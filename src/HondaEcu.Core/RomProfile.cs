@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace HondaEcu.Core;
 
@@ -39,6 +40,9 @@ public sealed class RomProfile
 
     public string SchemaVersion { get; }
 
+    [JsonIgnore]
+    public string? SourcePath { get; private set; }
+
     public string Id { get; }
 
     public string DisplayName { get; }
@@ -72,7 +76,9 @@ public sealed class RomProfile
     public static RomProfile Load(string path)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        return Parse(File.ReadAllText(path));
+        var profile = Parse(File.ReadAllText(path));
+        profile.SourcePath = Path.GetFullPath(path);
+        return profile;
     }
 
     public static RomProfile Parse(string json)

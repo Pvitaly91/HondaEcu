@@ -66,7 +66,9 @@ public sealed class OracleAnalysisTests
         Assert.Equal(6000, candidate.Numerator, 4);
         Assert.Equal(0, candidate.DenominatorOffset, 4);
         Assert.Equal(0, candidate.OffsetConstant, 4);
-        Assert.True(candidate.Confidence > 0.99);
+        Assert.True(candidate.FitScore > 0.99);
+        Assert.Equal(0, candidate.HoldoutPointCount);
+        Assert.False(candidate.HoldoutExactByteMatch);
     }
 
     [Fact]
@@ -156,52 +158,16 @@ public sealed class OracleAnalysisTests
     }
 
     [Fact]
-    public void CrossEditorRequiresSameBaselineAndCommonCandidate()
+    public void RenamingSyntheticAnalysisIsNotCrossEditorEvidence()
     {
         using var fixture = new SyntheticFixture();
         var setup = CreateUniqueRoundingCases(fixture);
-        var crome = OracleAnalyzer.Analyze(setup.Manifest, setup.Profile);
-        var hts = crome with { ReferenceTool = "Honda Tuning Suite" };
-        var ambiguousCrome = crome with
-        {
-            Parameters = crome.Parameters.Select(parameter => parameter with
-            {
-                Candidates = parameter.Candidates.Select(candidate => candidate with
-                {
-                    CompatibleRoundingPolicies = new[] { RoundingPolicy.Nearest, RoundingPolicy.Ceiling },
-                }).ToArray(),
-            }).ToArray(),
-        };
-        var ambiguous = CrossEditorComparer.Compare(ambiguousCrome,
-            ambiguousCrome with { ReferenceTool = "Honda Tuning Suite" });
+        var syntheticCromeFixture = OracleAnalyzer.Analyze(setup.Manifest, setup.Profile);
 
-        var confirmed = CrossEditorComparer.Compare(crome, hts);
-        var conflict = CrossEditorComparer.Compare(crome, hts with
-        {
-            BaselineHash = new RomHash(new string('0', 64), "00000000"),
-        });
-        var residualConflict = CrossEditorComparer.Compare(crome with
-        {
-            AdditionalChangedRanges = new[] { new DiffRange(70, 1, string.Empty, string.Empty) },
-        }, hts);
-
-        Assert.True(confirmed.SameBaseline);
-        Assert.True(confirmed.Parameters.Single().HasCommonCandidate);
-        Assert.Equal(ValidationLevel.CrossEditorConfirmed, confirmed.Parameters.Single().ValidationLevel);
-        Assert.False(conflict.SameBaseline);
-        Assert.True(conflict.Parameters.Single().HasCommonCandidate);
-        Assert.False(conflict.IsCrossEditorConfirmed);
-        Assert.Equal(ValidationLevel.OracleObserved, conflict.Parameters.Single().ValidationLevel);
-        Assert.Contains(conflict.Parameters.Single().ConflictReasons, reason => reason.Contains("same baseline", StringComparison.OrdinalIgnoreCase));
-        Assert.Equal(crome.AdditionalChangedRanges, confirmed.CromeAdditionalRanges);
-        Assert.Equal(hts.AdditionalChangedRanges, confirmed.HtsAdditionalRanges);
-        Assert.Equal(crome.ObservedChecksumChangedRanges, confirmed.CromeObservedChecksumRanges);
-        Assert.Equal(hts.ObservedChecksumChangedRanges, confirmed.HtsObservedChecksumRanges);
-        Assert.False(ambiguous.Parameters.Single().SameRounding);
-        Assert.False(ambiguous.IsCrossEditorConfirmed);
-        Assert.False(residualConflict.IsCrossEditorConfirmed);
-        Assert.Contains(residualConflict.Parameters.Single().ConflictReasons,
-            reason => reason.Contains("unexplained", StringComparison.OrdinalIgnoreCase));
+        // M0 accepted a with-clone renamed HTS as independent evidence. M0.1 binds the
+        // manifest provenance; merely changing this display label invalidates that binding.
+        Assert.Throws<InvalidDataException>(() => CrossEditorComparer.Compare(syntheticCromeFixture,
+            syntheticCromeFixture with { ReferenceTool = "Honda Tuning Suite" }));
     }
 
     private static OracleSetup CreateCases(

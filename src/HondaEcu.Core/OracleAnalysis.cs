@@ -1,207 +1,10 @@
 using System.Buffers.Binary;
+using System.Globalization;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 
 namespace HondaEcu.Core;
-
-public sealed record OracleCase(
-    string ParameterId,
-    double EngineeringValue,
-    string RomPath,
-    RomHash RomHash,
-    DateTimeOffset CreatedAt,
-    IReadOnlyList<DiffRange> DiffRanges,
-    string? UserNotes = null,
-    double? DisplayedValue = null);
-
-public sealed record OracleManifest(
-    string FormatVersion,
-    string ReferenceTool,
-    string ToolVersion,
-    IReadOnlyList<string> Plugins,
-    bool PluginsDisabled,
-    string ProfileId,
-    string BaselinePath,
-    RomHash BaselineHash,
-    string NoOpPath,
-    RomHash NoOpHash,
-    DateTimeOffset CreatedAt,
-    IReadOnlyList<DiffRange> NoOpNormalizationRanges,
-    IReadOnlyList<OracleCase> Cases,
-    string? UserNotes = null)
-{
-    public string ToJson(bool indented = true) => JsonSerializer.Serialize(this, JsonDefaults.Create(indented));
-
-    public static OracleManifest Parse(string json)
-    {
-        var manifest = JsonSerializer.Deserialize<OracleManifest>(json, JsonDefaults.Options) ??
-            throw new JsonException("Oracle manifest is empty.");
-        OracleManifestService.Validate(manifest);
-        return manifest;
-    }
-
-    public static OracleManifest Load(string path) => Parse(File.ReadAllText(path));
-}
-
-public static class OracleManifestService
-{
-    public static void Validate(OracleManifest manifest)
-    {
-        ArgumentNullException.ThrowIfNull(manifest);
-        if (!string.Equals(manifest.FormatVersion, "1.0", StringComparison.Ordinal) ||
-            string.IsNullOrWhiteSpace(manifest.ReferenceTool) || string.IsNullOrWhiteSpace(manifest.ToolVersion) ||
-            string.IsNullOrWhiteSpace(manifest.ProfileId) || string.IsNullOrWhiteSpace(manifest.BaselinePath) ||
-            string.IsNullOrWhiteSpace(manifest.NoOpPath) || manifest.BaselineHash is null || manifest.NoOpHash is null ||
-            manifest.Plugins is null || manifest.NoOpNormalizationRanges is null || manifest.Cases is null ||
-            manifest.CreatedAt == default)
-        {
-            throw new InvalidDataException("Oracle manifest is missing required version, tool provenance, paths, hashes, dates, or collections.");
-        }
-
-        ValidateHash(manifest.BaselineHash, "baseline");
-        ValidateHash(manifest.NoOpHash, "no-op");
-        if (manifest.Plugins.Any(string.IsNullOrWhiteSpace))
-        {
-            throw new InvalidDataException("Oracle plugin names cannot be empty.");
-        }
-
-        ValidateRanges(manifest.NoOpNormalizationRanges, "no-op normalization");
-        foreach (var oracleCase in manifest.Cases)
-        {
-            if (oracleCase is null || string.IsNullOrWhiteSpace(oracleCase.ParameterId) ||
-                string.IsNullOrWhiteSpace(oracleCase.RomPath) || oracleCase.RomHash is null ||
-                oracleCase.DiffRanges is null || !double.IsFinite(oracleCase.EngineeringValue) ||
-                (oracleCase.DisplayedValue is { } displayed && !double.IsFinite(displayed)) ||
-                oracleCase.CreatedAt == default)
-            {
-                throw new InvalidDataException("Oracle case is missing required provenance or contains a non-finite value.");
-            }
-
-            ValidateHash(oracleCase.RomHash, $"case '{oracleCase.ParameterId}'");
-            ValidateRanges(oracleCase.DiffRanges, $"case '{oracleCase.ParameterId}'");
-        }
-    }
-
-    public static OracleManifest Create(
-        string referenceTool,
-        string toolVersion,
-        string profileId,
-        string baselinePath,
-        string noOpPath,
-        bool pluginsDisabled,
-        IReadOnlyList<string>? plugins = null,
-        string? userNotes = null)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(referenceTool);
-        ArgumentException.ThrowIfNullOrWhiteSpace(toolVersion);
-        ArgumentException.ThrowIfNullOrWhiteSpace(profileId);
-        var baseline = RomImage.Load(baselinePath);
-        var noOp = RomImage.Load(noOpPath);
-        if (baseline.Size != noOp.Size)
-        {
-            throw new RomSizeException("Oracle baseline and no-op ROM sizes differ.");
-        }
-
-        var normalization = DiffEngine.Compare(baseline, noOp).Ranges;
-        var manifest = new OracleManifest(
-            "1.0",
-            referenceTool,
-            toolVersion,
-            Array.AsReadOnly(plugins?.ToArray() ?? Array.Empty<string>()),
-            pluginsDisabled,
-            profileId,
-            Path.GetFullPath(baselinePath),
-            baseline.Hash,
-            Path.GetFullPath(noOpPath),
-            noOp.Hash,
-            DateTimeOffset.UtcNow,
-            normalization,
-            Array.Empty<OracleCase>(),
-            userNotes);
-        Validate(manifest);
-        return manifest;
-    }
-
-    public static OracleManifest AddCase(
-        OracleManifest manifest,
-        string parameterId,
-        double engineeringValue,
-        string romPath,
-        string? userNotes = null,
-        double? displayedValue = null)
-    {
-        ArgumentNullException.ThrowIfNull(manifest);
-        ArgumentException.ThrowIfNullOrWhiteSpace(parameterId);
-        Validate(manifest);
-        if (!double.IsFinite(engineeringValue) || (displayedValue is { } displayed && !double.IsFinite(displayed)))
-        {
-            throw new ArgumentOutOfRangeException(nameof(engineeringValue), "Oracle values must be finite.");
-        }
-
-        var baseline = LoadAndVerify(manifest.BaselinePath, manifest.BaselineHash, "baseline");
-        var rom = RomImage.Load(romPath);
-        if (rom.Size != baseline.Size)
-        {
-            throw new RomSizeException("Oracle case size differs from its baseline.");
-        }
-
-        var oracleCase = new OracleCase(parameterId, engineeringValue, Path.GetFullPath(romPath), rom.Hash,
-            DateTimeOffset.UtcNow, DiffEngine.Compare(baseline, rom).Ranges, userNotes, displayedValue);
-        var cases = manifest.Cases.Append(oracleCase).ToArray();
-        var updated = manifest with { Cases = cases };
-        Validate(updated);
-        return updated;
-    }
-
-    public static void Save(OracleManifest manifest, string outputPath, bool overwrite = false)
-    {
-        ArgumentNullException.ThrowIfNull(manifest);
-        Validate(manifest);
-        AtomicDocument.WriteAllText(outputPath, manifest.ToJson(), overwrite);
-    }
-
-    internal static RomImage LoadAndVerify(string path, RomHash expected, string role)
-    {
-        var image = RomImage.Load(path);
-        if (image.Hash != expected)
-        {
-            throw new InvalidDataException($"Oracle {role} hash no longer matches its manifest.");
-        }
-
-        return image;
-    }
-
-    private static void ValidateHash(RomHash hash, string role)
-    {
-        if (string.IsNullOrWhiteSpace(hash.Sha256) || hash.Sha256.Length != 64 || !hash.Sha256.All(Uri.IsHexDigit) ||
-            string.IsNullOrWhiteSpace(hash.Crc32) || hash.Crc32.Length != 8 || !hash.Crc32.All(Uri.IsHexDigit))
-        {
-            throw new InvalidDataException($"Oracle {role} hash is malformed.");
-        }
-    }
-
-    private static void ValidateRanges(IReadOnlyList<DiffRange> ranges, string role)
-    {
-        foreach (var range in ranges)
-        {
-            if (range is null || range.Offset < 0 || range.Length <= 0 || range.OldHex is null || range.NewHex is null)
-            {
-                throw new InvalidDataException($"Oracle {role} contains an invalid diff range.");
-            }
-
-            try
-            {
-                if (HexUtilities.Parse(range.OldHex).Length > range.Length || HexUtilities.Parse(range.NewHex).Length > range.Length)
-                {
-                    throw new InvalidDataException($"Oracle {role} diff-range bytes exceed its declared length.");
-                }
-            }
-            catch (Exception exception) when (exception is ArgumentException or FormatException)
-            {
-                throw new InvalidDataException($"Oracle {role} contains malformed diff-range bytes.", exception);
-            }
-        }
-    }
-}
 
 public sealed record OracleCandidate(
     string ParameterId,
@@ -213,20 +16,73 @@ public sealed record OracleCandidate(
     double OffsetConstant,
     double Numerator,
     double DenominatorOffset,
-    RoundingPolicy RoundingPolicy,
+    RoundingPolicy? RoundingPolicy,
     IReadOnlyList<RoundingPolicy> CompatibleRoundingPolicies,
     double MeanAbsoluteError,
     double MaximumAbsoluteError,
     double Confidence,
     IReadOnlyList<long> RawValues,
     IReadOnlyList<double> EngineeringValues,
-    ValidationLevel ValidationLevel = ValidationLevel.OracleObserved);
+    ValidationLevel ValidationLevel = ValidationLevel.OracleObserved)
+{
+    public string CandidateId { get; init; } = string.Empty;
+    public RoundingPolicy? SelectedRoundingPolicy => RoundingPolicy;
+    public OracleRoundingAssessment RoundingAssessment { get; init; } = OracleRoundingBehavior.Assess(Array.Empty<RoundingPolicy>(), null);
+    public IReadOnlyList<RoundingPolicy> HoldoutCompatibleRoundingPolicies { get; init; } = Array.Empty<RoundingPolicy>();
+    // Confidence remains a serialized 1.0 compatibility alias. Neither field is a probability.
+    public double FitScore => Confidence;
+    public int IndependentTrainingPointCount { get; init; }
+    public int HoldoutPointCount { get; init; }
+    public int FreeCoefficientCount { get; init; }
+    public double TrainingMaximumAbsoluteError => MaximumAbsoluteError;
+    public double TrainingMeanAbsoluteError => MeanAbsoluteError;
+    public double? HoldoutMaximumAbsoluteError { get; init; }
+    public double? HoldoutMeanAbsoluteError { get; init; }
+    public double ConversionTolerance { get; init; }
+    public bool TrainingExactByteMatch { get; init; }
+    public bool HoldoutExactByteMatch { get; init; }
+    public bool HasConflicts { get; init; }
+    public OracleObservedRange? ObservedRange { get; init; }
+    public string ExtrapolationWarning { get; init; } = "No behavior outside the independent training observations is established.";
+    public IReadOnlyList<OracleObservation> Observations { get; init; } = Array.Empty<OracleObservation>();
+}
+
+public sealed record OracleObservedRange(double Minimum, double Maximum, long RawMinimum, long RawMaximum);
+
+public sealed record OracleObservation(
+    string ObservationId,
+    string RomPath,
+    RomHash RomHash,
+    double RequestedValue,
+    double? DisplayedValue,
+    long RawValue,
+    string RawHex,
+    OracleObservationRole Role,
+    bool IndependentPoint,
+    double? DecodingAbsoluteError,
+    IReadOnlyList<RoundingPolicy> ExactBytePolicies);
+
+public sealed record OracleObservationConflict(
+    double RequestedValue,
+    IReadOnlyList<string> ObservationIds,
+    IReadOnlyList<string> RomPaths,
+    IReadOnlyList<RomHash> RomHashes,
+    string Reason);
 
 public sealed record OracleParameterAnalysis(
     string ParameterId,
     int CaseCount,
     IReadOnlyList<OracleCandidate> Candidates,
-    IReadOnlyList<string> Warnings);
+    IReadOnlyList<string> Warnings)
+{
+    public IReadOnlyList<OracleObservationConflict> Conflicts { get; init; } = Array.Empty<OracleObservationConflict>();
+    public int IndependentTrainingPointCount { get; init; }
+    public int IndependentHoldoutPointCount { get; init; }
+    public int RepeatedObservationCount { get; init; }
+    public string? SelectedCandidateId { get; init; }
+    public string? SelectionRationale { get; init; }
+    public IReadOnlyList<DiffRange> ActualChangedRanges { get; init; } = Array.Empty<DiffRange>();
+}
 
 public sealed record OracleAnalysis(
     string FormatVersion,
@@ -247,15 +103,92 @@ public sealed record OracleAnalysis(
     /// These are reported separately from both inferred parameters and unexplained residuals.
     /// </summary>
     public IReadOnlyList<DiffRange> ObservedChecksumChangedRanges { get; init; } = Array.Empty<DiffRange>();
+    public IReadOnlyList<DiffRange> ActualChangedRanges { get; init; } = Array.Empty<DiffRange>();
+    public IReadOnlyList<DiffRange> CandidateHypothesisRanges { get; init; } = Array.Empty<DiffRange>();
+    public IReadOnlyList<DiffRange> ExplainedChangedRanges { get; init; } = Array.Empty<DiffRange>();
+    public IReadOnlyList<DiffRange> UnexplainedChangedRanges { get; init; } = Array.Empty<DiffRange>();
+    public ValidationLevel ChecksumEvidenceLevel { get; init; } = ValidationLevel.PublicDocumentation;
+    public OracleEvidenceBinding? EvidenceBinding { get; init; }
+    public OracleNoOpEvidence? NoOpEvidence { get; init; }
+    public string? ToolEdition { get; init; }
+    public IReadOnlyList<string> MigrationWarnings { get; init; } = Array.Empty<string>();
 
     public string ToJson(bool indented = true) => JsonSerializer.Serialize(this, JsonDefaults.Create(indented));
 
     public static OracleAnalysis Parse(string json)
     {
+        json = NormalizeFitScoreAlias(json);
         var analysis = JsonSerializer.Deserialize<OracleAnalysis>(json, JsonDefaults.Options) ??
             throw new JsonException("Oracle analysis is empty.");
         OracleAnalyzer.ValidateAnalysis(analysis);
+        if (analysis.FormatVersion == "1.0")
+        {
+            analysis = analysis with
+            {
+                MigrationWarnings = new[] { "Legacy 1.0 analysis has no independent holdout or integrity binding; reanalyze its source manifest. Confidence means fit score, not probability." },
+                Parameters = analysis.Parameters.Select(parameter => parameter with
+                {
+                    Candidates = parameter.Candidates.Select(candidate => candidate with
+                    {
+                        RoundingPolicy = candidate.CompatibleRoundingPolicies.Count == 1 ? candidate.CompatibleRoundingPolicies[0] : null,
+                        RoundingAssessment = OracleRoundingBehavior.Assess(candidate.CompatibleRoundingPolicies, null),
+                    }).ToArray(),
+                }).ToArray(),
+            };
+        }
+
+        OracleAnalyzer.ValidateAnalysis(analysis);
         return analysis;
+    }
+
+    private static string NormalizeFitScoreAlias(string json)
+    {
+        var root = JsonNode.Parse(json);
+        if (root is not JsonObject rootObject)
+        {
+            throw new JsonException("Oracle analysis must be a JSON object.");
+        }
+
+        static KeyValuePair<string, JsonNode?> Property(JsonObject obj, string name) =>
+            obj.FirstOrDefault(item => item.Key.Equals(name, StringComparison.OrdinalIgnoreCase));
+
+        if (Property(rootObject, "parameters").Value is JsonArray parameters)
+        {
+            foreach (var parameter in parameters.OfType<JsonObject>())
+            {
+                if (Property(parameter, "candidates").Value is not JsonArray candidates)
+                {
+                    continue;
+                }
+
+                foreach (var candidate in candidates.OfType<JsonObject>())
+                {
+                    var fit = Property(candidate, "fitScore");
+                    var confidence = Property(candidate, "confidence");
+                    if (fit.Value is not null)
+                    {
+                        if (fit.Value is not JsonValue scoreValue || !scoreValue.TryGetValue<double>(out var score) || !double.IsFinite(score))
+                        {
+                            throw new InvalidDataException("fitScore must be a finite number.");
+                        }
+
+                        if (confidence.Value is not null)
+                        {
+                            if (confidence.Value is not JsonValue aliasValue || !aliasValue.TryGetValue<double>(out var alias) || score != alias)
+                            {
+                                throw new InvalidDataException("fitScore and its legacy confidence alias disagree.");
+                            }
+                        }
+                        else
+                        {
+                            candidate["confidence"] = score;
+                        }
+                    }
+                }
+            }
+        }
+
+        return rootObject.ToJsonString();
     }
 
     public static OracleAnalysis Load(string path) => Parse(File.ReadAllText(path));
@@ -273,6 +206,12 @@ public static class OracleAnalyzer
     {
         ArgumentNullException.ThrowIfNull(manifest);
         ArgumentNullException.ThrowIfNull(profile);
+        var profileValidation = profile.Validate();
+        if (!profileValidation.IsValid)
+        {
+            throw new ProfileValidationException(profileValidation.Errors);
+        }
+
         OracleManifestService.Validate(manifest);
         if (!string.Equals(manifest.ProfileId, profile.Id, StringComparison.OrdinalIgnoreCase))
         {
@@ -289,6 +228,12 @@ public static class OracleAnalyzer
         var noOp = OracleManifestService.LoadAndVerify(manifest.NoOpPath, manifest.NoOpHash, "no-op");
         baseline.ValidateExactSize(profile.ExpectedSize, profile.Id);
         noOp.ValidateExactSize(profile.ExpectedSize, profile.Id);
+        foreach (var extraNoOp in new[] { manifest.IndependentNoOp, manifest.ResavedNoOp }.OfType<OracleFileEvidence>())
+        {
+            OracleManifestService.LoadAndVerify(extraNoOp.RomPath, extraNoOp.RomHash, "additional no-op")
+                .ValidateExactSize(profile.ExpectedSize, profile.Id);
+        }
+
         var actualNormalization = DiffEngine.Compare(baseline, noOp).Ranges;
         if (!actualNormalization.SequenceEqual(manifest.NoOpNormalizationRanges))
         {
@@ -327,19 +272,40 @@ public static class OracleAnalyzer
                 allObservedOffsets.UnionWith(ExpandOffsets(caseVersusNoOp));
             }
 
-            if (cases.Select(item => item.DisplayedValue ?? item.EngineeringValue).Distinct().Count() < 3)
+            var trainingValues = cases.Where(item => item.Role == OracleObservationRole.Training)
+                .Select(item => item.DisplayedValue ?? item.EngineeringValue).ToHashSet();
+            var holdoutValues = cases.Where(item => item.Role == OracleObservationRole.Holdout)
+                .Select(item => item.DisplayedValue ?? item.EngineeringValue).Distinct().Except(trainingValues).ToArray();
+            var repeatedCount = cases.Length - cases.Select(item => (item.EngineeringValue, item.DisplayedValue, item.RomHash)).Distinct().Count();
+            var conflicts = FindConflicts(cases);
+            if (conflicts.Count > 0)
             {
-                warnings.Add("At least three distinct engineering values are required for candidate analysis.");
-                analyses.Add(new OracleParameterAnalysis(group.Key, cases.Length, Array.Empty<OracleCandidate>(), warnings));
-                continue;
+                warnings.Add("Conflicting repeated requests were retained with their provenance. They cannot confirm a definition.");
+            }
+
+            if (trainingValues.Count < 3)
+            {
+                warnings.Add("At least three independent training values are required. Repeated and holdout observations do not add fitting points.");
+            }
+
+            if (cases.Any(item => item.DisplayedValue is null))
+            {
+                warnings.Add("Some reopened displayed values are missing; requested values are a provisional fitting fallback, not independent displayed-value evidence.");
+            }
+
+            if (holdoutValues.Length == 0)
+            {
+                warnings.Add("No independent holdout point is available. Perfect training fit is candidate evidence only.");
             }
 
             var changedOffsets = images.SelectMany(image => ExpandOffsets(DiffEngine.Compare(noOp, image).Ranges)).ToHashSet();
+            var parameterActualRanges = ToRanges(changedOffsets);
             changedOffsets.ExceptWith(excludedOffsets);
-            var candidates = FindCandidates(group.Key, cases, images, noOp, changedOffsets, excludedOffsets);
+            var domain = manifest.RoundingDomains.FirstOrDefault(item => string.Equals(item.Key, group.Key, StringComparison.OrdinalIgnoreCase)).Value;
+            var candidates = FindCandidates(group.Key, cases, images, noOp, changedOffsets, excludedOffsets, domain, conflicts.Count > 0);
             if (candidates.Count == 0)
             {
-                warnings.Add("No supported raw, linear, or inverse encoding candidate fit all cases.");
+                warnings.Add("No supported raw, linear, or inverse candidate fit the independent training observations.");
             }
 
             foreach (var candidate in candidates)
@@ -347,26 +313,44 @@ public static class OracleAnalyzer
                 candidateOffsets.UnionWith(Enumerable.Range(candidate.Offset, candidate.Width));
             }
 
-            analyses.Add(new OracleParameterAnalysis(group.Key, cases.Length, candidates, warnings));
+            analyses.Add(new OracleParameterAnalysis(group.Key, cases.Length, candidates, warnings)
+            {
+                Conflicts = conflicts,
+                IndependentTrainingPointCount = trainingValues.Count,
+                IndependentHoldoutPointCount = holdoutValues.Length,
+                RepeatedObservationCount = repeatedCount,
+                ActualChangedRanges = parameterActualRanges,
+            });
         }
 
-        var residualOffsets = allObservedOffsets
-            .Except(candidateOffsets)
-            .Except(excludedOffsets);
+        // A hypothesis is not an explanation: only the comparer may explain one uniquely
+        // validated definition. Declared checksum storage is kept separately, with its evidence.
+        var residualOffsets = allObservedOffsets.Except(excludedOffsets);
         var additional = ToRanges(residualOffsets);
         var observedChecksum = ToRanges(allObservedOffsets.Intersect(excludedOffsets));
-        return new OracleAnalysis("1.0", manifest.ReferenceTool, manifest.ToolVersion, profile.Id,
+        var analysis = new OracleAnalysis("2.0", manifest.ReferenceTool, manifest.ToolVersion, profile.Id,
             baseline.Hash, noOp.Hash, DateTimeOffset.UtcNow, actualNormalization,
             checksumRegions, additional, analyses)
         {
             ObservedChecksumChangedRanges = observedChecksum,
+            ActualChangedRanges = ToRanges(allObservedOffsets),
+            CandidateHypothesisRanges = ToRanges(allObservedOffsets.Intersect(candidateOffsets)),
+            UnexplainedChangedRanges = ToRanges(allObservedOffsets),
+            ChecksumEvidenceLevel = profile.Checksum?.EvidenceLevel ?? ValidationLevel.PublicDocumentation,
+            EvidenceBinding = OracleEvidence.Bind(manifest, profile),
+            NoOpEvidence = OracleEvidence.InspectNoOp(manifest),
+            ToolEdition = manifest.ToolEdition,
+            MigrationWarnings = manifest.FormatVersion == "1.0"
+                ? new[] { "Legacy manifest observations default to training; add explicit holdout roles and edition provenance. Confidence is a legacy alias for fitScore." }
+                : Array.Empty<string>(),
         };
+        return OracleEvidence.Seal(analysis);
     }
 
     internal static void ValidateAnalysis(OracleAnalysis analysis)
     {
         ArgumentNullException.ThrowIfNull(analysis);
-        if (!string.Equals(analysis.FormatVersion, "1.0", StringComparison.Ordinal) ||
+        if (analysis.FormatVersion is not ("1.0" or "2.0") ||
             string.IsNullOrWhiteSpace(analysis.ReferenceTool) || string.IsNullOrWhiteSpace(analysis.ToolVersion) ||
             string.IsNullOrWhiteSpace(analysis.ProfileId) || analysis.BaselineHash is null || analysis.NoOpHash is null ||
             analysis.NoOpNormalizationRanges is null || analysis.ExcludedChecksumRegions is null ||
@@ -381,26 +365,46 @@ public static class OracleAnalyzer
         {
             throw new InvalidDataException("Oracle analysis contains malformed parameter results.");
         }
+
+        OracleEvidence.ValidateAnalysisMetadata(analysis);
     }
 
     public static string ExportCandidate(OracleAnalysis analysis, string parameterId, int offset, ParameterEncodingType type)
     {
         ArgumentNullException.ThrowIfNull(analysis);
-        var candidate = analysis.Parameters
+        var matches = analysis.Parameters
             .FirstOrDefault(parameter => string.Equals(parameter.ParameterId, parameterId, StringComparison.OrdinalIgnoreCase))?
-            .Candidates.FirstOrDefault(item => item.Offset == offset && item.EncodingType == type) ??
-            throw new KeyNotFoundException("Requested oracle candidate was not found.");
-        if (candidate.CompatibleRoundingPolicies.Count != 1)
+            .Candidates.Where(item => item.Offset == offset && item.EncodingType == type).ToArray() ?? Array.Empty<OracleCandidate>();
+        if (matches.Length == 0)
         {
-            throw new InvalidOperationException(
-                "Candidate rounding is ambiguous. Add boundary oracle cases until exactly one rounding policy remains before export.");
+            throw new KeyNotFoundException("Requested oracle candidate was not found.");
         }
 
-        var establishedRounding = candidate.CompatibleRoundingPolicies[0];
-        var roundingEvidence = $"Rounding policy {establishedRounding} was uniquely compatible with the supplied cases.";
+        if (matches.Length != 1)
+        {
+            throw new InvalidOperationException("Offset and encoding identify several alternatives. Export by candidate ID to preserve the intended width and endianness.");
+        }
+
+        return ExportCandidate(analysis, matches[0].CandidateId);
+    }
+
+    public static string ExportCandidate(OracleAnalysis analysis, string candidateId)
+    {
+        ValidateAnalysis(analysis);
+        if (analysis.EvidenceBinding is null)
+        {
+            throw new InvalidDataException("Legacy candidate export requires reanalysis of the source manifest to bind current file and profile evidence.");
+        }
+
+        _ = OracleEvidence.ValidateBinding(analysis);
+        var matches = analysis.Parameters.SelectMany(parameter => parameter.Candidates).Where(candidate => candidate.CandidateId == candidateId).ToArray();
+        var candidate = matches.Length == 1 ? matches[0] : throw new KeyNotFoundException("A unique candidate ID is required.");
         var fragment = new
         {
+            formatVersion = "2.0",
+            artifactKind = "oracle-candidate-review",
             id = candidate.ParameterId,
+            candidateId = candidate.CandidateId,
             displayName = $"{candidate.ParameterId} (oracle candidate)",
             description = "Generated from editor observations; requires independent review and must not be promoted automatically.",
             offset = candidate.Offset,
@@ -417,15 +421,45 @@ public static class OracleAnalyzer
             units = "unknown",
             rawRange = new { minimum = candidate.RawValues.Min(), maximum = candidate.RawValues.Max() },
             engineeringRange = new { minimum = candidate.EngineeringValues.Min(), maximum = candidate.EngineeringValues.Max() },
-            roundingPolicy = establishedRounding,
+            roundingPolicy = candidate.SelectedRoundingPolicy,
+            compatibleRoundingPolicies = candidate.CompatibleRoundingPolicies,
+            holdoutCompatibleRoundingPolicies = candidate.HoldoutCompatibleRoundingPolicies,
+            roundingAssessment = candidate.RoundingAssessment,
+            fitScore = candidate.FitScore,
+            independentTrainingPointCount = candidate.IndependentTrainingPointCount,
+            holdoutPointCount = candidate.HoldoutPointCount,
+            freeCoefficientCount = candidate.FreeCoefficientCount,
+            trainingMaximumAbsoluteError = candidate.TrainingMaximumAbsoluteError,
+            holdoutMaximumAbsoluteError = candidate.HoldoutMaximumAbsoluteError,
+            holdoutExactByteMatch = candidate.HoldoutExactByteMatch,
+            extrapolationWarning = candidate.ExtrapolationWarning,
             writable = false,
             validationLevel = ValidationLevel.OracleObserved,
             revisionScope = $"{analysis.ProfileId}; oracle candidate only",
             sources = new[] { "oracle-manifest-review-required" },
-            notes = $"{roundingEvidence} Review the manifest provenance, add a matching EvidenceReference, and validate boundary cases across editors before profile inclusion.",
+            notes = "This read-only review artifact preserves unresolved alternatives and is not a loadable production profile definition. Review provenance and independent holdout/boundary cases before profile inclusion.",
             status = ParameterStatus.Candidate,
         };
         return JsonSerializer.Serialize(fragment, JsonDefaults.Options);
+    }
+
+    public static OracleAnalysis SelectCandidate(OracleAnalysis analysis, string parameterId, string candidateId, string rationale)
+    {
+        ValidateAnalysis(analysis);
+        _ = OracleEvidence.ValidateBinding(analysis);
+        ArgumentException.ThrowIfNullOrWhiteSpace(rationale);
+        var parameter = analysis.Parameters.Single(item => string.Equals(item.ParameterId, parameterId, StringComparison.OrdinalIgnoreCase));
+        if (!parameter.Candidates.Any(candidate => candidate.CandidateId == candidateId))
+        {
+            throw new KeyNotFoundException("Selected candidate does not belong to the requested parameter.");
+        }
+
+        return OracleEvidence.Seal(analysis with
+        {
+            Parameters = analysis.Parameters.Select(item => item == parameter
+                ? item with { SelectedCandidateId = candidateId, SelectionRationale = rationale }
+                : item).ToArray(),
+        });
     }
 
     private static IReadOnlyList<OracleCandidate> FindCandidates(
@@ -434,10 +468,10 @@ public static class OracleAnalyzer
         IReadOnlyList<RomImage> images,
         RomImage noOp,
         IReadOnlySet<int> changedOffsets,
-        IReadOnlySet<int> excludedOffsets)
+        IReadOnlySet<int> excludedOffsets,
+        OracleRoundingDomain? domain,
+        bool hasConflicts)
     {
-        var displayedEngineering = cases.Select(item => item.DisplayedValue ?? item.EngineeringValue).ToArray();
-        var requestedEngineering = cases.Select(item => item.EngineeringValue).ToArray();
         var result = new List<OracleCandidate>();
         var tested = new HashSet<(int Offset, int Width, bool Signed, Endianness Endianness)>();
         foreach (var changedOffset in changedOffsets.Order())
@@ -457,11 +491,8 @@ public static class OracleAnalyzer
             }
         }
 
-        return result
-            .OrderByDescending(candidate => candidate.Confidence)
-            .ThenBy(candidate => candidate.Offset)
-            .ThenBy(candidate => candidate.EncodingType)
-            .ToArray();
+        return result.OrderByDescending(candidate => candidate.FitScore)
+            .ThenBy(candidate => candidate.Offset).ThenBy(candidate => candidate.EncodingType).ToArray();
 
         void AddForWidth(int offset, int width, bool signed, Endianness endianness)
         {
@@ -471,174 +502,151 @@ public static class OracleAnalyzer
                 return;
             }
 
-            var raws = images.Select(image => ReadRaw(image.Span, offset, width, signed, endianness)).ToArray();
-            if (raws.Distinct().Count() < 3 || !IsMonotonic(raws, displayedEngineering))
+            var raw = images.Select(image => ReadRaw(image.Span, offset, width, signed, endianness)).ToArray();
+            var displayed = cases.Select(item => item.DisplayedValue ?? item.EngineeringValue).ToArray();
+            var training = Enumerable.Range(0, cases.Count).Where(index => cases[index].Role == OracleObservationRole.Training).ToArray();
+            // Deduplicate coefficient-fitting points only. Every case remains in the observations
+            // and requested-value rounding checks, including quantization and repeated saves.
+            var fitting = training.DistinctBy(index => (raw[index], displayed[index])).ToArray();
+            if (fitting.Length < 3 || fitting.Select(index => raw[index]).Distinct().Count() < 3 ||
+                !IsMonotonic(fitting.Select(index => raw[index]).ToArray(), fitting.Select(index => displayed[index]).ToArray()))
             {
                 return;
             }
 
+            var fitRaw = fitting.Select(index => raw[index]).ToArray();
+            var fitValues = fitting.Select(index => displayed[index]).ToArray();
             var rawType = width == 1
                 ? signed ? ParameterEncodingType.RawS8 : ParameterEncodingType.RawU8
                 : endianness == Endianness.Little ? ParameterEncodingType.RawU16LittleEndian : ParameterEncodingType.RawU16BigEndian;
-            AddRawCandidate(rawType, offset, width, endianness, raws, displayedEngineering, requestedEngineering, result, parameterId);
-            if (!signed)
+            Add(rawType, 1, 0, 1, 0, 0);
+            if (!signed && TryFitLine(fitRaw.Select(value => (double)value).ToArray(), fitValues, out var scale, out var addend) &&
+                Math.Abs(scale) >= 1e-12)
             {
-                AddLinearCandidate(width == 1 ? ParameterEncodingType.LinearU8 : ParameterEncodingType.LinearU16,
-                    offset, width, endianness, raws, displayedEngineering, requestedEngineering, result, parameterId);
-                AddInverseCandidate(width == 1 ? ParameterEncodingType.InverseU8 : ParameterEncodingType.InverseU16,
-                    offset, width, endianness, raws, displayedEngineering, requestedEngineering, result, parameterId);
+                Add(width == 1 ? ParameterEncodingType.LinearU8 : ParameterEncodingType.LinearU16, scale, addend, 1, 0, 2);
+            }
+
+            if (!signed && TryFitInverse(fitRaw, fitValues, out var numerator, out var denominatorOffset, out var engineeringOffset) &&
+                Math.Abs(numerator) >= 1e-12)
+            {
+                Add(width == 1 ? ParameterEncodingType.InverseU8 : ParameterEncodingType.InverseU16,
+                    1, engineeringOffset, numerator, denominatorOffset, 3);
+            }
+
+            void Add(ParameterEncodingType type, double scale, double offsetConstant, double numerator, double denominatorOffset, int freeCoefficients)
+            {
+                double Decode(long value) => type switch
+                {
+                    ParameterEncodingType.LinearU8 or ParameterEncodingType.LinearU16 => value * scale + offsetConstant,
+                    ParameterEncodingType.InverseU8 or ParameterEncodingType.InverseU16 => numerator / (value + denominatorOffset) + offsetConstant,
+                    _ => value,
+                };
+                double Encode(double value) => type switch
+                {
+                    ParameterEncodingType.LinearU8 or ParameterEncodingType.LinearU16 => (value - offsetConstant) / scale,
+                    ParameterEncodingType.InverseU8 or ParameterEncodingType.InverseU16 => numerator / (value - offsetConstant) - denominatorOffset,
+                    _ => value,
+                };
+
+                var trainErrors = fitting.Select(index => Math.Abs(Decode(raw[index]) - displayed[index])).ToArray();
+                // Numerical tolerance is deliberately explicit and small. It is not an editor/RPM
+                // tolerance: users with rounded display values need an independently documented model.
+                const double conversionTolerance = 1e-7;
+                if (trainErrors.Any(error => !double.IsFinite(error) || error > conversionTolerance))
+                {
+                    return;
+                }
+
+                var rawPredictions = cases.Select(item => Encode(item.EngineeringValue)).ToArray();
+                var compatible = CompatibleRounding(training.Select(index => raw[index]).ToArray(),
+                    training.Select(index => rawPredictions[index]).ToArray());
+                if (compatible.Count == 0)
+                {
+                    return;
+                }
+
+                var trainingKeys = fitting.Select(index => (raw[index], displayed[index])).ToHashSet();
+                var trainingRequests = training.Select(index => cases[index].EngineeringValue).ToHashSet();
+                var holdout = Enumerable.Range(0, cases.Count).Where(index => cases[index].Role == OracleObservationRole.Holdout).ToArray();
+                var independentHoldout = holdout.Where(index => !trainingKeys.Contains((raw[index], displayed[index])) &&
+                    !trainingRequests.Contains(cases[index].EngineeringValue))
+                    .DistinctBy(index => (raw[index], displayed[index])).ToArray();
+                var holdoutCompatible = holdout.Length == 0 ? Array.Empty<RoundingPolicy>() :
+                    compatible.Where(policy => holdout.All(index => Matches(raw[index], rawPredictions[index], policy))).ToArray();
+                var applicablePolicies = independentHoldout.Length > 0 ? holdoutCompatible : compatible;
+                var assessedDomain = domain;
+                if (domain is not null && rawPredictions.Any(value => !double.IsFinite(value) || value < domain.Minimum || value > domain.Maximum))
+                {
+                    // A declared domain contradicted by a used observation cannot establish behavior.
+                    assessedDomain = null;
+                }
+
+                var rounding = OracleRoundingBehavior.Assess(applicablePolicies, assessedDomain);
+                var holdoutErrors = holdout.Select(index => Math.Abs(Decode(raw[index]) - displayed[index])).ToArray();
+                var holdoutFinite = holdoutErrors.Length > 0 && holdoutErrors.All(double.IsFinite);
+                var independentIndices = fitting.Concat(independentHoldout).ToHashSet();
+                var observations = Enumerable.Range(0, cases.Count).Select(index => new OracleObservation(
+                    ObservationId(cases[index], index), cases[index].RomPath, cases[index].RomHash,
+                    cases[index].EngineeringValue, cases[index].DisplayedValue, raw[index],
+                    HexUtilities.Format(images[index].Span.Slice(offset, width)), cases[index].Role,
+                    independentIndices.Contains(index),
+                    double.IsFinite(Decode(raw[index])) ? Math.Abs(Decode(raw[index]) - displayed[index]) : null,
+                    compatible.Where(policy => Matches(raw[index], rawPredictions[index], policy)).ToArray())).ToArray();
+                var maximum = trainErrors.Max();
+                var fitScore = Math.Clamp(1 - maximum / Math.Max(1, fitValues.Max() - fitValues.Min()), 0, 1);
+                var idText = string.Join("|", parameterId.ToLowerInvariant(), offset, width, type, endianness,
+                    scale.ToString("R", CultureInfo.InvariantCulture), offsetConstant.ToString("R", CultureInfo.InvariantCulture),
+                    numerator.ToString("R", CultureInfo.InvariantCulture), denominatorOffset.ToString("R", CultureInfo.InvariantCulture));
+                result.Add(new OracleCandidate(parameterId, offset, width, type, endianness, scale, offsetConstant,
+                    numerator, denominatorOffset, rounding.Policies.Count == 1 ? rounding.Policies[0] : null,
+                    compatible, trainErrors.Average(), maximum, fitScore, raw, displayed)
+                {
+                    CandidateId = HashUtilities.Sha256(Encoding.UTF8.GetBytes(idText)),
+                    RoundingAssessment = rounding,
+                    HoldoutCompatibleRoundingPolicies = holdoutCompatible,
+                    IndependentTrainingPointCount = fitting.Length,
+                    HoldoutPointCount = independentHoldout.Length,
+                    FreeCoefficientCount = freeCoefficients,
+                    HoldoutMaximumAbsoluteError = holdoutFinite ? holdoutErrors.Max() : null,
+                    HoldoutMeanAbsoluteError = holdoutFinite ? holdoutErrors.Average() : null,
+                    ConversionTolerance = conversionTolerance,
+                    TrainingExactByteMatch = true,
+                    HoldoutExactByteMatch = independentHoldout.Length > 0 && holdoutCompatible.Length > 0,
+                    HasConflicts = hasConflicts,
+                    ObservedRange = new OracleObservedRange(fitValues.Min(), fitValues.Max(), fitRaw.Min(), fitRaw.Max()),
+                    ExtrapolationWarning = freeCoefficients >= fitting.Length
+                        ? "The training points do not outnumber free coefficients. An exact fit may interpolate noise; independent holdouts and boundaries are required. Extrapolation is unproven."
+                        : "Only the observed training range and explicitly checked holdout bytes were tested. Extrapolation is unproven.",
+                    Observations = observations,
+                });
             }
         }
     }
 
-    private static void AddRawCandidate(
-        ParameterEncodingType type,
-        int offset,
-        int width,
-        Endianness endianness,
-        long[] raw,
-        double[] displayedEngineering,
-        double[] requestedEngineering,
-        ICollection<OracleCandidate> output,
-        string parameterId)
+    private static IReadOnlyList<OracleObservationConflict> FindConflicts(IReadOnlyList<OracleCase> cases) =>
+        cases.Select((item, index) => (Case: item, Index: index)).GroupBy(item => item.Case.EngineeringValue)
+            .Where(group => group.Select(item => (item.Case.RomHash, item.Case.DisplayedValue)).Distinct().Count() > 1)
+            .Select(group => new OracleObservationConflict(group.Key,
+                group.Select(item => ObservationId(item.Case, item.Index)).ToArray(),
+                group.Select(item => item.Case.RomPath).ToArray(),
+                group.Select(item => item.Case.RomHash).ToArray(),
+                "The same requested value produced different ROM bytes or reopened values. No averaging or provenance removal was performed.")).ToArray();
+
+    private static string ObservationId(OracleCase item, int index) => item.ObservationId ?? $"case-{index + 1}";
+
+    private static IReadOnlyList<RoundingPolicy> CompatibleRounding(IReadOnlyList<long> actual, IReadOnlyList<double> predicted) =>
+        Enum.GetValues<RoundingPolicy>().Where(policy => actual.Zip(predicted, (raw, value) => Matches(raw, value, policy)).All(value => value)).ToArray();
+
+    private static bool Matches(long actual, double predicted, RoundingPolicy policy)
     {
-        var errors = displayedEngineering.Zip(raw, (value, encoded) => Math.Abs(value - encoded)).ToArray();
-        if (errors.All(error => error <= 1e-9))
+        if (!double.IsFinite(predicted))
         {
-            var compatible = CompatibleRounding(raw, requestedEngineering);
-            if (compatible.Count == 0)
-            {
-                return;
-            }
-
-            output.Add(CreateCandidate(parameterId, offset, width, type, endianness, 1, 0, 1, 0,
-                raw, displayedEngineering, errors, compatible));
-        }
-    }
-
-    private static void AddLinearCandidate(
-        ParameterEncodingType type,
-        int offset,
-        int width,
-        Endianness endianness,
-        long[] raw,
-        double[] displayedEngineering,
-        double[] requestedEngineering,
-        ICollection<OracleCandidate> output,
-        string parameterId)
-    {
-        if (!TryFitLine(raw.Select(value => (double)value).ToArray(), displayedEngineering, out var scale, out var addend) ||
-            Math.Abs(scale) < 1e-12)
-        {
-            return;
+            return false;
         }
 
-        var predicted = raw.Select(value => (value * scale) + addend).ToArray();
-        var errors = predicted.Zip(displayedEngineering, (left, right) => Math.Abs(left - right)).ToArray();
-        if (!Accept(errors, displayedEngineering))
-        {
-            return;
-        }
-
-        var compatible = CompatibleRounding(raw, requestedEngineering.Select(value => (value - addend) / scale).ToArray());
-        if (compatible.Count == 0)
-        {
-            return;
-        }
-
-        output.Add(CreateCandidate(parameterId, offset, width, type, endianness, scale, addend, 1, 0,
-            raw, displayedEngineering, errors, compatible));
-    }
-
-    private static void AddInverseCandidate(
-        ParameterEncodingType type,
-        int offset,
-        int width,
-        Endianness endianness,
-        long[] raw,
-        double[] displayedEngineering,
-        double[] requestedEngineering,
-        ICollection<OracleCandidate> output,
-        string parameterId)
-    {
-        if (!TryFitInverse(raw, displayedEngineering, out var numerator, out var denominatorOffset, out var engineeringOffset) ||
-            Math.Abs(numerator) < 1e-12 || raw.Any(value => Math.Abs(value + denominatorOffset) < 1e-12))
-        {
-            return;
-        }
-
-        var predicted = raw.Select(value => numerator / (value + denominatorOffset) + engineeringOffset).ToArray();
-        var errors = predicted.Zip(displayedEngineering, (left, right) => Math.Abs(left - right)).ToArray();
-        if (!Accept(errors, displayedEngineering))
-        {
-            return;
-        }
-
-        var rawPredictions = requestedEngineering.Select(value => numerator / (value - engineeringOffset) - denominatorOffset).ToArray();
-        var compatible = CompatibleRounding(raw, rawPredictions);
-        if (compatible.Count == 0)
-        {
-            return;
-        }
-
-        output.Add(CreateCandidate(parameterId, offset, width, type, endianness, 1, engineeringOffset,
-            numerator, denominatorOffset, raw, displayedEngineering, errors, compatible));
-    }
-
-    private static OracleCandidate CreateCandidate(
-        string parameterId,
-        int offset,
-        int width,
-        ParameterEncodingType type,
-        Endianness endianness,
-        double scale,
-        double offsetConstant,
-        double numerator,
-        double denominatorOffset,
-        long[] raw,
-        double[] engineering,
-        double[] errors,
-        IReadOnlyList<RoundingPolicy> compatible)
-    {
-        var mean = errors.Average();
-        var maximum = errors.Max();
-        var range = Math.Max(1, engineering.Max() - engineering.Min());
-        var fit = Math.Clamp(1 - (maximum / range), 0, 1);
-        var confidence = Math.Round(fit * Math.Min(1, raw.Length / 3.0), 6);
-        return new OracleCandidate(parameterId, offset, width, type, endianness, scale, offsetConstant,
-            numerator, denominatorOffset, compatible.FirstOrDefault(RoundingPolicy.Nearest), compatible,
-            mean, maximum, confidence, raw, engineering);
-    }
-
-    private static bool Accept(IReadOnlyList<double> errors, IReadOnlyList<double> engineering)
-    {
-        var range = engineering.Max() - engineering.Min();
-        var tolerance = Math.Max(0.51, range * 0.005);
-        return errors.All(double.IsFinite) && errors.Max() <= tolerance;
-    }
-
-    private static IReadOnlyList<RoundingPolicy> CompatibleRounding(IReadOnlyList<long> actual, IReadOnlyList<double> predicted)
-    {
-        var policies = new List<RoundingPolicy>();
-        if (actual.Zip(predicted, (raw, value) => Math.Abs(raw - value) <= 1e-7).All(value => value))
-        {
-            policies.Add(RoundingPolicy.Exact);
-        }
-
-        AddIf(RoundingPolicy.Nearest, value => Math.Round(value, MidpointRounding.AwayFromZero));
-        AddIf(RoundingPolicy.ToEven, value => Math.Round(value, MidpointRounding.ToEven));
-        AddIf(RoundingPolicy.Floor, Math.Floor);
-        AddIf(RoundingPolicy.Ceiling, Math.Ceiling);
-        AddIf(RoundingPolicy.Truncate, Math.Truncate);
-        return policies;
-
-        void AddIf(RoundingPolicy policy, Func<double, double> round)
-        {
-            if (actual.Zip(predicted, (raw, value) => raw == (long)round(value)).All(value => value))
-            {
-                policies.Add(policy);
-            }
-        }
+        // Match the codec's rounding semantics directly. Snapping near-integer inputs would
+        // silently change Floor/Ceiling at precisely the boundaries the holdouts must test.
+        return OracleRoundingBehavior.Round(predicted, policy) == actual;
     }
 
     private static bool TryFitLine(double[] x, double[] y, out double slope, out double intercept)
@@ -771,8 +779,13 @@ public static class OracleAnalyzer
         var decreasing = true;
         for (var index = 1; index < pairs.Length; index++)
         {
-            increasing &= pairs[index].Raw > pairs[index - 1].Raw;
-            decreasing &= pairs[index].Raw < pairs[index - 1].Raw;
+            if (pairs[index].Engineering == pairs[index - 1].Engineering && pairs[index].Raw != pairs[index - 1].Raw)
+            {
+                return false;
+            }
+
+            increasing &= pairs[index].Raw >= pairs[index - 1].Raw;
+            decreasing &= pairs[index].Raw <= pairs[index - 1].Raw;
         }
 
         return increasing || decreasing;
@@ -832,186 +845,4 @@ public static class OracleAnalyzer
         ranges.Add(new DiffRange(start, previous - start + 1, string.Empty, string.Empty));
         return ranges;
     }
-}
-
-public sealed record CrossEditorParameterComparison(
-    string ParameterId,
-    bool SameOffset,
-    bool SameWidth,
-    bool SameEndianness,
-    bool SameConversion,
-    bool SameRounding,
-    bool HasCommonCandidate,
-    ValidationLevel ValidationLevel,
-    IReadOnlyList<string> ConflictReasons,
-    IReadOnlyList<OracleCandidate> CommonCandidates);
-
-public sealed record CrossEditorReport(
-    string FormatVersion,
-    bool SameBaseline,
-    string ProfileId,
-    string CromeTool,
-    string CromeToolVersion,
-    string HtsTool,
-    string HtsToolVersion,
-    DateTimeOffset ComparedAt,
-    IReadOnlyList<CrossEditorParameterComparison> Parameters,
-    IReadOnlyList<DiffRange> CromeAdditionalRanges,
-    IReadOnlyList<DiffRange> HtsAdditionalRanges)
-{
-    public IReadOnlyList<DiffRange> CromeObservedChecksumRanges { get; init; } = Array.Empty<DiffRange>();
-
-    public IReadOnlyList<DiffRange> HtsObservedChecksumRanges { get; init; } = Array.Empty<DiffRange>();
-
-    public bool IsCrossEditorConfirmed =>
-        SameBaseline && Parameters.Any(parameter => parameter.ValidationLevel == ValidationLevel.CrossEditorConfirmed);
-
-    public string ToJson(bool indented = true) => JsonSerializer.Serialize(this, JsonDefaults.Create(indented));
-
-    public void Save(string path, bool overwrite = false) => AtomicDocument.WriteAllText(path, ToJson(), overwrite);
-}
-
-internal static class AtomicDocument
-{
-    public static void WriteAllText(string path, string contents, bool overwrite)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(path);
-        ArgumentNullException.ThrowIfNull(contents);
-        var destination = Path.GetFullPath(path);
-        var directory = Path.GetDirectoryName(destination) ?? Directory.GetCurrentDirectory();
-        Directory.CreateDirectory(directory);
-        if (!overwrite && File.Exists(destination))
-        {
-            throw new IOException($"Document already exists: {destination}");
-        }
-
-        var temporary = Path.Combine(directory, $".{Path.GetFileName(destination)}.{Guid.NewGuid():N}.tmp");
-        try
-        {
-            using (var stream = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 4096, FileOptions.WriteThrough))
-            using (var writer = new StreamWriter(stream, new System.Text.UTF8Encoding(encoderShouldEmitUTF8Identifier: false)))
-            {
-                writer.Write(contents);
-                writer.Flush();
-                stream.Flush(flushToDisk: true);
-            }
-
-            File.Move(temporary, destination, overwrite);
-        }
-        finally
-        {
-            if (File.Exists(temporary))
-            {
-                File.Delete(temporary);
-            }
-        }
-    }
-}
-
-public static class CrossEditorComparer
-{
-    public static CrossEditorReport Compare(OracleAnalysis crome, OracleAnalysis hts, double conversionTolerance = 1e-6)
-    {
-        ArgumentNullException.ThrowIfNull(crome);
-        ArgumentNullException.ThrowIfNull(hts);
-        OracleAnalyzer.ValidateAnalysis(crome);
-        OracleAnalyzer.ValidateAnalysis(hts);
-        if (!string.Equals(crome.ProfileId, hts.ProfileId, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Oracle analyses use different ROM profiles.");
-        }
-
-        var sameBaseline = crome.BaselineHash == hts.BaselineHash;
-        var parameterIds = crome.Parameters.Select(item => item.ParameterId)
-            .Union(hts.Parameters.Select(item => item.ParameterId), StringComparer.OrdinalIgnoreCase);
-        var comparisons = new List<CrossEditorParameterComparison>();
-        foreach (var parameterId in parameterIds)
-        {
-            var left = crome.Parameters.FirstOrDefault(item => string.Equals(item.ParameterId, parameterId, StringComparison.OrdinalIgnoreCase));
-            var right = hts.Parameters.FirstOrDefault(item => string.Equals(item.ParameterId, parameterId, StringComparison.OrdinalIgnoreCase));
-            var leftCandidates = left?.Candidates ?? Array.Empty<OracleCandidate>();
-            var rightCandidates = right?.Candidates ?? Array.Empty<OracleCandidate>();
-            var common = (from first in leftCandidates
-                          from second in rightCandidates
-                          where Equivalent(first, second, conversionTolerance)
-                          select first).Distinct().ToArray();
-            var reasons = new List<string>();
-            if (!sameBaseline)
-            {
-                reasons.Add("Crome and HTS did not use the same baseline ROM hash.");
-            }
-
-            if (crome.AdditionalChangedRanges.Count > 0)
-            {
-                reasons.Add("Crome has unexplained additional changed ranges.");
-            }
-
-            if (hts.AdditionalChangedRanges.Count > 0)
-            {
-                reasons.Add("Honda Tuning Suite has unexplained additional changed ranges.");
-            }
-
-            if (left is null || right is null)
-            {
-                reasons.Add("Parameter is missing from one editor analysis.");
-            }
-            else if (common.Length == 0)
-            {
-                reasons.Add("No candidate has the same offset, width, endianness, conversion, and compatible rounding.");
-                if (AnyMatch(leftCandidates, rightCandidates, (a, b) =>
-                    a.Offset == b.Offset && a.Width == b.Width && a.Endianness == b.Endianness &&
-                    a.EncodingType == b.EncodingType && SameConversion(a, b, conversionTolerance) &&
-                    (a.CompatibleRoundingPolicies.Count != 1 || b.CompatibleRoundingPolicies.Count != 1)))
-                {
-                    reasons.Add("Rounding evidence is ambiguous; both editors must establish the same single policy.");
-                }
-            }
-
-            var sameOffset = AnyMatch(leftCandidates, rightCandidates, (a, b) => a.Offset == b.Offset);
-            var sameWidth = AnyMatch(leftCandidates, rightCandidates, (a, b) => a.Offset == b.Offset && a.Width == b.Width);
-            var sameEndian = AnyMatch(leftCandidates, rightCandidates,
-                (a, b) => a.Offset == b.Offset && a.Width == b.Width && a.Endianness == b.Endianness);
-            var sameConversion = AnyMatch(leftCandidates, rightCandidates,
-                (a, b) => a.Offset == b.Offset && a.Width == b.Width && a.Endianness == b.Endianness &&
-                    a.EncodingType == b.EncodingType && SameConversion(a, b, conversionTolerance));
-            var sameRounding = common.Length > 0;
-            var hasCommon = common.Length > 0 && sameRounding;
-            var confirmed = sameBaseline && hasCommon &&
-                crome.AdditionalChangedRanges.Count == 0 && hts.AdditionalChangedRanges.Count == 0;
-            comparisons.Add(new CrossEditorParameterComparison(parameterId, sameOffset, sameWidth, sameEndian,
-                sameConversion, sameRounding, hasCommon,
-                confirmed ? ValidationLevel.CrossEditorConfirmed : ValidationLevel.OracleObserved, reasons, common));
-        }
-
-        return new CrossEditorReport("1.0", sameBaseline, crome.ProfileId,
-            crome.ReferenceTool, crome.ToolVersion, hts.ReferenceTool, hts.ToolVersion,
-            DateTimeOffset.UtcNow, comparisons,
-            crome.AdditionalChangedRanges, hts.AdditionalChangedRanges)
-        {
-            CromeObservedChecksumRanges = crome.ObservedChecksumChangedRanges,
-            HtsObservedChecksumRanges = hts.ObservedChecksumChangedRanges,
-        };
-    }
-
-    private static bool Equivalent(OracleCandidate left, OracleCandidate right, double tolerance) =>
-        left.Offset == right.Offset && left.Width == right.Width && left.Endianness == right.Endianness &&
-        left.EncodingType == right.EncodingType && SameConversion(left, right, tolerance) &&
-        HasSameEstablishedRounding(left, right);
-
-    private static bool HasSameEstablishedRounding(OracleCandidate left, OracleCandidate right) =>
-        left.CompatibleRoundingPolicies.Count == 1 && right.CompatibleRoundingPolicies.Count == 1 &&
-        left.CompatibleRoundingPolicies[0] == right.CompatibleRoundingPolicies[0];
-
-    private static bool SameConversion(OracleCandidate left, OracleCandidate right, double tolerance) =>
-        Close(left.Scale, right.Scale, tolerance) && Close(left.OffsetConstant, right.OffsetConstant, tolerance) &&
-        Close(left.Numerator, right.Numerator, tolerance) && Close(left.DenominatorOffset, right.DenominatorOffset, tolerance);
-
-    private static bool Close(double left, double right, double tolerance) =>
-        Math.Abs(left - right) <= tolerance * Math.Max(1, Math.Max(Math.Abs(left), Math.Abs(right)));
-
-    private static bool AnyMatch(
-        IReadOnlyList<OracleCandidate> left,
-        IReadOnlyList<OracleCandidate> right,
-        Func<OracleCandidate, OracleCandidate, bool> predicate) =>
-        left.Any(first => right.Any(second => predicate(first, second)));
 }

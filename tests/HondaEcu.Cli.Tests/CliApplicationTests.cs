@@ -255,7 +255,7 @@ public sealed class CliApplicationTests
     }
 
     [Fact]
-    public async Task OracleWorkflow_AnalyzesThreeCasesExportsCandidateAndComparesEditors()
+    public async Task SyntheticOracleWorkflow_ExportsCandidateButDiscoveryCasesDoNotConfirmEditors()
     {
         using var workspace = new TemporaryWorkspace(withProfile: true);
         var baseline = workspace.CreateRom("oracle-base.dat");
@@ -272,7 +272,7 @@ public sealed class CliApplicationTests
             {
                 bytes[0x40] = 0xA0;
                 bytes[0x300] = item.Raw;
-                bytes[^1] = (byte)(item.Raw + 1); // Simulated checksum byte must be excluded.
+                bytes[^1] = (byte)(item.Raw + 1); // Excluded from discovery, but still unexplained without checksum evidence.
             });
         }
 
@@ -307,6 +307,25 @@ public sealed class CliApplicationTests
             candidate.Offset == 0x300 && candidate.EncodingType == ParameterEncodingType.LinearU8);
         Assert.DoesNotContain(candidates, candidate => candidate.Offset == 32767);
         Assert.All(candidates, candidate => Assert.Equal(ValidationLevel.OracleObserved, candidate.ValidationLevel));
+        Assert.Contains("fitScore=", analyzed.Output, StringComparison.Ordinal);
+
+        var chosen = candidates.Single(candidate => candidate.Offset == 0x300 && candidate.EncodingType == ParameterEncodingType.LinearU8);
+        var selectedPath = workspace.PathOf("selected-analysis.json");
+        var selected = await workspace.RunAsync("oracle", "analyze", "--manifest", cromeManifest,
+            "--output", selectedPath, "--select-candidate", $"rev_limit_test={chosen.CandidateId}",
+            "--selection-reason", "Synthetic review preference; not new evidence.");
+        Assert.True(selected.ExitCode == CliApplication.Success, selected.Error);
+        var selectedAnalysis = OracleAnalysis.Load(selectedPath);
+        Assert.Equal(chosen.CandidateId, selectedAnalysis.Parameters.Single().SelectedCandidateId);
+        Assert.Equal(candidates.Count, selectedAnalysis.Parameters.Single().Candidates.Count);
+        var exportedById = await workspace.RunAsync("oracle", "export-candidate", "--analysis", selectedPath,
+            "--candidate-id", chosen.CandidateId);
+        Assert.True(exportedById.ExitCode == CliApplication.Success, exportedById.Error);
+        using (var byId = JsonDocument.Parse(exportedById.Output))
+        {
+            Assert.Equal(chosen.CandidateId, byId.RootElement.GetProperty("candidateId").GetString());
+            Assert.False(byId.RootElement.GetProperty("writable").GetBoolean());
+        }
 
         var fragmentPath = workspace.PathOf("candidate.json");
         var exported = await workspace.RunAsync(
@@ -339,16 +358,99 @@ public sealed class CliApplicationTests
         var compared = await workspace.RunAsync(
             "oracle", "compare", "--crome", cromeManifest, "--hts", htsManifest, "--output", comparisonPath);
         Assert.Equal(CliApplication.Success, compared.ExitCode);
-        Assert.Contains("Cross-editor confirmed candidate: True", compared.Output, StringComparison.Ordinal);
+        // Discovery-only fits, alternative widths, and unknown no-op transformations are not confirmation evidence.
+        Assert.Contains("All requested parameters confirmed: False", compared.Output, StringComparison.Ordinal);
         using var comparison = JsonDocument.Parse(File.ReadAllText(comparisonPath));
         Assert.True(comparison.RootElement.GetProperty("sameBaseline").GetBoolean());
-        Assert.True(comparison.RootElement.GetProperty("isCrossEditorConfirmed").GetBoolean());
+        Assert.False(comparison.RootElement.GetProperty("isCrossEditorConfirmed").GetBoolean());
 
         var wrongRole = await workspace.RunAsync(
             "oracle", "compare", "--crome", htsManifest, "--hts", htsManifest,
             "--output", workspace.PathOf("wrong-role.json"));
         Assert.Equal(CliApplication.OperationError, wrongRole.ExitCode);
         Assert.Contains("not crome", wrongRole.Error, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task OraclePreflight_ReportsMissingPrivateFilesWithoutCreatingRoms()
+    {
+        using var workspace = new TemporaryWorkspace(withProfile: true);
+        var baseline = workspace.CreateRom("preflight-base.dat");
+        var noOp = workspace.CreateRom("preflight-noop.dat");
+        var manifest = OracleManifestService.Create("Crome", "synthetic-preflight-1", TemporaryWorkspace.ProfileId,
+            baseline, noOp, pluginsDisabled: true);
+        var manifestPath = workspace.PathOf("preflight-manifest.json");
+        OracleManifestService.Save(manifest, manifestPath);
+        File.Delete(baseline);
+        File.Delete(noOp);
+        var output = workspace.PathOf("preflight.json");
+
+        var result = await workspace.RunAsync("oracle", "preflight", "--manifest", manifestPath, "--output", output);
+
+        Assert.True(result.ExitCode == CliApplication.Success, result.Error);
+        Assert.True(File.Exists(output));
+        Assert.Contains("collection-incomplete", File.ReadAllText(output), StringComparison.Ordinal);
+        Assert.False(File.Exists(baseline));
+        Assert.False(File.Exists(noOp));
+    }
+
+    [Fact]
+    public async Task OracleCollection_PreservesEditionNoOpChecksAndObservationRole()
+    {
+        using var workspace = new TemporaryWorkspace(withProfile: true);
+        var baseline = workspace.CreateRom("collection-base.dat");
+        var noOp = workspace.CreateRom("collection-noop.dat");
+        var independent = workspace.CreateRom("collection-independent-noop.dat");
+        var resaved = workspace.CreateRom("collection-resaved-noop.dat");
+        var casePath = workspace.CreateRom("collection-holdout.dat", bytes => bytes[0x300] = 40);
+        var manifestPath = workspace.PathOf("collection.json");
+
+        var created = await workspace.RunAsync("oracle", "create-manifest", "--tool", "Crome",
+            "--tool-version", "synthetic-test-1", "--tool-edition", "synthetic-unit-test",
+            "--profile", TemporaryWorkspace.ProfileId, "--baseline", baseline, "--noop", noOp,
+            "--independent-noop", independent, "--resaved-noop", resaved, "--plugins-disabled", "--output", manifestPath,
+            "--rounding-domain", "synthetic-rpm=0:255", "--domain-evidence", "Synthetic continuous raw-input domain; not Honda evidence.");
+        Assert.True(created.ExitCode == CliApplication.Success, created.Error);
+        var added = await workspace.RunAsync("oracle", "add-case", "--manifest", manifestPath,
+            "--parameter", "synthetic-rpm", "--value", "401", "--displayed-value", "400",
+            "--rom", casePath, "--role", "holdout", "--observation-id", "independent-check-1");
+        Assert.True(added.ExitCode == CliApplication.Success, added.Error);
+
+        var manifest = OracleManifest.Load(manifestPath);
+        Assert.Equal("2.0", manifest.FormatVersion);
+        Assert.Equal("synthetic-unit-test", manifest.ToolEdition);
+        Assert.Equal(255, manifest.RoundingDomains["synthetic-rpm"].Maximum);
+        Assert.Equal(independent, manifest.IndependentNoOp!.RomPath);
+        Assert.Equal(resaved, manifest.ResavedNoOp!.RomPath);
+        var observation = Assert.Single(manifest.Cases);
+        Assert.Equal(OracleObservationRole.Holdout, observation.Role);
+        Assert.Equal("independent-check-1", observation.ObservationId);
+        Assert.Equal(401, observation.EngineeringValue);
+        Assert.Equal(400, observation.DisplayedValue);
+
+        var preflightPath = workspace.PathOf("collection-preflight.json");
+        var preflight = await workspace.RunAsync("oracle", "preflight", "--manifest", manifestPath, "--output", preflightPath);
+        Assert.True(preflight.ExitCode == CliApplication.Success, preflight.Error);
+        Assert.True(File.Exists(preflightPath));
+        Assert.Equal(RomImage.Load(casePath).Hash, observation.RomHash);
+    }
+
+    [Fact]
+    public async Task OraclePreflight_RejectsOutputAtRecordedMissingRomPath()
+    {
+        using var workspace = new TemporaryWorkspace(withProfile: true);
+        var baseline = workspace.CreateRom("protected-base.dat");
+        var noOp = workspace.CreateRom("protected-noop.dat");
+        var manifest = OracleManifestService.Create("Crome", "synthetic-1", TemporaryWorkspace.ProfileId,
+            baseline, noOp, pluginsDisabled: true);
+        var manifestPath = workspace.PathOf("protected-manifest.json");
+        OracleManifestService.Save(manifest, manifestPath);
+        File.Delete(baseline);
+
+        var result = await workspace.RunAsync("oracle", "preflight", "--manifest", manifestPath, "--output", baseline);
+
+        Assert.Equal(CliApplication.UsageError, result.ExitCode);
+        Assert.False(File.Exists(baseline));
     }
 
     private sealed class TemporaryWorkspace : IDisposable

@@ -72,7 +72,7 @@ public sealed partial class CliApplication
     }
 
     private const string HelpText = """
-        HondaEcu M0 ROM inspection and validation harness
+        HondaEcu M0.1 ROM inspection and oracle validation harness
 
         Usage: hondaecu <command> [arguments] [options]
 
@@ -86,7 +86,7 @@ public sealed partial class CliApplication
                     [--allow-unverified] [--confirm-profile]
           roundtrip <rom> --profile <id>        Prove decode/encode byte identity
           verify <rom> --profile <id> --patch-report <json>
-          oracle create-manifest|add-case|analyze|compare|export-candidate
+          oracle create-manifest|add-case|analyze|compare|export-candidate|preflight
 
         ROM outputs are for PC inspection only unless separately validated.
         Exit codes: 0 success, 1 operation error, 2 usage error, 3 verification failure.

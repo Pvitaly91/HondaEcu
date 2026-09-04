@@ -1,0 +1,76 @@
+{
+  "formatVersion": "2.0",
+  "referenceTool": "<REQUIRED: Crome or Honda Tuning Suite, as declared by the collector>",
+  "toolVersion": "<REQUIRED: exact locally used version>",
+  "plugins": [],
+  "pluginsDisabled": false,
+  "profileId": "p28-304",
+  "baselinePath": "<GENERATED LOCALLY BY oracle create-manifest>",
+  "baselineHash": {
+    "sha256": "<GENERATED LOCALLY; DO NOT INVENT>",
+    "crc32": "<GENERATED LOCALLY; DO NOT INVENT>"
+  },
+  "noOpPath": "<GENERATED LOCALLY BY oracle create-manifest>",
+  "noOpHash": {
+    "sha256": "<GENERATED LOCALLY; DO NOT INVENT>",
+    "crc32": "<GENERATED LOCALLY; DO NOT INVENT>"
+  },
+  "createdAt": "<GENERATED LOCALLY BY oracle create-manifest>",
+  "noOpNormalizationRanges": [],
+  "cases": [
+    {
+      "parameterId": "<REQUIRED: discovery parameter id>",
+      "engineeringValue": "<REQUIRED NUMBER: requested editor value>",
+      "romPath": "<GENERATED LOCALLY BY oracle add-case>",
+      "romHash": {
+        "sha256": "<GENERATED LOCALLY; DO NOT INVENT>",
+        "crc32": "<GENERATED LOCALLY; DO NOT INVENT>"
+      },
+      "createdAt": "<GENERATED LOCALLY BY oracle add-case>",
+      "diffRanges": [],
+      "userNotes": "<REQUIRED: independent/repeat provenance and collection notes>",
+      "displayedValue": "<REQUIRED NUMBER: value after reopening>",
+      "role": "training",
+      "observationId": "<REQUIRED: unique stable observation id>"
+    },
+    {
+      "parameterId": "<SAME PARAMETER: independent validation case>",
+      "engineeringValue": "<REQUIRED NUMBER: requested holdout value>",
+      "romPath": "<GENERATED LOCALLY BY oracle add-case>",
+      "romHash": {
+        "sha256": "<GENERATED LOCALLY; DO NOT INVENT>",
+        "crc32": "<GENERATED LOCALLY; DO NOT INVENT>"
+      },
+      "createdAt": "<GENERATED LOCALLY BY oracle add-case>",
+      "diffRanges": [],
+      "userNotes": "<REQUIRED: confirm this case was withheld from fitting and selection>",
+      "displayedValue": "<REQUIRED NUMBER: value after reopening>",
+      "role": "holdout",
+      "observationId": "<REQUIRED: unique stable holdout id>"
+    }
+  ],
+  "userNotes": "<REQUIRED: collection scope and limitations; template is not evidence>",
+  "toolEdition": "<REQUIRED: exact edition or variant>",
+  "independentNoOp": {
+    "romPath": "<GENERATED LOCALLY BY oracle create-manifest>",
+    "romHash": {
+      "sha256": "<GENERATED LOCALLY; DO NOT INVENT>",
+      "crc32": "<GENERATED LOCALLY; DO NOT INVENT>"
+    }
+  },
+  "resavedNoOp": {
+    "romPath": "<GENERATED LOCALLY BY oracle create-manifest>",
+    "romHash": {
+      "sha256": "<GENERATED LOCALLY; DO NOT INVENT>",
+      "crc32": "<GENERATED LOCALLY; DO NOT INVENT>"
+    }
+  },
+  "transformationProfileId": null,
+  "roundingDomains": {
+    "<PARAMETER ID; OMIT ENTRY WHEN DOMAIN IS NOT PROVED>": {
+      "minimum": "<REQUIRED FINITE NUMBER: continuous unrounded raw-input minimum>",
+      "maximum": "<REQUIRED FINITE NUMBER: continuous unrounded raw-input maximum>",
+      "documentation": "<REQUIRED: independent evidence and exact scope; never sample extrema>"
+    }
+  }
+}
