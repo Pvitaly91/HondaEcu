@@ -324,7 +324,7 @@ public sealed class ProfileAndCodecTests
         return directory?.FullName ?? throw new DirectoryNotFoundException("Repository root not found.");
     }
 
-    private const string ValidProfileJson = """
+    private static readonly string ValidProfileJson = """
         {
           "schemaVersion": "1.0",
           "id": "synthetic-json-profile",
@@ -352,5 +352,5 @@ public sealed class ProfileAndCodecTests
           "checksum": { "algorithmId": "unknown", "status": "unknown", "offset": 0, "length": 0,
             "evidenceLevel": "public-documentation", "excludedRegions": [], "notes": "No algorithm" }
         }
-        """;
+        """.ReplaceLineEndings("\n");
 }
