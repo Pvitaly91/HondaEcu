@@ -1,0 +1,36 @@
+# Build outputs
+**/bin/
+**/obj/
+TestResults/
+coverage/
+.tmp/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+.idea/
+
+# Local ROMs, editor outputs, reports, and reverse-engineering artifacts
+private/roms/*
+private/oracle/*
+private/reports/*
+!private/roms/.gitkeep
+!private/oracle/.gitkeep
+!private/reports/.gitkeep
+*.bin
+*.rom
+*.hex
+*.eep
+*.dump
+*.gzf
+*.rep
+*.gpr
+*.gpr.bak
+*.db
+*.trace
+
+# OS files
+.DS_Store
+Thumbs.db

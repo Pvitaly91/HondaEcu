@@ -1,0 +1,575 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:hondaecu:schema:rom-profile:1.0",
+  "title": "HondaEcu ROM profile",
+  "description": "Declarative, non-executable ROM profile contract for HondaEcu M0.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "displayName",
+    "description",
+    "status",
+    "format",
+    "identity",
+    "revisionScope",
+    "sources",
+    "parameters",
+    "tables",
+    "checksum"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "id": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "displayName": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "description": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "status": {
+      "enum": [
+        "experimental"
+      ]
+    },
+    "format": {
+      "$ref": "#/$defs/format"
+    },
+    "identity": {
+      "$ref": "#/$defs/identity"
+    },
+    "revisionScope": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidenceReference"
+      }
+    },
+    "parameters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scalarParameter"
+      }
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/tableParameter"
+      }
+    },
+    "checksum": {
+      "$ref": "#/$defs/checksum"
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "format": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "exactSize",
+        "headerBytes",
+        "paddingAllowed",
+        "truncationAllowed"
+      ],
+      "properties": {
+        "kind": {
+          "const": "raw-binary"
+        },
+        "exactSize": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "headerBytes": {
+          "const": 0
+        },
+        "paddingAllowed": {
+          "const": false
+        },
+        "truncationAllowed": {
+          "const": false
+        }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hashes",
+        "signatures",
+        "requiresExplicitConfirmation"
+      ],
+      "properties": {
+        "hashes": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9A-Fa-f]{64}$"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "sha256"
+                ],
+                "properties": {
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9A-Fa-f]{64}$"
+                  },
+                  "crc32": {
+                    "type": "string",
+                    "pattern": "^[0-9A-Fa-f]{8}$"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "signatures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/signature"
+          }
+        },
+        "requiresExplicitConfirmation": {
+          "type": "boolean"
+        }
+      }
+    },
+    "signature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "offset",
+        "hexBytes"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hexBytes": {
+          "type": "string",
+          "pattern": "^(?:[0-9A-Fa-f]{2}[ \\t:-]*)+$"
+        },
+        "mask": {
+          "type": "string",
+          "pattern": "^(?:[0-9A-Fa-f]{2}[ \\t:-]*)+$"
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    },
+    "evidenceReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "url",
+        "accessedOn"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "title": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "commitSha": {
+          "type": "string",
+          "pattern": "^[0-9A-Fa-f]{40}$"
+        },
+        "accessedOn": {
+          "type": "string",
+          "format": "date"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
+    "encoding": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/encodingName"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "$ref": "#/$defs/encodingName"
+            },
+            "scale": {
+              "type": "number"
+            },
+            "offset": {
+              "type": "number"
+            },
+            "numerator": {
+              "type": "number"
+            },
+            "denominatorOffset": {
+              "type": "number"
+            },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "encodingName": {
+      "enum": [
+        "raw-u8",
+        "raw-s8",
+        "raw-u16-little-endian",
+        "raw-u16-big-endian",
+        "linear-u8",
+        "linear-u16",
+        "inverse-u8",
+        "inverse-u16",
+        "lookup-table",
+        "unsupported"
+      ]
+    },
+    "numberRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "minimum",
+        "maximum"
+      ],
+      "properties": {
+        "minimum": {
+          "type": "number"
+        },
+        "maximum": {
+          "type": "number"
+        }
+      }
+    },
+    "validationLevel": {
+      "enum": [
+        "public-documentation",
+        "oracle-observed",
+        "crome-observed",
+        "hts-observed",
+        "cross-editor-confirmed",
+        "static-analysis-confirmed",
+        "emulator-observed",
+        "bench-confirmed",
+        "vehicle-confirmed",
+        "disproved"
+      ]
+    },
+    "roundingPolicy": {
+      "enum": [
+        "exact",
+        "nearest",
+        "to-even",
+        "floor",
+        "ceiling",
+        "truncate"
+      ]
+    },
+    "parameterStatus": {
+      "enum": [
+        "candidate",
+        "documented",
+        "experimental",
+        "verified"
+      ]
+    },
+    "scalarParameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "displayName",
+        "description",
+        "offset",
+        "width",
+        "endianness",
+        "encoding",
+        "units",
+        "rawRange",
+        "engineeringRange",
+        "roundingPolicy",
+        "writable",
+        "validationLevel",
+        "revisionScope",
+        "sources",
+        "notes",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "displayName": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "description": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endianness": {
+          "enum": [
+            "not-applicable",
+            "little",
+            "big"
+          ]
+        },
+        "encoding": {
+          "$ref": "#/$defs/encoding"
+        },
+        "units": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "rawRange": {
+          "$ref": "#/$defs/numberRange"
+        },
+        "engineeringRange": {
+          "$ref": "#/$defs/numberRange"
+        },
+        "roundingPolicy": {
+          "$ref": "#/$defs/roundingPolicy"
+        },
+        "writable": {
+          "type": "boolean"
+        },
+        "validationLevel": {
+          "$ref": "#/$defs/validationLevel"
+        },
+        "revisionScope": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "notes": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "status": {
+          "$ref": "#/$defs/parameterStatus"
+        }
+      }
+    },
+    "tableParameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "displayName",
+        "description",
+        "offset",
+        "width",
+        "rows",
+        "columns",
+        "cellWidth",
+        "endianness",
+        "encoding",
+        "units",
+        "rawRange",
+        "engineeringRange",
+        "roundingPolicy",
+        "writable",
+        "validationLevel",
+        "revisionScope",
+        "sources",
+        "notes",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "displayName": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "description": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "cellWidth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endianness": {
+          "enum": [
+            "not-applicable",
+            "little",
+            "big"
+          ]
+        },
+        "encoding": {
+          "$ref": "#/$defs/encoding"
+        },
+        "units": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "rawRange": {
+          "$ref": "#/$defs/numberRange"
+        },
+        "engineeringRange": {
+          "$ref": "#/$defs/numberRange"
+        },
+        "roundingPolicy": {
+          "$ref": "#/$defs/roundingPolicy"
+        },
+        "writable": {
+          "type": "boolean"
+        },
+        "validationLevel": {
+          "$ref": "#/$defs/validationLevel"
+        },
+        "revisionScope": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "notes": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "status": {
+          "$ref": "#/$defs/parameterStatus"
+        }
+      }
+    },
+    "byteRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "offset",
+        "length"
+      ],
+      "properties": {
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "checksum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithmId",
+        "status",
+        "offset",
+        "length",
+        "evidenceLevel",
+        "excludedRegions",
+        "notes"
+      ],
+      "properties": {
+        "algorithmId": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "status": {
+          "enum": [
+            "unknown",
+            "valid",
+            "invalid",
+            "not-applicable"
+          ]
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidenceLevel": {
+          "$ref": "#/$defs/validationLevel"
+        },
+        "excludedRegions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/byteRange"
+          }
+        },
+        "notes": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    }
+  }
+}

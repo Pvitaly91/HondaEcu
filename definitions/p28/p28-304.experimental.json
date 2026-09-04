@@ -1,0 +1,438 @@
+{
+  "$schema": "../schemas/rom-profile.schema.json",
+  "schemaVersion": "1.0",
+  "id": "p28-304",
+  "displayName": "Honda P28-304 (experimental research profile)",
+  "description": "Read-only research leads transcribed from the pinned public PGMFI P28 map. No stock-ROM hash, writable calibration, or checksum algorithm is asserted.",
+  "status": "experimental",
+  "format": {
+    "kind": "raw-binary",
+    "exactSize": 32768,
+    "headerBytes": 0,
+    "paddingAllowed": false,
+    "truncationAllowed": false
+  },
+  "identity": {
+    "hashes": [],
+    "signatures": [],
+    "requiresExplicitConfirmation": true
+  },
+  "revisionScope": "Only the code base called 304stock.bin by the cited PGMFI page; exact market, transmission, label, and baseline hash are unresolved.",
+  "sources": [
+    {
+      "id": "pgmfi-p28",
+      "title": "Archived PGMFI Library.P28 ROM/RAM map",
+      "url": "https://github.com/hondabase/files-archive/blob/06d2eb0d9b37c6b1bd001254203790751457b4a7/pgmfiorg/twiki/bin/view/Library/P28.html",
+      "commitSha": "06d2eb0d9b37c6b1bd001254203790751457b4a7",
+      "accessedOn": "2026-09-04",
+      "scope": "The page explicitly says 304stock.bin is assumed for the ROM map.",
+      "notes": "Community documentation (TWiki r1.8, 2005-07-26), not an OEM specification; no baseline hash or reproducible test record is published."
+    },
+    {
+      "id": "pgmfi-rpm8-low-cam",
+      "title": "Archived PGMFI OBD1 8-bit low-cam RPM conversion discussion",
+      "url": "https://github.com/hondabase/files-archive/blob/06d2eb0d9b37c6b1bd001254203790751457b4a7/pgmfiorg/twiki/bin/view/Library/OBD1_8bitLowCamRPM.html",
+      "commitSha": "06d2eb0d9b37c6b1bd001254203790751457b4a7",
+      "accessedOn": "2026-09-04",
+      "scope": "Linked by the P28 page from the 0x6543 VTEC crossover lead.",
+      "notes": "Presents non-identical integer formulations and an explicit accuracy dispute; it is not an implementable encoding contract."
+    },
+    {
+      "id": "pgmfi-vtec-vss-p28",
+      "title": "Archived PGMFI DisableVtecVSSCheckP28 discussion",
+      "url": "https://github.com/hondabase/files-archive/blob/06d2eb0d9b37c6b1bd001254203790751457b4a7/pgmfiorg/twiki/bin/view/Library/DisableVtecVSSCheckP28.html",
+      "commitSha": "06d2eb0d9b37c6b1bd001254203790751457b4a7",
+      "accessedOn": "2026-09-04",
+      "scope": "Community control-flow notes linked from the P28 VTEC VSS-check row.",
+      "notes": "Research lead only; not an editor, static-analysis, emulator, bench, or vehicle validation record."
+    }
+  ],
+  "parameters": [
+    {
+      "id": "vtec_enable_candidate",
+      "displayName": "VTEC enable byte (candidate)",
+      "description": "The PGMFI map labels ROM offset 0x60E6 as a one-byte VTEC enable and claims 0xFF enables while 0x00 disables.",
+      "offset": 24806,
+      "width": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "state (claimed)",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28"
+      ],
+      "notes": "Hex offset 0x60E6. Engineering range is deliberately unbounded because no numeric engineering conversion is asserted. Confirm every code reference and controlled editor cases before enabling any write.",
+      "status": "candidate"
+    },
+    {
+      "id": "vtec_coolant_check_candidate",
+      "displayName": "VTEC coolant check byte (candidate)",
+      "description": "The PGMFI map labels ROM offset 0x1292 as a one-byte VTEC coolant check and claims 0x44 enables while 0xFF disables.",
+      "offset": 4754,
+      "width": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "unknown",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28",
+        "pgmfi-vtec-vss-p28"
+      ],
+      "notes": "Hex offset 0x1292. The linked listing places 0x44 as an immediate operand in an ECT comparison, so this may be a threshold-byte bypass rather than a Boolean setting. No conversion is implemented.",
+      "status": "candidate"
+    },
+    {
+      "id": "vtec_vss_check_candidate",
+      "displayName": "VTEC VSS check byte (candidate)",
+      "description": "The PGMFI map labels ROM offset 0x60FA as a one-byte VTEC VSS check and claims 0x00 enables while 0xFF disables.",
+      "offset": 24826,
+      "width": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "state (claimed)",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28",
+        "pgmfi-vtec-vss-p28"
+      ],
+      "notes": "Hex offset 0x60FA. A bypass lead is not a safety recommendation. Confirm complete control-flow effects and editor normalization before any write is considered.",
+      "status": "candidate"
+    },
+    {
+      "id": "vtec_crossover_rpm_candidate",
+      "displayName": "VTEC crossover RPM byte (candidate)",
+      "description": "The PGMFI map labels 0x6542 through 0x6549 as crossover bytes and tentatively singles out 0x6543.",
+      "offset": 25923,
+      "width": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "rpm (claimed)",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28",
+        "pgmfi-rpm8-low-cam"
+      ],
+      "notes": "Hex offset 0x6543. The linked conversion page contains conflicting integer formulations and an explicit accuracy dispute. Resolve with three-value Crome/HTS cases, rounding analysis, and static references; do not treat nearby 0x6542-0x6549 bytes as interchangeable.",
+      "status": "candidate"
+    }
+  ],
+  "tables": [
+    {
+      "id": "low_cam_map_axis_candidate",
+      "displayName": "Low-cam MAP axis region (candidate)",
+      "description": "The PGMFI map labels 10 bytes at 0x7000 as the low-cam mBar scale.",
+      "offset": 28672,
+      "width": 10,
+      "rows": 1,
+      "columns": 10,
+      "cellWidth": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "mbar (label only)",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28"
+      ],
+      "notes": "Hex offset 0x7000. The 1x10 representation is an opaque byte vector matching the published byte count; it does not assert table geometry, ordering, or a pressure conversion.",
+      "status": "candidate"
+    },
+    {
+      "id": "high_cam_map_axis_candidate",
+      "displayName": "High-cam MAP axis region (candidate)",
+      "description": "The PGMFI map labels 10 bytes at 0x700A as the high-cam mBar scale.",
+      "offset": 28682,
+      "width": 10,
+      "rows": 1,
+      "columns": 10,
+      "cellWidth": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "mbar (label only)",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28"
+      ],
+      "notes": "Hex offset 0x700A. The 1x10 representation is an opaque byte vector matching the published byte count; it does not assert table geometry, ordering, or a pressure conversion.",
+      "status": "candidate"
+    },
+    {
+      "id": "low_cam_rpm_axis_candidate",
+      "displayName": "Low-cam RPM axis region (candidate)",
+      "description": "The PGMFI map labels 20 bytes at 0x7014 as the low-cam RPM scale.",
+      "offset": 28692,
+      "width": 20,
+      "rows": 1,
+      "columns": 20,
+      "cellWidth": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "rpm (label only)",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28"
+      ],
+      "notes": "Hex offset 0x7014. The 1x20 representation is an opaque byte vector matching the published byte count; no per-element RPM conversion or ordering is asserted.",
+      "status": "candidate"
+    },
+    {
+      "id": "high_cam_rpm_axis_candidate",
+      "displayName": "High-cam RPM axis region (candidate)",
+      "description": "The PGMFI map labels 20 bytes at 0x7028 as the high-cam RPM scale.",
+      "offset": 28712,
+      "width": 20,
+      "rows": 1,
+      "columns": 20,
+      "cellWidth": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "rpm (label only)",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28"
+      ],
+      "notes": "Hex offset 0x7028. The 1x20 representation is an opaque byte vector matching the published byte count; no per-element RPM conversion or ordering is asserted.",
+      "status": "candidate"
+    },
+    {
+      "id": "low_cam_fuel_table_candidate",
+      "displayName": "Low-cam fuel table region (candidate)",
+      "description": "The PGMFI map labels the inclusive 200-byte range 0x7050-0x7117 as the low-cam fuel table.",
+      "offset": 28752,
+      "width": 200,
+      "rows": 1,
+      "columns": 200,
+      "cellWidth": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "unknown",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28"
+      ],
+      "notes": "The 1x200 representation is an opaque byte vector matching the published region length. It does not assert a 2-D shape, axis order, cell conversion, or fuel units.",
+      "status": "candidate"
+    },
+    {
+      "id": "high_cam_fuel_table_candidate",
+      "displayName": "High-cam fuel table region (candidate)",
+      "description": "The PGMFI map labels the inclusive 200-byte range 0x7122-0x71E9 as the high-cam fuel table.",
+      "offset": 28962,
+      "width": 200,
+      "rows": 1,
+      "columns": 200,
+      "cellWidth": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "unknown",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28"
+      ],
+      "notes": "The 1x200 representation is an opaque byte vector matching the published region length. It does not assert a 2-D shape, axis order, cell conversion, or fuel units.",
+      "status": "candidate"
+    },
+    {
+      "id": "low_cam_ignition_table_candidate",
+      "displayName": "Low-cam ignition table region (candidate)",
+      "description": "The PGMFI map labels the inclusive 200-byte range 0x72E4-0x73AB as the low-cam timing table.",
+      "offset": 29412,
+      "width": 200,
+      "rows": 1,
+      "columns": 200,
+      "cellWidth": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "unknown",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28"
+      ],
+      "notes": "The 1x200 representation is an opaque byte vector matching the published region length. It does not assert a 2-D shape, signedness, timing units/convention, axes, or cell conversion.",
+      "status": "candidate"
+    },
+    {
+      "id": "high_cam_ignition_table_candidate",
+      "displayName": "High-cam ignition table region (candidate)",
+      "description": "The PGMFI map labels the inclusive 200-byte range 0x73AC-0x7473 as the high-cam timing table.",
+      "offset": 29612,
+      "width": 200,
+      "rows": 1,
+      "columns": 200,
+      "cellWidth": 1,
+      "endianness": "not-applicable",
+      "encoding": {
+        "type": "unsupported"
+      },
+      "units": "unknown",
+      "rawRange": {
+        "minimum": 0,
+        "maximum": 255
+      },
+      "engineeringRange": {
+        "minimum": -1.7976931348623157e+308,
+        "maximum": 1.7976931348623157e+308
+      },
+      "roundingPolicy": "exact",
+      "writable": false,
+      "validationLevel": "public-documentation",
+      "revisionScope": "PGMFI P28 map assuming 304stock.bin only; no baseline hash established.",
+      "sources": [
+        "pgmfi-p28"
+      ],
+      "notes": "The 1x200 representation is an opaque byte vector matching the published region length. It does not assert a 2-D shape, signedness, timing units/convention, axes, or cell conversion.",
+      "status": "candidate"
+    }
+  ],
+  "checksum": {
+    "algorithmId": "unknown",
+    "status": "unknown",
+    "offset": 0,
+    "length": 0,
+    "evidenceLevel": "public-documentation",
+    "excludedRegions": [],
+    "notes": "The PGMFI map only labels a six-byte checksum jump routine at 0x2BAD and suggests a bypass patch. It does not identify stored checksum bytes, covered ranges, or an algorithm. HondaEcu must not apply that bypass; output remains not flash-ready."
+  }
+}

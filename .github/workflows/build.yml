@@ -1,0 +1,46 @@
+name: build
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Reject tracked ROM and reverse-engineering artifacts
+        shell: pwsh
+        run: |
+          $forbidden = @(git ls-files -- '*.bin' '*.rom' '*.hex' '*.eep' '*.dump' '*.gzf' '*.rep' '*.gpr' '*.gpr.bak' '*.db' '*.trace')
+          if ($forbidden.Count -gt 0) {
+            throw "Forbidden public artifacts are tracked: $($forbidden -join ', ')"
+          }
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build (Release)
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test (Release)
+        run: dotnet test --configuration Release --no-build
+
+      - name: Verify formatting
+        run: dotnet format --verify-no-changes
