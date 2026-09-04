@@ -1,5 +1,7 @@
 namespace HondaEcu.Core;
 
+public sealed record P28ThresholdSlot(string Id, int Context, int Pair, bool PriorState, int Offset);
+
 public sealed record ThresholdTransition(
     int Context,
     int Pair,
@@ -20,6 +22,25 @@ public static class P28ThresholdLogic
 
     // Neutral context numbering follows ascending ROM location, NOT selector-bit value.
     public static int SelectContext(bool data011EBit3) => data011EBit3 ? 0 : 1;
+
+    public static string GetSlotId(int context, int pair, bool priorState)
+    {
+        _ = ThresholdOffset(context, pair, priorState);
+        return $"context_{context}.pair_{pair}.state_{(priorState ? 1 : 0)}_threshold";
+    }
+
+    public static IReadOnlyList<P28ThresholdSlot> GetSlots() =>
+        Array.AsReadOnly(Enumerable.Range(0, 2).SelectMany(context =>
+            Enumerable.Range(0, 2).SelectMany(pair => new[] { true, false }.Select(prior =>
+                new P28ThresholdSlot(GetSlotId(context, pair, prior), context, pair, prior,
+                    ThresholdOffset(context, pair, prior))))).ToArray());
+
+    public static P28ThresholdSlot ResolveSlot(string slotId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(slotId);
+        return GetSlots().SingleOrDefault(slot => string.Equals(slot.Id, slotId, StringComparison.Ordinal)) ??
+            throw new ArgumentException("Unknown neutral P28 threshold slot.", nameof(slotId));
+    }
 
     public static int ThresholdOffset(int context, int pair, bool priorState)
     {

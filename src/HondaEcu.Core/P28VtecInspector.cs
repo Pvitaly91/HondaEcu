@@ -446,7 +446,7 @@ public static class P28VtecInspector
                 {
                     var offset = P28ThresholdLogic.ThresholdOffset(context, pair, priorState);
                     slots.Add(new P28ThresholdSlotReport(
-                        $"context_{context}.pair_{pair}.state_{(priorState ? 1 : 0)}_threshold",
+                        P28ThresholdLogic.GetSlotId(context, pair, priorState),
                         context,
                         pair,
                         priorState,

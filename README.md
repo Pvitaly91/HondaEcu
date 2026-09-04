@@ -33,6 +33,8 @@ No real Crome or HTS golden files are present in the repository; the tracked `pr
 
 M1b adds a [read-only VTEC threshold inspector and scoped compact-code research model](docs/M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). A private exact-byte/profile binding is required for candidate-specific interpretation; `--confirm-profile` alone cannot identify a baseline. Established raw edge paths are separated from an unresolved normal-path instruction and its explicitly conditional mathematical model. Physical RPM remains unavailable. This does not complete M1 or enable real P28 writes.
 
+M1c adds [one-slot PC-only raw threshold plan/apply/verify and derived-file lineage inspection](docs/M1C_RAW_THRESHOLD_EDITING.md). The targeted ADD investigation did not promote the compact model. Research edits require the original private binding and create only new private files; they are not RPM settings, checksum-valid ROMs, or ECU-ready outputs. Public P28 definitions remain non-writable.
+
 ## Build and test
 
 Install a .NET 8 SDK, then run:

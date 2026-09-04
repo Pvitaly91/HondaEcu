@@ -90,6 +90,15 @@ public sealed partial class CliApplication
           oracle create-manifest|add-case|analyze|compare|export-candidate|preflight
           research p28-vtec inspect <rom> --profile p28-304 --output <private-json>
                     [--baseline-binding <private-json>] [--confirm-profile]
+                    [--baseline <original-rom> --plan <private-json> --patch-report <private-json>]
+          research p28-vtec plan <rom> --profile p28-304 --confirm-profile
+                    --baseline-binding <private-json> --slot <slot-id> --raw-value <0..255>
+                    --output <private-plan.json>
+          research p28-vtec apply <baseline> --plan <private-json> --baseline-binding <private-json>
+                    --confirm-pc-only --output <new-private-rom> --report <private-json>
+                    [--profile p28-304] [--confirm-profile]
+          research p28-vtec verify <output> --baseline <original> --baseline-binding <private-json>
+                    --plan <private-json> --report <private-json> [--output <private-json>]
 
         ROM outputs are for PC inspection only unless separately validated.
         Exit codes: 0 success, 1 operation error, 2 usage error, 3 verification failure.
