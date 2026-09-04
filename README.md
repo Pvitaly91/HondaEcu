@@ -29,7 +29,7 @@ M0.1 adds stricter evidence accounting:
 - editor version, edition/variant, options, and file hashes are provenance declared by the user, not proof that a named editor produced a file;
 - `oracle preflight` reports whether the private collection is ready for analysis without modifying a ROM.
 
-No real Crome or HTS golden files are present in the repository; the tracked `private/` directories contain only `.gitkeep` placeholders. The current M1 data status is **`AwaitingUserFiles`**. Synthetic tests exercise analyzer rules only; they do not prove Crome, HTS, P28-304, checksum, emulator, bench, or vehicle behavior. M0.1 does not implement M1 or emulator integration.
+No real Crome or HTS golden files are present in the repository; the tracked `private/` directories contain only `.gitkeep` placeholders. M1 still awaits real editor observations. In M1a, one archive baseline candidate was obtained privately and a partial VTEC static investigation was performed; native revision identity and editor import/no-op behavior remain unverified. See [M1a real-ROM findings](docs/M1A_REAL_ROM_FINDINGS.md). Synthetic tests exercise analyzer rules only; they do not prove editor or ECU behavior. Neither M0.1 nor M1a completes M1 or implements an emulator.
 
 ## Build and test
 
