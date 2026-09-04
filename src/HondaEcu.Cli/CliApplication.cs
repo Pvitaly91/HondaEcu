@@ -46,6 +46,7 @@ public sealed partial class CliApplication
                 "roundtrip" => await RoundtripAsync(args[1..], cancellationToken).ConfigureAwait(false),
                 "verify" => await VerifyAsync(args[1..], cancellationToken).ConfigureAwait(false),
                 "oracle" => await OracleAsync(args[1..], cancellationToken).ConfigureAwait(false),
+                "research" => await ResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
                 _ => throw new CliUsageException($"Unknown command '{args[0]}'. Run 'hondaecu help' for usage."),
             };
         }
@@ -87,6 +88,8 @@ public sealed partial class CliApplication
           roundtrip <rom> --profile <id>        Prove decode/encode byte identity
           verify <rom> --profile <id> --patch-report <json>
           oracle create-manifest|add-case|analyze|compare|export-candidate|preflight
+          research p28-vtec inspect <rom> --profile p28-304 --output <private-json>
+                    [--baseline-binding <private-json>] [--confirm-profile]
 
         ROM outputs are for PC inspection only unless separately validated.
         Exit codes: 0 success, 1 operation error, 2 usage error, 3 verification failure.

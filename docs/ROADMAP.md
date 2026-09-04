@@ -35,6 +35,14 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
+### M1a / M1b research progress (not M1 completion)
+
+- M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
+- M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
+- Physical RPM, original-BIN execution, independent editor validation, checksum validation and hardware behavior are not established. Public profiles remain non-writable; Oracle v2 evidence levels are not promoted by model agreement.
+
+See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). The next narrow research gate is the missing instruction semantics, not an editor installation or another preparation framework.
+
 ## M2 — Calibration maps
 
 - low/high-cam fuel maps

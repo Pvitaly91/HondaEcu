@@ -31,6 +31,8 @@ M0.1 adds stricter evidence accounting:
 
 No real Crome or HTS golden files are present in the repository; the tracked `private/` directories contain only `.gitkeep` placeholders. M1 still awaits real editor observations. In M1a, one archive baseline candidate was obtained privately and a partial VTEC static investigation was performed; native revision identity and editor import/no-op behavior remain unverified. See [M1a real-ROM findings](docs/M1A_REAL_ROM_FINDINGS.md). Synthetic tests exercise analyzer rules only; they do not prove editor or ECU behavior. Neither M0.1 nor M1a completes M1 or implements an emulator.
 
+M1b adds a [read-only VTEC threshold inspector and scoped compact-code research model](docs/M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). A private exact-byte/profile binding is required for candidate-specific interpretation; `--confirm-profile` alone cannot identify a baseline. Established raw edge paths are separated from an unresolved normal-path instruction and its explicitly conditional mathematical model. Physical RPM remains unavailable. This does not complete M1 or enable real P28 writes.
+
 ## Build and test
 
 Install a .NET 8 SDK, then run:
@@ -48,6 +50,7 @@ Run the CLI from source with `dotnet run --project src/HondaEcu.Cli --`, or invo
 
 ```shell
 hondaecu inspect private/roms/p28-304.bin
+hondaecu research p28-vtec inspect private/oracle/p28-304/base.bin --profile p28-304 --confirm-profile --baseline-binding private/reports/m1b/baseline-binding.json --output private/reports/m1b/vtec-inspection.json
 hondaecu diff base.bin modified.bin --output private/reports/diff.json --max-ranges 50
 hondaecu profile list
 hondaecu profile show p28-304
