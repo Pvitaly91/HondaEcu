@@ -39,17 +39,63 @@ M1d adds [bounded byte-executed slice validation](docs/M1D_BYTECODE_SLICE_VALIDA
 
 M1e adds [RPM producer execution and explicit scaling analysis](docs/M1E_RPM_PRODUCER_AND_SCALING.md) through `research p28-vtec producer-check`. Six interval-derived words feed actual G → compact F → threshold execution, checked against independent integer models. The private 133978-case batch has 98 strict matches and 133880 separately conditional matches, with no mismatches; strict mode stops the latter as unresolved. The source-derived timer selector is CLK/32, but board frequency/event geometry remain unknown. Optional rational preview requires explicit assumptions, never enables `physicalRpmAvailable`, and does not complete M1 or make a ROM flash-ready.
 
+## Windows Desktop Research Preview — D0
+
+D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;
+it is a PC-only research preview, not a finished tuning editor or completion of M1.
+The permanent status is «Дослідницький режим. Не для запису в ECU».
+
+On Windows, build a portable folder with PowerShell 7:
+
+```powershell
+./scripts/publish-desktop.ps1
+```
+
+Double-click `artifacts/desktop/win-x64/HondaEcu.Desktop.exe`. Keep the entire
+folder together: the self-contained .NET runtime, `definitions/`, `tools/` and
+component notices are required. The target machine does not need .NET SDK, Rust,
+Cargo, Git or the source repository. Publishing requires the .NET 8 SDK selected
+by `global.json`, Rust 1.85.1 and MSVC x64 build tools. Existing publication folders
+are refused; choose a new `-OutputPath artifacts/desktop/win-x64-next` for a later build.
+
+For source development on Windows:
+
+```powershell
+dotnet restore HondaEcu.Windows.sln
+dotnet build HondaEcu.Windows.sln --configuration Release --no-restore
+dotnet test HondaEcu.Windows.sln --configuration Release --no-build
+dotnet run --project src/HondaEcu.Desktop/HondaEcu.Desktop.csproj --configuration Release
+```
+
+Start with «Демонстраційний режим»: invented thresholds demonstrate one-slot raw
+preview, exact in-memory diff, a step graph and cancel without an OEM ROM or a
+fabricated binding. Demo cannot save a Honda firmware or execute real ROM slices.
+«Відкрити BIN» opens an unknown file read-only. Explicitly select your current
+private original binding and research profile to unlock scoped baseline work;
+an existing child additionally needs original parent, plan and patch report.
+No private files are searched for automatically.
+
+The window provides one raw-byte plan (decimal integer 0–255), new PC-only
+copy/plan/report publication with readback verification, M1d/M1e checks, cancellation
+and structured current-job results. Strict execution is the default; permitted and
+actually used ADD assumptions remain distinct. With no runner, reading/demo/diff
+and preview still work; choose your built executable explicitly with «Обрати Rust
+runner…». The packaged version uses `tools/p28-slice-runner.exe` beside the app.
+Physical RPM, checksum validity and ECU/hardware behavior remain unconfirmed;
+all copies are `PcInspectionOnly / NotFlashReady`.
+See [D0 usage, packaging and validation limits](docs/D0_DESKTOP_PREVIEW.md).
+
 ## Build and test
 
 Install a .NET 8 SDK and Rust toolchain 1.85.1, then run (the .NET integration tests require the built Rust executable):
 
 ```shell
-dotnet restore
+dotnet restore HondaEcu.sln
 cargo +1.85.1 build --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml
 cargo +1.85.1 test --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml
-dotnet build --configuration Release --no-restore
-dotnet test --configuration Release --no-build
-dotnet format --verify-no-changes
+dotnet build HondaEcu.sln --configuration Release --no-restore
+dotnet test HondaEcu.sln --configuration Release --no-build
+dotnet format HondaEcu.sln --verify-no-changes --no-restore
 ```
 
 Run the CLI from source with `dotnet run --project src/HondaEcu.Cli --`, or invoke the built `hondaecu` executable.
@@ -122,3 +168,9 @@ The full policy is in [ROM_HANDLING_POLICY.md](docs/ROM_HANDLING_POLICY.md).
 See [ROADMAP.md](docs/ROADMAP.md) for milestone details and [P28_304_EVIDENCE.md](docs/P28_304_EVIDENCE.md) for source provenance and open questions.
 
 No license has been selected. Licensing remains an explicit decision for the repository owner.
+
+The D0 portable package can also be checked with
+`./scripts/test-desktop-portable.ps1`. It runs an explicit no-window resource
+diagnostic outside the repository with another working directory and no developer
+tools on PATH; it is separate from the actual synthetic WPF GUI smoke recorded
+in [the D0 validation report](docs/D0_DESKTOP_PREVIEW.md#validation-record-and-limits).

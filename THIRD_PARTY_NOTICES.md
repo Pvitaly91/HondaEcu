@@ -70,3 +70,26 @@ Unicode notice):
 | unicode-ident | 1.0.24 | (MIT OR Apache-2.0) AND Unicode-3.0 |
 
 These component licenses do not determine the license of HondaEcu's own code.
+
+## Windows Desktop Research Preview distribution
+
+The D0 portable build includes the .NET 8 runtime and Windows Desktop/WPF runtime.
+Their exact resolved package identifiers and versions are listed in the portable
+`PUBLISH-MANIFEST.json`. Complete license and third-party notice files from those
+same runtime packages are copied to `licenses/dotnet/<package-version>/`; no SDK,
+test-framework or chart package is redistributed as part of the application.
+
+The pinned Rust 1.85.1 standard library is linked into the runner. Its distributed
+`LICENSE-MIT`, `LICENSE-APACHE` and `COPYRIGHT` texts are copied from the exact
+toolchain to `licenses/rust-1.85.1/`. The Windows runner uses a static Microsoft
+C runtime and does not require the compiler or a separately installed VC runtime
+to launch. This build setting does not select a license for HondaEcu's own code.
+
+Within a portable folder, the runner's retained upstream license is at
+`licenses/p28-slice-runner/LICENSE.upstream`, and its exact crate license files
+are under `licenses/p28-slice-runner/crates/`. The opcode-table attribution above
+is retained unchanged in this notice. Source-tree paths and research-document
+links elsewhere in this file describe provenance, not runtime dependencies.
+
+No OEM ROM, private binding/report, editor binary or hardware driver is included.
+The repository owner's root-license decision remains separate and unresolved.

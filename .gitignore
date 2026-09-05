@@ -5,6 +5,11 @@ TestResults/
 coverage/
 .tmp/
 /rust/**/target/
+/artifacts/
+*.exe
+*.dll
+*.pdb
+*.zip
 *.user
 *.suo
 *.userosscache

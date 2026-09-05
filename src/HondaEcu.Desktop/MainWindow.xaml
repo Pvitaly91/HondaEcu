@@ -1,0 +1,201 @@
+<Window x:Class="HondaEcu.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:HondaEcu.Desktop.Controls"
+        Title="HondaEcu — Дослідницький перегляд"
+        Width="1200" Height="930" MinWidth="760" MinHeight="580"
+        WindowStartupLocation="CenterScreen" Closing="Window_Closing">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Border Background="#142D43" Padding="22,16">
+            <StackPanel>
+                <TextBlock Text="HondaEcu" FontSize="27" FontWeight="SemiBold" Foreground="White" />
+                <TextBlock Text="Windows Desktop Research Preview · D0" Foreground="#CBD9E6" Margin="0,3,0,12" />
+                <WrapPanel>
+                    <Button x:Name="OpenBinButton" Command="{Binding OpenBinCommand}" Content="_Відкрити BIN" AutomationProperties.Name="Відкрити BIN" />
+                    <Button x:Name="DemoButton" Command="{Binding DemoCommand}" Content="_Демонстраційний режим" AutomationProperties.Name="Демонстраційний режим" />
+                    <Button Command="{Binding BindBaselineCommand}" Content="Обрати _binding" />
+                    <Button Command="{Binding OpenDerivedCommand}" Content="Відкрити _похідний файл" />
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+        <Border Grid.Row="1" Background="#FFF1D4" BorderBrush="#E8C47A" BorderThickness="0,0,0,1" Padding="22,10">
+            <StackPanel>
+                <TextBlock Text="Дослідницький режим. Не для запису в ECU" FontWeight="SemiBold" />
+                <TextBlock Text="PcInspectionOnly · NotFlashReady · Checksum Unknown" FontSize="12" Foreground="#695223" Margin="0,2,0,0" />
+            </StackPanel>
+        </Border>
+        <TabControl Grid.Row="2" Margin="14,12,14,0" BorderBrush="#D9E2EC" Background="#F3F6FA">
+            <TabItem Header="Огляд і зміна">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14"
+                              CanContentScroll="False">
+                    <StackPanel>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Відкрийте BIN для огляду або почніть із синтетичної демонстрації. Приватні файли не шукаються автоматично."
+                                           Style="{StaticResource MutedText}" Margin="0,0,0,12" />
+                                <TextBlock Text="{Binding ModeLabel}" FontWeight="SemiBold" FontSize="17" Foreground="#14588A" />
+                                <TextBlock Text="{Binding FileName}" FontSize="17" Margin="0,8,0,3" />
+                                <WrapPanel>
+                                    <TextBlock Text="Розмір: " FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding FileSize}" Margin="0,0,24,5" />
+                                    <TextBlock Text="Дослідницький профіль: " FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding ProfileName}" Margin="0,0,0,5" />
+                                </WrapPanel>
+                                <TextBlock Text="{Binding BindingStatus}" Style="{StaticResource MutedText}" />
+                                <Expander Header="Технічні дані та hash" Margin="0,12,0,0">
+                                    <TextBox Text="{Binding HashText, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
+                                             FontFamily="Consolas" Margin="0,8,0,0" AutomationProperties.Name="Hash відкритого файла" />
+                                </Expander>
+                                <Expander Header="Нейтральний hex preview — без інтерпретації прошивки" Margin="0,8,0,0">
+                                    <TextBox Text="{Binding HexPreview, Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True"
+                                             FontFamily="Consolas" FontSize="13" Height="172" Margin="0,8,0,0"
+                                             HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                             AutomationProperties.Name="Нейтральний hex preview" />
+                                </Expander>
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Досліджені raw-пороги" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="Таблиця доступна після перевірки binding або в демонстрації. Один план — рівно один слот; значення не є RPM."
+                                           Style="{StaticResource MutedText}" Margin="0,0,0,12" />
+                                <DataGrid x:Name="SlotTable" ItemsSource="{Binding Slots}" SelectedItem="{Binding SelectedSlot}"
+                                          AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
+                                          SelectionUnit="FullRow" CanUserAddRows="False" CanUserDeleteRows="False"
+                                          CanUserReorderColumns="False" RowHeaderWidth="0" Height="262"
+                                          RowHeight="27" HeadersVisibility="Column" GridLinesVisibility="Horizontal"
+                                          HorizontalGridLinesBrush="#E5EBF2" AlternatingRowBackground="#F3F7FB"
+                                          BorderBrush="#D9E2EC" HorizontalScrollBarVisibility="Auto"
+                                          AutomationProperties.Name="Таблиця досліджених порогів">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Slot ID" Binding="{Binding Id}" Width="SizeToCells" MinWidth="285" />
+                                        <DataGridTextColumn Header="Контекст" Binding="{Binding Context}" Width="82" />
+                                        <DataGridTextColumn Header="Пара" Binding="{Binding Pair}" Width="62" />
+                                        <DataGridTextColumn Header="Prior state" Binding="{Binding PriorState}" Width="92" />
+                                        <DataGridTextColumn Header="Offset" Binding="{Binding OffsetHex}" Width="80" />
+                                        <DataGridTextColumn Header="Raw (dec)" Binding="{Binding CurrentRaw}" Width="88" />
+                                        <DataGridTextColumn Header="Raw (hex)" Binding="{Binding CurrentHex}" Width="88" />
+                                        <DataGridTextColumn Header="Пропозиція" Binding="{Binding ProposedRaw}" Width="98" />
+                                        <DataGridTextColumn Header="Стан доказів" Binding="{Binding Evidence}" Width="*" MinWidth="155" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                                <WrapPanel Margin="0,16,0,0" VerticalAlignment="Center">
+                                    <StackPanel Margin="0,0,16,8">
+                                        <TextBlock Text="Обраний слот" Style="{StaticResource MutedText}" />
+                                        <TextBlock Text="{Binding SelectedSlot.Id}" FontWeight="SemiBold" MinWidth="155" Margin="0,7,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Margin="0,0,16,8">
+                                        <Label Content="_Нове raw, ціле 0–255" Target="{Binding ElementName=RawValueInput}" Padding="0,0,0,4" />
+                                        <TextBox x:Name="RawValueInput" Text="{Binding ProposedRaw, UpdateSourceTrigger=PropertyChanged}"
+                                                 IsEnabled="{Binding CanEdit}" Width="170" HorizontalAlignment="Left"
+                                                 AutomationProperties.Name="Нове raw, ціле від 0 до 255" />
+                                    </StackPanel>
+                                </WrapPanel>
+                                <WrapPanel Margin="0,4,0,0">
+                                    <Button x:Name="PreviewButton" Command="{Binding PreviewCommand}" Content="Переглянути _зміну"
+                                            AutomationProperties.Name="Переглянути зміну"
+                                            Style="{StaticResource PrimaryButton}" />
+                                    <Button x:Name="RevertButton" Command="{Binding RevertCommand}" Content="Скасувати з_міну" AutomationProperties.Name="Скасувати зміну" />
+                                    <Button x:Name="SaveCopyButton" Command="{Binding SaveCopyCommand}" Content="Зберегти PC-only _копію" AutomationProperties.Name="Зберегти PC-only копію" />
+                                </WrapPanel>
+                                <TextBlock Text="Оригінал не змінюється. Демонстрація не зберігається як Honda-прошивка."
+                                           Style="{StaticResource MutedText}" FontSize="12" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Точний попередній перегляд" Style="{StaticResource SectionTitle}" />
+                                <TextBox Text="{Binding PreviewText, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
+                                         AcceptsReturn="True" MinHeight="88" MaxHeight="260" VerticalScrollBarVisibility="Auto"
+                                         FontFamily="Consolas" FontSize="13" AutomationProperties.Name="Точний diff зміни" />
+                                <TextBlock Text="Модель порогового порівняння" FontSize="17" FontWeight="SemiBold" Margin="0,18,0,4" />
+                                <TextBlock Text="newState = compactCode &gt; threshold · Рівність: false" Style="{StaticResource MutedText}" />
+                                <TextBlock Margin="0,3,0,8">
+                                    <Run Text="Обраний prior state: " /><Run Text="{Binding SelectedSlot.PriorState, Mode=OneWay}" />
+                                </TextBlock>
+                                <controls:PredicatePlot x:Name="PredicatePlot" Rows="{Binding PlotRows}" Height="258" MinWidth="250"
+                                                        AutomationProperties.Name="Модель порогового порівняння, стара і нова ступінчасті криві" />
+                                <TextBlock Text="Це програмна модель, не фізичне ввімкнення VTEC і не результат byte-execution."
+                                           Style="{StaticResource MutedText}" FontSize="12" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="Перевірки">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14">
+                    <StackPanel>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Перевірки поточного файла" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="Strict — початковий режим, без дозволених assumptions. Збіг програмної моделі не доводить поведінку обладнання."
+                                           Style="{StaticResource MutedText}" Margin="0,0,0,12" />
+                                <WrapPanel>
+                                    <Button Command="{Binding VerifyCommand}" Content="Перевірити зміну _файла" />
+                                    <Button x:Name="ExecuteButton" Command="{Binding ExecuteCommand}" IsEnabled="{Binding CanExecuteM1d}" Content="Виконати фрагменти прошивки — M1d" />
+                                    <Button x:Name="ProducerButton" Command="{Binding ProducerCommand}" Content="Перевірити розрахунок внутрішніх обертів — M1e" />
+                                </WrapPanel>
+                                <TextBlock Text="{Binding RunnerStatus}" Margin="0,4,0,8" />
+                                <Button Command="{Binding SelectRunnerCommand}" Content="Обрати Rust _runner…" HorizontalAlignment="Left" />
+                                <TextBlock Text="Без runner працюють читання, demo, diff і preview. Реальне виконання потребує відповідного локального baseline та перевіреного binding."
+                                           Style="{StaticResource MutedText}" />
+                                <Expander Header="Розширені дозволи — непідтверджені instruction assumptions" Margin="0,18,0,0">
+                                    <StackPanel Margin="0,8,0,0">
+                                        <TextBlock Text="Дозволи незалежні. Вони не підвищують рівень доказів. Перед умовним запуском потрібне окреме підтвердження."
+                                                   Style="{StaticResource MutedText}" />
+                                        <CheckBox x:Name="AddEr1CheckBox" Content="oki.add-er1-a — лише producer M1e"
+                                                  IsChecked="{Binding AllowAddEr1}" />
+                                        <CheckBox x:Name="AddEr3CheckBox" Content="oki.add-er3-a — compact F у M1d / M1e"
+                                                  IsChecked="{Binding AllowAddEr3}" />
+                                        <TextBlock Text="Для M1d дозвіл er1 недоречний: вимкніть його перед запуском M1d."
+                                                   Style="{StaticResource MutedText}" FontSize="12" />
+                                    </StackPanel>
+                                </Expander>
+                            </StackPanel>
+                        </Border>
+                        <TextBlock Text="Результати поточного запуску" Style="{StaticResource SectionTitle}" />
+                        <TextBlock Text="Сума порівнянь усіх етапів, не кількість унікальних входів."
+                                   Style="{StaticResource MutedText}" Margin="0,0,0,12" />
+                        <WrapPanel>
+                            <Border Style="{StaticResource CounterCard}"><StackPanel><TextBlock Text="Без assumptions" /><TextBlock Text="{Binding Counters.CompletedWithoutAssumptions}" FontSize="29" FontWeight="SemiBold" /></StackPanel></Border>
+                            <Border Style="{StaticResource CounterCard}"><StackPanel><TextBlock Text="Умовні збіги" /><TextBlock Text="{Binding Counters.ConditionalMatches}" FontSize="29" FontWeight="SemiBold" /></StackPanel></Border>
+                            <Border Style="{StaticResource CounterCard}"><StackPanel><TextBlock Text="Невстановлено (Unresolved)" /><TextBlock Text="{Binding Counters.Unresolved}" FontSize="29" FontWeight="SemiBold" /></StackPanel></Border>
+                            <Border Style="{StaticResource CounterCard}"><StackPanel><TextBlock Text="Розбіжності (Mismatch)" /><TextBlock Text="{Binding Counters.Mismatches}" FontSize="29" FontWeight="SemiBold" /></StackPanel></Border>
+                            <Border Style="{StaticResource CounterCard}"><StackPanel><TextBlock Text="Помилки виконання" /><TextBlock Text="{Binding Counters.ExecutionErrors}" FontSize="29" FontWeight="SemiBold" /></StackPanel></Border>
+                            <Border Style="{StaticResource CounterCard}"><StackPanel><TextBlock Text="Перевищено бюджет" /><TextBlock Text="{Binding Counters.BudgetExceeded}" FontSize="29" FontWeight="SemiBold" /></StackPanel></Border>
+                            <Border Style="{StaticResource CounterCard}"><StackPanel><TextBlock Text="Не виконано (Not-run)" /><TextBlock Text="{Binding Counters.NotRun}" FontSize="29" FontWeight="SemiBold" /></StackPanel></Border>
+                        </WrapPanel>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding ResultSummary}" Margin="0,0,0,12" />
+                                <TextBlock Text="Нуль mismatch не скасовує conditional або unresolved. Фізичні оберти не підтверджені."
+                                           Style="{StaticResource MutedText}" Margin="0,0,0,14" />
+                                <Button x:Name="ResultsButton" Command="{Binding OpenResultsCommand}" Content="Відкрити структурований _результат" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+        <Border Grid.Row="3" Background="White" BorderBrush="#D9E2EC" BorderThickness="0,1,0,0" Padding="20,10">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding StatusText}" AutomationProperties.LiveSetting="Polite" />
+                    <TextBlock Text="{Binding ErrorText}" Foreground="#9B3026" FontWeight="SemiBold" AutomationProperties.LiveSetting="Assertive" />
+                    <ProgressBar IsIndeterminate="True" Height="4" Margin="0,8,14,0"
+                                 Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibility}}"
+                                 AutomationProperties.Name="Операція виконується, відсоток невідомий" />
+                </StackPanel>
+                <Button x:Name="CancelOperationButton" Grid.Column="1" Command="{Binding CancelCommand}" Content="_Скасувати операцію"
+                        Margin="14,0,0,0" VerticalAlignment="Center" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

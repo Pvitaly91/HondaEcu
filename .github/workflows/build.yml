@@ -28,13 +28,13 @@ jobs:
       - name: Reject tracked ROM and reverse-engineering artifacts
         shell: pwsh
         run: |
-          $forbidden = @(git ls-files -- '*.bin' '*.rom' '*.hex' '*.eep' '*.dump' '*.gzf' '*.rep' '*.gpr' '*.gpr.bak' '*.db' '*.trace')
+          $forbidden = @(git ls-files -- '*.bin' '*.rom' '*.hex' '*.eep' '*.dump' '*.gzf' '*.rep' '*.gpr' '*.gpr.bak' '*.db' '*.trace' '*.exe' '*.dll' '*.pdb' '*.zip' 'artifacts/**')
           if ($forbidden.Count -gt 0) {
             throw "Forbidden public artifacts are tracked: $($forbidden -join ', ')"
           }
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore HondaEcu.sln
 
       - name: Set up pinned Rust toolchain
         run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
@@ -46,10 +46,60 @@ jobs:
           cargo +1.85.1 fmt --check --manifest-path rust/p28-slice-runner/Cargo.toml
 
       - name: Build (Release)
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build HondaEcu.sln --configuration Release --no-restore
 
       - name: Test .NET and real Rust process end-to-end (synthetic only)
-        run: dotnet test --configuration Release --no-build
+        run: dotnet test HondaEcu.sln --configuration Release --no-build
 
       - name: Verify formatting
-        run: dotnet format --verify-no-changes
+        run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
+
+  desktop-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET 8 from global.json
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Reject tracked private and binary artifacts
+        shell: pwsh
+        run: |
+          $forbidden = @(git ls-files -- '*.bin' '*.rom' '*.hex' '*.eep' '*.dump' '*.gzf' '*.rep' '*.gpr' '*.gpr.bak' '*.db' '*.trace' '*.exe' '*.dll' '*.pdb' '*.zip' 'artifacts/**')
+          $private = @(git ls-files -- 'private/**' | Where-Object { $_ -notmatch '/\.gitkeep$' })
+          if ($forbidden.Count -gt 0 -or $private.Count -gt 0) { throw 'Forbidden public artifacts are tracked.' }
+
+      - name: Set up and build pinned Rust runner for integration tests
+        run: |
+          rustup toolchain install 1.85.1 --profile minimal --component rustfmt
+          cargo +1.85.1 build --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml
+
+      - name: Restore Windows-only solution
+        run: dotnet restore HondaEcu.Windows.sln
+
+      - name: Build Windows desktop (Release)
+        run: dotnet build HondaEcu.Windows.sln --configuration Release --no-restore
+
+      - name: Test desktop contracts (synthetic only; not a GUI smoke test)
+        run: dotnet test HondaEcu.Windows.sln --configuration Release --no-build
+
+      - name: Verify Windows solution formatting
+        run: dotnet format HondaEcu.Windows.sln --verify-no-changes --no-restore
+
+      - name: Publish clean self-contained portable application
+        shell: pwsh
+        run: ./scripts/publish-desktop.ps1
+
+      - name: Check portable startup outside repository (no-window diagnostic, not GUI smoke)
+        shell: pwsh
+        run: ./scripts/test-desktop-portable.ps1
+
+      - name: Upload portable Windows preview (no ROM or private reports)
+        uses: actions/upload-artifact@v4
+        with:
+          name: HondaEcu-Desktop-Research-Preview-win-x64
+          path: artifacts/desktop/win-x64/
+          if-no-files-found: error
+          retention-days: 14
