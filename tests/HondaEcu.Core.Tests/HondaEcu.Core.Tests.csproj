@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\HondaEcu.Core\HondaEcu.Core.csproj" />
+    <ProjectReference Include="..\HondaEcu.Slice.TestHost\HondaEcu.Slice.TestHost.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

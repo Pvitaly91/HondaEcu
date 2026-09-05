@@ -31,6 +31,7 @@ public sealed partial class CliApplication
             "plan" => await P28VtecPlanAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "apply" => await P28VtecApplyAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "verify" => await P28VtecVerifyAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "execute-check" => await P28VtecExecuteCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
             _ => throw new CliUsageException($"Unknown p28-vtec research command '{args[0]}'."),
         };
     }

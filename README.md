@@ -35,12 +35,16 @@ M1b adds a [read-only VTEC threshold inspector and scoped compact-code research 
 
 M1c adds [one-slot PC-only raw threshold plan/apply/verify and derived-file lineage inspection](docs/M1C_RAW_THRESHOLD_EDITING.md). The targeted ADD investigation did not promote the compact model. Research edits require the original private binding and create only new private files; they are not RPM settings, checksum-valid ROMs, or ECU-ready outputs. Public P28 definitions remain non-writable.
 
+M1d adds [bounded byte-executed slice validation](docs/M1D_BYTECODE_SLICE_VALIDATION.md): one audited Rust CPU runner and a thin C# process adapter, with strict unresolved-instruction stops and explicitly conditional ADD results. It does not boot an ECU, prove hardware behavior, establish physical RPM, or complete M1. Third-party component licenses/notices are listed separately in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); no root license is selected.
+
 ## Build and test
 
-Install a .NET 8 SDK, then run:
+Install a .NET 8 SDK and Rust toolchain 1.85.1, then run (the .NET integration tests require the built Rust executable):
 
 ```shell
 dotnet restore
+cargo +1.85.1 build --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml
+cargo +1.85.1 test --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml
 dotnet build --configuration Release --no-restore
 dotnet test --configuration Release --no-build
 dotnet format --verify-no-changes

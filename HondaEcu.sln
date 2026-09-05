@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HondaEcu.Core.Tests", "test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HondaEcu.Cli.Tests", "tests\HondaEcu.Cli.Tests\HondaEcu.Cli.Tests.csproj", "{E7896090-684D-4C66-8A41-37FBFEC993AC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HondaEcu.Slice.TestHost", "tests\HondaEcu.Slice.TestHost\HondaEcu.Slice.TestHost.csproj", "{A194E02D-712C-4051-8130-24E267E507AF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,10 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A194E02D-712C-4051-8130-24E267E507AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A194E02D-712C-4051-8130-24E267E507AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A194E02D-712C-4051-8130-24E267E507AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A194E02D-712C-4051-8130-24E267E507AF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E9F076D3-821A-40A5-9E0A-A8878681EB1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E9F076D3-821A-40A5-9E0A-A8878681EB1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9F076D3-821A-40A5-9E0A-A8878681EB1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -42,6 +48,7 @@ Global
 		{E7896090-684D-4C66-8A41-37FBFEC993AC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{A194E02D-712C-4051-8130-24E267E507AF} = {EF6BAB0F-66D7-4178-A0A4-9E00F5197851}
 		{E9F076D3-821A-40A5-9E0A-A8878681EB1A} = {1B2BF94E-A41E-44BA-AEB2-26D31A4E87B4}
 		{2361459F-8220-4647-99D1-C8DC6C9E538D} = {1B2BF94E-A41E-44BA-AEB2-26D31A4E87B4}
 		{F772E3C3-1E11-4DD2-89D9-EB510C4DF21E} = {EF6BAB0F-66D7-4178-A0A4-9E00F5197851}

@@ -36,10 +36,18 @@ jobs:
       - name: Restore
         run: dotnet restore
 
+      - name: Set up pinned Rust toolchain
+        run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
+
+      - name: Rust build and instruction tests (synthetic only)
+        run: |
+          cargo +1.85.1 build --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml
+          cargo +1.85.1 test --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml
+
       - name: Build (Release)
         run: dotnet build --configuration Release --no-restore
 
-      - name: Test (Release)
+      - name: Test .NET and real Rust process end-to-end (synthetic only)
         run: dotnet test --configuration Release --no-build
 
       - name: Verify formatting
