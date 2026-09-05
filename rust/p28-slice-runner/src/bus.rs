@@ -1,8 +1,99 @@
 // Minimal memory-only replacement for the pinned upstream Bus.
-// No peripheral, timer, interrupt, engine or scenario model is imported.
+// Old tasks remain memory-only. Acquisition alone can opt into three frozen,
+// read-only peripheral observations; this is not a peripheral/IRQ simulator.
 use std::cell::RefCell;
 
 pub const RAM_SIZE: usize = 4096;
+
+#[derive(Clone, Copy)]
+pub(crate) struct CaptureObservation {
+    pub tmr2: u16,
+    pub irqh: u8,
+    pub tcon2: u8,
+}
+
+#[cfg(test)]
+mod capture_bus_tests {
+    use super::*;
+    use crate::cpu::Cpu;
+    use crate::exec::{read_data_u16, read_data_u8, write_data_u16, write_data_u8};
+
+    #[test]
+    fn old_bus_has_no_peripheral_observations_and_word_width_is_preserved() {
+        let cpu = Cpu::new();
+        let mut bus = Bus::new(vec![], 0xAA);
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x3A), 0);
+        assert!(bus.take_fault().is_some());
+        bus.observe_capture(Some(CaptureObservation {
+            tmr2: 0xFEDC,
+            irqh: 0x81,
+            tcon2: 4,
+        }));
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x3A), 0xFEDC);
+        assert_eq!(read_data_u8(&cpu, &mut bus, 0x19), 0x81);
+        assert_eq!(read_data_u8(&cpu, &mut bus, 0x42), 4);
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x3A), 0xFEDC);
+        assert_eq!(
+            bus.peripheral_accesses(),
+            [
+                [0x3A, 16, 0, 0xFEDC],
+                [0x19, 8, 0, 0x81],
+                [0x42, 8, 0, 4],
+                [0x3A, 16, 0, 0xFEDC]
+            ]
+        );
+        assert!(bus.take_fault().is_none());
+        bus.observe_capture(None);
+        read_data_u8(&cpu, &mut bus, 0x19);
+        assert!(bus.take_fault().is_some());
+    }
+
+    #[test]
+    fn frozen_observations_reject_wrong_width_unknown_sfr_and_all_writes() {
+        let mut cpu = Cpu::new();
+        let mut bus = Bus::new(vec![], 0);
+        bus.observe_capture(Some(CaptureObservation {
+            tmr2: 0x1234,
+            irqh: 1,
+            tcon2: 4,
+        }));
+        for address in [0x3A, 0x3B, 0x18, 0x43] {
+            read_data_u8(&cpu, &mut bus, address);
+            assert!(bus.take_fault().is_some());
+        }
+        for address in [0x19, 0x42, 0x38] {
+            read_data_u16(&cpu, &mut bus, address);
+            assert!(bus.take_fault().is_some());
+        }
+        write_data_u8(&mut cpu, &mut bus, 0x42, 0);
+        assert!(bus.take_fault().is_some());
+        write_data_u16(&mut cpu, &mut bus, 0x3A, 0);
+        assert!(bus.take_fault().is_some());
+        assert_eq!(
+            bus.peripheral_accesses(),
+            [[0x42, 8, 1, 0], [0x3A, 16, 1, 0]]
+        );
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x3A), 0x1234);
+        assert_eq!(read_data_u8(&cpu, &mut bus, 0x42), 4);
+    }
+
+    #[test]
+    fn native_journal_retains_same_value_and_partial_stores_without_harness_seeds() {
+        let mut cpu = Cpu::new();
+        let mut bus = Bus::new(vec![], 0xAA);
+        write_data_u16(&mut cpu, &mut bus, 0x360, 0xBEEF);
+        bus.begin_write_journal();
+        write_data_u16(&mut cpu, &mut bus, 0x360, 0xBEEF);
+        write_data_u8(&mut cpu, &mut bus, 0x363, 0xAA);
+        write_data_u16(&mut cpu, &mut bus, 0xFFF, 0xCAFE);
+        assert!(bus.take_fault().is_some());
+        assert_eq!(
+            bus.end_write_journal(),
+            [[0x360, 16, 0xBEEF], [0x363, 8, 0xAA], [0xFFF, 8, 0xFE]]
+        );
+        assert!(bus.end_write_journal().is_empty());
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AccessFault {
@@ -29,6 +120,10 @@ pub struct Bus {
     ordered_reads: bool,
     read_limit: usize,
     data_ranges: Option<Vec<[u16; 2]>>,
+    capture: Option<CaptureObservation>,
+    peripheral_accesses: Vec<[u32; 4]>,
+    journal_writes: bool,
+    data_writes: Vec<[u32; 3]>,
 }
 
 impl Bus {
@@ -41,6 +136,10 @@ impl Bus {
             ordered_reads: false,
             read_limit: 256,
             data_ranges: None,
+            capture: None,
+            peripheral_accesses: vec![],
+            journal_writes: false,
+            data_writes: vec![],
         }
     }
 
@@ -63,6 +162,21 @@ impl Bus {
     }
     pub fn clear_program_reads(&self) {
         self.program_reads.borrow_mut().clear();
+    }
+    pub(crate) fn observe_capture(&mut self, observation: Option<CaptureObservation>) {
+        self.capture = observation;
+        self.peripheral_accesses.clear();
+    }
+    pub(crate) fn begin_write_journal(&mut self) {
+        self.data_writes.clear();
+        self.journal_writes = true;
+    }
+    pub(crate) fn end_write_journal(&mut self) -> Vec<[u32; 3]> {
+        self.journal_writes = false;
+        std::mem::take(&mut self.data_writes)
+    }
+    pub(crate) fn peripheral_accesses(&self) -> Vec<[u32; 4]> {
+        self.peripheral_accesses.clone()
     }
     /// Opt-in for incremental checksum calls; old slice logging is unchanged.
     pub fn configure_scoped_access(&mut self, data_ranges: Vec<[u16; 2]>, read_limit: usize) {
@@ -140,12 +254,38 @@ impl Bus {
             return 0;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
+            if let Some(observation) = self.capture {
+                let value = match address {
+                    0x19 => Some(observation.irqh),
+                    0x42 => Some(observation.tcon2),
+                    _ => None,
+                };
+                if let Some(value) = value {
+                    self.peripheral_accesses
+                        .push([address as u32, 8, 0, value as u32]);
+                    return value;
+                }
+            }
             self.record_fault("data", address as u32, "read");
             return 0;
         }
         self.ram[address as usize]
     }
     pub fn read_data_u16(&mut self, address: u16) -> u16 {
+        if address < 0x80 {
+            if self.check_data_access(address, "read")
+                && self.check_data_access(address.saturating_add(1), "read")
+                && address == 0x3A
+            {
+                if let Some(observation) = self.capture {
+                    self.peripheral_accesses
+                        .push([address as u32, 16, 0, observation.tmr2 as u32]);
+                    return observation.tmr2;
+                }
+            }
+            self.record_fault("data", address as u32, "read-word");
+            return 0;
+        }
         let Some(high) = address.checked_add(1) else {
             self.record_fault("data", 65536, "read");
             return 0;
@@ -157,18 +297,39 @@ impl Bus {
             return;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
+            if self.capture.is_some() {
+                self.peripheral_accesses
+                    .push([address as u32, 8, 1, value as u32]);
+            }
             self.record_fault("data", address as u32, "write");
             return;
         }
         self.ram[address as usize] = value;
+        if self.journal_writes {
+            self.data_writes.push([address as u32, 8, value as u32]);
+        }
     }
     pub fn write_data_u16(&mut self, address: u16, value: u16) {
+        if address < 0x80 && self.capture.is_some() {
+            self.peripheral_accesses
+                .push([address as u32, 16, 1, value as u32]);
+            self.record_fault("data", address as u32, "write-word");
+            return;
+        }
         let Some(high) = address.checked_add(1) else {
             self.record_fault("data", 65536, "write");
             return;
         };
         let bytes = value.to_le_bytes();
+        let before = self.data_writes.len();
         self.write_data_u8(address, bytes[0]);
         self.write_data_u8(high, bytes[1]);
+        // A successful architectural word store is one journal event, even
+        // when the stored value was already present. Partial stores retain
+        // their actual byte events instead of claiming a completed word write.
+        if self.journal_writes && self.data_writes.len() == before + 2 {
+            self.data_writes.truncate(before);
+            self.data_writes.push([address as u32, 16, value as u32]);
+        }
     }
 }

@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1h research progress (not M1 completion)
+### M1a–M1i research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -47,7 +47,16 @@ The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery i
 - M1h adds conditional RPM queries and all-256-raw inverse selection for explicit steady normal-interval scenarios. Exact open/closed transition domains, retained ties, separate G/F permissions and query provenance feed existing M1g planning only after explicit raw selection. No hardware defaults, measured RPM claim, new compensation authority or independent writer are added. See [M1h domain, policy and evidence](M1H_CONDITIONAL_RPM_SELECTION.md).
 - Physical RPM, independent editor validation and hardware behavior remain unestablished. Scoped software checksum evidence does not authenticate a factory revision or make an image flash-ready. Public profiles remain non-writable; Oracle v2 evidence levels are not promoted by interpreter/model agreement.
 
-See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). The next narrow research gate is the missing instruction semantics, not an editor installation or another preparation framework.
+M1i adds [stateful capture-sequence validation](M1I_CAPTURE_SEQUENCE_VALIDATION.md):
+actual normal acquisition with frozen explicit SFR observations and persistent
+per-image CPU/RAM, followed by explicitly scheduled G/F/threshold. An independent
+model checks each write/state transition; exact synthetic phases are compared
+against the unchanged M1h envelope only after valid fresh warm-up. Verified M1g
+child execution uses its own entire image. No timer/IRQ scheduler, GUI change,
+new BIN, physical RPM or full ECU boot is introduced.
+
+See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). Missing
+ADD semantics, independent editor evidence and hardware validation remain gates.
 
 ## M2 — Calibration maps
 

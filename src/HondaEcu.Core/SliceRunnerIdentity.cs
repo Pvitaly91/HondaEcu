@@ -5,7 +5,7 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.3.0";
+    internal const string CurrentVersion = "0.4.0";
     private static readonly string[] LegacyFixes =
     [
         "word-ror-through-carry-preserves-noncarry-flags", "load-zero-flag-and-dd-contract",
@@ -16,9 +16,14 @@ internal static class SliceRunnerIdentity
         .. LegacyFixes, "clr-accumulator-zero-flag", "jrnz-dpl-byte-count", "adcb-r0-immediate-half-carry",
         "inc-x1-half-carry", "indexed-alternate-immediate-displacement", "word-data-access-alignment",
     ];
-    private static readonly string[] CurrentFixes =
+    private static readonly string[] ChecksumFixes =
     [
         .. ProducerFixes, "byte-add-direct-accumulator-half-carry", "byte-add-r0-accumulator-half-carry", "inc-indexed-x2-half-carry",
+    ];
+    private static readonly string[] CurrentFixes =
+    [
+        .. ChecksumFixes, "word-sub-direct-updates-half-borrow", "byte-inc-direct-updates-half-carry",
+        "byte-sll-accumulator-preserves-noncarry-flags",
     ];
 
     internal static string[] Validate(JsonElement root, string operation)
@@ -26,13 +31,17 @@ internal static class SliceRunnerIdentity
         var version = root.GetProperty("runnerVersion").GetString();
         if (root.GetProperty("protocolVersion").GetInt32() != 1 || root.GetProperty("operation").GetString() != operation ||
             root.GetProperty("upstreamCommit").GetString() != P28ByteExecutionValidator.UpstreamCommit ||
-            version is not ("0.1.0" or "0.2.0" or CurrentVersion) || operation == "producerBatch" && version == "0.1.0" ||
-            operation == "checksumBatch" && version != CurrentVersion)
+            version is not ("0.1.0" or "0.2.0" or "0.3.0" or CurrentVersion) ||
+            operation is not ("p28Batch" or "synthetic" or "producerBatch" or "checksumBatch" or "acquisitionSequence") ||
+            operation == "producerBatch" && version == "0.1.0" ||
+            operation == "checksumBatch" && version is not ("0.3.0" or CurrentVersion) ||
+            operation == "acquisitionSequence" && version != CurrentVersion)
         {
             throw new SliceProcessException(SliceProcessFailure.Protocol,
                 "Runner version, operation or protocol differs from the audited compatibility inventory.");
         }
-        var expected = version == "0.1.0" ? LegacyFixes : version == "0.2.0" ? ProducerFixes : CurrentFixes;
+        var expected = version == "0.1.0" ? LegacyFixes : version == "0.2.0" ? ProducerFixes :
+            version == "0.3.0" ? ChecksumFixes : CurrentFixes;
         var fixes = root.GetProperty("localSemanticFixes").EnumerateArray().Select(item => item.GetString()!).ToArray();
         if (!fixes.Order(StringComparer.Ordinal).SequenceEqual(expected.Order(StringComparer.Ordinal)))
         {

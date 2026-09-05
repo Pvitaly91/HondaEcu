@@ -23,7 +23,13 @@ every instruction. Unused imports and all upstream embedded test modules were
 excluded: in particular, the original decoder contains a firmware fixture test.
 No upstream fixtures, corpora, board model, EngineState, telemetry, executables
 or file-dependent tests are redistributed. Every local adaptation and semantic
-fix is listed in [the M1d record](docs/M1D_BYTECODE_SLICE_VALIDATION.md).
+fix is recorded in [M1d](docs/M1D_BYTECODE_SLICE_VALIDATION.md),
+[M1e](docs/M1E_RPM_PRODUCER_AND_SCALING.md),
+[the M1f instruction audit](rust/p28-slice-runner/M1F_CHECKSUM_AUDIT.md), and
+[the M1i instruction/SFR audit](rust/p28-slice-runner/M1I_ACQUISITION_AUDIT.md).
+M1i adds only an opt-in frozen observation boundary for three explicitly
+reviewed peripheral reads; old memory-only operations retain their denial of
+those SFRs. No upstream peripheral/engine implementation was imported.
 
 ### Opcode-table ancestry
 

@@ -40,6 +40,11 @@ pub fn read_data_u8(cpu: &Cpu, bus: &mut Bus, address: u16) -> u8 {
 }
 
 pub fn read_data_u16(cpu: &Cpu, bus: &mut Bus, address: u16) -> u16 {
+    // Preserve architectural width before the bus can observe a scoped SFR.
+    // CPU aliases remain coherent; ordinary data words use the same bus API.
+    if address > 7 {
+        return bus.read_data_u16(address);
+    }
     let Some(high) = address.checked_add(1) else {
         bus.record_fault("data", 65536, "read");
         return 0;
@@ -74,6 +79,10 @@ pub fn write_data_u8(cpu: &mut Cpu, bus: &mut Bus, address: u16, value: u8) {
 }
 
 pub fn write_data_u16(cpu: &mut Cpu, bus: &mut Bus, address: u16, value: u16) {
+    if address > 7 {
+        bus.write_data_u16(address, value);
+        return;
+    }
     let Some(high) = address.checked_add(1) else {
         bus.record_fault("data", 65536, "write");
         return;
@@ -428,6 +437,15 @@ impl<'a> Exec<'a> {
                 {
                     self.cpu.hc = (a & 15) + (b & 15) > 15;
                 }
+                // M1i SUB A,N8 only (B5 N8 A2), manual 3-156 and user
+                // manual 33: word half borrow is the borrow to bit 3.
+                if base == "SUB"
+                    && !byte
+                    && args[0] == Arg::Reg(Reg::A)
+                    && args[1] == Arg::Mem(Mem::Direct)
+                {
+                    self.cpu.hc = (a & 15) < (b & 15);
+                }
                 if !matches!(base, "CMP" | "CMPC") {
                     self.write(&args[0], byte, res as u16);
                 }
@@ -458,6 +476,10 @@ impl<'a> Exec<'a> {
                     && !byte
                     && (args[0] == Arg::Reg(Reg::X1) || args[0] == Arg::Mem(Mem::IdxReg(Reg::X2)))
                 {
+                    self.cpu.hc = v & 15 == 15;
+                }
+                // M1i INCB N8 only (C5 N8 16), manual 3-61.
+                if base == "INC" && byte && args[0] == Arg::Mem(Mem::Direct) {
                     self.cpu.hc = v & 15 == 15;
                 }
                 self.write(&args[0], byte, res);
@@ -562,7 +584,9 @@ impl<'a> Exec<'a> {
                 self.cpu.cf = carry;
                 // Reviewed word ROR and SRL forms change only CF (manual
                 // printed 3-122, 3-150 and 3-151).
-                if !matches!(base, "ROR" | "SRL") {
+                // M1i SLLB A (53/DD0), manual 3-144, also changes CF only.
+                let reviewed_sllb_a = base == "SLL" && byte && args[0] == Arg::Reg(Reg::A);
+                if !matches!(base, "ROR" | "SRL") && !reviewed_sllb_a {
                     self.set_zf(res as u16, byte);
                 }
                 self.write(&args[0], byte, res as u16);
@@ -842,6 +866,174 @@ pub fn step(cpu: &mut Cpu, bus: &mut Bus) -> Result<Decoded, ExecError> {
         cpu.cycles += 4;
     }
     Ok(d)
+}
+
+#[cfg(test)]
+mod acquisition_cpu_tests {
+    use super::*;
+
+    #[test]
+    fn decoded_sub_direct_word_updates_half_borrow_and_preserves_non_arithmetic_flags() {
+        // Instruction manual 3-156; user manual 33: HC is borrow to bit 3,
+        // including word operations. Synthetic operand location, not ROM code.
+        let mut bus = Bus::new(vec![0xB5, 0xD2, 0xA2], 0xA5);
+        let mut cpu = Cpu::new();
+        for lhs in [0x0000u16, 0x000F, 0x0010, 0x00FF, 0x8000, 0xFFFF] {
+            for rhs in [0x0000u16, 0x0001, 0x000F, 0x0010, 0x0101, 0x8000, 0xFFFF] {
+                for prior_hc in [false, true] {
+                    cpu.pc = 0;
+                    cpu.set_psw_u16(0xB331);
+                    cpu.a = lhs;
+                    cpu.hc = prior_hc;
+                    let unchanged =
+                        cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_CF_BIT | Cpu::PSW_HC_BIT);
+                    write_data_u16(&mut cpu, &mut bus, 0xD2, rhs);
+                    assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "SUB A, N8");
+                    assert_eq!(cpu.a, lhs.wrapping_sub(rhs));
+                    assert_eq!(cpu.cf, lhs < rhs);
+                    assert_eq!(cpu.zf, lhs == rhs);
+                    assert_eq!(cpu.hc, (lhs & 15) < (rhs & 15), "{lhs:04X}-{rhs:04X}");
+                    assert_eq!(
+                        cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_CF_BIT | Cpu::PSW_HC_BIT),
+                        unchanged
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn decoded_incb_direct_updates_half_carry_for_every_byte_and_keeps_adjacent_byte() {
+        // Instruction manual 3-61: byte increment affects ZF and HC only.
+        let mut bus = Bus::new(vec![0xC5, 0xD3, 0x16], 0xA5);
+        let mut cpu = Cpu::new();
+        for value in 0u16..=255 {
+            for dd in [false, true] {
+                for prior_hc in [false, true] {
+                    cpu.pc = 0;
+                    cpu.set_psw_u16(0xB331);
+                    cpu.dd = dd;
+                    cpu.hc = prior_hc;
+                    let unchanged = cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_HC_BIT);
+                    write_data_u8(&mut cpu, &mut bus, 0xD3, value as u8);
+                    assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "INCB N8");
+                    assert_eq!(
+                        read_data_u8(&cpu, &mut bus, 0xD3),
+                        (value as u8).wrapping_add(1)
+                    );
+                    assert_eq!(read_data_u8(&cpu, &mut bus, 0xD4), 0xA5);
+                    assert_eq!(cpu.zf, value == 255);
+                    assert_eq!(cpu.hc, value & 15 == 15, "input={value:02X}");
+                    assert_eq!(
+                        cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_HC_BIT),
+                        unchanged
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn decoded_sllb_accumulator_preserves_zero_halfcarry_descriptor_and_high_byte() {
+        // Instruction manual 3-144: 53/DD0 changes CF only, not ZF.
+        let mut bus = Bus::new(vec![0x53], 0xA5);
+        let mut cpu = Cpu::new();
+        for value in 0u16..=255 {
+            for prior_zf in [false, true] {
+                for prior_hc in [false, true] {
+                    cpu.pc = 0;
+                    cpu.set_psw_u16(0x0331);
+                    cpu.a = 0xA500 | value;
+                    cpu.zf = prior_zf;
+                    cpu.hc = prior_hc;
+                    let unchanged = cpu.psw_u16() & !Cpu::PSW_CF_BIT;
+                    assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "SLLB A");
+                    assert_eq!(cpu.a, 0xA500 | ((value << 1) & 255));
+                    assert_eq!(cpu.cf, value & 0x80 != 0);
+                    assert_eq!(
+                        cpu.psw_u16() & !Cpu::PSW_CF_BIT,
+                        unchanged,
+                        "input={value:02X}"
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn decoded_extnd_sign_extends_every_byte_and_only_sets_descriptor() {
+        // Manual 3-59: sign extension, not zero extension; all flags but DD stay.
+        let mut bus = Bus::new(vec![0xF8], 0xA5);
+        let mut cpu = Cpu::new();
+        for value in 0u16..=255 {
+            for flags in [0x0331u16, 0xF331, 0x8331, 0x6331] {
+                cpu.pc = 0;
+                cpu.set_psw_u16(flags);
+                cpu.a = 0x5A00 | value;
+                let unchanged = cpu.psw_u16() & !Cpu::PSW_DD_BIT;
+                assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "EXTND");
+                assert_eq!(cpu.a, value as u8 as i8 as i16 as u16);
+                assert!(cpu.dd);
+                assert_eq!(cpu.psw_u16() & !Cpu::PSW_DD_BIT, unchanged);
+            }
+        }
+    }
+
+    #[test]
+    fn decoded_sb_direct_and_offpage_use_old_bit_zero_and_preserve_other_bits() {
+        // Manual 3-127; byte objects. Separate synthetic single instructions.
+        for (bytes, address, bit) in [
+            (vec![0xC5, 0xD3, 0x18], 0x00D3, 0u8),
+            (vec![0xC4, 0x53, 0x1B], 0x0253, 3u8),
+        ] {
+            let mut bus = Bus::new(bytes, 0xA5);
+            let mut cpu = Cpu::new();
+            cpu.lrb = 0x43;
+            for value in 0u16..=255 {
+                for dd in [false, true] {
+                    cpu.pc = 0;
+                    cpu.set_psw_u16(0xB331);
+                    cpu.dd = dd;
+                    let unchanged = cpu.psw_u16() & !Cpu::PSW_ZF_BIT;
+                    write_data_u8(&mut cpu, &mut bus, address, value as u8);
+                    step(&mut cpu, &mut bus).unwrap();
+                    assert_eq!(cpu.zf, value as u8 & (1 << bit) == 0);
+                    assert_eq!(
+                        read_data_u8(&cpu, &mut bus, address),
+                        value as u8 | (1 << bit)
+                    );
+                    assert_eq!(read_data_u8(&cpu, &mut bus, address + 1), 0xA5);
+                    assert_eq!(cpu.psw_u16() & !Cpu::PSW_ZF_BIT, unchanged);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn decoded_er3_and_x1_access_same_memory_as_full_localbank_and_scb_aliases() {
+        // User manual 30,34: LRB local base <<3; SCB2 selects0090..0097.
+        // Isolated instructions, not an acquisition procedure fixture.
+        for lrb in [0x0021u16, 0x0121] {
+            let mut cpu = Cpu::new();
+            let mut bus = Bus::new(vec![0x8B], 0xA5);
+            cpu.set_psw_u16(0x1102);
+            cpu.lrb = lrb;
+            cpu.a = 0xB7E3;
+            assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "ST A, er3");
+            let address = (lrb << 3) + 6;
+            assert_eq!(read_data_u16(&cpu, &mut bus, address), 0xB7E3);
+            assert_eq!(read_data_u8(&cpu, &mut bus, address + 1), 0xB7);
+            let mut pointer_bus = Bus::new(vec![0x50], 0xA5);
+            cpu.pc = 0;
+            cpu.a = 0x0240;
+            assert_eq!(
+                step(&mut cpu, &mut pointer_bus).unwrap().mnemonic,
+                "MOV X1, A"
+            );
+            assert_eq!(read_data_u16(&cpu, &mut pointer_bus, 0x0090), 0x0240);
+            assert_eq!(read_data_u16(&cpu, &mut pointer_bus, 0x0088), 0xA5A5);
+        }
+    }
 }
 
 #[cfg(test)]

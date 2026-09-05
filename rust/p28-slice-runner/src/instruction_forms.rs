@@ -13,6 +13,48 @@ pub enum FormAdmission {
 
 pub const PRODUCER_ADD_ASSUMPTION: &str = "oki.add-er1-a";
 
+/// M1i normal acquisition forms only. This ISA-form registry does not admit
+/// literal operands, branch destinations, peripheral addresses or other modes;
+/// the separate acquisition contract must check those and the entry state.
+pub fn acquisition_form_admission(decoded: &Decoded) -> FormAdmission {
+    let Some(p) = FULL_OPCODES.get(decoded.index) else {
+        return FormAdmission::Unsupported;
+    };
+    if p.mnemonic != decoded.mnemonic || p.bytes_pat.len() != decoded.len {
+        return FormAdmission::Unsupported;
+    }
+    match (p.mnemonic, p.dd_mode, p.bytes_pat) {
+        // Instruction manual printed 3-69/70, 3-85, 3-154, 3-31/34.
+        ("L A, N8", 'S', ["E5", "N8"])
+        | ("L A, off N8", 'S', ["E4", "N8"])
+        | ("L A, er3", 'S', ["37"])
+        | ("LB A, N8", 'R', ["F5", "N8"])
+        | ("ST A, er3", '1', ["8B"])
+        | ("ST A, N8", '1', ["D5", "N8"])
+        | ("ST A, off N8", '1', ["D4", "N8"])
+        | ("ST A, N16[X1]", '1', ["D0", "NL", "NH"])
+        | ("MOV X1, A", 'U', ["50"])
+        | ("CLR A", 'S', ["F9"])
+        | ("CLRB N8", 'U', ["C5", "N8", "15"])
+        // Printed 3-64/65, 3-66/67, 3-77 and 3-127. SB is test-and-set;
+        // MB C,bit reads a byte and changes CF only, never its source.
+        | ("JBR off N8.2, rel8", 'U', ["DA", "N8", "rel8"])
+        | ("JBS off N8.7, rel8", 'U', ["EF", "N8", "rel8"])
+        | ("JGE rel8", 'U', ["CD", "rel8"])
+        | ("JEQ rel8", 'U', ["C9", "rel8"])
+        | ("MB C, N8.0", 'U', ["C5", "N8", "28"])
+        | ("MB C, N8.2", 'U', ["C5", "N8", "2A"])
+        | ("SB N8.0", 'U', ["C5", "N8", "18"])
+        | ("SB off N8.3", 'U', ["C4", "N8", "1B"])
+        // Newly tested exact forms: printed 3-156, 3-61, 3-144, 3-59.
+        | ("SUB A, N8", '1', ["B5", "N8", "A2"])
+        | ("INCB N8", 'U', ["C5", "N8", "16"])
+        | ("SLLB A", '0', ["53"])
+        | ("EXTND", 'S', ["F8"]) => FormAdmission::Allowed,
+        _ => FormAdmission::Unsupported,
+    }
+}
+
 /// Exact M1f forms. Literal operands are checked separately by the scoped
 /// execution boundaries/state/read contract; no word object ADD is admitted.
 pub fn checksum_form_admission(decoded: &Decoded) -> FormAdmission {
@@ -102,6 +144,50 @@ mod tests {
 
     fn admission(bytes: &[u8], dd: bool) -> FormAdmission {
         producer_form_admission(&decode(dd, |i| bytes.get(i).copied().unwrap_or(0)).unwrap())
+    }
+
+    #[test]
+    fn acquisition_registry_has_twenty_three_exact_forms_and_no_alternative_mode_forms() {
+        let count = FULL_OPCODES
+            .iter()
+            .enumerate()
+            .filter(|(index, p)| {
+                acquisition_form_admission(&Decoded {
+                    index: *index,
+                    len: p.bytes_pat.len(),
+                    mnemonic: p.mnemonic,
+                    fields: Default::default(),
+                    dd_after: None,
+                    cycles: 0,
+                }) == FormAdmission::Allowed
+            })
+            .count();
+        assert_eq!(count, 23);
+        // Separate, unrelated single-instruction examples, not firmware bytes.
+        for (bytes, dd, expected) in [
+            (&[0xB5, 0xD2, 0xA2][..], true, FormAdmission::Allowed),
+            (&[0xB5, 0xD2, 0xA2][..], false, FormAdmission::Unsupported),
+            (&[0xC5, 0xD3, 0x16][..], true, FormAdmission::Allowed),
+            (&[0x53][..], false, FormAdmission::Allowed),
+            (&[0x53][..], true, FormAdmission::Unsupported),
+            (&[0xF8][..], false, FormAdmission::Allowed),
+            (&[0xF8][..], true, FormAdmission::Allowed),
+            (&[0xC5, 0xD2, 0x28][..], true, FormAdmission::Allowed),
+            (&[0xC5, 0xD2, 0x29][..], true, FormAdmission::Unsupported),
+            (&[0xC4, 0x52, 0x1B][..], false, FormAdmission::Allowed),
+            (&[0xC4, 0x52, 0x1A][..], false, FormAdmission::Unsupported),
+            (&[0xD0, 0x40, 0x02][..], true, FormAdmission::Allowed),
+            (&[0xD1, 0x40, 0x02][..], true, FormAdmission::Unsupported),
+            (&[0x90, 0x37][..], true, FormAdmission::Unsupported),
+            (&[0x20, 0xB0, 0x03][..], true, FormAdmission::Unsupported),
+            (&[0x45, 0x81][..], true, FormAdmission::Unsupported),
+            (&[0x47, 0x81][..], true, FormAdmission::Unsupported),
+        ] {
+            let found = decode(dd, |i| bytes.get(i).copied().unwrap_or(0))
+                .map(|d| acquisition_form_admission(&d))
+                .unwrap_or(FormAdmission::Unsupported);
+            assert_eq!(found, expected, "{bytes:02X?} DD={dd}");
+        }
     }
 
     #[test]

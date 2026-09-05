@@ -15,6 +15,7 @@ pub struct Request {
     pub scratch_patterns: Vec<u8>,
     pub synthetic: Option<SyntheticContract>,
     pub producer_cases: Option<Vec<[u32; 14]>>,
+    pub acquisition_sequence: Option<crate::acquisition::SequenceRequest>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -60,6 +61,8 @@ pub struct Response {
     pub producer_threshold_rows: Option<Vec<[i32; 9]>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub checksum_cases: Option<Vec<crate::checksum::ChecksumCase>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub acquisition_sequences: Option<Vec<crate::acquisition::SequenceResult>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -84,6 +87,8 @@ pub struct CaseResult {
     pub program_reads: Vec<u16>,
     pub trace: Vec<TraceEntry>,
     pub error: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub executed_instruction_bytes: Option<Vec<u16>>,
 }
 
 #[derive(Debug, Serialize)]
@@ -116,6 +121,9 @@ impl Response {
                 "byte-add-direct-accumulator-half-carry",
                 "byte-add-r0-accumulator-half-carry",
                 "inc-indexed-x2-half-carry",
+                "word-sub-direct-updates-half-borrow",
+                "byte-inc-direct-updates-half-carry",
+                "byte-sll-accumulator-preserves-noncarry-flags",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
@@ -125,6 +133,7 @@ impl Response {
             producer_rows: None,
             producer_threshold_rows: None,
             checksum_cases: None,
+            acquisition_sequences: None,
         }
     }
 }

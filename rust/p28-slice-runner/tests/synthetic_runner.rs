@@ -33,6 +33,7 @@ fn request(rom: Vec<u8>, synthetic: SyntheticContract) -> Request {
         scratch_patterns: vec![0],
         synthetic: Some(synthetic),
         producer_cases: None,
+        acquisition_sequence: None,
     }
 }
 
@@ -295,6 +296,7 @@ fn synthetic_batch_cannot_launder_threshold_add_through_compact_permission() {
         scratch_patterns: vec![0, 85, 170],
         synthetic: None,
         producer_cases: None,
+        acquisition_sequence: None,
     })
     .unwrap();
     assert_eq!(result.compact_rows.len(), 393216);

@@ -1,5 +1,6 @@
 //! Bounded seeded byte execution. No engine simulation or compact-code formula.
 
+pub mod acquisition;
 pub mod bus;
 pub mod checksum;
 pub mod cpu;

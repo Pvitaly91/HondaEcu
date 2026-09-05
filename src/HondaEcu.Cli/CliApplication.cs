@@ -134,6 +134,16 @@ public sealed partial class CliApplication
                     [--allow-assumption oki.add-er1-a] [--allow-assumption oki.add-er3-a]
                     Conditional mathematical selection only; no BIN, runner or export authority.
                     Without scaling, numerical RPM is unavailable. Strict model mode is the default.
+          research p28-vtec acquisition-check <baseline> --profile p28-304 --confirm-profile
+                    --baseline-binding <private-json> --runner <rust-executable>
+                    --scenario <bounded-capture-scenario.json> --output <new-private-json>
+                    [--composition acquisition-only|scheduled-g-f-threshold]
+                    [--allow-assumption oki.add-er1-a] [--allow-assumption oki.add-er3-a]
+                    [--derived <M1g-child> --plan <composed-plan> --export-report <receipt>
+                     --compensation-definition <reviewed-signed-private-json>]
+                    [--envelope-scaling <M1h-scenario> --envelope-slot <slot-id>
+                     --envelope-rpm <N/D> --envelope-rpm-provenance <text>]
+                    Persistent seeded execution with explicit peripheral snapshots, not ECU boot or physical RPM.
 
         ROM outputs are for PC inspection only unless separately validated.
         Exit codes: 0 success, 1 operation error, 2 usage error, 3 verification failure.

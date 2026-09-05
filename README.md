@@ -39,6 +39,15 @@ M1d adds [bounded byte-executed slice validation](docs/M1D_BYTECODE_SLICE_VALIDA
 
 M1e adds [RPM producer execution and explicit scaling analysis](docs/M1E_RPM_PRODUCER_AND_SCALING.md) through `research p28-vtec producer-check`. Six interval-derived words feed actual G → compact F → threshold execution, checked against independent integer models. The private 133978-case batch has 98 strict matches and 133880 separately conditional matches, with no mismatches; strict mode stops the latter as unresolved. The source-derived timer selector is CLK/32, but board frequency/event geometry remain unknown. Optional rational preview requires explicit assumptions, never enables `physicalRpmAvailable`, and does not complete M1 or make a ROM flash-ready.
 
+M1i adds [stateful capture-sequence validation](docs/M1I_CAPTURE_SEQUENCE_VALIDATION.md)
+through the headless `research p28-vtec acquisition-check` command. Actual normal
+capture code maintains its sample history, then optionally feeds actual G/F/
+threshold execution. Explicit frozen peripheral snapshots and caller scheduling
+are not a timer/IRQ simulator. Independent per-event comparison and unchanged
+M1h steady-envelope checks preserve strict/conditional/NotRun distinctions.
+Verified M1g child sequences execute the child's own bytes. No new BIN, physical
+RPM claim or GUI acceptance is implied; GUI r3 remains paused.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

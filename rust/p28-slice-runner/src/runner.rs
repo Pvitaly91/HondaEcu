@@ -161,6 +161,29 @@ pub(crate) fn execute_in_state_with_policy(
     capture_trace: bool,
     form_policy: Option<fn(&crate::decoder::Decoded) -> crate::instruction_forms::FormAdmission>,
 ) -> CaseResult {
+    execute_in_state_observed(
+        cpu,
+        bus,
+        contract,
+        assumptions,
+        capture_trace,
+        form_policy,
+        false,
+    )
+}
+
+/// One executor loop for old tasks and stateful acquisition stages. Extents
+/// contain only admitted instructions actually passed to step, never decoder
+/// lookahead or a presumed whole routine range.
+pub(crate) fn execute_in_state_observed(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    contract: &SliceContract,
+    assumptions: &[&str],
+    capture_trace: bool,
+    form_policy: Option<fn(&crate::decoder::Decoded) -> crate::instruction_forms::FormAdmission>,
+    record_extents: bool,
+) -> CaseResult {
     let mut result = CaseResult {
         status: 0,
         used_assumptions: vec![],
@@ -170,7 +193,9 @@ pub(crate) fn execute_in_state_with_policy(
         program_reads: vec![],
         trace: vec![],
         error: None,
+        executed_instruction_bytes: None,
     };
+    let mut extents = std::collections::BTreeSet::new();
     if let Some(fault) = bus.take_fault() {
         result.status = 2;
         result.error = Some(format!("invalid entry state: {fault}"));
@@ -259,6 +284,9 @@ pub(crate) fn execute_in_state_with_policy(
                     result.used_assumptions.push(id.into());
                 }
             }
+            if record_extents {
+                extents.extend((pc as u32..pc as u32 + decoded.len as u32).map(|a| a as u16));
+            }
             let execution = step(cpu, bus);
             result.steps += 1;
             if capture_trace && result.trace.len() < MAX_TRACE {
@@ -291,6 +319,9 @@ pub(crate) fn execute_in_state_with_policy(
         .map(|address| read_data_u8(cpu, bus, *address) as i32)
         .collect();
     result.program_reads = bus.program_reads();
+    if record_extents {
+        result.executed_instruction_bytes = Some(extents.into_iter().collect());
+    }
     if let Some(fault) = bus.take_fault() {
         result.status = 2;
         result.error = Some(fault.to_string());
@@ -346,6 +377,9 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 fn validate_request(request: &Request) -> Result<(), String> {
     if request.protocol_version != PROTOCOL_VERSION {
         return Err("unsupported protocol version".into());
+    }
+    if request.operation != "acquisitionSequence" && request.acquisition_sequence.is_some() {
+        return Err("acquisition observations are unavailable to other operations".into());
     }
     if request.allow_assumptions.len() > 2
         || request
@@ -435,6 +469,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
             crate::producer::validate_producer_request(request)?;
         }
         "checksumBatch" => crate::checksum::validate_request(request)?,
+        "acquisitionSequence" => crate::acquisition::validate_request(request)?,
         _ => return Err("unsupported operation".into()),
     }
     Ok(())
@@ -443,6 +478,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "acquisitionSequence" {
+        return crate::acquisition::run_sequence_request(&request, response);
+    }
     if request.operation == "producerBatch" {
         return crate::producer::run_producer_batch(&request, response);
     }
