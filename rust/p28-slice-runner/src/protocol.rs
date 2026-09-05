@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 pub const PROTOCOL_VERSION: u32 = 1;
 pub const UPSTREAM_COMMIT: &str = "85b30752473ca9979e4ad9b307ea05a30c0b3d1e";
 pub const ADD_ASSUMPTION: &str = "oki.add-er3-a";
+pub const PRODUCER_ADD_ASSUMPTION: &str = "oki.add-er1-a";
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -13,6 +14,7 @@ pub struct Request {
     pub allow_assumptions: Vec<String>,
     pub scratch_patterns: Vec<u8>,
     pub synthetic: Option<SyntheticContract>,
+    pub producer_cases: Option<Vec<[u32; 14]>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -52,6 +54,10 @@ pub struct Response {
     pub threshold_rows: Vec<[i32; 12]>,
     pub diagnostics: Vec<Diagnostic>,
     pub synthetic_result: Option<CaseResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub producer_rows: Option<Vec<[i32; 22]>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub producer_threshold_rows: Option<Vec<[i32; 9]>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -99,12 +105,20 @@ impl Response {
                 "load-zero-flag-and-dd-contract",
                 "word-srl-preserves-noncarry-flags",
                 "bit-operands-use-byte-access",
+                "clr-accumulator-zero-flag",
+                "jrnz-dpl-byte-count",
+                "adcb-r0-immediate-half-carry",
+                "inc-x1-half-carry",
+                "indexed-alternate-immediate-displacement",
+                "word-data-access-alignment",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
             threshold_rows: vec![],
             diagnostics: vec![],
             synthetic_result: None,
+            producer_rows: None,
+            producer_threshold_rows: None,
         }
     }
 }

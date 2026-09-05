@@ -8,7 +8,7 @@ public sealed partial class CliApplication
     {
         if (args.Length == 0)
         {
-            throw new CliUsageException("Usage: hondaecu research p28-vtec <inspect|plan|apply|verify> ...");
+            throw new CliUsageException("Usage: hondaecu research p28-vtec <inspect|plan|apply|verify|execute-check|producer-check> ...");
         }
 
         return args[0] switch
@@ -22,7 +22,7 @@ public sealed partial class CliApplication
     {
         if (args.Length == 0)
         {
-            throw new CliUsageException("Usage: hondaecu research p28-vtec <inspect|plan|apply|verify> ...");
+            throw new CliUsageException("Usage: hondaecu research p28-vtec <inspect|plan|apply|verify|execute-check|producer-check> ...");
         }
 
         return args[0] switch
@@ -32,6 +32,7 @@ public sealed partial class CliApplication
             "apply" => await P28VtecApplyAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "verify" => await P28VtecVerifyAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "execute-check" => await P28VtecExecuteCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "producer-check" => await P28VtecProducerCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
             _ => throw new CliUsageException($"Unknown p28-vtec research command '{args[0]}'."),
         };
     }

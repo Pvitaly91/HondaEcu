@@ -49,7 +49,6 @@ public static class P28ByteExecutionValidator
     public const string UpstreamCommit = "85b30752473ca9979e4ad9b307ea05a30c0b3d1e";
     public const string AddAssumption = "oki.add-er3-a";
     private static readonly int[] Patterns = [0, 85, 170];
-    private static readonly string[] ExpectedFixes = ["word-ror-through-carry-preserves-noncarry-flags", "load-zero-flag-and-dd-contract", "word-srl-preserves-noncarry-flags", "bit-operands-use-byte-access"];
 
     public static void ValidateAdmission(
         RomImage baseline, RomProfile profile, P28ExactBaselineBinding binding, bool confirmed,
@@ -370,7 +369,7 @@ public static class P28ByteExecutionValidator
             index == 0 ? "baseline" : "derived", counter.Build(), readChecks[index], disabledChecks[index])).ToArray();
         var failed = compactSummary.HasFailure || threshold.Any(item => item.Counts.HasFailure || item.Counts.StoppedUnresolved > 0) ||
             comparison is { ExactChangedCaseSet: false } || comparison is { ChangedByteActuallyRead: false };
-        return new P28ExecutionReport(1, "0.1.0", UpstreamCommit, fixes, "SeededRomSlice", profile.Id,
+        return new P28ExecutionReport(1, root.GetProperty("runnerVersion").GetString()!, UpstreamCommit, fixes, "SeededRomSlice", profile.Id,
             baseline.Hash, derived?.Hash, P28VtecInspector.ComputeProfileDigest(profile),
             P28RawThresholdEditor.ComputeBindingDigest(binding), plan is null ? null : P28RawThresholdEditor.ComputePlanDigest(plan),
             contracts, allowAddAssumption ? "conditional" : "strict", allowAddAssumption ? [AddAssumption] : [], used ? [AddAssumption] : [],
@@ -414,21 +413,7 @@ public static class P28ByteExecutionValidator
     }
 
     private static string[] ValidateIdentity(JsonElement root, string operation)
-    {
-        if (root.GetProperty("protocolVersion").GetInt32() != 1 ||
-            root.GetProperty("operation").GetString() != operation ||
-            root.GetProperty("upstreamCommit").GetString() != UpstreamCommit ||
-            root.GetProperty("runnerVersion").GetString() != "0.1.0")
-        {
-            throw Protocol("Runner identity, operation or protocol version differs from this audited adapter.");
-        }
-        var fixes = root.GetProperty("localSemanticFixes").EnumerateArray().Select(item => item.GetString()!).ToArray();
-        if (!fixes.Order(StringComparer.Ordinal).SequenceEqual(ExpectedFixes.Order(StringComparer.Ordinal)))
-        {
-            throw Protocol("Audited local semantic fixes must be declared exactly.");
-        }
-        return fixes;
-    }
+        => SliceRunnerIdentity.Validate(root, operation);
 
     private static int PatternIndex(int pattern)
     {

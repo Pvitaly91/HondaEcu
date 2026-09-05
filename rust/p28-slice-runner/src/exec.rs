@@ -16,8 +16,8 @@
 
 use crate::bus::{AccessFault, Bus};
 use crate::cpu::Cpu;
-use crate::decoder::{Decoded, decode};
-use crate::operand::{Arg, Mem, Parsed, Reg, table};
+use crate::decoder::{decode, Decoded};
+use crate::operand::{table, Arg, Mem, Parsed, Reg};
 
 /// One coherent data-space API for CPU SFR aliases, register-bank operands,
 /// instruction memory accesses and caller seeding. No RAM shadow of 0..7 exists.
@@ -174,7 +174,10 @@ impl<'a> Exec<'a> {
         if byte {
             read_data_u8(self.cpu, self.bus, address) as u16
         } else {
-            read_data_u16(self.cpu, self.bus, address)
+            // Architectural word boundary, not address-space wrapping:
+            // effective-address overflow is checked before reaching here.
+            // Manual Fig.1-8/Table1-3-1 (1-20); ROM/user-stack are exceptions.
+            read_data_u16(self.cpu, self.bus, address & !1)
         }
     }
 
@@ -182,7 +185,7 @@ impl<'a> Exec<'a> {
         if byte {
             write_data_u8(self.cpu, self.bus, address, value as u8);
         } else {
-            write_data_u16(self.cpu, self.bus, address, value);
+            write_data_u16(self.cpu, self.bus, address & !1, value);
         }
     }
 
@@ -216,6 +219,10 @@ impl<'a> Exec<'a> {
             Mem::IdxReg(r) => {
                 let value = self.reg(r);
                 self.checked_address(value, f.n16 as i32, "data")
+            }
+            Mem::IdxRegAlt(r) => {
+                let value = self.reg(r);
+                self.checked_address(value, f.n16_alt as i32, "data")
             }
             Mem::IdxMemN8 => {
                 let base = self.load(f.n8 as u16, false);
@@ -304,7 +311,11 @@ impl<'a> Exec<'a> {
     }
 
     fn mask(v: u16, byte: bool) -> u16 {
-        if byte { v & 0xFF } else { v }
+        if byte {
+            v & 0xFF
+        } else {
+            v
+        }
     }
 
     // ---- stack -----------------------------------------------------------
@@ -358,7 +369,14 @@ impl<'a> Exec<'a> {
                 self.write(&args[0], byte, y);
                 self.write(&args[1], byte, x);
             }
-            "CLR" => self.write(&args[0], byte, 0),
+            "CLR" => {
+                self.write(&args[0], byte, 0);
+                // CLR A F9 is equivalent to L A,#0, unlike CLR obj.
+                // Manual printed 3-31: ZF=1; decoder establishes DD=1.
+                if !byte && args[0] == Arg::Reg(Reg::A) {
+                    self.cpu.zf = true;
+                }
+            }
 
             // ---- arithmetic / logic --------------------------------------
             "ADD" | "ADC" | "SUB" | "SBC" | "CMP" | "CMPC" => {
@@ -390,6 +408,11 @@ impl<'a> Exec<'a> {
                 };
                 self.cpu.cf = carry;
                 self.set_zf(res as u16, byte);
+                // Narrow newly audited producer form: ADCB r0,#N8.
+                // Manual 3-12 and user manual 33: half carry is bit3 carry.
+                if base == "ADC" && byte && args[0] == Arg::R(0) && args[1] == Arg::ImmN8 {
+                    self.cpu.hc = (a & 15) + (b & 15) + carry_in > 15;
+                }
                 if !matches!(base, "CMP" | "CMPC") {
                     self.write(&args[0], byte, res as u16);
                 }
@@ -415,6 +438,10 @@ impl<'a> Exec<'a> {
                 };
                 let res = Self::mask(res, byte);
                 self.set_zf(res, byte);
+                // INC X1 (70), manual 3-60: CF/DD unchanged, ZF/HC updated.
+                if base == "INC" && !byte && args[0] == Arg::Reg(Reg::X1) {
+                    self.cpu.hc = v & 15 == 15;
+                }
                 self.write(&args[0], byte, res);
             }
             "MUL" => {
@@ -589,7 +616,8 @@ impl<'a> Exec<'a> {
                 let old = self.reg(Reg::Usp);
                 let u = self.checked_address(old, -2, "data");
                 self.set_reg(Reg::Usp, u);
-                self.store(u, false, v);
+                // User-stack accesses do not word-align (manual 1-20).
+                write_data_u16(self.cpu, self.bus, u, v);
             }
 
             // ---- control flow --------------------------------------------
@@ -659,10 +687,12 @@ impl<'a> Exec<'a> {
                 }
             }
             "JRNZ" => {
-                // Decrement the named register and branch while it is non-zero.
-                let v = self.read(&args[0], false, false).wrapping_sub(1);
-                self.write(&args[0], false, v);
-                if v != 0 {
+                // JRNZ DP decrements/tests DPL only; DPH and every flag remain
+                // intact. Manual printed 3-68, opcode 30 rel8.
+                let old = self.read(&args[0], false, false);
+                let low = (old as u8).wrapping_sub(1);
+                self.write(&args[0], false, (old & 0xFF00) | low as u16);
+                if low != 0 {
                     let off = self.d.fields.rel8 as i16;
                     self.cpu.pc = self.checked_address(self.cpu.pc, off as i32, "code");
                     self.branch_taken = true;
@@ -794,6 +824,214 @@ pub fn step(cpu: &mut Cpu, bus: &mut Bus) -> Result<Decoded, ExecError> {
         cpu.cycles += 4;
     }
     Ok(d)
+}
+
+#[cfg(test)]
+mod producer_form_tests {
+    use super::*;
+
+    fn machine(bytes: &[u8]) -> (Cpu, Bus) {
+        let mut cpu = Cpu::new();
+        cpu.set_psw_u16(0x0331);
+        cpu.lrb = 0x43;
+        (cpu, Bus::new(bytes.to_vec(), 0xA5))
+    }
+
+    #[test]
+    fn clr_accumulator_sets_zero_and_word_descriptor_only() {
+        let (mut cpu, mut bus) = machine(&[0xF9]);
+        cpu.a = 0xFFFF;
+        cpu.cf = true;
+        cpu.hc = true;
+        let before = cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_DD_BIT);
+        assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "CLR A");
+        assert_eq!(cpu.a, 0);
+        assert!(cpu.zf);
+        assert!(cpu.dd);
+        assert_eq!(cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_DD_BIT), before);
+    }
+
+    #[test]
+    fn jrnz_decrements_only_dpl_and_branches_on_only_dpl() {
+        for (initial, expected, pc) in [
+            (0x1201, 0x1200, 2),
+            (0x1200, 0x12FF, 4),
+            (0xFFFF, 0xFFFE, 4),
+        ] {
+            let (mut cpu, mut bus) = machine(&[0x30, 2, 0, 0, 0]);
+            cpu.set_psw_u16(0xF331);
+            write_data_u16(&mut cpu, &mut bus, 0x8C, initial);
+            let before = cpu.psw_u16();
+            assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "JRNZ DP, rel8");
+            assert_eq!(read_data_u16(&cpu, &mut bus, 0x8C), expected);
+            assert_eq!(cpu.pc, pc);
+            assert_eq!(cpu.psw_u16(), before);
+        }
+    }
+
+    #[test]
+    fn adcb_r0_immediate_has_byte_carry_halfcarry_and_preserves_banked_neighbor() {
+        for dd in [false, true] {
+            for initial in 0..=u8::MAX {
+                for immediate in [0, 1, 7, 15, 255] {
+                    for carry in [false, true] {
+                        let (mut cpu, mut bus) = machine(&[0x20, 0x90, immediate]);
+                        cpu.dd = dd;
+                        cpu.cf = carry;
+                        cpu.hc = false;
+                        write_data_u8(&mut cpu, &mut bus, 0x218, initial);
+                        let before =
+                            cpu.psw_u16() & !(Cpu::PSW_CF_BIT | Cpu::PSW_ZF_BIT | Cpu::PSW_HC_BIT);
+                        let decoded = step(&mut cpu, &mut bus).unwrap();
+                        let expected = initial as u16 + immediate as u16 + u16::from(carry);
+                        assert_eq!(decoded.mnemonic, "ADCB r0, #N8");
+                        assert_eq!(read_data_u8(&cpu, &mut bus, 0x218), expected as u8);
+                        assert_eq!(read_data_u8(&cpu, &mut bus, 0x219), 0xA5);
+                        assert_eq!(cpu.cf, expected > 255);
+                        assert_eq!(cpu.zf, expected % 256 == 0);
+                        assert_eq!(
+                            cpu.hc,
+                            (initial & 15) as u16 + (immediate & 15) as u16 + u16::from(carry) > 15
+                        );
+                        assert_eq!(
+                            cpu.psw_u16() & !(Cpu::PSW_CF_BIT | Cpu::PSW_ZF_BIT | Cpu::PSW_HC_BIT),
+                            before
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn inc_x1_word_updates_zero_halfcarry_but_not_carry_or_dd() {
+        for value in [0x000F, 0x00FF, 0xFFFF, 0x8000] {
+            let (mut cpu, mut bus) = machine(&[0x70]);
+            cpu.cf = true;
+            cpu.hc = false;
+            cpu.dd = true;
+            write_data_u16(&mut cpu, &mut bus, 0x88, value);
+            let before = cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_HC_BIT);
+            assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "INC X1");
+            assert_eq!(read_data_u16(&cpu, &mut bus, 0x88), value.wrapping_add(1));
+            assert_eq!(cpu.zf, value == 0xFFFF);
+            assert_eq!(cpu.hc, value & 15 == 15);
+            assert_eq!(cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_HC_BIT), before);
+        }
+    }
+
+    #[test]
+    fn indexed_immediate_move_keeps_displacement_separate_from_value() {
+        let (mut cpu, mut bus) = machine(&[0xB0, 0x00, 0x03, 0x98, 0x34, 0x12]);
+        write_data_u16(&mut cpu, &mut bus, 0x88, 2);
+        let before = cpu.psw_u16();
+        assert_eq!(
+            step(&mut cpu, &mut bus).unwrap().mnemonic,
+            "MOV N'16[X1], #N16"
+        );
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x302), 0x1234);
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x300), 0xA5A5);
+        assert_eq!(cpu.psw_u16(), before);
+    }
+
+    #[test]
+    fn indexed_word_load_uses_documented_word_boundary_not_adjacent_bytes() {
+        let (mut cpu, mut bus) = machine(&[0xE0, 0x01, 0x03]);
+        write_data_u16(&mut cpu, &mut bus, 0x88, 2);
+        write_data_u16(&mut cpu, &mut bus, 0x302, 0x1234);
+        write_data_u8(&mut cpu, &mut bus, 0x304, 0xAB);
+        assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "L A, N16[X1]");
+        assert_eq!(cpu.a, 0x1234);
+    }
+
+    #[test]
+    fn word_alignment_does_not_align_raw_seeding_byte_operands_or_rom_reads() {
+        let (mut cpu, mut bus) = machine(&[0xB0, 0x01, 0x03, 0x98, 0x34, 0x12]);
+        write_data_u16(&mut cpu, &mut bus, 0x88, 2);
+        step(&mut cpu, &mut bus).unwrap();
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x302), 0x1234);
+        assert_eq!(read_data_u8(&cpu, &mut bus, 0x304), 0xA5);
+        // The raw snapshot API deliberately addresses consecutive bytes.
+        write_data_u16(&mut cpu, &mut bus, 0x303, 0xFEDC);
+        assert_eq!(read_data_u8(&cpu, &mut bus, 0x303), 0xDC);
+        assert_eq!(read_data_u8(&cpu, &mut bus, 0x304), 0xFE);
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x303), 0xFEDC);
+        // LC is ROM addressing, explicitly excluded from word alignment.
+        let (mut cpu, mut bus) = machine(&[0x92, 0xA8, 0xAA, 0x34, 0x12]);
+        write_data_u16(&mut cpu, &mut bus, 0x8C, 3);
+        step(&mut cpu, &mut bus).unwrap();
+        assert_eq!(cpu.a, 0x1234);
+        assert_eq!(bus.program_reads(), vec![3, 4]);
+    }
+
+    #[test]
+    fn conditional_add_er1_then_adcb_r0_accumulates_multiple_word_carries() {
+        // This test is CONDITIONAL on oki.add-er1-a. It checks the implemented
+        // software hypothesis, not primary evidence for the missing ADD form.
+        for samples in [
+            [0xFFFF; 6],
+            [1, 0xFFFF, 1, 0xFFFF, 1, 0xFFFF],
+            [0x8000, 0x8000, 0x7FFF, 1, 0, 0xFFFF],
+            [0, 0, 0, 0, 0, 0],
+        ] {
+            let (mut cpu, mut bus) = machine(&[0x45, 0x81, 0x20, 0x90, 0]);
+            cpu.lrb = 0x123; // Full LRB, not a hard-coded low-page bank.
+            cpu.dd = true;
+            let bank = 0x918;
+            write_data_u16(&mut cpu, &mut bus, bank, 0);
+            write_data_u16(&mut cpu, &mut bus, bank + 2, 0);
+            let mut sum = 0u32;
+            for sample in samples {
+                cpu.pc = 0;
+                cpu.a = sample;
+                assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "ADD er1, A");
+                assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "ADCB r0, #N8");
+                sum += sample as u32;
+                let actual = ((read_data_u16(&cpu, &mut bus, bank) as u32) << 16)
+                    | read_data_u16(&cpu, &mut bus, bank + 2) as u32;
+                assert_eq!(actual, sum);
+                assert_eq!(read_data_u8(&cpu, &mut bus, bank + 1), 0);
+                assert_eq!(read_data_u16(&cpu, &mut bus, 0x202), 0xA5A5);
+            }
+        }
+    }
+
+    #[test]
+    fn producer_offpage_bit_forms_and_jbs_keep_the_required_flags_and_aliases() {
+        for (opcode, bit, set) in [(0x0C, 4, false), (0x0D, 5, false), (0x1D, 5, true)] {
+            for old_set in [false, true] {
+                let (mut cpu, mut bus) = machine(&[0xC4, 0x17, opcode]);
+                cpu.lrb = 0x123;
+                let original = if old_set { 0x81 | (1 << bit) } else { 0x81 };
+                write_data_u8(&mut cpu, &mut bus, 0x917, original);
+                let before = cpu.psw_u16() & !Cpu::PSW_ZF_BIT;
+                step(&mut cpu, &mut bus).unwrap();
+                assert_eq!(cpu.zf, !old_set);
+                assert_eq!(cpu.psw_u16() & !Cpu::PSW_ZF_BIT, before);
+                assert_eq!(
+                    read_data_u8(&cpu, &mut bus, 0x917),
+                    if set {
+                        original | (1 << bit)
+                    } else {
+                        original & !(1 << bit)
+                    }
+                );
+                assert_eq!(read_data_u8(&cpu, &mut bus, 0x918), 0xA5);
+            }
+        }
+        for set in [false, true] {
+            let (mut cpu, mut bus) = machine(&[0xEF, 0x17, 2, 0, 0, 0]);
+            cpu.lrb = 0x123;
+            write_data_u8(&mut cpu, &mut bus, 0x917, if set { 0x80 } else { 0 });
+            let before = cpu.psw_u16();
+            assert_eq!(
+                step(&mut cpu, &mut bus).unwrap().mnemonic,
+                "JBS off N8.7, rel8"
+            );
+            assert_eq!(cpu.pc, if set { 5 } else { 3 });
+            assert_eq!(cpu.psw_u16(), before);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -948,7 +1186,9 @@ mod tests {
         let (mut cpu, mut bus) = machine(&[0xE3, 0xB3]); // L A,-77[USP].
         cpu.set_psw_u16(1);
         write_data_u16(&mut cpu, &mut bus, 0x8E, 0x180);
-        write_data_u16(&mut cpu, &mut bus, 0x133, 0x1234);
+        // Effective address0133 is checked, then CPU word-aligned to0132
+        // (manual1-20). Caller seed writes are raw consecutive bytes.
+        write_data_u16(&mut cpu, &mut bus, 0x132, 0x1234);
         step(&mut cpu, &mut bus).unwrap();
         assert_eq!(cpu.a, 0x1234);
         cpu.pc = 0;

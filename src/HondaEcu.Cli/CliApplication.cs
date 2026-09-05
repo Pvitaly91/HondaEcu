@@ -99,6 +99,13 @@ public sealed partial class CliApplication
                     [--profile p28-304] [--confirm-profile]
           research p28-vtec verify <output> --baseline <original> --baseline-binding <private-json>
                     --plan <private-json> --report <private-json> [--output <private-json>]
+          research p28-vtec execute-check <baseline> --profile p28-304 --confirm-profile
+                    --baseline-binding <private-json> --runner <rust-executable> --output <private-json>
+                    [--allow-assumption oki.add-er3-a] [--derived <child> --plan <private-json> --patch-report <private-json>]
+          research p28-vtec producer-check <baseline> --profile p28-304 --confirm-profile
+                    --baseline-binding <private-json> --runner <rust-executable> --output <private-json>
+                    [--allow-assumption oki.add-er1-a] [--allow-assumption oki.add-er3-a]
+                    [--derived <child> --plan <private-json> --patch-report <private-json>] [--scaling <private-json>]
 
         ROM outputs are for PC inspection only unless separately validated.
         Exit codes: 0 success, 1 operation error, 2 usage error, 3 verification failure.

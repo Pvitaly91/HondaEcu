@@ -51,6 +51,8 @@ pub enum Mem {
     IdxUsp,
     /// `N16[reg]`
     IdxReg(Reg),
+    /// `N'16[reg]` -- displacement distinct from the main immediate value.
+    IdxRegAlt(Reg),
     /// `N16[N8]` -- base is the word held at RAM `N8`.
     IdxMemN8,
     /// `N16[off N8]` -- base is the word held at the LRB-paged `off N8`.
@@ -156,7 +158,7 @@ fn parse_arg(s: &str) -> Option<Arg> {
                 ("N16", "N8") => Mem::IdxMemN8,
                 ("N16", "off N8") => Mem::IdxMemOff,
                 ("N16", b) => Mem::IdxReg(parse_reg(b)?),
-                ("N'16", b) => Mem::IdxReg(parse_reg(b)?),
+                ("N'16", b) => Mem::IdxRegAlt(parse_reg(b)?),
                 _ => return None,
             }));
         }

@@ -37,6 +37,8 @@ M1c adds [one-slot PC-only raw threshold plan/apply/verify and derived-file line
 
 M1d adds [bounded byte-executed slice validation](docs/M1D_BYTECODE_SLICE_VALIDATION.md): one audited Rust CPU runner and a thin C# process adapter, with strict unresolved-instruction stops and explicitly conditional ADD results. It does not boot an ECU, prove hardware behavior, establish physical RPM, or complete M1. Third-party component licenses/notices are listed separately in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md); no root license is selected.
 
+M1e adds [RPM producer execution and explicit scaling analysis](docs/M1E_RPM_PRODUCER_AND_SCALING.md) through `research p28-vtec producer-check`. Six interval-derived words feed actual G → compact F → threshold execution, checked against independent integer models. The private 133978-case batch has 98 strict matches and 133880 separately conditional matches, with no mismatches; strict mode stops the latter as unresolved. The source-derived timer selector is CLK/32, but board frequency/event geometry remain unknown. Optional rational preview requires explicit assumptions, never enables `physicalRpmAvailable`, and does not complete M1 or make a ROM flash-ready.
+
 ## Build and test
 
 Install a .NET 8 SDK and Rust toolchain 1.85.1, then run (the .NET integration tests require the built Rust executable):

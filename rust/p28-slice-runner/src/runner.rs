@@ -4,7 +4,7 @@ use crate::decoder::decode;
 use crate::exec::{read_data_u8, step, write_data_u16, write_data_u8};
 use crate::protocol::{
     CaseResult, Diagnostic, Request, Response, SyntheticContract, TraceEntry, ADD_ASSUMPTION,
-    PROTOCOL_VERSION,
+    PRODUCER_ADD_ASSUMPTION, PROTOCOL_VERSION,
 };
 
 const MAX_TRACE: usize = 128;
@@ -95,6 +95,23 @@ pub fn execute_case(
     allow_add: bool,
     capture_trace: bool,
 ) -> CaseResult {
+    let (mut cpu, mut bus) = seed_machine(rom, contract, scratch);
+    let assumptions = if allow_add {
+        vec![ADD_ASSUMPTION]
+    } else {
+        vec![]
+    };
+    execute_in_state(
+        &mut cpu,
+        &mut bus,
+        contract,
+        &assumptions,
+        capture_trace,
+        false,
+    )
+}
+
+pub(crate) fn seed_machine(rom: &[u8], contract: &SliceContract, scratch: u8) -> (Cpu, Bus) {
     let mut cpu = Cpu::new();
     let mut bus = Bus::new(rom.to_vec(), scratch);
     cpu.pc = contract.entry_pc;
@@ -111,6 +128,17 @@ pub fn execute_case(
     for [address, value] in &contract.data_seeds {
         write_data_u8(&mut cpu, &mut bus, *address, *value as u8);
     }
+    (cpu, bus)
+}
+
+pub(crate) fn execute_in_state(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    contract: &SliceContract,
+    assumptions: &[&str],
+    capture_trace: bool,
+    producer_policy: bool,
+) -> CaseResult {
     let mut result = CaseResult {
         status: 0,
         used_assumptions: vec![],
@@ -158,8 +186,24 @@ pub fn execute_case(
                 result.error = Some("instruction crosses allowed code boundary".into());
                 break;
             }
-            if !supported_operation(decoded.mnemonic) {
-                result.status = 2;
+            let mut required_assumption = None;
+            let admitted = if producer_policy {
+                match crate::instruction_forms::producer_form_admission(&decoded) {
+                    crate::instruction_forms::FormAdmission::Allowed => true,
+                    crate::instruction_forms::FormAdmission::Assumption(id) => {
+                        required_assumption = Some(id);
+                        true
+                    }
+                    crate::instruction_forms::FormAdmission::Unsupported => false,
+                }
+            } else {
+                supported_operation(decoded.mnemonic)
+            };
+            if !admitted {
+                // A decoded producer form outside the audited registry is an
+                // unresolved evidence boundary, not an implicitly admitted
+                // instruction merely because its mnemonic is familiar.
+                result.status = if producer_policy { 1 } else { 2 };
                 result.error = Some(format!(
                     "unimplemented in reviewed slice subset: {}",
                     decoded.mnemonic
@@ -168,20 +212,32 @@ pub fn execute_case(
             }
             // This word object form is DD-independent in the upstream table.
             // Never allow DD=0 to bypass the research assumption gate.
-            let reaches_add = decoded.len == 2
-                && bus.fetch_code_u8(pc) == 0x47
-                && bus.fetch_code_u8(pc + 1) == 0x81;
-            if reaches_add {
-                if !allow_add {
-                    result.status = 1;
-                    result.error = Some(format!("unresolved instruction: {ADD_ASSUMPTION}"));
-                    break;
-                }
-                if result.used_assumptions.is_empty() {
-                    result.used_assumptions.push(ADD_ASSUMPTION.into());
+            if decoded.len == 2 && bus.fetch_code_u8(pc + 1) == 0x81 {
+                match bus.fetch_code_u8(pc) {
+                    0x47 => required_assumption = Some(ADD_ASSUMPTION),
+                    0x45 => required_assumption = Some(PRODUCER_ADD_ASSUMPTION),
+                    0x44 | 0x46 => {
+                        result.status = 1;
+                        result.error = Some(
+                            "word object ADD form not established and no defined permission exists"
+                                .into(),
+                        );
+                        break;
+                    }
+                    _ => {}
                 }
             }
-            let execution = step(&mut cpu, &mut bus);
+            if let Some(id) = required_assumption {
+                if !assumptions.contains(&id) {
+                    result.status = 1;
+                    result.error = Some(format!("unresolved instruction: {id}"));
+                    break;
+                }
+                if !result.used_assumptions.iter().any(|used| used == id) {
+                    result.used_assumptions.push(id.into());
+                }
+            }
+            let execution = step(cpu, bus);
             result.steps += 1;
             if capture_trace && result.trace.len() < MAX_TRACE {
                 result.trace.push(TraceEntry {
@@ -214,7 +270,7 @@ pub fn execute_case(
     result.outputs = contract
         .output_addresses
         .iter()
-        .map(|address| read_data_u8(&cpu, &mut bus, *address) as i32)
+        .map(|address| read_data_u8(cpu, bus, *address) as i32)
         .collect();
     result.program_reads = bus.program_reads();
     if let Some(fault) = bus.take_fault() {
@@ -224,7 +280,7 @@ pub fn execute_case(
     result
 }
 
-fn compact_contract(raw: u16, s: bool) -> SliceContract {
+pub(crate) fn compact_contract(raw: u16, s: bool) -> SliceContract {
     SliceContract {
         entry_pc: 0x07C7,
         exit_pcs: vec![0x0822],
@@ -244,7 +300,7 @@ fn compact_contract(raw: u16, s: bool) -> SliceContract {
     }
 }
 
-fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool) -> SliceContract {
+pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool) -> SliceContract {
     SliceContract {
         entry_pc: 0x122C,
         exit_pcs: vec![0x126D, 0x1281],
@@ -273,11 +329,17 @@ fn validate_request(request: &Request) -> Result<(), String> {
     if request.protocol_version != PROTOCOL_VERSION {
         return Err("unsupported protocol version".into());
     }
-    if request.allow_assumptions.len() > 1
+    if request.allow_assumptions.len() > 2
         || request
             .allow_assumptions
             .iter()
-            .any(|s| s != ADD_ASSUMPTION)
+            .any(|s| s != ADD_ASSUMPTION && s != PRODUCER_ADD_ASSUMPTION)
+        || request
+            .allow_assumptions
+            .iter()
+            .collect::<std::collections::HashSet<_>>()
+            .len()
+            != request.allow_assumptions.len()
     {
         return Err("unsupported or duplicate assumption".into());
     }
@@ -293,6 +355,11 @@ fn validate_request(request: &Request) -> Result<(), String> {
     match request.operation.as_str() {
         "p28Batch" => {
             if request.synthetic.is_some()
+                || request.producer_cases.is_some()
+                || request
+                    .allow_assumptions
+                    .iter()
+                    .any(|s| s != ADD_ASSUMPTION)
                 || request.scratch_patterns != [0, 85, 170]
                 || request.images[0].id != "baseline"
                 || request.images.iter().any(|i| i.rom.len() != 32768)
@@ -302,7 +369,10 @@ fn validate_request(request: &Request) -> Result<(), String> {
             }
         }
         "synthetic" => {
-            if request.images.len() != 1 || request.scratch_patterns.len() != 1 {
+            if request.images.len() != 1
+                || request.scratch_patterns.len() != 1
+                || request.producer_cases.is_some()
+            {
                 return Err("synthetic request requires one image and one scratch pattern".into());
             }
             let c = request
@@ -335,6 +405,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
                 return Err("conflicting or invalid synthetic entry-state seeds".into());
             }
         }
+        "producerBatch" => {
+            crate::producer::validate_producer_request(request)?;
+        }
         _ => return Err("unsupported operation".into()),
     }
     Ok(())
@@ -343,6 +416,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "producerBatch" {
+        return crate::producer::run_producer_batch(&request, response);
+    }
     let allow_add = request
         .allow_assumptions
         .iter()
@@ -352,12 +428,24 @@ pub fn run_request(request: Request) -> Result<Response, String> {
         response
             .entry_contracts
             .push(serde_json::to_value(c).map_err(|e| e.to_string())?);
-        response.synthetic_result = Some(execute_case(
+        let contract = c.into();
+        let (mut cpu, mut bus) = seed_machine(
             &request.images[0].rom,
-            &c.into(),
+            &contract,
             request.scratch_patterns[0],
-            allow_add,
+        );
+        let assumptions: Vec<_> = request
+            .allow_assumptions
+            .iter()
+            .map(String::as_str)
+            .collect();
+        response.synthetic_result = Some(execute_in_state(
+            &mut cpu,
+            &mut bus,
+            &contract,
+            &assumptions,
             true,
+            false,
         ));
         return Ok(response);
     }

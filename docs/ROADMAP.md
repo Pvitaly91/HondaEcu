@@ -35,12 +35,13 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a / M1b / M1c / M1d research progress (not M1 completion)
+### M1a / M1b / M1c / M1d / M1e research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
 - M1c adds one-slot raw research planning, PC-only copy editing, full-diff verification and parent/plan/report lineage inspection. Targeted manual/opcode checks did not establish the missing live ADD semantics; model status stays unchanged. See [M1c scope and commands](M1C_RAW_THRESHOLD_EDITING.md).
 - M1d adds a minimal audited Rust bytecode slice runner, decoded-instruction regressions, strict/conditional execution categories, and lineage-gated baseline/derived threshold comparison. Seeded slices are distinct from full ECU boot or hardware proof. See [M1d scope and results](M1D_BYTECODE_SLICE_VALIDATION.md).
+- M1e executes the RAM-only six-word interval producer, preserves its actual T/S into compact execution, and compares downstream baseline/child predicates. The 133978-case finite batch separates 98 strict from 133880 conditional matches, with zero mismatches. Exact instruction-form admission keeps the new er1 ADD permission separate from er3. Timer configuration is source-derived, physical frequency/event geometry remain unknown, and optional rational scaling has no implicit defaults. See [M1e producer, state and scaling evidence](M1E_RPM_PRODUCER_AND_SCALING.md).
 - Physical RPM, independent editor validation, checksum validation and hardware behavior remain unestablished. Public profiles remain non-writable; Oracle v2 evidence levels are not promoted by interpreter/model agreement.
 
 See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). The next narrow research gate is the missing instruction semantics, not an editor installation or another preparation framework.

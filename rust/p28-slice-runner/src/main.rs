@@ -2,7 +2,8 @@ use std::io::{self, Read, Write};
 
 use p28_slice_runner::{protocol::Request, runner::run_request};
 
-const MAX_REQUEST_BYTES: u64 = 1_048_576;
+// Bounded producer input vectors fit in one request/process, never one process per case.
+const MAX_REQUEST_BYTES: u64 = 16 * 1_048_576;
 
 fn main() {
     if let Err(error) = run() {
