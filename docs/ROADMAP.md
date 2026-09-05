@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1g research progress (not M1 completion)
+### M1a–M1h research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -44,6 +44,7 @@ The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery i
 - M1e executes the RAM-only six-word interval producer, preserves its actual T/S into compact execution, and compares downstream baseline/child predicates. The 133978-case finite batch separates 98 strict from 133880 conditional matches, with zero mismatches. Exact instruction-form admission keeps the new er1 ADD permission separate from er3. Timer configuration is source-derived, physical frequency/event geometry remain unknown, and optional rational scaling has no implicit defaults. See [M1e producer, state and scaling evidence](M1E_RPM_PRODUCER_AND_SCALING.md).
 - M1f adds a separate, read-only native checksum contract, independent C# calculation, incremental Rust byte execution and CLI/Desktop results. The exact research candidate uses a full-image modulo-256 byte sum with fixed zero residue; no storage offset, repair or bypass is invented. See [M1f scope and actual validation record](M1F_NATIVE_CHECKSUM_VALIDATION.md).
 - M1g adds a separate two-change PC-only composition over M1c: one raw threshold plus one computed byte at a privately reviewed exact-baseline CompensationLocation. Static control-flow/data-consumer scope, A/B/C checksum and threshold comparisons, strict native execution before save, and verified original-parent readback remain separate evidence. Legacy raw Save and M1c v1 are unchanged; no generic repair or arbitrary offset is allowed. See [M1g scope, workflow and measured results](M1G_CHECKSUM_PRESERVING_EXPORT.md).
+- M1h adds conditional RPM queries and all-256-raw inverse selection for explicit steady normal-interval scenarios. Exact open/closed transition domains, retained ties, separate G/F permissions and query provenance feed existing M1g planning only after explicit raw selection. No hardware defaults, measured RPM claim, new compensation authority or independent writer are added. See [M1h domain, policy and evidence](M1H_CONDITIONAL_RPM_SELECTION.md).
 - Physical RPM, independent editor validation and hardware behavior remain unestablished. Scoped software checksum evidence does not authenticate a factory revision or make an image flash-ready. Public profiles remain non-writable; Oracle v2 evidence levels are not promoted by interpreter/model agreement.
 
 See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). The next narrow research gate is the missing instruction semantics, not an editor installation or another preparation framework.
@@ -69,6 +70,8 @@ table/step graph, one-slot preview/save/verification, M1d/M1e checks and asynchr
 cancellation. M1f extends that existing checks tab with read-only checksum results.
 M1g adds explicit reviewed-location preview/export and composed-child lineage,
 without silently changing legacy raw Save or promoting a checksum into ECU safety.
+M1h adds a conditional RPM scenario/query section and explicit raw-candidate
+transfer into the existing M1g plan; mathematical and execution statuses stay separate.
 This is not completion of the entire M3 editor milestone or of M1.
 
 ## M4 — Additional OBD1 profiles

@@ -98,6 +98,17 @@ the static non-interference audit or prove ECU safety. Legacy raw Save stays
 unchanged; no arbitrary-offset or repair-any-ROM command is added. Use a new
 portable path such as `artifacts/desktop/win-x64-m1g`; never replace D0/M1f.
 
+M1h adds [conditional RPM preview and inverse threshold selection](docs/M1H_CONDITIONAL_RPM_SELECTION.md)
+for an explicit uniform steady normal-interval scenario. It reuses scaling,
+producer G, compact F and the selected one-step predicate; all 256 raw thresholds
+are considered with exact rational transition endpoints and a documented minimax
+policy that retains ties. No hardware quantities are defaulted, strict model mode
+is the default, and er1/er3 permissions remain independent. A chosen raw requires
+explicit confirmation and existing M1g planning/export admission; the RPM preview
+itself writes only a new private report. Conditional calculations and strict
+checksum results remain distinct, with `physicalRpmAvailable: false` and
+`PcInspectionOnly / NotFlashReady` unchanged.
+
 ## Build and test
 
 Install a .NET 8 SDK and Rust toolchain 1.85.1, then run (the .NET integration tests require the built Rust executable):

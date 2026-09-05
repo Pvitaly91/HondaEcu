@@ -15,7 +15,7 @@
         <Border Background="#142D43" Padding="22,16">
             <StackPanel>
                 <TextBlock Text="HondaEcu" FontSize="27" FontWeight="SemiBold" Foreground="White" />
-                <TextBlock Text="Windows Desktop Research Preview · D0 + M1f + M1g" Foreground="#CBD9E6" Margin="0,3,0,12" />
+                <TextBlock Text="Windows Desktop Research Preview · D0 + M1f + M1g + M1h" Foreground="#CBD9E6" Margin="0,3,0,12" />
                 <WrapPanel>
                     <Button x:Name="OpenBinButton" Command="{Binding OpenBinCommand}" Content="_Відкрити BIN" AutomationProperties.Name="Відкрити BIN" />
                     <Button x:Name="DemoButton" Command="{Binding DemoCommand}" Content="_Демонстраційний режим" AutomationProperties.Name="Демонстраційний режим" />
@@ -127,6 +127,9 @@
                         </Border>
                     </StackPanel>
                 </ScrollViewer>
+            </TabItem>
+            <TabItem Header="M1h · умовні RPM">
+                <controls:RpmPlanningPanel />
             </TabItem>
             <TabItem Header="M1g · окремий експорт">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14">

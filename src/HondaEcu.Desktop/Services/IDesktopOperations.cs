@@ -6,6 +6,8 @@ namespace HondaEcu.Desktop.Services;
 
 public interface IDesktopOperations
 {
+    Task<P28RpmPlanningReport> PreviewRpmAsync(DesktopRpmJob job, CancellationToken cancellationToken) =>
+        Task.Run(() => P28RpmPlanner.Analyze(job.Query, cancellationToken), cancellationToken);
     Task<DesktopValidationResult> ValidateAsync(DesktopValidationJob job, CancellationToken cancellationToken);
     Task<P28RawThresholdVerificationReport> SaveAsync(P28RawThresholdPatchResult result,
         DesktopSavePaths paths, IReadOnlyList<string> protectedPaths, CancellationToken cancellationToken);

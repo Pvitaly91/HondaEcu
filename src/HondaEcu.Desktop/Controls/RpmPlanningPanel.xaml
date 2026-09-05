@@ -1,0 +1,99 @@
+<UserControl x:Class="HondaEcu.Desktop.Controls.RpmPlanningPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:HondaEcu.Desktop.Controls">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14">
+        <StackPanel>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Розрахунок у RPM — умовна модель" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="Лише uniform steady normal intervals. Не measured RPM, не full hysteresis, gates або соленоїд. Hardware: NotRun. PcInspectionOnly / NotFlashReady."
+                               Style="{StaticResource MutedText}" Margin="0,0,0,10" />
+                    <WrapPanel>
+                        <Button Command="{Binding LoadRpmScenarioCommand}" Content="Завантажити явний scaling JSON" AutomationProperties.Name="Завантажити явний scaling JSON" />
+                        <Button Command="{Binding LoadDemoRpmScenarioCommand}" Content="Вигаданий RPM-сценарій — лише Demo" AutomationProperties.Name="Вигаданий RPM-сценарій лише Demo" />
+                        <Button Command="{Binding ClearRpmScenarioCommand}" Content="Прибрати RPM-сценарій" />
+                    </WrapPanel>
+                    <TextBox Text="{Binding RpmScenarioSummary, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
+                             MinHeight="75" MaxHeight="220" VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Величини, походження та claims RPM-сценарію" />
+                    <TextBlock Text="{Binding SelectedSlot.Id}" FontWeight="SemiBold" Margin="0,10,0,4" />
+                    <TextBlock Text="Слот обирається на вкладці «Огляд і зміна». Контекст і prior state не є S для F; S надходить з результату G."
+                               Style="{StaticResource MutedText}" />
+                    <WrapPanel Margin="0,12,0,0">
+                        <StackPanel Margin="0,0,16,8">
+                            <Label Content="Запитаний RPM: точне N або N/D" Target="{Binding ElementName=RpmTargetInput}" Padding="0,0,0,4" />
+                            <TextBox x:Name="RpmTargetInput" Text="{Binding RequestedRpm, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="220" HorizontalAlignment="Left" AutomationProperties.Name="Запитаний умовний RPM" />
+                        </StackPanel>
+                        <StackPanel Margin="0,0,0,8">
+                            <Label Content="Походження нового запиту (override)" Target="{Binding ElementName=RpmProvenanceInput}" Padding="0,0,0,4" />
+                            <TextBox x:Name="RpmProvenanceInput" Text="{Binding RpmQueryProvenance, UpdateSourceTrigger=PropertyChanged}"
+                                     Width="390" HorizontalAlignment="Left" AutomationProperties.Name="Походження запиту RPM" />
+                        </StackPanel>
+                    </WrapPanel>
+                    <TextBlock Text="Порожній запит використовує явно записаний legacy rpm зі scaling JSON. Новий запит створює окремий snapshot; початковий файл не змінюється."
+                               Style="{StaticResource MutedText}" />
+                    <CheckBox Content="oki.add-er1-a — дозволити математичну гіпотезу G" IsChecked="{Binding RpmAllowAddEr1}" AutomationProperties.Name="RPM math permission oki.add-er1-a" />
+                    <CheckBox Content="oki.add-er3-a — окремо дозволити математичну гіпотезу F" IsChecked="{Binding RpmAllowAddEr3}" AutomationProperties.Name="RPM math permission oki.add-er3-a" />
+                    <TextBlock Text="Ці дозволи стосуються лише математики, не запускають runner і не змінюють дозволи byte-execution на вкладці «Перевірки»."
+                               Style="{StaticResource MutedText}" FontSize="12" />
+                    <Button Command="{Binding PreviewRpmCommand}" Content="Обчислити RPM preview та всі 256 raw" HorizontalAlignment="Left"
+                            Style="{StaticResource PrimaryButton}" Margin="0,10,0,0" AutomationProperties.Name="Обчислити умовний RPM preview" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="{Binding RpmPreviewSummary}" TextWrapping="Wrap" Margin="0,0,0,12" AutomationProperties.Name="Статус умовного RPM preview" />
+                    <TextBlock Text="Кандидати — усі raw 0–255; Best зберігає всі точні ties. Жоден рядок не обирається автоматично."
+                               Style="{StaticResource MutedText}" Margin="0,0,0,8" />
+                    <DataGrid ItemsSource="{Binding RpmCandidates}" SelectedItem="{Binding SelectedRpmCandidate}" IsEnabled="{Binding CanSelectRpmCandidate}"
+                              AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single" SelectionUnit="FullRow" CanUserAddRows="False"
+                              CanUserDeleteRows="False" Height="220" RowHeaderWidth="0" HorizontalScrollBarVisibility="Auto"
+                              AutomationProperties.Name="Усі RPM raw кандидати без прихованого вибору">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Raw" Binding="{Binding RawValue}" Width="55" />
+                            <DataGridCheckBoxColumn Header="Best" Binding="{Binding IsBest, Mode=OneWay}" Width="50" />
+                            <DataGridCheckBoxColumn Header="Eligible" Binding="{Binding SimpleSelectable, Mode=OneWay}" Width="70" />
+                            <DataGridTextColumn Header="Точний transition hull (не Mixed)" Binding="{Binding IntervalText}" Width="270" />
+                            <DataGridTextColumn Header="Minimax |ΔRPM|" Binding="{Binding ErrorText}" Width="170" />
+                            <DataGridTextColumn Header="Причина / domain" Binding="{Binding ReasonText}" Width="*" MinWidth="250" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <TextBox Text="{Binding RpmCandidateSummary, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MinHeight="80" MaxHeight="230"
+                             VerticalScrollBarVisibility="Auto" Margin="0,12,0,8" AutomationProperties.Name="Точні області та квантування RPM кандидата" />
+                    <controls:RpmPredicatePlot Rows="{Binding RpmPlotRows}" Caption="{Binding RpmPlotCaption}" Height="295" MinWidth="250"
+                                               Visibility="{Binding HasRpmPlot, Converter={StaticResource BooleanToVisibility}}"
+                                               AutomationProperties.Name="Умовний RPM графік з окремими Mixed Unknown Invalid" />
+                    <TextBlock Text="Без scaling числових RPM немає; compactCode 0–255 залишається на вкладці «Огляд і зміна»."
+                               Style="{StaticResource MutedText}" />
+                    <WrapPanel Margin="0,12,0,0">
+                        <Button Command="{Binding UseRpmCandidateCommand}" Content="Використати цей raw-кандидат у плані" AutomationProperties.Name="Використати цей raw-кандидат у плані" />
+                        <Button Command="{Binding SaveRpmSelectionCommand}" Content="Зберегти selection provenance JSON" AutomationProperties.Name="Зберегти selection provenance JSON" />
+                        <Button Command="{Binding OpenRpmReportCommand}" Content="Повний математичний JSON" />
+                    </WrapPanel>
+                    <TextBlock Text="{Binding RpmPlanStatus}" TextWrapping="Wrap" FontWeight="SemiBold" />
+                    <TextBlock Text="Передача потребує bound original та чинного reviewed CompensationLocation. Збереження BIN — лише чинний M1g export після strict checksum. Checksum pass не робить RPM strict."
+                               Style="{StaticResource MutedText}" Margin="0,8,0,0" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <StackPanel>
+                    <TextBlock Text="Forward: scenario → envelope → G → F → predicate" Style="{StaticResource SectionTitle}" />
+                    <TextBlock Text="Консервативні floor/ceiling комбінації не є доведеною послідовністю capture-подій. Mixed не є ймовірністю. Integer ticks мають одну конфігурацію."
+                               Style="{StaticResource MutedText}" Margin="0,0,0,8" />
+                    <DataGrid ItemsSource="{Binding RpmForwardRows}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False"
+                              CanUserDeleteRows="False" Height="230" RowHeaderWidth="0" HorizontalScrollBarVisibility="Auto"
+                              AutomationProperties.Name="Усі sample configurations та G F predicate результати">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Samples" Binding="{Binding Samples}" Width="250" />
+                            <DataGridTextColumn Header="G disposition / T / S" Binding="{Binding Producer}" Width="270" />
+                            <DataGridTextColumn Header="F Code / ExtraBit" Binding="{Binding Compact}" Width="155" />
+                            <DataGridTextColumn Header="Old → selected raw" Binding="{Binding Predicates}" Width="155" />
+                            <DataGridTextColumn Header="Used assumptions / reason" Binding="{Binding Evidence}" Width="*" MinWidth="320" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

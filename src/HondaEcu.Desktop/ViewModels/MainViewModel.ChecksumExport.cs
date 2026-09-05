@@ -6,6 +6,7 @@ namespace HondaEcu.Desktop.ViewModels;
 
 public sealed partial class MainViewModel
 {
+    private sealed record DefinitionSnapshot(string Path, string Digest);
     private VerifiedCompensationLocation? _compensationLocation;
     private string? _compensationPath;
     private P28ChecksumPreservingPreview? _checksumPreview;
@@ -23,7 +24,8 @@ public sealed partial class MainViewModel
     public bool CanPreviewChecksumExport => !IsBusy && SelectedSlot is not null &&
         (Mode == DesktopAccessMode.Demo || _compensationLocation is not null && Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.VerifiedDerived);
     public bool CanValidateChecksumExport => !IsBusy && _checksumComposition is not null && File.Exists(RunnerPath);
-    public bool CanSaveChecksumExport => !IsBusy && _checksumExport is not null && File.Exists(RunnerPath);
+    public bool CanSaveChecksumExport => !IsBusy && _checksumExport is not null && File.Exists(RunnerPath) &&
+        (_rpmSelection is null || _rpmSelectionPath is not null);
 
     private void InitializeChecksumExportCommands()
     {
@@ -121,28 +123,39 @@ public sealed partial class MainViewModel
         var composition = _checksumComposition!;
         var session = SessionId;
         var runner = RunnerPath;
+        var definition = CaptureDefinition();
+        var rpm = CaptureRpmSelection(document);
         BeginJob();
-        _activeTask = ValidateChecksumCoreAsync(document, composition, runner, session, JobId, _cancellation!.Token);
+        _activeTask = ValidateChecksumCoreAsync(document, composition, runner, definition, rpm, session, JobId, _cancellation!.Token);
         return _activeTask;
     }
 
     private async Task ValidateChecksumCoreAsync(DesktopDocument document, P28VerifiedChecksumComposition composition,
-        string runner, long session, long job, CancellationToken token)
+        string runner, DefinitionSnapshot definition, RpmSelectionSnapshot? rpm, long session, long job, CancellationToken token)
     {
         try
         {
-            var digest = await Task.Run(() => { RequireCurrentInputFiles(document); RequireCurrentDefinition(); return RunnerDigest(runner); }, token);
-            var validated = await Task.Run(() => _operations.ValidateChecksumExportAsync(composition, runner, token), token);
+            var digest = await Task.Run(() =>
+            {
+                RequireCurrentInputFiles(document); RequireDefinition(definition); RequireRpmSelection(rpm, false, token);
+                return RunnerDigest(runner);
+            }, token);
+            var validated = await Task.Run(async () =>
+            {
+                var result = await _operations.ValidateChecksumExportAsync(composition, runner, token).ConfigureAwait(false);
+                token.ThrowIfCancellationRequested();
+                RequireCurrentInputFiles(document); RequireDefinition(definition); RequireRpmSelection(rpm, false, token);
+                if (RunnerDigest(runner) != digest) throw new InvalidDataException("Runner змінився під час виконання.");
+                return result;
+            }, token);
             token.ThrowIfCancellationRequested();
             if (session != SessionId || job != JobId || _disposed) return;
-            RequireCurrentInputFiles(document); RequireCurrentDefinition();
-            if (RunnerDigest(runner) != digest) throw new InvalidDataException("Runner змінився під час виконання.");
             if (validated.Composition.Plan.ToJson(false) != composition.Plan.ToJson(false) || validated.Composition.Image.Hash != composition.Image.Hash)
                 throw new InvalidDataException("Виконання повернуло іншу композицію.");
             P28ChecksumPreservingExecution.ValidateForPublication(validated);
             _checksumExport = validated;
             _validatedRunnerDigest = digest;
-            ChecksumExportPreview = DescribeChecksumPreview(_checksumPreview!, true);
+            ChecksumExportPreview = DescribeChecksumPreview(_checksumPreview!, true) + RpmExportQualification;
             _resultJson = validated.ChecksumReport.ToJson();
             Counters = DesktopCounters.From(validated.ChecksumReport.Counts);
             ResultSummary = "M1g actual strict checksum завершено. Окрема кнопка експорту доступна для цього стану; NotFlashReady.";
@@ -165,25 +178,37 @@ public sealed partial class MainViewModel
         var document = _document!;
         var validated = _checksumExport!;
         var locationPath = _compensationPath!;
+        var definition = CaptureDefinition();
+        var rpm = CaptureRpmSelection(document);
+        var runner = RunnerPath;
+        var runnerDigest = _validatedRunnerDigest;
+        var protectedPaths = Array.AsReadOnly(Protected(document).Concat(new[] { locationPath, runner }).Concat(RpmProtectedPaths()).ToArray());
+        var rpmQualification = RpmExportQualification;
         var session = SessionId;
         BeginJob();
+        var job = JobId;
+        var token = _cancellation!.Token;
         try
         {
-            RequireCurrentInputFiles(document); RequireCurrentDefinition();
-            if (RunnerDigest(RunnerPath) != _validatedRunnerDigest) throw new InvalidDataException("Runner змінився після actual execution. Повторіть перевірку.");
-            var verification = await _operations.SaveChecksumExportAsync(validated, paths,
-                Protected(document).Concat(new[] { locationPath, RunnerPath }).ToArray(), _cancellation!.Token);
+            await Task.Run(() =>
+            {
+                RequireCurrentInputFiles(document); RequireDefinition(definition); RequireRpmSelection(rpm, true, token);
+                if (RunnerDigest(runner) != runnerDigest) throw new InvalidDataException("Runner змінився після actual execution. Повторіть перевірку.");
+            }, token);
+            token.ThrowIfCancellationRequested();
+            if (session != SessionId || job != JobId || _disposed) return;
+            var verification = await _operations.SaveChecksumExportAsync(validated, paths, protectedPaths, token);
             if (!verification.IsValid) throw new InvalidDataException("Нові файли не пройшли readback; залишено для дослідження.");
             // Never trust only a service-returned success or its chosen bytes.
             verification = P28ChecksumPreservingCopyWriter.VerifySavedCopy(validated, paths.OutputPath, paths.PlanPath, paths.ReportPath);
             if (!verification.IsValid) throw new InvalidDataException("Незалежна перевірка складеного lineage не пройшла.");
-            RequireCurrentInputFiles(document); RequireCurrentDefinition();
-            if (session != SessionId || _disposed) return;
+            RequireCurrentInputFiles(document); RequireDefinition(definition);
+            if (session != SessionId || job != JobId || token.IsCancellationRequested || _disposed) return;
             var child = LoadChecksumDocument(paths.OutputPath, (document.Parent ?? document.Image).SourcePath!,
                 document.Profile!.SourcePath!, document.BindingPath!, paths.PlanPath, paths.ReportPath, locationPath, true);
             SetDocument(child);
             _resultJson = verification.ToJson();
-            ResultSummary = "Новий M1g child original parent перечитано; повний diff та reverse restoration підтверджені. Receipt — історичний запуск, не дозвіл на новий export. NotFlashReady.";
+            ResultSummary = "Новий M1g child original parent перечитано; повний diff та reverse restoration підтверджені. Receipt — історичний запуск, не дозвіл на новий export. NotFlashReady." + rpmQualification;
         }
         catch (OperationCanceledException) { if (session == SessionId && !_disposed) StatusText = "Скасовано до публікації."; }
         catch (Exception exception) { SetError(exception, session); }
@@ -253,8 +278,17 @@ public sealed partial class MainViewModel
 
     private void RequireCurrentDefinition()
     {
-        if (_compensationLocation is null || _compensationPath is null ||
-            P28ChecksumPreservingEditor.LoadLocation(_compensationPath).DefinitionDigest != _compensationLocation.DefinitionDigest)
+        RequireDefinition(CaptureDefinition());
+    }
+    private DefinitionSnapshot CaptureDefinition()
+    {
+        if (_compensationLocation is null || _compensationPath is null)
+            throw new InvalidDataException("Reviewed CompensationLocation відсутній або змінився; оберіть і перевірте знову.");
+        return new(_compensationPath, _compensationLocation.DefinitionDigest);
+    }
+    private static void RequireDefinition(DefinitionSnapshot snapshot)
+    {
+        if (P28ChecksumPreservingEditor.LoadLocation(snapshot.Path).DefinitionDigest != snapshot.Digest)
             throw new InvalidDataException("Reviewed CompensationLocation відсутній або змінився; оберіть і перевірте знову.");
     }
     private static string RunnerDigest(string path) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(path)));

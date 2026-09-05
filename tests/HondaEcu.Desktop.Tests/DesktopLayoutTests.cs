@@ -29,15 +29,29 @@ public sealed class DesktopLayoutTests
                 viewModel.EnterDemo();
                 viewModel.ProposedRaw = "60";
                 viewModel.PreviewChange();
+                Assert.Contains(viewModel.PlotRows, row => row.Before != row.After);
                 var content = Assert.IsAssignableFrom<FrameworkElement>(window.Content);
                 var tabs = Descendants<TabControl>(content).Single();
+                tabs.SelectedIndex = 1;
+                viewModel.LoadDemoRpmScenario();
+                RunRpmPreview();
+                Assert.Equal(256, viewModel.RpmCandidates.Count);
+                Assert.DoesNotContain(viewModel.RpmCandidates, candidate => candidate.IsBest);
+                content.Measure(new Size(1280, 900));
+                content.Arrange(new Rect(new Size(1280, 900)));
+                content.UpdateLayout();
+                viewModel.RpmAllowAddEr1 = true;
+                viewModel.RpmAllowAddEr3 = true;
+                RunRpmPreview();
+                viewModel.SelectedRpmCandidate = viewModel.RpmCandidates.Single(candidate => candidate.RawValue == 247);
+                Assert.True(viewModel.HasRpmPlot);
                 foreach (var scale in new[] { 1.0, 1.25, 1.5 })
                 {
                     stage = $"measuring viewport {scale}";
                     // Offscreen DIP measurement, not an OS DPI switch or GUI
                     // smoke test. Real window automation is recorded separately.
                     var viewport = new Size(1280 / scale, 900 / scale);
-                    foreach (var tabIndex in new[] { 0, 1 })
+                    foreach (var tabIndex in Enumerable.Range(0, tabs.Items.Count))
                     {
                         tabs.SelectedIndex = tabIndex;
                         content.Measure(viewport);
@@ -67,7 +81,6 @@ public sealed class DesktopLayoutTests
                 plot.GetBindingExpression(PredicatePlot.RowsProperty)!.UpdateTarget();
                 Assert.Same(viewModel.PlotRows, plot.Rows);
                 Assert.Equal(256, plot.Rows!.Count);
-                Assert.Contains(plot.Rows, row => row.Before != row.After);
                 Assert.False(viewModel.CanSave);
                 var checksum = Assert.IsType<Button>(window.FindName("ChecksumButton"));
                 Assert.Equal("Перевірити штатну checksum", AutomationProperties.GetName(checksum));
@@ -81,6 +94,28 @@ public sealed class DesktopLayoutTests
                 stage = "shutting down application";
                 application.Shutdown();
                 stage = "finished";
+
+                void RunRpmPreview()
+                {
+                    // Populate and realize the actual WPF columns, not just the ViewModel.
+                    // Pump this private offscreen dispatcher until its immutable job finishes.
+                    var frame = new System.Windows.Threading.DispatcherFrame();
+                    Exception? previewFailure = null;
+                    _ = window.Dispatcher.BeginInvoke(new Action(async () =>
+                    {
+                        try { await viewModel.PreviewRpmAsync(); }
+                        catch (Exception exception) { previewFailure = exception; }
+                        finally
+                        {
+                            _ = window.Dispatcher.BeginInvoke(
+                                System.Windows.Threading.DispatcherPriority.ApplicationIdle,
+                                new Action(() => frame.Continue = false));
+                        }
+                    }));
+                    System.Windows.Threading.Dispatcher.PushFrame(frame);
+                    if (previewFailure is not null) ExceptionDispatchInfo.Capture(previewFailure).Throw();
+                    Assert.Empty(viewModel.ErrorText);
+                }
             }
             catch (Exception exception)
             {

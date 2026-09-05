@@ -58,6 +58,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         OpenResultsCommand = new(() => _dialogs.ShowStructuredResult("Структурований результат поточного запуску", _resultJson!),
             () => _resultJson is not null && !IsBusy);
         InitializeChecksumExportCommands();
+        InitializeRpmCommands();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -463,6 +464,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         InvalidateSession();
         _document = document;
         ResetCompensationDefinition(document);
+        ResetRpmScenario();
         ClearPending();
         _allowAddEr1 = false;
         _allowAddEr3 = false;
@@ -499,6 +501,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         SessionId++;
         Cancel();
         ClearChecksumPreview();
+        ClearRpmPreview();
         _resultJson = null;
         Counters = DesktopCounters.Empty;
         ChecksumSummary = null;
@@ -538,6 +541,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         PreviewCommand.Refresh(); RevertCommand.Refresh(); SaveCopyCommand.Refresh(); VerifyCommand.Refresh();
         ExecuteCommand.Refresh(); ProducerCommand.Refresh(); ChecksumCommand.Refresh(); CancelCommand.Refresh(); SelectRunnerCommand.Refresh(); OpenResultsCommand.Refresh();
         RefreshChecksumExportCommands();
+        RefreshRpmCommands();
     }
 
     private async Task BindFromDialogsAsync()

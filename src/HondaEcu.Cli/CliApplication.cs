@@ -128,6 +128,12 @@ public sealed partial class CliApplication
                     --baseline-binding <private-json> --runner <rust-executable> --output <private-json>
                     [--allow-assumption oki.add-er1-a] [--allow-assumption oki.add-er3-a]
                     [--derived <child> --plan <private-json> --patch-report <private-json>] [--scaling <private-json>]
+          research p28-vtec rpm-preview <original> --profile p28-304 --confirm-profile
+                    --baseline-binding <private-json> --slot <slot-id> --output <new-private-json>
+                    [--scaling <explicit-scenario.json>] [--rpm <N/D> --rpm-provenance <text>]
+                    [--allow-assumption oki.add-er1-a] [--allow-assumption oki.add-er3-a]
+                    Conditional mathematical selection only; no BIN, runner or export authority.
+                    Without scaling, numerical RPM is unavailable. Strict model mode is the default.
 
         ROM outputs are for PC inspection only unless separately validated.
         Exit codes: 0 success, 1 operation error, 2 usage error, 3 verification failure.

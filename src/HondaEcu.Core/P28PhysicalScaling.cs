@@ -64,21 +64,17 @@ public static class P28PhysicalScaling
 
     public static P28ScalingAnalysis AnalyzeDocument(JsonElement root)
     {
-        ExactProperties(root, "formatVersion", "scope", "quantities");
-        if (root.GetProperty("formatVersion").ValueKind != JsonValueKind.Number ||
-            !root.GetProperty("formatVersion").TryGetInt32(out var version) || version != 1 ||
-            Text(root.GetProperty("scope")) != "uniform-normal-intervals")
+        var inputs = ReadScenarioQuantities(root, optionalRpm: false);
+        Rational Read(string key)
         {
-            throw new InvalidDataException("Scaling requires formatVersion 1 and scope uniform-normal-intervals.");
+            var value = inputs[key];
+            return new(BigInteger.Parse(value.Numerator, CultureInfo.InvariantCulture), BigInteger.Parse(value.Denominator, CultureInfo.InvariantCulture));
         }
-        var quantities = root.GetProperty("quantities");
-        ExactProperties(quantities, "clockHz", "timerClockDivisor", "eventsPerCrankRev", "eventsPerSample", "rpm");
-        var inputs = new Dictionary<string, P28ScalingQuantity>(StringComparer.Ordinal);
-        var clock = Read("clockHz", "Hz");
-        var divisor = Read("timerClockDivisor", "1");
-        var events = Read("eventsPerCrankRev", "events/crank-revolution");
-        var sample = Read("eventsPerSample", "events/sample");
-        var rpm = Read("rpm", "crank-revolutions/minute");
+        var clock = Read("clockHz");
+        var divisor = Read("timerClockDivisor");
+        var events = Read("eventsPerCrankRev");
+        var sample = Read("eventsPerSample");
+        var rpm = Read("rpm");
         var timer = clock / divisor;
         var ticks = new Rational(60, 1) * timer * sample / (rpm * events);
         var floor = ticks.Numerator / ticks.Denominator;
@@ -106,8 +102,44 @@ public static class P28PhysicalScaling
             ["All supplied quantities and their claimed provenance are unverified analyst inputs, not a trusted profile or measured board identity.",
              "oki.add-er1-a arithmetic hypothesis is used for this mathematical preview only; it grants no byte-execution permission.",
              "Uniform normal interval mode, defined event spacing, no capture overflow/invalid interval, and no mixed-history samples."]);
+    }
 
-        Rational Read(string key, string unit)
+    // M1h consumes the same strict unit/provenance parser but separates the optional
+    // legacy RPM query from the four scenario quantities. M1e still requires RPM.
+    internal static IReadOnlyDictionary<string, P28ScalingQuantity> ReadScenarioQuantities(JsonElement root, bool optionalRpm)
+    {
+        ExactProperties(root, "formatVersion", "scope", "quantities");
+        if (root.GetProperty("formatVersion").ValueKind != JsonValueKind.Number ||
+            !root.GetProperty("formatVersion").TryGetInt32(out var version) || version != 1 ||
+            Text(root.GetProperty("scope")) != "uniform-normal-intervals")
+        {
+            throw new InvalidDataException("Scaling requires formatVersion 1 and scope uniform-normal-intervals.");
+        }
+        var quantities = root.GetProperty("quantities");
+        if (quantities.ValueKind != JsonValueKind.Object)
+        {
+            throw new InvalidDataException("Scaling quantities require a JSON object.");
+        }
+        if (optionalRpm && !quantities.TryGetProperty("rpm", out _))
+        {
+            ExactProperties(quantities, "clockHz", "timerClockDivisor", "eventsPerCrankRev", "eventsPerSample");
+        }
+        else
+        {
+            ExactProperties(quantities, "clockHz", "timerClockDivisor", "eventsPerCrankRev", "eventsPerSample", "rpm");
+        }
+        var inputs = new Dictionary<string, P28ScalingQuantity>(StringComparer.Ordinal);
+        Read("clockHz", "Hz");
+        Read("timerClockDivisor", "1");
+        Read("eventsPerCrankRev", "events/crank-revolution");
+        Read("eventsPerSample", "events/sample");
+        if (quantities.TryGetProperty("rpm", out _))
+        {
+            Read("rpm", "crank-revolutions/minute");
+        }
+        return new System.Collections.ObjectModel.ReadOnlyDictionary<string, P28ScalingQuantity>(inputs);
+
+        void Read(string key, string unit)
         {
             var element = quantities.GetProperty(key);
             ExactProperties(element, "numerator", "denominator", "unit", "provenance", "evidence");
@@ -124,7 +156,6 @@ public static class P28PhysicalScaling
                 throw new InvalidDataException("Scaling evidence must be an explicit analyst input or unverified source/measurement claim.");
             }
             inputs.Add(key, new(numerator.ToString(CultureInfo.InvariantCulture), denominator.ToString(CultureInfo.InvariantCulture), unit, provenance, evidence));
-            return new(numerator, denominator);
         }
     }
 
