@@ -15,7 +15,7 @@
         <Border Background="#142D43" Padding="22,16">
             <StackPanel>
                 <TextBlock Text="HondaEcu" FontSize="27" FontWeight="SemiBold" Foreground="White" />
-                <TextBlock Text="Windows Desktop Research Preview · D0 + M1f" Foreground="#CBD9E6" Margin="0,3,0,12" />
+                <TextBlock Text="Windows Desktop Research Preview · D0 + M1f + M1g" Foreground="#CBD9E6" Margin="0,3,0,12" />
                 <WrapPanel>
                     <Button x:Name="OpenBinButton" Command="{Binding OpenBinCommand}" Content="_Відкрити BIN" AutomationProperties.Name="Відкрити BIN" />
                     <Button x:Name="DemoButton" Command="{Binding DemoCommand}" Content="_Демонстраційний режим" AutomationProperties.Name="Демонстраційний режим" />
@@ -123,6 +123,46 @@
                                                         AutomationProperties.Name="Модель порогового порівняння, стара і нова ступінчасті криві" />
                                 <TextBlock Text="Це програмна модель, не фізичне ввімкнення VTEC і не результат byte-execution."
                                            Style="{StaticResource MutedText}" FontSize="12" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="M1g · окремий експорт">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14">
+                    <StackPanel>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Зберегти штатну checksum — PC-only" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="Одна запитана зміна raw-порога + один обчислений CompensationLocation. Це не bypass і не довільний repair. Звичайне Save на першій вкладці залишається окремим M1c workflow."
+                                           Style="{StaticResource MutedText}" Margin="0,0,0,12" />
+                                <WrapPanel>
+                                    <Button Command="{Binding SelectCompensationCommand}" Content="Обрати reviewed CompensationLocation" AutomationProperties.Name="Обрати reviewed CompensationLocation" />
+                                    <Button Command="{Binding OpenChecksumChildCommand}" Content="Відкрити M1g original-parent lineage" AutomationProperties.Name="Відкрити M1g lineage" />
+                                </WrapPanel>
+                                <TextBox Text="{Binding CompensationStatus, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
+                                         AcceptsReturn="True" MinHeight="92" MaxHeight="260" VerticalScrollBarVisibility="Auto"
+                                         AutomationProperties.Name="Доступність компенсації та межі доказів" />
+                                <TextBlock Text="На першій вкладці оберіть слот і raw 0–255. Для verified M1c child буде відтворено його існуючий threshold plan із original parent; child не стає baseline."
+                                           Style="{StaticResource MutedText}" Margin="0,12,0,0" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="Дві явні зміни й три залишки" Style="{StaticResource SectionTitle}" />
+                                <WrapPanel>
+                                    <Button Command="{Binding PreviewChecksumExportCommand}" Content="Переглянути M1g композицію" AutomationProperties.Name="Переглянути M1g композицію" />
+                                    <Button Command="{Binding ValidateChecksumExportCommand}" Content="Виконати strict checksum для експорту" AutomationProperties.Name="Виконати strict checksum для експорту" />
+                                    <Button Command="{Binding SaveChecksumExportCommand}" Content="Зберегти M1g PC-only копію" AutomationProperties.Name="Зберегти M1g PC-only копію" Style="{StaticResource PrimaryButton}" />
+                                </WrapPanel>
+                                <TextBox Text="{Binding ChecksumExportPreview, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap"
+                                         AcceptsReturn="True" MinHeight="220" MaxHeight="430" VerticalScrollBarVisibility="Auto"
+                                         FontFamily="Consolas" FontSize="13" AutomationProperties.Name="M1g diff, residues та actual execution" />
+                                <TextBlock Text="{Binding RunnerStatus}" TextWrapping="Wrap" Margin="0,12,0,4" />
+                                <Button Command="{Binding SelectRunnerCommand}" Content="Обрати локальний runner" HorizontalAlignment="Left" />
+                                <TextBlock Text="Без actual strict execution поточного стану кнопка збереження недоступна. No-op має нуль змін. Demo — окремий вигаданий arithmetic fixture без Honda definition та експорту. M1d/M1e ADD assumptions незалежні."
+                                           Style="{StaticResource MutedText}" Margin="0,8,0,8" />
+                                <TextBlock Text="PcInspectionOnly / NotFlashReady — не для ECU, фізичні RPM і поведінку автомобіля не підтверджено." FontWeight="SemiBold" TextWrapping="Wrap" Foreground="#825516" />
                             </StackPanel>
                         </Border>
                     </StackPanel>

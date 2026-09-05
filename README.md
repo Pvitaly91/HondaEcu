@@ -85,9 +85,18 @@ M1f adds [read-only native checksum research](docs/M1F_NATIVE_CHECKSUM_VALIDATIO
 and «Перевірити штатну checksum» in the existing checks tab. Scoped byte-sum
 arithmetic, stateful original-byte execution, coverage and evidence are separate;
 missing runner means execution NotRun, and demo has no native Honda checksum.
-There is no repair/bypass or save-time checksum change. Physical RPM and ECU/hardware behavior remain unconfirmed;
+M1f does not repair/bypass the check or change checksum during legacy raw Save. Physical RPM and ECU/hardware behavior remain unconfirmed;
 all copies are `PcInspectionOnly / NotFlashReady`.
 See [D0 usage, packaging and validation limits](docs/D0_DESKTOP_PREVIEW.md).
+
+M1g adds a separate [checksum-preserving PC-only research export](docs/M1G_CHECKSUM_PRESERVING_EXPORT.md):
+one existing threshold edit plus one computed byte at the privately reviewed,
+exact-baseline-scoped CompensationLocation. It retains the enabled native check,
+requires strict complete byte execution before publication, and verifies the full
+two-byte diff and original-parent lineage. Signed review identity does not replace
+the static non-interference audit or prove ECU safety. Legacy raw Save stays
+unchanged; no arbitrary-offset or repair-any-ROM command is added. Use a new
+portable path such as `artifacts/desktop/win-x64-m1g`; never replace D0/M1f.
 
 ## Build and test
 

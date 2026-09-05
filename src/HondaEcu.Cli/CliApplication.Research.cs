@@ -8,7 +8,7 @@ public sealed partial class CliApplication
     {
         if (args.Length == 0)
         {
-            throw new CliUsageException("Usage: hondaecu research p28-vtec <inspect|plan|apply|verify|execute-check|producer-check|checksum-check> ...");
+            throw new CliUsageException("Usage: hondaecu research p28-vtec <inspect|plan|apply|verify|execute-check|producer-check|checksum-check|compensation-check|checksum-export-plan|checksum-export-apply|checksum-export-verify|checksum-export-inspect> ...");
         }
 
         return args[0] switch
@@ -22,7 +22,7 @@ public sealed partial class CliApplication
     {
         if (args.Length == 0)
         {
-            throw new CliUsageException("Usage: hondaecu research p28-vtec <inspect|plan|apply|verify|execute-check|producer-check|checksum-check> ...");
+            throw new CliUsageException("Usage: hondaecu research p28-vtec <inspect|plan|apply|verify|execute-check|producer-check|checksum-check|compensation-check|checksum-export-plan|checksum-export-apply|checksum-export-verify|checksum-export-inspect> ...");
         }
 
         return args[0] switch
@@ -34,6 +34,11 @@ public sealed partial class CliApplication
             "execute-check" => await P28VtecExecuteCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "producer-check" => await P28VtecProducerCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "checksum-check" => await P28ChecksumCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "compensation-check" => await P28CompensationCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "checksum-export-plan" => await P28ChecksumExportPlanAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "checksum-export-apply" => await P28ChecksumExportApplyAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "checksum-export-verify" => await P28ChecksumExportVerifyAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "checksum-export-inspect" => await P28ChecksumExportInspectAsync(args[1..], cancellationToken).ConfigureAwait(false),
             _ => throw new CliUsageException($"Unknown p28-vtec research command '{args[0]}'."),
         };
     }

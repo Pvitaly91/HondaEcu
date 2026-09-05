@@ -8,7 +8,7 @@ using HondaEcu.Desktop.Services;
 
 namespace HondaEcu.Desktop.ViewModels;
 
-public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
+public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
 {
     private const string BinFilter = "BIN файли (*.bin)|*.bin|Усі файли (*.*)|*.*";
     private const string JsonFilter = "JSON (*.json)|*.json|Усі файли (*.*)|*.*";
@@ -45,7 +45,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         PreviewCommand = new(PreviewChange, () => CanEdit && SelectedSlot is not null);
         RevertCommand = new(RevertChange, () => _pendingSlot is not null && !IsBusy);
         SaveCopyCommand = new(SaveFromDialogsAsync, () => CanSave);
-        VerifyCommand = new(VerifyChangeAsync, () => !IsBusy && (_pendingResult is not null || Mode == DesktopAccessMode.VerifiedDerived));
+        VerifyCommand = new(VerifyChangeAsync, () => !IsBusy && (_pendingResult is not null || Mode is DesktopAccessMode.VerifiedDerived or DesktopAccessMode.VerifiedChecksumDerived));
         ExecuteCommand = new(() => RunValidationAsync(DesktopValidationKind.Execute), () => CanExecuteM1d);
         ProducerCommand = new(() => RunValidationAsync(DesktopValidationKind.Producer), () => CanExecute);
         ChecksumCommand = new(() => RunValidationAsync(DesktopValidationKind.Checksum), () => CanCheckChecksum);
@@ -57,6 +57,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         }, () => !IsBusy);
         OpenResultsCommand = new(() => _dialogs.ShowStructuredResult("Структурований результат поточного запуску", _resultJson!),
             () => _resultJson is not null && !IsBusy);
+        InitializeChecksumExportCommands();
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -81,6 +82,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         DesktopAccessMode.RawOnly => "Unknown / raw-only — інтерпретацію не підтверджено",
         DesktopAccessMode.BoundBaseline => "Оригінальний baseline — приватний research binding перевірено",
         DesktopAccessMode.VerifiedDerived => "Перевірений похідний файл — редагування заборонено",
+        DesktopAccessMode.VerifiedChecksumDerived => "Перевірений M1g child original parent — PcInspectionOnly / NotFlashReady",
         DesktopAccessMode.Demo => "Синтетичний приклад — не прошивка Honda",
         _ => "Відкрийте BIN або демонстраційний режим",
     };
@@ -94,6 +96,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         DesktopAccessMode.BoundBaseline => "Matched — analyst-declared, не автентифікація ECU",
         DesktopAccessMode.VerifiedDerived => "Original parent binding + перевірені plan/report; child не є новим baseline",
+        DesktopAccessMode.VerifiedChecksumDerived => "Original parent + складений план + reviewed CompensationLocation; не новий baseline",
         DesktopAccessMode.Demo => "Binding відсутній; демонстрація не створює binding",
         _ => "NotProvided — лише нейтральні байти",
     };
@@ -140,9 +143,9 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public bool IsBusy { get; private set; }
     public bool CanEdit => !IsBusy && Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.Demo;
     public bool CanSave => !IsBusy && Mode == DesktopAccessMode.BoundBaseline && _pendingResult is not null;
-    public bool CanExecute => !IsBusy && File.Exists(RunnerPath) && Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.VerifiedDerived;
+    public bool CanExecute => !IsBusy && File.Exists(RunnerPath) && Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.VerifiedDerived or DesktopAccessMode.VerifiedChecksumDerived;
     public bool CanExecuteM1d => CanExecute && !AllowAddEr1;
-    public bool CanCheckChecksum => !IsBusy && Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.VerifiedDerived;
+    public bool CanCheckChecksum => !IsBusy && Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.VerifiedDerived or DesktopAccessMode.VerifiedChecksumDerived;
     public string RunnerPath { get; private set; }
     public string RunnerStatus => File.Exists(RunnerPath) ? "Локальний runner доступний" :
         "Runner відсутній. Огляд і preview працюють; явно виберіть локальний runner для виконання.";
@@ -271,6 +274,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public Task VerifyChangeAsync()
     {
         if (IsBusy || _document is null) return Task.CompletedTask;
+        if (Mode == DesktopAccessMode.VerifiedChecksumDerived) return VerifyChecksumChildAsync();
         BeginJob();
         _activeTask = VerifyCoreAsync(ValidationDocument(), _pendingResult is not null, SessionId, _cancellation!.Token);
         return _activeTask;
@@ -437,6 +441,11 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             P28VtecInspector.ComputeProfileDigest(RomProfile.Load(document.Profile!.SourcePath!)) != P28VtecInspector.ComputeProfileDigest(document.Profile) ||
             P28RawThresholdEditor.ComputeBindingDigest(P28ExactBaselineBinding.Load(document.BindingPath!)) != P28RawThresholdEditor.ComputeBindingDigest(document.Binding!))
             throw new InvalidDataException("Original BIN, profile або binding змінився на диску. Результат не приєднано; відкрийте й перевірте файли знову.");
+        if (document.ChecksumComposition is not null)
+        {
+            RequireCurrentChecksumFiles(document);
+            return;
+        }
         if (document.LineagePaths is { } paths &&
             (RomImage.Load(paths.OutputPath).Hash != document.Image.Hash ||
              P28RawThresholdPlan.Load(paths.PlanPath).ToJson(false) != document.Plan!.ToJson(false) ||
@@ -453,13 +462,14 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         // started against the previously displayed document during asynchronous I/O.
         InvalidateSession();
         _document = document;
+        ResetCompensationDefinition(document);
         ClearPending();
         _allowAddEr1 = false;
         _allowAddEr3 = false;
         var bytes = document.Image.ToArray();
         HexPreview = string.Join(Environment.NewLine, bytes.Take(128).Chunk(16).Select((row, index) =>
             $"{index * 16:X4}: {string.Join(" ", row.Select(value => value.ToString("X2", CultureInfo.InvariantCulture)))}"));
-        Slots = document.Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.VerifiedDerived or DesktopAccessMode.Demo
+        Slots = document.Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.VerifiedDerived or DesktopAccessMode.VerifiedChecksumDerived or DesktopAccessMode.Demo
             ? P28ThresholdLogic.GetSlots().Select((slot, index) => new ThresholdSlotView(slot.Id, slot.Context, slot.Pair,
                 slot.PriorState, slot.Offset, bytes[document.Mode == DesktopAccessMode.Demo ? index : slot.Offset],
                 document.Mode == DesktopAccessMode.Demo ? "Синтетична модель" : "Дослідницька модель; RPM не підтверджені")).ToArray() : [];
@@ -488,6 +498,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         SessionId++;
         Cancel();
+        ClearChecksumPreview();
         _resultJson = null;
         Counters = DesktopCounters.Empty;
         ChecksumSummary = null;
@@ -526,6 +537,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         OpenBinCommand.Refresh(); DemoCommand.Refresh(); BindBaselineCommand.Refresh(); OpenDerivedCommand.Refresh();
         PreviewCommand.Refresh(); RevertCommand.Refresh(); SaveCopyCommand.Refresh(); VerifyCommand.Refresh();
         ExecuteCommand.Refresh(); ProducerCommand.Refresh(); ChecksumCommand.Refresh(); CancelCommand.Refresh(); SelectRunnerCommand.Refresh(); OpenResultsCommand.Refresh();
+        RefreshChecksumExportCommands();
     }
 
     private async Task BindFromDialogsAsync()

@@ -25,7 +25,10 @@ public sealed record P28ExecutionIssue(string Slice, int[] InputAndOutput, strin
 public sealed record P28ThresholdExecutionSummary(string ImageId, P28ExecutionCounts Counts, int ProgramReadChecks, int DisabledPreservationChecks);
 public sealed record P28DerivedExecutionComparison(
     bool VerifiedM1cLineage, int ComparedCases, int ExpectedChangedCases, int ActualChangedCases,
-    bool ExactChangedCaseSet, int ChangedByteReadCases, bool ChangedByteActuallyRead);
+    bool ExactChangedCaseSet, int ChangedByteReadCases, bool ChangedByteActuallyRead)
+{
+    public bool VerifiedCompositionLineage { get; init; }
+}
 
 public sealed record P28ExecutionReport(
     int ProtocolVersion, string RunnerVersion, string UpstreamCommit, IReadOnlyList<string> LocalSemanticFixes,
@@ -52,12 +55,19 @@ public static class P28ByteExecutionValidator
 
     public static void ValidateAdmission(
         RomImage baseline, RomProfile profile, P28ExactBaselineBinding binding, bool confirmed,
-        RomImage? derived = null, P28RawThresholdPlan? plan = null, P28RawThresholdPatchReport? patchReport = null)
+        RomImage? derived = null, P28RawThresholdPlan? plan = null, P28RawThresholdPatchReport? patchReport = null,
+        P28VerifiedChecksumComposition? composition = null)
     {
         var inspection = P28VtecInspector.Inspect(baseline, profile, [profile], confirmed, binding);
         if (!inspection.InterpretationApplied || inspection.BaselineBinding.Status != P28BaselineBindingStatus.Matched)
         {
             throw new InvalidDataException("Byte execution requires the unchanged original baseline, matching research binding and explicit profile acknowledgement.");
+        }
+        if (composition is not null)
+        {
+            if (plan is not null || patchReport is not null) throw new InvalidDataException("Choose exactly one original-parent lineage type, M1c or checksum composition.");
+            P28ChecksumPreservingEditor.ValidateAdmittedChild(composition, baseline, profile, binding, derived);
+            return;
         }
         var lineageCount = new object?[] { derived, plan, patchReport }.Count(value => value is not null);
         if (lineageCount is not (0 or 3))
@@ -94,12 +104,13 @@ public static class P28ByteExecutionValidator
         RomImage baseline, RomProfile profile, P28ExactBaselineBinding binding, bool confirmed,
         string runner, bool allowAddAssumption = false,
         RomImage? derived = null, P28RawThresholdPlan? plan = null, P28RawThresholdPatchReport? patchReport = null,
-        SliceProcessOptions? options = null, CancellationToken cancellationToken = default)
+        SliceProcessOptions? options = null, CancellationToken cancellationToken = default,
+        P28VerifiedChecksumComposition? composition = null)
     {
-        ValidateAdmission(baseline, profile, binding, confirmed, derived, plan, patchReport);
+        ValidateAdmission(baseline, profile, binding, confirmed, derived, plan, patchReport, composition);
         var response = await SeededSliceProcess.ExchangeAsync(
             runner, CreateRequest(baseline, derived, allowAddAssumption), options, cancellationToken).ConfigureAwait(false);
-        var report = Analyze(baseline, profile, binding, allowAddAssumption, response, derived, plan, patchReport);
+        var report = Analyze(baseline, profile, binding, allowAddAssumption, response, derived, plan, patchReport, composition);
         var diagnostics = report.Diagnostics.ToList();
         // Model mismatches are known only after C# comparison. Re-execute at most four
         // of them using the same unchanged image and entry state, never one process per pass.
@@ -216,12 +227,18 @@ public static class P28ByteExecutionValidator
     public static P28ExecutionReport Analyze(
         RomImage baseline, RomProfile profile, P28ExactBaselineBinding binding, bool allowAddAssumption,
         SliceProcessResponse response, RomImage? derived = null,
-        P28RawThresholdPlan? plan = null, P28RawThresholdPatchReport? patchReport = null)
+        P28RawThresholdPlan? plan = null, P28RawThresholdPatchReport? patchReport = null,
+        P28VerifiedChecksumComposition? composition = null)
     {
-        ValidateAdmission(baseline, profile, binding, true, derived, plan, patchReport);
+        ValidateAdmission(baseline, profile, binding, true, derived, plan, patchReport, composition);
         try
         {
-            return AnalyzeCore(baseline, profile, binding, allowAddAssumption, response, derived, plan);
+            var result = AnalyzeCore(baseline, profile, binding, allowAddAssumption, response, derived, composition?.Plan.ThresholdPlan ?? plan);
+            return composition is null ? result : result with
+            {
+                PlanDigest = P28ChecksumPreservingEditor.ComputePlanDigest(composition.Plan),
+                DerivedComparison = result.DerivedComparison! with { VerifiedM1cLineage = false, VerifiedCompositionLineage = true },
+            };
         }
         catch (Exception exception) when (exception is JsonException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException)
         {

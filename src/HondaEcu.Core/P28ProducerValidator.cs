@@ -16,7 +16,10 @@ public sealed record P28ProducerThresholdSummary(string ImageId, P28ProducerStag
 public sealed record P28ProducerDerivedSummary(
     bool VerifiedM1cLineage, int EligiblePairedCases, int ExpectedChangedPredicateCases,
     int ActualChangedPredicateCases, bool ExactChangedCaseSet, int PlannedSlotReadCases,
-    int PlannedSlotSelectedCases, string ReadSelectionQualification);
+    int PlannedSlotSelectedCases, string ReadSelectionQualification)
+{
+    public bool VerifiedCompositionLineage { get; init; }
+}
 public sealed record P28ProducerExample(
     P28ProducerInput Input, P28ProducerModelResult Model, int[] ProducerAndCompactExecution,
     IReadOnlyList<int[]> ThresholdExecution);
@@ -76,14 +79,15 @@ public static class P28ProducerValidator
         RomImage baseline, RomProfile profile, P28ExactBaselineBinding binding, bool confirmed,
         string runner, IEnumerable<string> assumptions, RomImage? derived = null,
         P28RawThresholdPlan? plan = null, P28RawThresholdPatchReport? patchReport = null,
-        JsonElement? scaling = null, SliceProcessOptions? options = null, CancellationToken cancellationToken = default)
+        JsonElement? scaling = null, SliceProcessOptions? options = null, CancellationToken cancellationToken = default,
+        P28VerifiedChecksumComposition? composition = null)
     {
-        P28ByteExecutionValidator.ValidateAdmission(baseline, profile, binding, confirmed, derived, plan, patchReport);
+        P28ByteExecutionValidator.ValidateAdmission(baseline, profile, binding, confirmed, derived, plan, patchReport, composition);
         var allowed = ValidateAssumptions(assumptions);
         var cases = P28ProducerCases.Create();
         var response = await SeededSliceProcess.ExchangeAsync(runner, CreateRequest(baseline, derived, cases, allowed), options, cancellationToken)
             .ConfigureAwait(false);
-        var report = Analyze(baseline, profile, binding, cases, allowed, response, derived, plan, patchReport, scaling);
+        var report = Analyze(baseline, profile, binding, cases, allowed, response, derived, plan, patchReport, scaling, composition);
         var replayIds = report.Issues.Select(issue => issue.CaseId).Distinct().Take(4).ToArray();
         if (replayIds.Length == 0) { return report; }
         var diagnostics = report.Diagnostics.ToList();
@@ -92,7 +96,7 @@ public static class P28ProducerValidator
             var replayCases = replayIds.Select((id, index) => cases[id] with { CaseId = index }).ToArray();
             var replayResponse = await SeededSliceProcess.ExchangeAsync(runner,
                 CreateRequest(baseline, derived, replayCases, allowed), options, cancellationToken).ConfigureAwait(false);
-            var replay = Analyze(baseline, profile, binding, replayCases, allowed, replayResponse, derived, plan, patchReport, scaling);
+            var replay = Analyze(baseline, profile, binding, replayCases, allowed, replayResponse, derived, plan, patchReport, scaling, composition);
             var consistent = replayIds.Select((id, index) =>
             {
                 var original = report.SelectedExamples.First(example => example.Input.CaseId == id);
@@ -126,13 +130,18 @@ public static class P28ProducerValidator
         RomImage baseline, RomProfile profile, P28ExactBaselineBinding binding,
         IReadOnlyList<P28ProducerInput> cases, IEnumerable<string> assumptions, SliceProcessResponse response,
         RomImage? derived = null, P28RawThresholdPlan? plan = null, P28RawThresholdPatchReport? patchReport = null,
-        JsonElement? scaling = null)
+        JsonElement? scaling = null, P28VerifiedChecksumComposition? composition = null)
     {
         ValidateCases(cases);
-        P28ByteExecutionValidator.ValidateAdmission(baseline, profile, binding, true, derived, plan, patchReport);
+        P28ByteExecutionValidator.ValidateAdmission(baseline, profile, binding, true, derived, plan, patchReport, composition);
         try
         {
-            return AnalyzeCore(baseline, profile, binding, cases, ValidateAssumptions(assumptions), response, derived, plan, scaling);
+            var result = AnalyzeCore(baseline, profile, binding, cases, ValidateAssumptions(assumptions), response, derived, composition?.Plan.ThresholdPlan ?? plan, scaling);
+            return composition is null ? result : result with
+            {
+                PlanDigest = P28ChecksumPreservingEditor.ComputePlanDigest(composition.Plan),
+                DerivedComparison = result.DerivedComparison! with { VerifiedM1cLineage = false, VerifiedCompositionLineage = true },
+            };
         }
         catch (Exception exception) when (exception is JsonException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException)
         {

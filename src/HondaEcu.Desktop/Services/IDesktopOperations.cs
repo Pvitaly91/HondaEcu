@@ -9,6 +9,13 @@ public interface IDesktopOperations
     Task<DesktopValidationResult> ValidateAsync(DesktopValidationJob job, CancellationToken cancellationToken);
     Task<P28RawThresholdVerificationReport> SaveAsync(P28RawThresholdPatchResult result,
         DesktopSavePaths paths, IReadOnlyList<string> protectedPaths, CancellationToken cancellationToken);
+    Task<P28VerifiedChecksumExport> ValidateChecksumExportAsync(P28VerifiedChecksumComposition composition,
+        string runnerPath, CancellationToken cancellationToken) =>
+        P28ChecksumPreservingExecution.ValidateForExportAsync(composition, runnerPath, cancellationToken: cancellationToken);
+    Task<P28ChecksumPreservingVerification> SaveChecksumExportAsync(P28VerifiedChecksumExport validated,
+        DesktopSavePaths paths, IReadOnlyList<string> protectedPaths, CancellationToken cancellationToken) =>
+        Task.Run(() => P28ChecksumPreservingCopyWriter.Save(validated, paths.OutputPath, paths.PlanPath,
+            paths.ReportPath, protectedPaths, cancellationToken), cancellationToken);
 }
 
 public sealed class DesktopOperations : IDesktopOperations
@@ -17,14 +24,14 @@ public sealed class DesktopOperations : IDesktopOperations
     {
         var document = job.Document;
         var parent = document.Parent ?? document.Image;
-        var child = document.Mode == DesktopAccessMode.VerifiedDerived ? document.Image : null;
+        var child = document.Mode is DesktopAccessMode.VerifiedDerived or DesktopAccessMode.VerifiedChecksumDerived ? document.Image : null;
         if (job.Kind == DesktopValidationKind.Execute)
         {
             if (job.Assumptions.Any(item => item != P28ByteExecutionValidator.AddAssumption))
                 throw new ArgumentException("M1d does not permit oki.add-er1-a.");
             var report = await P28ByteExecutionValidator.ExecuteAsync(parent, document.Profile!, document.Binding!, true,
                 job.RunnerPath, job.Assumptions.Contains(P28ByteExecutionValidator.AddAssumption), child,
-                document.Plan, document.PatchReport, cancellationToken: cancellationToken).ConfigureAwait(false);
+                document.Plan, document.PatchReport, cancellationToken: cancellationToken, composition: document.ChecksumComposition).ConfigureAwait(false);
             return new(DesktopCounters.From(report), JsonSerializer.Serialize(report, JsonDefaults.Create()),
                 report.HasFailure, report.PermittedAssumptions, report.UsedAssumptions, "Фізичні оберти не підтверджені");
         }
@@ -33,7 +40,7 @@ public sealed class DesktopOperations : IDesktopOperations
             var scaling = JsonSerializer.SerializeToElement(P28PhysicalScaling.Analyze(null), JsonDefaults.Create());
             var report = await P28ProducerValidator.ExecuteAsync(parent, document.Profile!, document.Binding!, true,
                 job.RunnerPath, job.Assumptions, child, document.Plan, document.PatchReport, scaling,
-                cancellationToken: cancellationToken).ConfigureAwait(false);
+                cancellationToken: cancellationToken, composition: document.ChecksumComposition).ConfigureAwait(false);
             return new(DesktopCounters.From(report), JsonSerializer.Serialize(report, JsonDefaults.Create()),
                 report.HasFailure, report.PermittedAssumptions, report.UsedAssumptions, "Фізичні оберти не підтверджені — symbolic/unavailable");
         }
@@ -43,7 +50,7 @@ public sealed class DesktopOperations : IDesktopOperations
                 throw new ArgumentException("Checksum does not permit M1d/M1e ADD assumptions.");
             var report = await P28NativeChecksumVerifier.CheckAsync(parent, document.Profile!, document.Binding!, true,
                 job.RunnerPath, derived: child, plan: document.Plan, patchReport: document.PatchReport,
-                cancellationToken: cancellationToken).ConfigureAwait(false);
+                cancellationToken: cancellationToken, composition: document.ChecksumComposition).ConfigureAwait(false);
             return new(DesktopCounters.From(report.Counts), report.ToJson(), report.HasFailure,
                 report.PermittedAssumptions, report.UsedAssumptions, "Перевірка цілісності ROM, не перевірка VTEC або RPM", report);
         }

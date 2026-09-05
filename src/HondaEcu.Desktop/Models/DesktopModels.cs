@@ -3,7 +3,7 @@ using HondaEcu.Core;
 
 namespace HondaEcu.Desktop.Models;
 
-public enum DesktopAccessMode { Empty, RawOnly, BoundBaseline, VerifiedDerived, Demo }
+public enum DesktopAccessMode { Empty, RawOnly, BoundBaseline, VerifiedDerived, Demo, VerifiedChecksumDerived }
 public enum DesktopValidationKind { Execute, Producer, Checksum }
 
 public sealed class ThresholdSlotView(string id, int context, int pair, bool priorState,
@@ -69,7 +69,9 @@ public sealed record DesktopCounters(int CompletedWithoutAssumptions, int Condit
 public sealed record DesktopDocument(DesktopAccessMode Mode, RomImage Image, RomImage? Parent = null,
     RomProfile? Profile = null, P28ExactBaselineBinding? Binding = null,
     P28RawThresholdPlan? Plan = null, P28RawThresholdPatchReport? PatchReport = null,
-    IReadOnlyList<string>? InputPaths = null, DesktopLineagePaths? LineagePaths = null, string? BindingPath = null);
+    IReadOnlyList<string>? InputPaths = null, DesktopLineagePaths? LineagePaths = null, string? BindingPath = null,
+    P28VerifiedChecksumComposition? ChecksumComposition = null, string? CompensationDefinitionPath = null,
+    P28ChecksumPreservingExportReport? ChecksumExportReport = null);
 
 public sealed record DesktopLineagePaths(string OutputPath, string ParentPath, string ProfilePath,
     string BindingPath, string PlanPath, string ReportPath);

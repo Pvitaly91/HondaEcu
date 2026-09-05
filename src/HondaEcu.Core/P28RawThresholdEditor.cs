@@ -412,7 +412,7 @@ public static class P28RawThresholdEditor
         "Unresolved; no RPM conversion or inverse selection.", "Not run", "Not run", "Not run",
         "Unverified archive provenance; private hash binding is not factory authentication. Checksum is unknown and untouched; the derived file may fail the ECU's native integrity check.");
 
-    private static IReadOnlyList<P28ThresholdContextReport> BuildDerivedContexts(RomImage output) =>
+    internal static IReadOnlyList<P28ThresholdContextReport> BuildDerivedContexts(RomImage output) =>
         ReadOnly(P28ThresholdLogic.GetSlots().GroupBy(slot => slot.Context).Select(group =>
             new P28ThresholdContextReport($"context_{group.Key}", group.Key,
                 P28ThresholdLogic.SelectContext(true) == group.Key, group.Min(slot => slot.Offset),

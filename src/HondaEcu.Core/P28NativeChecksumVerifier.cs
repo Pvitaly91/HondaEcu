@@ -36,10 +36,11 @@ public static class P28NativeChecksumVerifier
         RomImage baseline, RomProfile profile, P28ExactBaselineBinding binding, bool confirmed,
         string? runner = null, IEnumerable<string>? assumptions = null, RomImage? derived = null,
         P28RawThresholdPlan? plan = null, P28RawThresholdPatchReport? patchReport = null,
-        SliceProcessOptions? options = null, CancellationToken cancellationToken = default)
+        SliceProcessOptions? options = null, CancellationToken cancellationToken = default,
+        P28VerifiedChecksumComposition? composition = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        P28ByteExecutionValidator.ValidateAdmission(baseline, profile, binding, confirmed, derived, plan, patchReport);
+        P28ByteExecutionValidator.ValidateAdmission(baseline, profile, binding, confirmed, derived, plan, patchReport, composition);
         _ = ValidateAssumptions(assumptions);
         var inputs = new List<(string Id, RomImage Image)> { ("baseline", baseline) };
         if (derived is not null) inputs.Add(("derived", derived));
@@ -102,7 +103,7 @@ public static class P28NativeChecksumVerifier
         var cases = inputs.Select((item, index) =>
         {
             var (disposition, status, reason) = Decide(assessments[index], calculations[index], executions[index]);
-            return new P28NativeChecksumCaseReport(item.Id, item.Id == "baseline" ? "OriginalResearchBaseline" : "VerifiedM1cChild",
+            return new P28NativeChecksumCaseReport(item.Id, item.Id == "baseline" ? "OriginalResearchBaseline" : composition is null ? "VerifiedM1cChild" : "VerifiedChecksumCompositionChild",
                 item.Image.Hash, [], assessments[index], calculations[index], executions[index], disposition, status, reason);
         }).ToArray();
         var all = executions.SelectMany(items => items).ToArray();
@@ -113,7 +114,7 @@ public static class P28NativeChecksumVerifier
             Count(NativeChecksumExecutionStatus.BudgetExceeded), Count(NativeChecksumExecutionStatus.NotRun));
         return new(1, "ScopedNativeRomChecksum", P28NativeChecksumArithmetic.Contract, profile.Id, baseline.Hash, derived?.Hash,
             P28VtecInspector.ComputeProfileDigest(profile), P28RawThresholdEditor.ComputeBindingDigest(binding),
-            plan is null ? null : P28RawThresholdEditor.ComputePlanDigest(plan), derived is not null, "strict", [], [],
+            composition is not null ? P28ChecksumPreservingEditor.ComputePlanDigest(composition.Plan) : plan is null ? null : P28RawThresholdEditor.ComputePlanDigest(plan), derived is not null, "strict", [], [],
             runnerVersion, upstream, fixes, contracts, cases, counts,
             counts.Mismatches + counts.ExecutionErrors + counts.BudgetExceeded != 0 || cases.Any(item => item.ChecksumStatus == ChecksumStatus.Invalid),
             assessments.All(item => item.ContractRecognized)
@@ -124,7 +125,8 @@ public static class P28NativeChecksumVerifier
             ["Seeded checksum progression, not full ECU boot or execution of scheduler/startup/peripherals.",
              "A scoped arithmetic Valid result is not factory provenance, physical-CPU validation, flash readiness or permission to repair.",
              "Private research binding declares an exact input/profile only; it is not a trusted revision identity.",
-             "No checksum field, exclusion, repair, bypass, compensating storage or new patch chain is introduced."]);
+             composition is null ? "No checksum field, exclusion, repair, bypass, compensating storage or new patch chain is introduced." :
+                "This read-only verifier performs no repair or bypass. The separately admitted original-parent composition contains an explicit computed compensation byte under its reviewed scope; no factory checksum-storage claim is made."]);
     }
 
     public static (NativeChecksumDisposition Disposition, ChecksumStatus Status, string Reason) Decide(

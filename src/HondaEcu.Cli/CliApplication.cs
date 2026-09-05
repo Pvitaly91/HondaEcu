@@ -105,6 +105,25 @@ public sealed partial class CliApplication
           research p28-vtec checksum-check <baseline> --profile p28-304 --confirm-profile
                     --baseline-binding <private-json> --output <private-json> [--runner <rust-executable>]
                     [--derived <child> --plan <private-json> --patch-report <private-json>]
+          research p28-vtec compensation-check <original> --profile p28-304 --confirm-profile
+                    --baseline-binding <private-json> --output <new-private-json>
+                    [--compensation-definition <reviewed-signed-private-json>]
+          research p28-vtec checksum-export-plan <original> --profile p28-304 --confirm-profile
+                    --baseline-binding <private-json> --compensation-definition <reviewed-signed-private-json>
+                    --output <new-composed-plan.json>
+                    [--slot <slot-id> --raw-value <0..255>]
+                    [--derived <M1c-child> --plan <M1c-plan> --patch-report <M1c-report>]
+                    Choose exactly one threshold request or complete existing M1c lineage.
+          research p28-vtec checksum-export-apply <original> --baseline-binding <private-json>
+                    --compensation-definition <reviewed-signed-private-json> --plan <composed-plan>
+                    --runner <rust-executable> --confirm-pc-only --output <new-private-rom>
+                    --saved-plan <new-plan-copy.json> --report <new-export-report.json>
+          research p28-vtec checksum-export-verify <output> --baseline <original>
+                    --baseline-binding <private-json> --compensation-definition <reviewed-signed-private-json>
+                    --plan <composed-plan> --report <export-report> [--output <new-verification.json>]
+          research p28-vtec checksum-export-inspect <output> --baseline <original>
+                    --baseline-binding <private-json> --compensation-definition <reviewed-signed-private-json>
+                    --plan <composed-plan> --report <export-report> --output <new-inspection.json>
           research p28-vtec producer-check <baseline> --profile p28-304 --confirm-profile
                     --baseline-binding <private-json> --runner <rust-executable> --output <private-json>
                     [--allow-assumption oki.add-er1-a] [--allow-assumption oki.add-er3-a]
