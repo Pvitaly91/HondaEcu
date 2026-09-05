@@ -15,7 +15,7 @@
         <Border Background="#142D43" Padding="22,16">
             <StackPanel>
                 <TextBlock Text="HondaEcu" FontSize="27" FontWeight="SemiBold" Foreground="White" />
-                <TextBlock Text="Windows Desktop Research Preview · D0" Foreground="#CBD9E6" Margin="0,3,0,12" />
+                <TextBlock Text="Windows Desktop Research Preview · D0 + M1f" Foreground="#CBD9E6" Margin="0,3,0,12" />
                 <WrapPanel>
                     <Button x:Name="OpenBinButton" Command="{Binding OpenBinCommand}" Content="_Відкрити BIN" AutomationProperties.Name="Відкрити BIN" />
                     <Button x:Name="DemoButton" Command="{Binding DemoCommand}" Content="_Демонстраційний режим" AutomationProperties.Name="Демонстраційний режим" />
@@ -27,7 +27,7 @@
         <Border Grid.Row="1" Background="#FFF1D4" BorderBrush="#E8C47A" BorderThickness="0,0,0,1" Padding="22,10">
             <StackPanel>
                 <TextBlock Text="Дослідницький режим. Не для запису в ECU" FontWeight="SemiBold" />
-                <TextBlock Text="PcInspectionOnly · NotFlashReady · Checksum Unknown" FontSize="12" Foreground="#695223" Margin="0,2,0,0" />
+                <TextBlock Text="PcInspectionOnly · NotFlashReady · Checksum — окрема scoped перевірка" FontSize="12" Foreground="#695223" Margin="0,2,0,0" />
             </StackPanel>
         </Border>
         <TabControl Grid.Row="2" Margin="14,12,14,0" BorderBrush="#D9E2EC" Background="#F3F6FA">
@@ -140,10 +140,12 @@
                                     <Button Command="{Binding VerifyCommand}" Content="Перевірити зміну _файла" />
                                     <Button x:Name="ExecuteButton" Command="{Binding ExecuteCommand}" IsEnabled="{Binding CanExecuteM1d}" Content="Виконати фрагменти прошивки — M1d" />
                                     <Button x:Name="ProducerButton" Command="{Binding ProducerCommand}" Content="Перевірити розрахунок внутрішніх обертів — M1e" />
+                                    <Button x:Name="ChecksumButton" Command="{Binding ChecksumCommand}" Content="Перевірити штатну checksum"
+                                            AutomationProperties.Name="Перевірити штатну checksum" />
                                 </WrapPanel>
                                 <TextBlock Text="{Binding RunnerStatus}" Margin="0,4,0,8" />
                                 <Button Command="{Binding SelectRunnerCommand}" Content="Обрати Rust _runner…" HorizontalAlignment="Left" />
-                                <TextBlock Text="Без runner працюють читання, demo, diff і preview. Реальне виконання потребує відповідного локального baseline та перевіреного binding."
+                                <TextBlock Text="Без runner працюють читання, demo, diff, preview та окремий C# розрахунок checksum для встановленого scope; byte execution тоді NotRun. Demo не має штатної Honda checksum. Реальне виконання потребує відповідного baseline та перевіреного binding."
                                            Style="{StaticResource MutedText}" />
                                 <Expander Header="Розширені дозволи — непідтверджені instruction assumptions" Margin="0,18,0,0">
                                     <StackPanel Margin="0,8,0,0">
@@ -153,7 +155,7 @@
                                                   IsChecked="{Binding AllowAddEr1}" />
                                         <CheckBox x:Name="AddEr3CheckBox" Content="oki.add-er3-a — compact F у M1d / M1e"
                                                   IsChecked="{Binding AllowAddEr3}" />
-                                        <TextBlock Text="Для M1d дозвіл er1 недоречний: вимкніть його перед запуском M1d."
+                                        <TextBlock Text="Для M1d дозвіл er1 недоречний: вимкніть його перед запуском M1d. Checksum завжди strict і не використовує ці дозволи."
                                                    Style="{StaticResource MutedText}" FontSize="12" />
                                     </StackPanel>
                                 </Expander>
@@ -177,6 +179,23 @@
                                 <TextBlock Text="Нуль mismatch не скасовує conditional або unresolved. Фізичні оберти не підтверджені."
                                            Style="{StaticResource MutedText}" Margin="0,0,0,14" />
                                 <Button x:Name="ResultsButton" Command="{Binding OpenResultsCommand}" Content="Відкрити структурований _результат" HorizontalAlignment="Left" />
+                            </StackPanel>
+                        </Border>
+                        <Border Style="{StaticResource Card}" Visibility="{Binding HasChecksumResult, Converter={StaticResource BooleanToVisibility}}">
+                            <StackPanel>
+                                <TextBlock Text="Штатна checksum — M1f, read-only" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="Розрахунок C#" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ChecksumSummary.Arithmetic}" Margin="0,4,0,12" />
+                                <TextBlock Text="Виконання машинних bytes" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ChecksumSummary.Execution}" Margin="0,4,0,12" />
+                                <TextBlock Text="Coverage та проміжний стан" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ChecksumSummary.Coverage}" Margin="0,4,0,12" />
+                                <TextBlock Text="Доказовість" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ChecksumSummary.Evidence}" Margin="0,4,0,12" />
+                                <TextBlock Text="Assumptions" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ChecksumSummary.Assumptions}" Margin="0,4,0,12" />
+                                <TextBlock Text="Причина рішення та обмеження" FontWeight="SemiBold" />
+                                <TextBlock Text="{Binding ChecksumSummary.Reason}" Margin="0,4,0,0" />
                             </StackPanel>
                         </Border>
                     </StackPanel>

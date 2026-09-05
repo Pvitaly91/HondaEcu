@@ -524,6 +524,7 @@ internal sealed class FakeDialogs : IDialogService
 
 internal sealed class FakeOperations : IDesktopOperations
 {
+    public P28NativeChecksumReport? ChecksumReport { get; init; }
     public bool Block { get; init; }
     public bool IgnoreCancellation { get; init; }
     public bool SaveFailure { get; init; }
@@ -540,6 +541,9 @@ internal sealed class FakeOperations : IDesktopOperations
         Token = cancellationToken;
         Started.TrySetResult();
         if (Block) await Release.Task.WaitAsync(IgnoreCancellation ? CancellationToken.None : cancellationToken);
+        if (ChecksumReport is not null)
+            return new(DesktopCounters.From(ChecksumReport.Counts), ChecksumReport.ToJson(), ChecksumReport.HasFailure,
+                ChecksumReport.PermittedAssumptions, ChecksumReport.UsedAssumptions, "NotFlashReady", ChecksumReport);
         return new(new(2, 1, 3, 0, 0, 0, 4), "{\"syntheticTestReport\":true}", false, job.Assumptions, job.Assumptions,
             "Фізичні оберти не підтверджені");
     }

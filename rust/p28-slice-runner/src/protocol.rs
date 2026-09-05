@@ -58,6 +58,8 @@ pub struct Response {
     pub producer_rows: Option<Vec<[i32; 22]>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub producer_threshold_rows: Option<Vec<[i32; 9]>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub checksum_cases: Option<Vec<crate::checksum::ChecksumCase>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -111,6 +113,9 @@ impl Response {
                 "inc-x1-half-carry",
                 "indexed-alternate-immediate-displacement",
                 "word-data-access-alignment",
+                "byte-add-direct-accumulator-half-carry",
+                "byte-add-r0-accumulator-half-carry",
+                "inc-indexed-x2-half-carry",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
@@ -119,6 +124,7 @@ impl Response {
             synthetic_result: None,
             producer_rows: None,
             producer_threshold_rows: None,
+            checksum_cases: None,
         }
     }
 }

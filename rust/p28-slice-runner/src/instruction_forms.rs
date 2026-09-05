@@ -13,6 +13,44 @@ pub enum FormAdmission {
 
 pub const PRODUCER_ADD_ASSUMPTION: &str = "oki.add-er1-a";
 
+/// Exact M1f forms. Literal operands are checked separately by the scoped
+/// execution boundaries/state/read contract; no word object ADD is admitted.
+pub fn checksum_form_admission(decoded: &Decoded) -> FormAdmission {
+    let Some(p) = FULL_OPCODES.get(decoded.index) else {
+        return FormAdmission::Unsupported;
+    };
+    if p.mnemonic != decoded.mnemonic || p.bytes_pat.len() != decoded.len {
+        return FormAdmission::Unsupported;
+    }
+    match (p.mnemonic, p.dd_mode, p.bytes_pat) {
+        ("CLR X2", 'U', ["91", "15"])
+        | ("MOV er0, N16[X2]", 'U', ["B1", "NL", "NH", "48"])
+        | ("CLR A", 'S', ["F9"])
+        | ("LB A, #N8", 'R', ["77", "N8"])
+        | ("MUL", 'U', ["90", "35"])
+        | ("MOV X1, A", 'U', ["50"])
+        | ("MOV DP, #N16", 'U', ["62", "NL", "NH"])
+        | ("MOVB r0, N16[X2]", 'U', ["C1", "NL", "NH", "48"])
+        | ("LC A, [X1]", 'U', ["90", "A8"])
+        | ("ADDB A, N8", '0', ["C5", "N8", "82"])
+        | ("ADDB r0, A", 'U', ["20", "81"])
+        | ("INC X1", 'U', ["70"])
+        | ("JRNZ DP, rel8", 'U', ["30", "rel8"])
+        | ("LB A, r0", 'R', ["78"])
+        | ("STB A, N16[X2]", '0', ["D1", "NL", "NH"])
+        | ("INC N16[X2]", 'U', ["B1", "NL", "NH", "16"])
+        | ("CMP N'16[X2], #N16", 'U', ["B1", "N'L", "N'H", "C0", "NL", "NH"])
+        | ("JNE rel8", 'U', ["CE", "rel8"])
+        | ("CLR N16[X2]", 'U', ["B1", "NL", "NH", "15"])
+        | ("JEQ rel8", 'U', ["C9", "rel8"])
+        | ("CLRB N16[X2]", 'U', ["C1", "NL", "NH", "15"])
+        | ("LCB A, N16", 'U', ["90", "9D", "NL", "NH"])
+        | ("MOVB N'8, #N8", 'U', ["C5", "N'8", "98", "N8"])
+        | ("J addr16", 'U', ["03", "addrl", "addrh"]) => FormAdmission::Allowed,
+        _ => FormAdmission::Unsupported,
+    }
+}
+
 pub fn producer_form_admission(decoded: &Decoded) -> FormAdmission {
     let Some(pattern) = FULL_OPCODES.get(decoded.index) else {
         return FormAdmission::Unsupported;
@@ -84,5 +122,45 @@ mod tests {
         assert_eq!(admission(&[0x88], false), FormAdmission::Unsupported);
         assert_eq!(admission(&[0xF9], false), FormAdmission::Allowed);
         assert_eq!(admission(&[0xFA], false), FormAdmission::Unsupported);
+    }
+
+    #[test]
+    fn checksum_registry_has_only_twenty_four_reviewed_exact_forms() {
+        let admitted: Vec<_> = FULL_OPCODES
+            .iter()
+            .enumerate()
+            .filter(|(index, pattern)| {
+                let decoded = Decoded {
+                    index: *index,
+                    len: pattern.bytes_pat.len(),
+                    mnemonic: pattern.mnemonic,
+                    fields: Default::default(),
+                    dd_after: None,
+                    cycles: 0,
+                };
+                checksum_form_admission(&decoded) == FormAdmission::Allowed
+            })
+            .collect();
+        assert_eq!(admitted.len(), 24);
+        for (bytes, dd, expected) in [
+            (&[0x90, 0xA8][..], false, FormAdmission::Allowed),
+            (&[0x90, 0xA8][..], true, FormAdmission::Allowed),
+            (&[0x92, 0xA8][..], false, FormAdmission::Unsupported),
+            (&[0xC5, 7, 0x82][..], false, FormAdmission::Allowed),
+            (&[0xC5, 7, 0x82][..], true, FormAdmission::Unsupported),
+            (&[0x20, 0x81][..], true, FormAdmission::Allowed),
+            (&[0x21, 0x81][..], false, FormAdmission::Unsupported),
+            (&[0x45, 0x81][..], false, FormAdmission::Unsupported),
+            (&[0x47, 0x81][..], true, FormAdmission::Unsupported),
+            (&[0xB1, 0xA2, 3, 0x16][..], true, FormAdmission::Allowed),
+            (&[0xB0, 0xA2, 3, 0x16][..], true, FormAdmission::Unsupported),
+            (&[0xD1, 0xA0, 3][..], false, FormAdmission::Allowed),
+            (&[0xD1, 0xA0, 3][..], true, FormAdmission::Unsupported),
+        ] {
+            let found = decode(dd, |i| bytes.get(i).copied().unwrap_or(0))
+                .map(|decoded| checksum_form_admission(&decoded))
+                .unwrap_or(FormAdmission::Unsupported);
+            assert_eq!(found, expected, "{:02X?} DD={dd}", bytes);
+        }
     }
 }

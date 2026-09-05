@@ -102,6 +102,9 @@ public sealed partial class CliApplication
           research p28-vtec execute-check <baseline> --profile p28-304 --confirm-profile
                     --baseline-binding <private-json> --runner <rust-executable> --output <private-json>
                     [--allow-assumption oki.add-er3-a] [--derived <child> --plan <private-json> --patch-report <private-json>]
+          research p28-vtec checksum-check <baseline> --profile p28-304 --confirm-profile
+                    --baseline-binding <private-json> --output <private-json> [--runner <rust-executable>]
+                    [--derived <child> --plan <private-json> --patch-report <private-json>]
           research p28-vtec producer-check <baseline> --profile p28-304 --confirm-profile
                     --baseline-binding <private-json> --runner <rust-executable> --output <private-json>
                     [--allow-assumption oki.add-er1-a] [--allow-assumption oki.add-er3-a]

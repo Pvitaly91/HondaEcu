@@ -1,5 +1,10 @@
 # D0 — Windows Desktop Research Preview
 
+This document records the D0 delivery. The later
+[M1f native checksum extension](M1F_NATIVE_CHECKSUM_VALIDATION.md) adds a separate
+read-only check to this window; it does not change the D0 save/plan checksum
+Unknown semantics or make the research UI a completed M3 editor.
+
 Base: `origin/codex/p28-rpm-producer-scaling-m1e`,
 `43a6e60d3a8ddf33caee44af6683d766ef6a9ab0`, including M1d
 `7752addb98db9aa1ad749e013b374eb9a161d8df`.

@@ -69,6 +69,9 @@ public sealed class DesktopLayoutTests
                 Assert.Equal(256, plot.Rows!.Count);
                 Assert.Contains(plot.Rows, row => row.Before != row.After);
                 Assert.False(viewModel.CanSave);
+                var checksum = Assert.IsType<Button>(window.FindName("ChecksumButton"));
+                Assert.Equal("Перевірити штатну checksum", AutomationProperties.GetName(checksum));
+                Assert.False(checksum.Command.CanExecute(null));
                 stage = "closing window";
                 viewModel.Dispose();
                 window.Close();

@@ -22,6 +22,9 @@ use crate::operand::{table, Arg, Mem, Parsed, Reg};
 /// One coherent data-space API for CPU SFR aliases, register-bank operands,
 /// instruction memory accesses and caller seeding. No RAM shadow of 0..7 exists.
 pub fn read_data_u8(cpu: &Cpu, bus: &mut Bus, address: u16) -> u8 {
+    if !bus.check_data_access(address, "read") {
+        return 0;
+    }
     let value = match address / 2 {
         0 => cpu.ssp,
         1 => cpu.lrb,
@@ -48,6 +51,9 @@ pub fn read_data_u16(cpu: &Cpu, bus: &mut Bus, address: u16) -> u16 {
 }
 
 pub fn write_data_u8(cpu: &mut Cpu, bus: &mut Bus, address: u16, value: u8) {
+    if !bus.check_data_access(address, "write") {
+        return;
+    }
     if address > 7 {
         bus.write_data_u8(address, value);
         return;
@@ -413,6 +419,15 @@ impl<'a> Exec<'a> {
                 if base == "ADC" && byte && args[0] == Arg::R(0) && args[1] == Arg::ImmN8 {
                     self.cpu.hc = (a & 15) + (b & 15) + carry_in > 15;
                 }
+                // M1f exact byte forms, manual printed 3-16/3-17:
+                // ADDB A,N8 (C5 N8 82), ADDB r0,A (20 81). No carry-in.
+                if base == "ADD"
+                    && byte
+                    && ((args[0] == Arg::Reg(Reg::A) && args[1] == Arg::Mem(Mem::Direct))
+                        || (args[0] == Arg::R(0) && args[1] == Arg::Reg(Reg::A)))
+                {
+                    self.cpu.hc = (a & 15) + (b & 15) > 15;
+                }
                 if !matches!(base, "CMP" | "CMPC") {
                     self.write(&args[0], byte, res as u16);
                 }
@@ -439,7 +454,10 @@ impl<'a> Exec<'a> {
                 let res = Self::mask(res, byte);
                 self.set_zf(res, byte);
                 // INC X1 (70), manual 3-60: CF/DD unchanged, ZF/HC updated.
-                if base == "INC" && !byte && args[0] == Arg::Reg(Reg::X1) {
+                if base == "INC"
+                    && !byte
+                    && (args[0] == Arg::Reg(Reg::X1) || args[0] == Arg::Mem(Mem::IdxReg(Reg::X2)))
+                {
                     self.cpu.hc = v & 15 == 15;
                 }
                 self.write(&args[0], byte, res);

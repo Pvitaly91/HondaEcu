@@ -42,7 +42,7 @@ M1e adds [RPM producer execution and explicit scaling analysis](docs/M1E_RPM_PRO
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;
-it is a PC-only research preview, not a finished tuning editor or completion of M1.
+it is an implemented PC-only research preview, not a finished tuning editor or completion of M1 or M3.
 The permanent status is «Дослідницький режим. Не для запису в ECU».
 
 On Windows, build a portable folder with PowerShell 7:
@@ -81,7 +81,11 @@ and structured current-job results. Strict execution is the default; permitted a
 actually used ADD assumptions remain distinct. With no runner, reading/demo/diff
 and preview still work; choose your built executable explicitly with «Обрати Rust
 runner…». The packaged version uses `tools/p28-slice-runner.exe` beside the app.
-Physical RPM, checksum validity and ECU/hardware behavior remain unconfirmed;
+M1f adds [read-only native checksum research](docs/M1F_NATIVE_CHECKSUM_VALIDATION.md)
+and «Перевірити штатну checksum» in the existing checks tab. Scoped byte-sum
+arithmetic, stateful original-byte execution, coverage and evidence are separate;
+missing runner means execution NotRun, and demo has no native Honda checksum.
+There is no repair/bypass or save-time checksum change. Physical RPM and ECU/hardware behavior remain unconfirmed;
 all copies are `PcInspectionOnly / NotFlashReady`.
 See [D0 usage, packaging and validation limits](docs/D0_DESKTOP_PREVIEW.md).
 

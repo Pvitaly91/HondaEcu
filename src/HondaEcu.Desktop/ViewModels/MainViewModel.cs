@@ -48,6 +48,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         VerifyCommand = new(VerifyChangeAsync, () => !IsBusy && (_pendingResult is not null || Mode == DesktopAccessMode.VerifiedDerived));
         ExecuteCommand = new(() => RunValidationAsync(DesktopValidationKind.Execute), () => CanExecuteM1d);
         ProducerCommand = new(() => RunValidationAsync(DesktopValidationKind.Producer), () => CanExecute);
+        ChecksumCommand = new(() => RunValidationAsync(DesktopValidationKind.Checksum), () => CanCheckChecksum);
         CancelCommand = new(Cancel, () => IsBusy);
         SelectRunnerCommand = new(() =>
         {
@@ -69,6 +70,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public AsyncCommand VerifyCommand { get; }
     public AsyncCommand ExecuteCommand { get; }
     public AsyncCommand ProducerCommand { get; }
+    public AsyncCommand ChecksumCommand { get; }
     public RelayCommand CancelCommand { get; }
     public RelayCommand SelectRunnerCommand { get; }
     public RelayCommand OpenResultsCommand { get; }
@@ -140,12 +142,15 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public bool CanSave => !IsBusy && Mode == DesktopAccessMode.BoundBaseline && _pendingResult is not null;
     public bool CanExecute => !IsBusy && File.Exists(RunnerPath) && Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.VerifiedDerived;
     public bool CanExecuteM1d => CanExecute && !AllowAddEr1;
+    public bool CanCheckChecksum => !IsBusy && Mode is DesktopAccessMode.BoundBaseline or DesktopAccessMode.VerifiedDerived;
     public string RunnerPath { get; private set; }
     public string RunnerStatus => File.Exists(RunnerPath) ? "Локальний runner доступний" :
         "Runner відсутній. Огляд і preview працюють; явно виберіть локальний runner для виконання.";
     public bool AllowAddEr1 { get => _allowAddEr1; set { if (_allowAddEr1 != value) { InvalidateSession(); _allowAddEr1 = value; NotifyAll(); } } }
     public bool AllowAddEr3 { get => _allowAddEr3; set { if (_allowAddEr3 != value) { InvalidateSession(); _allowAddEr3 = value; NotifyAll(); } } }
     public DesktopCounters Counters { get; private set; } = DesktopCounters.Empty;
+    public DesktopChecksumSummary? ChecksumSummary { get; private set; }
+    public bool HasChecksumResult => ChecksumSummary is not null;
     public string ResultSummary { get; private set; } = "Перевірки ще не виконувалися. Фізичні оберти не підтверджені.";
     public long SessionId { get; private set; }
     public long JobId { get; private set; }
@@ -348,14 +353,18 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public Task RunValidationAsync(DesktopValidationKind kind)
     {
-        if (!CanExecute || kind == DesktopValidationKind.Execute && AllowAddEr1)
+        if ((kind == DesktopValidationKind.Checksum ? !CanCheckChecksum : !CanExecute) ||
+            kind == DesktopValidationKind.Execute && AllowAddEr1)
         {
             SetError(!File.Exists(RunnerPath) ? RunnerStatus : "Потрібен bound baseline / verified child; oki.add-er1-a дозволений лише для M1e.");
             return Task.CompletedTask;
         }
         var assumptions = new List<string>();
-        if (AllowAddEr1) assumptions.Add(P28ProducerModel.AddEr1Assumption);
-        if (AllowAddEr3) assumptions.Add(P28ByteExecutionValidator.AddAssumption);
+        if (kind != DesktopValidationKind.Checksum)
+        {
+            if (AllowAddEr1) assumptions.Add(P28ProducerModel.AddEr1Assumption);
+            if (AllowAddEr3) assumptions.Add(P28ByteExecutionValidator.AddAssumption);
+        }
         if (assumptions.Count != 0 && !_dialogs.Confirm("Непідтверджені assumptions", string.Join("\n", assumptions) +
             "\n\nЦі дозволи не підтверджують інструкції. Умовні результати залишаться окремими. Продовжити?")) return Task.CompletedTask;
         BeginJob();
@@ -381,10 +390,13 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
             if (job.SessionId != SessionId || job.JobId != JobId || token.IsCancellationRequested || _disposed) return;
             Counters = result.Counters;
             _resultJson = result.Json;
+            ChecksumSummary = result.Checksum is null ? null : DesktopChecksumSummary.From(result.Checksum);
             var state = result.HasFailure || Counters.HasFailure ? "Виявлені помилки або mismatch" :
                 Counters.HasIncompleteOrConditional ? "Є умовні / unresolved / not-run результати; це не повне підтвердження" : "Виконані порівняння збігаються в межах контракту";
             ResultSummary = $"{job.Kind} · session {job.SessionId} / job {job.JobId}. {state}.\nДозволено: {string.Join(", ", result.PermittedAssumptions.DefaultIfEmpty("немає (strict)"))}. " +
                 $"Використано: {string.Join(", ", result.UsedAssumptions.DefaultIfEmpty("немає"))}.\n{result.PhysicalScalingStatus}. NotFlashReady.";
+            if (ChecksumSummary is not null)
+                ResultSummary = "Штатна checksum — окремий scoped research результат нижче. Match означає збіг C# з виконанням, а не обов’язково Valid. NotFlashReady.";
         }
         catch (OperationCanceledException) { if (job.SessionId == SessionId) StatusText = "Перевірку скасовано; неповний результат не приєднано."; }
         catch (Exception exception) { SetError(exception, job.SessionId); }
@@ -478,6 +490,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         Cancel();
         _resultJson = null;
         Counters = DesktopCounters.Empty;
+        ChecksumSummary = null;
         ResultSummary = "Результати попереднього стану не застосовуються. Фізичні оберти не підтверджені.";
         ErrorText = "";
         return SessionId;
@@ -489,6 +502,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         IsBusy = true;
         _resultJson = null;
         Counters = DesktopCounters.Empty;
+        ChecksumSummary = null;
         ErrorText = "";
         ResultSummary = "Поточний запуск ще не має завершеного результату. Фізичні оберти не підтверджені.";
         StatusText = "Виконується… Прогрес невідомий; можна скасувати.";
@@ -511,7 +525,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         Notify("");
         OpenBinCommand.Refresh(); DemoCommand.Refresh(); BindBaselineCommand.Refresh(); OpenDerivedCommand.Refresh();
         PreviewCommand.Refresh(); RevertCommand.Refresh(); SaveCopyCommand.Refresh(); VerifyCommand.Refresh();
-        ExecuteCommand.Refresh(); ProducerCommand.Refresh(); CancelCommand.Refresh(); SelectRunnerCommand.Refresh(); OpenResultsCommand.Refresh();
+        ExecuteCommand.Refresh(); ProducerCommand.Refresh(); ChecksumCommand.Refresh(); CancelCommand.Refresh(); SelectRunnerCommand.Refresh(); OpenResultsCommand.Refresh();
     }
 
     private async Task BindFromDialogsAsync()

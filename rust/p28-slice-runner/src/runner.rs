@@ -139,6 +139,28 @@ pub(crate) fn execute_in_state(
     capture_trace: bool,
     producer_policy: bool,
 ) -> CaseResult {
+    execute_in_state_with_policy(
+        cpu,
+        bus,
+        contract,
+        assumptions,
+        capture_trace,
+        if producer_policy {
+            Some(crate::instruction_forms::producer_form_admission)
+        } else {
+            None
+        },
+    )
+}
+
+pub(crate) fn execute_in_state_with_policy(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    contract: &SliceContract,
+    assumptions: &[&str],
+    capture_trace: bool,
+    form_policy: Option<fn(&crate::decoder::Decoded) -> crate::instruction_forms::FormAdmission>,
+) -> CaseResult {
     let mut result = CaseResult {
         status: 0,
         used_assumptions: vec![],
@@ -187,8 +209,8 @@ pub(crate) fn execute_in_state(
                 break;
             }
             let mut required_assumption = None;
-            let admitted = if producer_policy {
-                match crate::instruction_forms::producer_form_admission(&decoded) {
+            let admitted = if let Some(policy) = form_policy {
+                match policy(&decoded) {
                     crate::instruction_forms::FormAdmission::Allowed => true,
                     crate::instruction_forms::FormAdmission::Assumption(id) => {
                         required_assumption = Some(id);
@@ -203,7 +225,7 @@ pub(crate) fn execute_in_state(
                 // A decoded producer form outside the audited registry is an
                 // unresolved evidence boundary, not an implicitly admitted
                 // instruction merely because its mnemonic is familiar.
-                result.status = if producer_policy { 1 } else { 2 };
+                result.status = if form_policy.is_some() { 1 } else { 2 };
                 result.error = Some(format!(
                     "unimplemented in reviewed slice subset: {}",
                     decoded.mnemonic
@@ -254,11 +276,7 @@ pub(crate) fn execute_in_state(
                 break;
             }
             if let Some(range) = contract.program_read_range {
-                if bus
-                    .program_reads()
-                    .iter()
-                    .any(|a| (*a as u32) < range[0] || (*a as u32) >= range[1])
-                {
+                if !bus.program_reads_within(range) {
                     result.status = 2;
                     result.error = Some("program-data read outside slice contract".into());
                     break;
@@ -344,7 +362,12 @@ fn validate_request(request: &Request) -> Result<(), String> {
         return Err("unsupported or duplicate assumption".into());
     }
     if request.images.is_empty()
-        || request.images.len() > 2
+        || request.images.len()
+            > if request.operation == "checksumBatch" {
+                32
+            } else {
+                2
+            }
         || request
             .images
             .iter()
@@ -368,7 +391,10 @@ fn validate_request(request: &Request) -> Result<(), String> {
                 return Err("invalid fixed P28 batch contract".into());
             }
         }
-        "synthetic" => {
+        "synthetic" | "checksumSynthetic" => {
+            if request.operation == "checksumSynthetic" && !request.allow_assumptions.is_empty() {
+                return Err("checksum task permits no instruction assumptions".into());
+            }
             if request.images.len() != 1
                 || request.scratch_patterns.len() != 1
                 || request.producer_cases.is_some()
@@ -408,6 +434,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "producerBatch" => {
             crate::producer::validate_producer_request(request)?;
         }
+        "checksumBatch" => crate::checksum::validate_request(request)?,
         _ => return Err("unsupported operation".into()),
     }
     Ok(())
@@ -419,11 +446,14 @@ pub fn run_request(request: Request) -> Result<Response, String> {
     if request.operation == "producerBatch" {
         return crate::producer::run_producer_batch(&request, response);
     }
+    if request.operation == "checksumBatch" {
+        return crate::checksum::run_batch(&request, response);
+    }
     let allow_add = request
         .allow_assumptions
         .iter()
         .any(|s| s == ADD_ASSUMPTION);
-    if request.operation == "synthetic" {
+    if request.operation == "synthetic" || request.operation == "checksumSynthetic" {
         let c = request.synthetic.as_ref().expect("validated");
         response
             .entry_contracts
@@ -439,13 +469,17 @@ pub fn run_request(request: Request) -> Result<Response, String> {
             .iter()
             .map(String::as_str)
             .collect();
-        response.synthetic_result = Some(execute_in_state(
+        response.synthetic_result = Some(execute_in_state_with_policy(
             &mut cpu,
             &mut bus,
             &contract,
             &assumptions,
             true,
-            false,
+            if request.operation == "checksumSynthetic" {
+                Some(crate::instruction_forms::checksum_form_admission)
+            } else {
+                None
+            },
         ));
         return Ok(response);
     }

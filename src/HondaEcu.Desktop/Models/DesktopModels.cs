@@ -4,7 +4,7 @@ using HondaEcu.Core;
 namespace HondaEcu.Desktop.Models;
 
 public enum DesktopAccessMode { Empty, RawOnly, BoundBaseline, VerifiedDerived, Demo }
-public enum DesktopValidationKind { Execute, Producer }
+public enum DesktopValidationKind { Execute, Producer, Checksum }
 
 public sealed class ThresholdSlotView(string id, int context, int pair, bool priorState,
     int offset, byte currentRaw, string evidence) : INotifyPropertyChanged
@@ -52,6 +52,10 @@ public sealed record DesktopCounters(int CompletedWithoutAssumptions, int Condit
         return FromProducerStages(report.Threshold.Select(item => item.Counts).Prepend(report.ProducerToCompact).Prepend(report.Producer));
     }
 
+    public static DesktopCounters From(P28ChecksumExecutionCounts counts) =>
+        new(counts.MatchesWithoutAssumptions, counts.ConditionalMatches, counts.Unresolved,
+            counts.Mismatches, counts.ExecutionErrors, counts.BudgetExceeded, counts.NotRun);
+
     public static DesktopCounters FromProducerStages(IEnumerable<P28ProducerStageCounts> stages)
     {
         var rows = stages.ToArray();
@@ -74,6 +78,7 @@ public sealed record DesktopValidationJob(long SessionId, long JobId, DesktopVal
     DesktopDocument Document, string RunnerPath, IReadOnlyList<string> Assumptions, string? SelectedSlotId);
 
 public sealed record DesktopValidationResult(DesktopCounters Counters, string Json, bool HasFailure,
-    IReadOnlyList<string> PermittedAssumptions, IReadOnlyList<string> UsedAssumptions, string PhysicalScalingStatus);
+    IReadOnlyList<string> PermittedAssumptions, IReadOnlyList<string> UsedAssumptions, string PhysicalScalingStatus,
+    P28NativeChecksumReport? Checksum = null);
 
 public sealed record DesktopSavePaths(string OutputPath, string PlanPath, string ReportPath);
