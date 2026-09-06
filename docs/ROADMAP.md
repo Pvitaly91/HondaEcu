@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1j research progress (not M1 completion)
+### M1a–M1k research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -60,8 +60,17 @@ once-seeded per-image CPU/RAM, independent model history, actual ordered gates,
 native scheduled counter bodies and distinct request/selection-status outputs.
 Strict mode retains a precise SUBB encoding boundary; its specific conditional
 permission does not broaden G/F ADD permissions. VTEC-only is validated with raw
-software inputs; composed acquisition-to-stateful execution remains NotRun.
+software inputs; composed acquisition-to-stateful execution was NotRun in M1j.
 The boundary does not establish physical switching, complete M1 or resume GUI r3.
+
+M1k completes the bounded [integrated capture-to-VTEC chain](M1K_INTEGRATED_CAPTURE_TO_VTEC.md):
+actual acquisition → G → F → persistent VTEC decision on one CPU/RAM/P1 lifetime,
+with explicit native counter-body scheduling and independent full-chain model
+history. The headless command checks A/original, B/threshold-only in memory and
+C/verified M1g child, including state and side effects. Permission-local and
+cumulative outcomes, terminal suffixes and partial non-comparable pairs remain
+separate. Physical RPM, hardware/full boot and GUI r3 acceptance remain NotRun;
+no new export, calibration, emulator framework or scheduler claim is added.
 
 See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). Missing
 ADD semantics, independent editor evidence and hardware validation remain gates.

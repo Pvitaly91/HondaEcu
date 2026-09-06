@@ -118,6 +118,28 @@ mod capture_bus_tests {
         read_data_u8(&cpu, &mut bus, 0x22);
         assert!(bus.take_fault().is_some());
     }
+
+    #[test]
+    fn p1_stage_capability_switch_preserves_latch_and_denies_reads_and_writes() {
+        let mut cpu = Cpu::new();
+        let mut bus = Bus::new(vec![], 0);
+        bus.set_p1_output_latch(Some(0xB5));
+        bus.set_p1_access(false);
+        read_data_u8(&cpu, &mut bus, 0x22);
+        assert!(bus.take_fault().is_some());
+        write_data_u8(&mut cpu, &mut bus, 0x22, 0);
+        assert!(bus.take_fault().is_some());
+        assert_eq!(bus.p1_output_latch(), Some(0xB5));
+        bus.observe_capture(Some(CaptureObservation {
+            tmr2: 99,
+            irqh: 0,
+            tcon2: 0,
+        }));
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x3A), 99);
+        bus.observe_capture(None);
+        bus.set_p1_access(true);
+        assert_eq!(read_data_u8(&cpu, &mut bus, 0x22), 0xB5);
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -150,6 +172,7 @@ pub struct Bus {
     journal_writes: bool,
     data_writes: Vec<[u32; 3]>,
     p1_output_latch: Option<u8>,
+    p1_access: bool,
     decision_events: Option<Vec<[u32; 8]>>,
     comparison_operands: [u32; 2],
     program_data_ranges: Option<Vec<[u16; 2]>>,
@@ -170,6 +193,7 @@ impl Bus {
             journal_writes: false,
             data_writes: vec![],
             p1_output_latch: None,
+            p1_access: false,
             decision_events: None,
             comparison_operands: [65536; 2],
             program_data_ranges: None,
@@ -200,6 +224,11 @@ impl Bus {
     /// This models no pins, loads, feedback, interrupts or peripheral time.
     pub(crate) fn set_p1_output_latch(&mut self, value: Option<u8>) {
         self.p1_output_latch = value;
+        self.p1_access = value.is_some();
+    }
+    /// Stage capability only: disabling access must never erase the latch.
+    pub(crate) fn set_p1_access(&mut self, enabled: bool) {
+        self.p1_access = enabled;
     }
     pub(crate) fn p1_output_latch(&self) -> Option<u8> {
         self.p1_output_latch
@@ -337,7 +366,7 @@ impl Bus {
             return 0;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
-            if address == 0x22 {
+            if address == 0x22 && self.p1_access {
                 if let Some(value) = self.p1_output_latch {
                     return value;
                 }
@@ -385,7 +414,7 @@ impl Bus {
             return;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
-            if address == 0x22 && self.p1_output_latch.is_some() {
+            if address == 0x22 && self.p1_access && self.p1_output_latch.is_some() {
                 self.p1_output_latch = Some(value);
                 if self.journal_writes {
                     self.data_writes.push([0x22, 8, value as u32]);

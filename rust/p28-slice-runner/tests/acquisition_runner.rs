@@ -80,7 +80,7 @@ fn run(value: Value) -> Value {
 #[test]
 fn actual_process_observes_word_width_preserves_history_and_same_value_stores() {
     let output = run(request(toy_program(false, false), false));
-    assert_eq!(output["runnerVersion"], "0.5.0");
+    assert_eq!(output["runnerVersion"], "0.6.0");
     assert!(output["diagnostics"].as_array().unwrap().is_empty());
     for sequence in output["acquisitionSequences"].as_array().unwrap() {
         assert_eq!(sequence["completedObservations"], 2);

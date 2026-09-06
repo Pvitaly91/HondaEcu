@@ -56,6 +56,16 @@ SUBB encoding discrepancy remains strict-unresolved or explicitly conditional.
 The boundary is software output data, not physical VTEC; M1i/M1h semantics and
 GUI r3 paused/NotRun are unchanged.
 
+M1k adds the mandatory [integrated capture-to-VTEC software chain](docs/M1K_INTEGRATED_CAPTURE_TO_VTEC.md)
+through headless `research p28-vtec chain-check`. Actual acquisition → G → F →
+persistent decision share one CPU/RAM/P1 latch per image sequence; Code, samples,
+T and prior/request state cannot be supplied per event. A separate C# history
+checks every boundary, ordered byte/word store and native gate. Baseline A,
+in-memory threshold-only B and fully admitted M1g child C execute their own bytes.
+Three exact-form permissions retain cumulative conditional history and terminal
+NotRun suffixes. This completes the bounded software integration, not full M1,
+physical ECU validation or GUI acceptance; no new BIN/export is introduced.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

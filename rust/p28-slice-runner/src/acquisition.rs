@@ -187,7 +187,7 @@ pub fn validate_request(request: &Request) -> Result<(), String> {
     Ok(())
 }
 
-fn acquisition_contract() -> SliceContract {
+pub(crate) fn acquisition_contract() -> SliceContract {
     SliceContract {
         entry_pc: 0x56BE,
         exit_pcs: vec![0x5719],
@@ -203,6 +203,14 @@ fn acquisition_contract() -> SliceContract {
 }
 
 fn seed_state(cpu: &mut Cpu, bus: &mut Bus, state: &PersistentState) {
+    seed_persistent_fields(cpu, bus, state);
+    // M1i-only isolated prefix preconditions, never shared with M1k.
+    write_data_u8(cpu, bus, 0xCC, 0);
+    let prior = read_data_u8(cpu, bus, 0x131);
+    write_data_u8(cpu, bus, 0x131, prior & !1);
+}
+
+pub(crate) fn seed_persistent_fields(cpu: &mut Cpu, bus: &mut Bus, state: &PersistentState) {
     for (address, value) in [
         (0xEE, state.previous_timestamp),
         (0xC4, state.previous_t),
@@ -223,14 +231,9 @@ fn seed_state(cpu: &mut Cpu, bus: &mut Bus, state: &PersistentState) {
     ] {
         write_data_u8(cpu, bus, address, value);
     }
-    // Existing threshold prefix preconditions, seeded once. These are not
-    // observations of a complete ECU main loop or persistent hysteresis.
-    write_data_u8(cpu, bus, 0xCC, 0);
-    let prior = read_data_u8(cpu, bus, 0x131);
-    write_data_u8(cpu, bus, 0x131, prior & !1);
 }
 
-fn snapshot(cpu: &Cpu, bus: &mut Bus) -> PersistentState {
+pub(crate) fn snapshot(cpu: &Cpu, bus: &mut Bus) -> PersistentState {
     PersistentState {
         previous_timestamp: read_data_u16(cpu, bus, 0xEE),
         samples: std::array::from_fn(|index| read_data_u16(cpu, bus, 0x360 + index as u16 * 2)),
@@ -245,7 +248,7 @@ fn snapshot(cpu: &Cpu, bus: &mut Bus) -> PersistentState {
     }
 }
 
-fn enter(cpu: &mut Cpu, bus: &mut Bus, contract: &SliceContract) {
+pub(crate) fn enter(cpu: &mut Cpu, bus: &mut Bus, contract: &SliceContract) {
     cpu.pc = contract.entry_pc;
     write_data_u16(cpu, bus, 2, contract.lrb);
     write_data_u16(cpu, bus, 4, contract.psw);

@@ -124,7 +124,7 @@ public static class P28StatefulValidator
                 void Check(bool match, string name) { if (!match) differences.Add(name); }
                 Check(actual.StateBefore == previous, "Actual persistent continuity");
                 var gates = ProjectGates(actual.GateEvents);
-                var selections = ProjectThresholds(actual, gates);
+                var selections = ProjectThresholds(gates);
                 P28StatefulModelStep? expected = null;
                 if (stop >= 0)
                 {
@@ -210,7 +210,7 @@ public static class P28StatefulValidator
         return step.TickRuns.Count == expected.Count && step.TickRuns.Zip(expected).All(p =>
             p.First[0] == p.Second.Entry && p.First[1] == p.Second.Target && p.First[2] == p.Second.Exit && p.First[3] == 0 && p.First[4] is >= 2 and <= 4);
     }
-    private static IReadOnlyList<P28VtecThresholdSelection> ProjectThresholds(P28StatefulObservedStep step, IReadOnlyList<P28VtecGate> gates)
+    internal static IReadOnlyList<P28VtecThresholdSelection> ProjectThresholds(IReadOnlyList<P28VtecGate> gates)
     {
         var result = new List<P28VtecThresholdSelection>();
         for (var pair = 0; pair < 2; pair++)
@@ -225,7 +225,7 @@ public static class P28StatefulValidator
         }
         return result.AsReadOnly();
     }
-    private static IReadOnlyList<P28VtecGate> ProjectGates(IReadOnlyList<int[]> events)
+    internal static IReadOnlyList<P28VtecGate> ProjectGates(IReadOnlyList<int[]> events)
     {
         var seen = new HashSet<int>();
         foreach (var e in events) if (!seen.Add(e[0]) || !P28StatefulModel.GateDefinitions.Any(g => g.Pc == e[0])) throw Protocol("Unknown or repeated decision gate event.");

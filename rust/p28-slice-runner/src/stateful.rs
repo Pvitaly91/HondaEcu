@@ -27,7 +27,7 @@ pub struct State {
     pub p1_output_data: u8,
 }
 impl State {
-    fn bytes(&self) -> [u8; 8] {
+    pub(crate) fn bytes(&self) -> [u8; 8] {
         [
             self.data0131,
             self.data0127,
@@ -156,7 +156,7 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
     }
     Ok(())
 }
-fn contract(entry: u16, exit: u16) -> SliceContract {
+pub(crate) fn contract(entry: u16, exit: u16) -> SliceContract {
     SliceContract {
         entry_pc: entry,
         exit_pcs: vec![exit],
@@ -181,7 +181,7 @@ fn enter(cpu: &mut Cpu, bus: &mut Bus, c: &SliceContract) {
     write_data_u16(cpu, bus, 0x8E, c.usp);
     bus.clear_program_reads();
 }
-fn snapshot(cpu: &Cpu, bus: &mut Bus) -> State {
+pub(crate) fn snapshot(cpu: &Cpu, bus: &mut Bus) -> State {
     State {
         data0131: read_data_u8(cpu, bus, 0x131),
         data0127: read_data_u8(cpu, bus, 0x127),
@@ -198,6 +198,17 @@ fn persistent(writes: Vec<[u32; 3]>) -> Vec<[u32; 3]> {
         .into_iter()
         .filter(|w| STATE_ADDRESSES.contains(&(w[0] as u16)))
         .collect()
+}
+
+pub(crate) fn tick_schedule(fast: u8, slow: u8) -> Vec<(u16, u16, u16)> {
+    let mut schedule = vec![];
+    for _ in 0..fast {
+        schedule.extend([(0x5BD0, 0x5BD9, 0x1D8), (0x5BD0, 0x5BD9, 0x1D9)]);
+    }
+    for _ in 0..slow {
+        schedule.extend([(0x5BD0, 0x5BD9, 0x1DF), (0x3CEB, 0x3CF3, 0xF3)]);
+    }
+    schedule
 }
 
 fn sequence(
@@ -270,13 +281,7 @@ fn sequence(
             result.checkpoints.push(cp);
             continue;
         }
-        let mut schedule = vec![];
-        for _ in 0..input.fast_ticks {
-            schedule.extend([(0x5BD0, 0x5BD9, 0x1D8), (0x5BD0, 0x5BD9, 0x1D9)]);
-        }
-        for _ in 0..input.slow_ticks {
-            schedule.extend([(0x5BD0, 0x5BD9, 0x1DF), (0x3CEB, 0x3CF3, 0xF3)]);
-        }
+        let schedule = tick_schedule(input.fast_ticks, input.slow_ticks);
         bus.set_program_data_ranges(vec![]);
         for (entry, exit, target) in schedule {
             let tick = contract(entry, exit);

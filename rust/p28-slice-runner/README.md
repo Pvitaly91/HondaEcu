@@ -95,3 +95,30 @@ See [the M1i instruction/SFR audit](M1I_ACQUISITION_AUDIT.md) and
 actual native-image comparisons remain separate private evidence. Everything
 remains **PcInspectionOnly / NotFlashReady**; physical RPM, full boot, hardware
 capture races and GUI acceptance are not established here.
+
+## Integrated capture-to-VTEC task (0.6.0)
+
+`integratedCaptureVtec` uses a closed version-1 `integratedChain` object with one
+initial state, 1–256 dense events and at most eight selected trace indexes.
+The event contains frozen TMR2/IRQH/TCON2, caller slot/context/enabled, explicit
+raw/software snapshots, bounded fast/slow body counts and one `runDecision`
+Boolean. It never accepts per-event samples, T, compact Code or prior/request.
+Images are either one baseline or exactly ordered baseline/intermediate/derived;
+each image/scratch pair gets its own CPU/RAM and retained P1 latch.
+
+The fixed order is inputs → acquisition → native counter bodies → scheduled
+G → F → decision. Only acquisition can read capture snapshots; only decision
+can access P1 output-data, and disabling access does not erase the latch.
+The command reuses existing in-state execution and exact-form policies, not
+isolated runner initialization. `chain_forms` admits the already audited
+compact forms without broad mnemonic or unknown-form fallback. Permissions
+er1/er3/SUBB are stage-local and cumulatively taint later history.
+
+Every stage reports shared state and CPU/bank/SCB/stack boundaries, native
+writes, instruction extents, data reads, gates, body counts and bounded traces.
+The first terminal stage stops all later stages, events and input application.
+Its decoded-but-refused instruction is not an executed extent. Native counter
+traces aggregate at most 128 instructions per stage, including selected replay.
+Runner 0.6.0 retains the 0.5.0 semantic-fix inventory; the DIVB refusal extent
+correction is diagnostic accounting, not new ISA semantics. Old tasks keep
+their contracts. See [M1k scope, schema and actual results](../../docs/M1K_INTEGRATED_CAPTURE_TO_VTEC.md).

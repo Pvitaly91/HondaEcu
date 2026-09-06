@@ -25,6 +25,29 @@ public sealed class P28StatefulModel
         ArgumentNullException.ThrowIfNull(initial); _rom = rom.ToArray(); _state = initial;
     }
     public P28VtecPersistentState State => _state;
+    internal IReadOnlyList<int[]> AdvanceCounters(int fastTicks, int slowTicks)
+    {
+        if (_stopped || fastTicks is < 0 or > 32 || slowTicks is < 0 or > 32)
+            throw new InvalidOperationException("Invalid or stopped native counter schedule.");
+        var writes = new List<int[]>();
+        void Store(int address, byte value)
+        {
+            writes.Add([address, 8, value]);
+            _state = address switch
+            {
+                0x1D8 => _state with { Data01D8 = value },
+                0x1D9 => _state with { Data01D9 = value },
+                0x1DF => _state with { Data01DF = value },
+                0xF3 => _state with { Data00F3 = value },
+                _ => throw new InvalidOperationException("Unknown counter."),
+            };
+        }
+        void Decrement(int address, byte value) { if (value != 0) Store(address, (byte)(value - 1)); }
+        for (var i = 0; i < fastTicks; i++) { Decrement(0x1D8, _state.Data01D8); Decrement(0x1D9, _state.Data01D9); }
+        for (var i = 0; i < slowTicks; i++)
+        { Decrement(0x1DF, _state.Data01DF); if (_state.Data00F3 != 255) Store(0xF3, (byte)(_state.Data00F3 + 1)); }
+        return writes.AsReadOnly();
+    }
     internal static readonly (int Pc, string Id, int Length)[] GateDefinitions =
     [
         (0x122C,"disabled-path",3), (0x1233,"prefix-prior-set",3), (0x123A,"prefix-context-0",3),
@@ -50,12 +73,7 @@ public sealed class P28StatefulModel
         var gateOrder = new List<int>();
         var thresholds = new List<P28VtecThresholdSelection>(); var used = new List<string>();
         if (_stopped) return Finish(4, EntryPc, "Previous terminal stop; no inputs or schedule applied.");
-        for (var i = 0; i < input.FastTicks; i++) { Decrement(0x1D8, _state.Data01D8); Decrement(0x1D9, _state.Data01D9); }
-        for (var i = 0; i < input.SlowTicks; i++)
-        {
-            Decrement(0x1DF, _state.Data01DF);
-            if (_state.Data00F3 != 255) Store(0xF3, _state.Data00F3 + 1, ticks);
-        }
+        ticks.AddRange(AdvanceCounters(input.FastTicks, input.SlowTicks));
         atEntry = _state;
         if (Gate(0x122C, !input.Enabled)) { SetBit(0x22, 1, false); goto ClearRequest; }
         var oldPrefix = Gate(0x1233, (_state.Data0131 & 1) != 0);
@@ -121,7 +139,6 @@ public sealed class P28StatefulModel
         bool Gate(int pc, bool outcome, int? left = null, int? right = null)
         { gates.Add(pc, new(pc, GateDefinitions.Single(g => g.Pc == pc).Id, outcome, left, right)); gateOrder.Add(pc); return outcome; }
         bool Compare(int pc, int left, int right) => Gate(pc, left < right, left, right);
-        void Decrement(int address, byte value) { if (value != 0) Store(address, value - 1, ticks); }
         void SetBit(int address, int bit, bool value)
         {
             var old = address == 0x22 ? _state.P1OutputData : address == 0x131 ? _state.Data0131 : _state.Data0127;

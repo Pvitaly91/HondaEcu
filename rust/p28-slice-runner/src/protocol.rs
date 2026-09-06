@@ -17,6 +17,7 @@ pub struct Request {
     pub producer_cases: Option<Vec<[u32; 14]>>,
     pub acquisition_sequence: Option<crate::acquisition::SequenceRequest>,
     pub stateful_vtec: Option<crate::stateful::Stimulus>,
+    pub integrated_chain: Option<crate::chain::Stimulus>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -66,6 +67,8 @@ pub struct Response {
     pub acquisition_sequences: Option<Vec<crate::acquisition::SequenceResult>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stateful_sequences: Option<Vec<crate::stateful::SequenceResult>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub chain_sequences: Option<Vec<crate::chain::Sequence>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -142,6 +145,7 @@ impl Response {
             checksum_cases: None,
             acquisition_sequences: None,
             stateful_sequences: None,
+            chain_sequences: None,
         }
     }
 }

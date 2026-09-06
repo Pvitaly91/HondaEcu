@@ -284,9 +284,6 @@ pub(crate) fn execute_in_state_observed(
                     result.used_assumptions.push(id.into());
                 }
             }
-            if record_extents {
-                extents.extend((pc as u32..pc as u32 + decoded.len as u32).map(|a| a as u16));
-            }
             if bus.decision_observing()
                 && decoded.mnemonic == "DIVB"
                 && read_data_u8(cpu, bus, cpu.bank_base()) == 0
@@ -295,6 +292,10 @@ pub(crate) fn execute_in_state_observed(
                 result.error =
                     Some("unresolved DIVB zero divisor: primary result undefined".into());
                 break;
+            }
+            // A semantic precondition refusal is decoded, but was never stepped.
+            if record_extents {
+                extents.extend((pc as u32..pc as u32 + decoded.len as u32).map(|a| a as u16));
             }
             let accumulator_before = cpu.a;
             let psw_before = cpu.psw_u16();
@@ -404,11 +405,20 @@ fn validate_request(request: &Request) -> Result<(), String> {
     if request.operation != "statefulVtec" && request.stateful_vtec.is_some() {
         return Err("stateful stimulus is unavailable to other operations".into());
     }
-    if request.allow_assumptions.len() > 2
+    if request.operation != "integratedCaptureVtec" && request.integrated_chain.is_some() {
+        return Err("integrated stimulus is unavailable to other operations".into());
+    }
+    if request.allow_assumptions.len()
+        > if request.operation == "integratedCaptureVtec" {
+            3
+        } else {
+            2
+        }
         || request.allow_assumptions.iter().any(|s| {
             s != ADD_ASSUMPTION
                 && s != PRODUCER_ADD_ASSUMPTION
-                && !(request.operation == "statefulVtec"
+                && !((request.operation == "statefulVtec"
+                    || request.operation == "integratedCaptureVtec")
                     && s == crate::stateful_forms::SUBB_OFF_ASSUMPTION)
         })
         || request
@@ -424,6 +434,8 @@ fn validate_request(request: &Request) -> Result<(), String> {
         || request.images.len()
             > if request.operation == "checksumBatch" {
                 32
+            } else if request.operation == "integratedCaptureVtec" {
+                3
             } else {
                 2
             }
@@ -496,6 +508,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "checksumBatch" => crate::checksum::validate_request(request)?,
         "acquisitionSequence" => crate::acquisition::validate_request(request)?,
         "statefulVtec" => crate::stateful::validate_request(request)?,
+        "integratedCaptureVtec" => crate::chain::validate_request(request)?,
         _ => return Err("unsupported operation".into()),
     }
     Ok(())
@@ -504,6 +517,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "integratedCaptureVtec" {
+        return crate::chain::run(request, response);
+    }
     if request.operation == "statefulVtec" {
         return crate::stateful::run(request, response);
     }

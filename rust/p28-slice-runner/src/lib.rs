@@ -2,6 +2,8 @@
 
 pub mod acquisition;
 pub mod bus;
+pub mod chain;
+pub mod chain_forms;
 pub mod checksum;
 pub mod cpu;
 pub mod decoder;

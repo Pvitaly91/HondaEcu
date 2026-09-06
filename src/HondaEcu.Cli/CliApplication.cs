@@ -139,6 +139,13 @@ public sealed partial class CliApplication
             --scenario <private-json> --output <new-private-json>
             [--allow-assumption oki.subb-a-off-n8-encoding]
             [--derived <child> --plan <plan> --export-report <receipt> --compensation-definition <definition>]
+          research p28-vtec chain-check <baseline> --profile p28-304 --confirm-profile
+            --baseline-binding <private-json> --runner <rust-executable>
+            --scenario <bounded-chain-scenario.json> --output <new-private-json>
+            [--allow-assumption oki.add-er1-a] [--allow-assumption oki.add-er3-a]
+            [--allow-assumption oki.subb-a-off-n8-encoding]
+            [--derived <child> --plan <plan> --export-report <receipt> --compensation-definition <definition>]
+            One CPU/RAM history per image; samples/T/Code/prior are never per-event inputs.
           research p28-vtec acquisition-check <baseline> --profile p28-304 --confirm-profile
                     --baseline-binding <private-json> --runner <rust-executable>
                     --scenario <bounded-capture-scenario.json> --output <new-private-json>
