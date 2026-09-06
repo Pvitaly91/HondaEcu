@@ -34,6 +34,7 @@ public sealed partial class CliApplication
             "execute-check" => await P28VtecExecuteCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "producer-check" => await P28VtecProducerCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "acquisition-check" => await P28VtecAcquisitionCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "state-check" => await P28VtecStateCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "rpm-preview" => await P28RpmPreviewAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "checksum-check" => await P28ChecksumCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "compensation-check" => await P28CompensationCheckAsync(args[1..], cancellationToken).ConfigureAwait(false),

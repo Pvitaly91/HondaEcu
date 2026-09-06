@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1i research progress (not M1 completion)
+### M1a–M1j research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -54,6 +54,14 @@ model checks each write/state transition; exact synthetic phases are compared
 against the unchanged M1h envelope only after valid fresh warm-up. Verified M1g
 child execution uses its own entire image. No timer/IRQ scheduler, GUI change,
 new BIN, physical RPM or full ECU boot is introduced.
+
+M1j adds [stateful VTEC software-decision validation](M1J_STATEFUL_VTEC_DECISION.md):
+once-seeded per-image CPU/RAM, independent model history, actual ordered gates,
+native scheduled counter bodies and distinct request/selection-status outputs.
+Strict mode retains a precise SUBB encoding boundary; its specific conditional
+permission does not broaden G/F ADD permissions. VTEC-only is validated with raw
+software inputs; composed acquisition-to-stateful execution remains NotRun.
+The boundary does not establish physical switching, complete M1 or resume GUI r3.
 
 See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). Missing
 ADD semantics, independent editor evidence and hardware validation remain gates.

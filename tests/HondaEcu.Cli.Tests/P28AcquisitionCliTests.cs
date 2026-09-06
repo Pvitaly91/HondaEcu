@@ -247,7 +247,7 @@ public sealed class P28AcquisitionCliTests
         return arguments;
     }
 
-    private sealed class Workspace : IDisposable
+    internal sealed class Workspace : IDisposable
     {
         private readonly string _definitions;
         public Workspace()

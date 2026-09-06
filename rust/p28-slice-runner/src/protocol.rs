@@ -16,6 +16,7 @@ pub struct Request {
     pub synthetic: Option<SyntheticContract>,
     pub producer_cases: Option<Vec<[u32; 14]>>,
     pub acquisition_sequence: Option<crate::acquisition::SequenceRequest>,
+    pub stateful_vtec: Option<crate::stateful::Stimulus>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -63,6 +64,8 @@ pub struct Response {
     pub checksum_cases: Option<Vec<crate::checksum::ChecksumCase>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub acquisition_sequences: Option<Vec<crate::acquisition::SequenceResult>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stateful_sequences: Option<Vec<crate::stateful::SequenceResult>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -124,6 +127,10 @@ impl Response {
                 "word-sub-direct-updates-half-borrow",
                 "byte-inc-direct-updates-half-carry",
                 "byte-sll-accumulator-preserves-noncarry-flags",
+                "byte-clear-accumulator-zero-flag",
+                "stateful-exact-byte-add-sub-half-carry",
+                "increment-dp-half-carry",
+                "decrement-indexed-x1-byte-half-borrow",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
@@ -134,6 +141,7 @@ impl Response {
             producer_threshold_rows: None,
             checksum_cases: None,
             acquisition_sequences: None,
+            stateful_sequences: None,
         }
     }
 }

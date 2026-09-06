@@ -93,6 +93,31 @@ mod capture_bus_tests {
         );
         assert!(bus.end_write_journal().is_empty());
     }
+
+    #[test]
+    fn p1_is_explicit_byte_output_data_only_and_never_a_generic_sfr_stub() {
+        let mut cpu = Cpu::new();
+        let mut bus = Bus::new(vec![], 0);
+        read_data_u8(&cpu, &mut bus, 0x22);
+        assert!(bus.take_fault().is_some());
+        bus.set_p1_output_latch(Some(0xA4));
+        assert_eq!(read_data_u8(&cpu, &mut bus, 0x22), 0xA4);
+        bus.begin_write_journal();
+        write_data_u8(&mut cpu, &mut bus, 0x22, 0xA4);
+        assert_eq!(bus.end_write_journal(), [[0x22, 8, 0xA4]]);
+        write_data_u16(&mut cpu, &mut bus, 0x22, 0xFFFF);
+        assert!(bus.take_fault().is_some());
+        assert_eq!(bus.p1_output_latch(), Some(0xA4));
+        for address in [0x22, 0x23, 0x24] {
+            read_data_u16(&cpu, &mut bus, address);
+            assert!(bus.take_fault().is_some());
+        }
+        write_data_u8(&mut cpu, &mut bus, 0x23, 0xFF);
+        assert!(bus.take_fault().is_some());
+        bus.set_p1_output_latch(None);
+        read_data_u8(&cpu, &mut bus, 0x22);
+        assert!(bus.take_fault().is_some());
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -124,6 +149,10 @@ pub struct Bus {
     peripheral_accesses: Vec<[u32; 4]>,
     journal_writes: bool,
     data_writes: Vec<[u32; 3]>,
+    p1_output_latch: Option<u8>,
+    decision_events: Option<Vec<[u32; 8]>>,
+    comparison_operands: [u32; 2],
+    program_data_ranges: Option<Vec<[u16; 2]>>,
 }
 
 impl Bus {
@@ -140,6 +169,10 @@ impl Bus {
             peripheral_accesses: vec![],
             journal_writes: false,
             data_writes: vec![],
+            p1_output_latch: None,
+            decision_events: None,
+            comparison_operands: [65536; 2],
+            program_data_ranges: None,
         }
     }
 
@@ -162,6 +195,48 @@ impl Bus {
     }
     pub fn clear_program_reads(&self) {
         self.program_reads.borrow_mut().clear();
+    }
+    /// M1j only: P1IO=FF, output-data-register reads, external bus disabled.
+    /// This models no pins, loads, feedback, interrupts or peripheral time.
+    pub(crate) fn set_p1_output_latch(&mut self, value: Option<u8>) {
+        self.p1_output_latch = value;
+    }
+    pub(crate) fn p1_output_latch(&self) -> Option<u8> {
+        self.p1_output_latch
+    }
+    pub(crate) fn start_decision_observer(&mut self) {
+        self.decision_events = Some(vec![]);
+    }
+    pub(crate) fn decision_observing(&self) -> bool {
+        self.decision_events.is_some()
+    }
+    pub(crate) fn clear_comparison_operands(&mut self) {
+        self.comparison_operands = [65536; 2];
+    }
+    pub(crate) fn observe_comparison(&mut self, lhs: u16, rhs: u16) {
+        self.comparison_operands = [lhs as u32, rhs as u32];
+    }
+    pub(crate) fn observe_instruction(&mut self, event: [u32; 6]) {
+        if let Some(events) = self.decision_events.as_mut() {
+            if events.len() < 512 {
+                events.push([
+                    event[0],
+                    event[1],
+                    event[2],
+                    event[3],
+                    event[4],
+                    event[5],
+                    self.comparison_operands[0],
+                    self.comparison_operands[1],
+                ]);
+            }
+        }
+    }
+    pub(crate) fn finish_decision_observer(&mut self) -> Vec<[u32; 8]> {
+        self.decision_events.take().unwrap_or_default()
+    }
+    pub(crate) fn set_program_data_ranges(&mut self, ranges: Vec<[u16; 2]>) {
+        self.program_data_ranges = Some(ranges);
     }
     pub(crate) fn observe_capture(&mut self, observation: Option<CaptureObservation>) {
         self.capture = observation;
@@ -220,6 +295,14 @@ impl Bus {
     }
 
     pub fn read_code_u8(&self, address: u16) -> u8 {
+        if self
+            .program_data_ranges
+            .as_ref()
+            .is_some_and(|ranges| !ranges.iter().any(|r| address >= r[0] && address < r[1]))
+        {
+            self.record_fault("program-data", address as u32, "read");
+            return 0;
+        }
         let mut reads = self.program_reads.borrow_mut();
         // The runner has a bounded instruction budget; unique addresses avoid
         // a trace per successful repeated table read.
@@ -254,6 +337,11 @@ impl Bus {
             return 0;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
+            if address == 0x22 {
+                if let Some(value) = self.p1_output_latch {
+                    return value;
+                }
+            }
             if let Some(observation) = self.capture {
                 let value = match address {
                     0x19 => Some(observation.irqh),
@@ -297,6 +385,13 @@ impl Bus {
             return;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
+            if address == 0x22 && self.p1_output_latch.is_some() {
+                self.p1_output_latch = Some(value);
+                if self.journal_writes {
+                    self.data_writes.push([0x22, 8, value as u32]);
+                }
+                return;
+            }
             if self.capture.is_some() {
                 self.peripheral_accesses
                     .push([address as u32, 8, 1, value as u32]);
@@ -310,7 +405,7 @@ impl Bus {
         }
     }
     pub fn write_data_u16(&mut self, address: u16, value: u16) {
-        if address < 0x80 && self.capture.is_some() {
+        if address < 0x80 && (self.capture.is_some() || self.p1_output_latch.is_some()) {
             self.peripheral_accesses
                 .push([address as u32, 16, 1, value as u32]);
             self.record_fault("data", address as u32, "write-word");

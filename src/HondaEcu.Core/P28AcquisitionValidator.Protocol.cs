@@ -63,7 +63,7 @@ public static partial class P28AcquisitionValidator
             Int(element, "everWrittenMask", 0, 63), Integers(element, "slotWriteCounts", 0, 131072, 6, exact: true));
     }
 
-    private static P28AcquisitionStageResult? ParseStage(JsonElement element, int budget, int outputs,
+    internal static P28AcquisitionStageResult? ParseStage(JsonElement element, int budget, int outputs,
         IReadOnlyList<string> allowed, string? permitted)
     {
         if (element.ValueKind == JsonValueKind.Null) return null;

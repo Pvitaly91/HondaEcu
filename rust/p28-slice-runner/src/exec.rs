@@ -386,9 +386,9 @@ impl<'a> Exec<'a> {
             }
             "CLR" => {
                 self.write(&args[0], byte, 0);
-                // CLR A F9 is equivalent to L A,#0, unlike CLR obj.
-                // Manual printed 3-31: ZF=1; decoder establishes DD=1.
-                if !byte && args[0] == Arg::Reg(Reg::A) {
+                // CLR A F9 / CLRB A FA, manual 3-31/3-33: ZF=1.
+                // The decoder establishes DD; object clears preserve flags.
+                if args[0] == Arg::Reg(Reg::A) {
                     self.cpu.zf = true;
                 }
             }
@@ -400,6 +400,9 @@ impl<'a> Exec<'a> {
                 let code = base == "CMPC";
                 let lhs = self.read(&args[0], byte, false);
                 let rhs = self.read(&args[1], byte, code);
+                if matches!(base, "CMP" | "CMPC") {
+                    self.bus.observe_comparison(lhs, rhs);
+                }
                 let carry_in = match base {
                     "ADC" | "SBC" => self.cpu.cf as u32,
                     _ => 0,
@@ -432,7 +435,8 @@ impl<'a> Exec<'a> {
                 // ADDB A,N8 (C5 N8 82), ADDB r0,A (20 81). No carry-in.
                 if base == "ADD"
                     && byte
-                    && ((args[0] == Arg::Reg(Reg::A) && args[1] == Arg::Mem(Mem::Direct))
+                    && ((args[0] == Arg::Reg(Reg::A)
+                        && matches!(args[1], Arg::Mem(Mem::Direct) | Arg::ImmN8 | Arg::R(6)))
                         || (args[0] == Arg::R(0) && args[1] == Arg::Reg(Reg::A)))
                 {
                     self.cpu.hc = (a & 15) + (b & 15) > 15;
@@ -443,6 +447,19 @@ impl<'a> Exec<'a> {
                     && !byte
                     && args[0] == Arg::Reg(Reg::A)
                     && args[1] == Arg::Mem(Mem::Direct)
+                {
+                    self.cpu.hc = (a & 15) < (b & 15);
+                }
+                // M1j exact byte forms, manual 3-160/3-161. The A7 off-page
+                // encoding remains separately conditional in form admission.
+                if base == "SUB"
+                    && byte
+                    && ((args[0] == Arg::Reg(Reg::A)
+                        && matches!(
+                            args[1],
+                            Arg::R(1 | 6 | 7) | Arg::ImmN8 | Arg::Mem(Mem::OffPage)
+                        ))
+                        || (matches!(args[0], Arg::R(0 | 6)) && args[1] == Arg::Reg(Reg::A)))
                 {
                     self.cpu.hc = (a & 15) < (b & 15);
                 }
@@ -474,13 +491,18 @@ impl<'a> Exec<'a> {
                 // INC X1 (70), manual 3-60: CF/DD unchanged, ZF/HC updated.
                 if base == "INC"
                     && !byte
-                    && (args[0] == Arg::Reg(Reg::X1) || args[0] == Arg::Mem(Mem::IdxReg(Reg::X2)))
+                    && (matches!(args[0], Arg::Reg(Reg::X1 | Reg::Dp))
+                        || args[0] == Arg::Mem(Mem::IdxReg(Reg::X2)))
                 {
                     self.cpu.hc = v & 15 == 15;
                 }
                 // M1i INCB N8 only (C5 N8 16), manual 3-61.
                 if base == "INC" && byte && args[0] == Arg::Mem(Mem::Direct) {
                     self.cpu.hc = v & 15 == 15;
+                }
+                // M1j DECB N16[X1], manual 3-56: CF/DD preserved.
+                if base == "DEC" && byte && args[0] == Arg::Mem(Mem::IdxReg(Reg::X1)) {
+                    self.cpu.hc = v & 15 == 0;
                 }
                 self.write(&args[0], byte, res);
             }

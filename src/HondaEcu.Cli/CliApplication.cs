@@ -134,6 +134,11 @@ public sealed partial class CliApplication
                     [--allow-assumption oki.add-er1-a] [--allow-assumption oki.add-er3-a]
                     Conditional mathematical selection only; no BIN, runner or export authority.
                     Without scaling, numerical RPM is unavailable. Strict model mode is the default.
+          research p28-vtec state-check <baseline> --profile p28-304 --confirm-profile
+            --baseline-binding <private-json> --runner <rust-executable>
+            --scenario <private-json> --output <new-private-json>
+            [--allow-assumption oki.subb-a-off-n8-encoding]
+            [--derived <child> --plan <plan> --export-report <receipt> --compensation-definition <definition>]
           research p28-vtec acquisition-check <baseline> --profile p28-304 --confirm-profile
                     --baseline-binding <private-json> --runner <rust-executable>
                     --scenario <bounded-capture-scenario.json> --output <new-private-json>

@@ -48,6 +48,14 @@ M1h steady-envelope checks preserve strict/conditional/NotRun distinctions.
 Verified M1g child sequences execute the child's own bytes. No new BIN, physical
 RPM claim or GUI acceptance is implied; GUI r3 remains paused.
 
+M1j adds [stateful VTEC software-decision validation](docs/M1J_STATEFUL_VTEC_DECISION.md)
+through `research p28-vtec state-check`. Prior predicates, counters and request/status
+history persist across actual ROM calls; an independent C# model checks every
+transition and executed gate. VTEC-only uses explicit raw compactCode. A specific
+SUBB encoding discrepancy remains strict-unresolved or explicitly conditional.
+The boundary is software output data, not physical VTEC; M1i/M1h semantics and
+GUI r3 paused/NotRun are unchanged.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;
