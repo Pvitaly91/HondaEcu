@@ -18,6 +18,7 @@ pub struct Request {
     pub acquisition_sequence: Option<crate::acquisition::SequenceRequest>,
     pub stateful_vtec: Option<crate::stateful::Stimulus>,
     pub integrated_chain: Option<crate::chain::Stimulus>,
+    pub limiter_sequence: Option<crate::limiter::Stimulus>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -69,6 +70,8 @@ pub struct Response {
     pub stateful_sequences: Option<Vec<crate::stateful::SequenceResult>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub chain_sequences: Option<Vec<crate::chain::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limiter_sequences: Option<Vec<crate::limiter::Sequence>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -146,6 +149,7 @@ impl Response {
             acquisition_sequences: None,
             stateful_sequences: None,
             chain_sequences: None,
+            limiter_sequences: None,
         }
     }
 }

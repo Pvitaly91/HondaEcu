@@ -36,6 +36,7 @@ fn request(rom: Vec<u8>, synthetic: SyntheticContract) -> Request {
         acquisition_sequence: None,
         stateful_vtec: None,
         integrated_chain: None,
+        limiter_sequence: None,
     }
 }
 
@@ -301,6 +302,7 @@ fn synthetic_batch_cannot_launder_threshold_add_through_compact_permission() {
         acquisition_sequence: None,
         stateful_vtec: None,
         integrated_chain: None,
+        limiter_sequence: None,
     })
     .unwrap();
     assert_eq!(result.compact_rows.len(), 393216);

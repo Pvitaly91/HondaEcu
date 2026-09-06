@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1k research progress (not M1 completion)
+### M1a–M1l research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -71,6 +71,15 @@ C/verified M1g child, including state and side effects. Permission-local and
 cumulative outcomes, terminal suffixes and partial non-comparable pairs remain
 separate. Physical RPM, hardware/full boot and GUI r3 acceptance remain NotRun;
 no new export, calibration, emulator framework or scheduler claim is added.
+
+M1l completes the isolated [rev-limiter discovery and cut/resume validation](M1L_REV_LIMITER_VALIDATION.md):
+the exact period-word decision path, fixed/RAM threshold structure and native
+channel-mask consumer before P2 are established. Read-only inspection, persistent
+byte execution, independent C# history and single-word in-memory A/B mutations
+are delivered separately from the completed M1k chain. Earlier combined gates,
+adaptive threshold production, full scheduling and electrical pulses remain
+outside this execution contract. Limiter export is not enabled; M1, physical RPM,
+cross-editor/hardware verification and GUI r3 acceptance remain incomplete.
 
 See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). Missing
 ADD semantics, independent editor evidence and hardware validation remain gates.

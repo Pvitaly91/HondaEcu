@@ -5,7 +5,7 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.6.0";
+    internal const string CurrentVersion = "0.7.0";
     private static readonly string[] LegacyFixes =
     [
         "word-ror-through-carry-preserves-noncarry-flags", "load-zero-flag-and-dd-contract",
@@ -36,13 +36,14 @@ internal static class SliceRunnerIdentity
         var version = root.GetProperty("runnerVersion").GetString();
         if (root.GetProperty("protocolVersion").GetInt32() != 1 || root.GetProperty("operation").GetString() != operation ||
             root.GetProperty("upstreamCommit").GetString() != P28ByteExecutionValidator.UpstreamCommit ||
-            version is not ("0.1.0" or "0.2.0" or "0.3.0" or "0.4.0" or "0.5.0" or CurrentVersion) ||
-            operation is not ("p28Batch" or "synthetic" or "producerBatch" or "checksumBatch" or "acquisitionSequence" or "statefulVtec" or "integratedCaptureVtec") ||
+            version is not ("0.1.0" or "0.2.0" or "0.3.0" or "0.4.0" or "0.5.0" or "0.6.0" or CurrentVersion) ||
+            operation is not ("p28Batch" or "synthetic" or "producerBatch" or "checksumBatch" or "acquisitionSequence" or "statefulVtec" or "integratedCaptureVtec" or "limiterSequence") ||
             operation == "producerBatch" && version == "0.1.0" ||
-            operation == "checksumBatch" && version is not ("0.3.0" or "0.4.0" or "0.5.0" or CurrentVersion) ||
-            operation == "acquisitionSequence" && version is not ("0.4.0" or "0.5.0" or CurrentVersion) ||
-            operation == "statefulVtec" && version is not ("0.5.0" or CurrentVersion) ||
-            operation == "integratedCaptureVtec" && version != CurrentVersion)
+            operation == "checksumBatch" && version is not ("0.3.0" or "0.4.0" or "0.5.0" or "0.6.0" or CurrentVersion) ||
+            operation == "acquisitionSequence" && version is not ("0.4.0" or "0.5.0" or "0.6.0" or CurrentVersion) ||
+            operation == "statefulVtec" && version is not ("0.5.0" or "0.6.0" or CurrentVersion) ||
+            operation == "integratedCaptureVtec" && version is not ("0.6.0" or CurrentVersion) ||
+            operation == "limiterSequence" && version != CurrentVersion)
         {
             throw new SliceProcessException(SliceProcessFailure.Protocol,
                 "Runner version, operation or protocol differs from the audited compatibility inventory.");

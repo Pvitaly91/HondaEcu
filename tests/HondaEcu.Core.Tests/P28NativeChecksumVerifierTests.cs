@@ -152,7 +152,7 @@ public sealed class P28NativeChecksumVerifierTests
                     outputAddresses = new[] { 0x208 },
                 },
             });
-            Assert.Equal("0.6.0", response.Response.GetProperty("runnerVersion").GetString());
+            Assert.Equal("0.7.0", response.Response.GetProperty("runnerVersion").GetString());
             return response.Response.GetProperty("syntheticResult").Clone();
         }
         var first = await Run(7);

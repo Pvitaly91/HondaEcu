@@ -14,6 +14,7 @@ public sealed partial class CliApplication
         return args[0] switch
         {
             "p28-vtec" => await P28VtecResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "p28-limiter" => await P28LimiterResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
             _ => throw new CliUsageException($"Unknown research command '{args[0]}'."),
         };
     }

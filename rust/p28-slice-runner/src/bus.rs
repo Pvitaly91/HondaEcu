@@ -173,6 +173,7 @@ pub struct Bus {
     data_writes: Vec<[u32; 3]>,
     p1_output_latch: Option<u8>,
     p1_access: bool,
+    limiter_p4: Option<u8>,
     decision_events: Option<Vec<[u32; 8]>>,
     comparison_operands: [u32; 2],
     program_data_ranges: Option<Vec<[u16; 2]>>,
@@ -194,6 +195,7 @@ impl Bus {
             data_writes: vec![],
             p1_output_latch: None,
             p1_access: false,
+            limiter_p4: None,
             decision_events: None,
             comparison_operands: [65536; 2],
             program_data_ranges: None,
@@ -209,6 +211,10 @@ impl Bus {
                 operation,
             });
         }
+    }
+    /// Isolated limiter only: frozen software read of P4 bit0, no output/pins.
+    pub(crate) fn observe_limiter_p4(&mut self, value: Option<u8>) {
+        self.limiter_p4 = value.map(|v| v & 1);
     }
 
     pub fn take_fault(&self) -> Option<AccessFault> {
@@ -366,6 +372,11 @@ impl Bus {
             return 0;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
+            if address == 0x2C {
+                if let Some(value) = self.limiter_p4 {
+                    return value;
+                }
+            }
             if address == 0x22 && self.p1_access {
                 if let Some(value) = self.p1_output_latch {
                     return value;

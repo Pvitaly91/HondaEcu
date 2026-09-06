@@ -66,6 +66,15 @@ Three exact-form permissions retain cumulative conditional history and terminal
 NotRun suffixes. This completes the bounded software integration, not full M1,
 physical ECU validation or GUI acceptance; no new BIN/export is introduced.
 
+M1l adds [exact-bound rev-limiter inspection and stateful validation](docs/M1L_REV_LIMITER_VALIDATION.md)
+through separate headless `research p28-limiter inspect|check` commands. The
+unsigned period-word cut/resume path executes together with its native channel
+mask consumer; independent C# histories verify operands, branches and ordered
+writes. Separate in-memory word mutations move actual boundaries. Adaptive RAM
+threshold production and surrounding scheduling remain explicit dependencies.
+M1k stays closed; this second research parameter does not complete M1, enable
+limiter export, establish physical RPM or resume GUI r3. No new BIN is produced.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

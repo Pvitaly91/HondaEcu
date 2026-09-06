@@ -396,6 +396,9 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "limiterSequence" && request.limiter_sequence.is_some() {
+        return Err("limiter stimulus is unavailable to other operations".into());
+    }
     if request.protocol_version != PROTOCOL_VERSION {
         return Err("unsupported protocol version".into());
     }
@@ -508,6 +511,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "checksumBatch" => crate::checksum::validate_request(request)?,
         "acquisitionSequence" => crate::acquisition::validate_request(request)?,
         "statefulVtec" => crate::stateful::validate_request(request)?,
+        "limiterSequence" => crate::limiter::validate_request(request)?,
         "integratedCaptureVtec" => crate::chain::validate_request(request)?,
         _ => return Err("unsupported operation".into()),
     }
@@ -517,6 +521,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "limiterSequence" {
+        return crate::limiter::run(request, response);
+    }
     if request.operation == "integratedCaptureVtec" {
         return crate::chain::run(request, response);
     }

@@ -13,7 +13,7 @@ public sealed class P28AcquisitionRustIntegrationTests
             "Invented verbatim-copy probe, not the native interval procedure", [0]);
         var program = ToyProgram();
         var response = await Run(program, scenario);
-        Assert.Equal("0.6.0", response.Response.GetProperty("runnerVersion").GetString());
+        Assert.Equal("0.7.0", response.Response.GetProperty("runnerVersion").GetString());
         foreach (var sequence in response.Response.GetProperty("acquisitionSequences").EnumerateArray())
         {
             var first = sequence.GetProperty("checkpoints")[0];
