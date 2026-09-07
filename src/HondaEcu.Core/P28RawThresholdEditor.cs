@@ -469,10 +469,10 @@ internal static class P28RawEditJson
             return;
         }
 
-        if (type == typeof(int) || type == typeof(byte))
+        if (type == typeof(int) || type == typeof(byte) || type == typeof(ushort))
         {
             if (element.ValueKind != JsonValueKind.Number || !element.TryGetInt32(out var number) ||
-                (type == typeof(byte) && number is < 0 or > 255))
+                (type == typeof(byte) && number is < 0 or > 255) || (type == typeof(ushort) && number is < 0 or > 65535))
             {
                 throw new InvalidDataException("Raw-edit numeric fields must be in-range integers.");
             }

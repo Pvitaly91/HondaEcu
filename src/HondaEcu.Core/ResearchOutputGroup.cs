@@ -3,6 +3,20 @@ namespace HondaEcu.Core;
 /// <summary>Shared three-file staging and best-effort rollback. Not power-loss atomicity.</summary>
 internal static class ResearchOutputGroup
 {
+    internal static (string[] Sources, Action Recheck) CaptureInputs(RomImage original, RomProfile profile,
+        string profileDigest, IEnumerable<string>? protectedPaths)
+    {
+        var sources = (protectedPaths ?? []).Concat(new[] { original.SourcePath, profile.SourcePath }.OfType<string>()).ToArray();
+        var snapshot = sources.Distinct().ToDictionary(s => s, File.ReadAllBytes);
+        void Recheck()
+        {
+            foreach (var item in snapshot)
+                if (!item.Value.AsSpan().SequenceEqual(File.ReadAllBytes(item.Key))) throw new InvalidDataException("Protected input changed before publication.");
+            if (original.SourcePath is { } path && !RomImage.Load(path).Span.SequenceEqual(original.Span)) throw new InvalidDataException("Original changed after validation.");
+            if (profile.SourcePath is { } pp && P28VtecInspector.ComputeProfileDigest(RomProfile.Load(pp)) != profileDigest) throw new InvalidDataException("Profile changed after validation.");
+        }
+        return (sources, Recheck);
+    }
     internal static T Write<T>(RomImage image, string planJson, string reportJson, string outputPath, string planPath,
         string reportPath, IEnumerable<string> protectedPaths, Action requireCurrentInputs, Func<string[], T> readback,
         CancellationToken cancellationToken)

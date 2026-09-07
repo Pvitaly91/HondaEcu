@@ -17,6 +17,19 @@ public static class P28LimiterInspector
 {
     internal const string CutId = "fixed-context-cut", ResumeId = "fixed-context-resume";
     internal const int CutOffset = 0x196A, ResumeOffset = 0x1967;
+    internal static int AdaptiveBaseOffset(int bank, bool cut) => (bank, cut) switch
+    {
+        (0, false) => 0x6495,
+        (0, true) => 0x649B,
+        (1, false) => 0x64A1,
+        (1, true) => 0x64A7,
+        _ => throw new ArgumentException("Select exactly bank 0 or 1."),
+    };
+    internal static string AdaptiveBaseId(int bank, bool cut)
+    {
+        _ = AdaptiveBaseOffset(bank, cut);
+        return $"adaptive-bank-{bank}-base-{(cut ? "cut" : "resume")}";
+    }
     internal static int FieldOffset(string id) => id switch
     {
         CutId => CutOffset,
@@ -45,8 +58,13 @@ public static class P28LimiterInspector
             new(CutId, FieldOffset(CutId), 2, Word(image.Span, FieldOffset(CutId)), "LittleEndianUnsignedWordImmediate", "0124.5 clear; P4.0 or 011B.7 set"),
             new(ResumeId, FieldOffset(ResumeId), 2, Word(image.Span, FieldOffset(ResumeId)), "LittleEndianUnsignedWordImmediate", "0124.5 set; P4.0 or 011B.7 set"),
         };
-        foreach (var (id, offset) in new[] { ("bank-0-base-resume", 0x6495), ("bank-0-base-cut", 0x649B), ("bank-1-base-resume", 0x64A1), ("bank-1-base-cut", 0x64A7) })
-            fields.Add(new(id, offset, 2, Word(image.Span, offset), "LittleEndianUnsignedProgramData", "Adaptive producer 487B..48F5; not a directly editable fixed threshold"));
+        foreach (var bank in new[] { 0, 1 })
+            foreach (var cut in new[] { false, true })
+            {
+                var offset = AdaptiveBaseOffset(bank, cut);
+                // Preserve the established read-only inspection IDs; export has its own purpose/IDs.
+                fields.Add(new($"bank-{bank}-base-{(cut ? "cut" : "resume")}", offset, 2, Word(image.Span, offset), "LittleEndianUnsignedProgramData", "Adaptive producer 487B..48F5; not a directly editable fixed threshold"));
+            }
         return new(1, image.Hash, image.Size, true, "MatchedExactResearchParentNotFactoryAuthentication", fields.AsReadOnly(),
             ["00C4/00C5 is the unsigned period word produced at 07A2; lower normal period represents higher speed.",
              "1966..197D selects fixed immediates or RAM 01A4/01A6, using previous 0124.5; 197D tests rawPeriod < selected word. Equality clears overspeed.",

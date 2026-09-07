@@ -222,11 +222,16 @@ public static class P28FixedLimiterExecution
         }
         Runs(e.LimiterRuns, LimiterScenarios(p.Plan).Select(s => (s.Id, s.Scenario.Digest, s.Scenario.Calls.Count)).ToArray(), false);
         Runs(e.AdaptiveRuns, AdaptiveScenarios().Select(s => (s.Id, s.Scenario.Digest, s.Scenario.Calls.Count)).ToArray(), true);
-        if (e.ChecksumRuns.Count != 9) throw new InvalidDataException("Missing native checksum evidence.");
+        RequireChecksumEvidence(images.Select(i => (i.Item1, i.Item2)).ToArray(), e.ChecksumRuns);
+        ValidateRelations(e.LimiterRuns, e.AdaptiveRuns);
+    }
+    internal static void RequireChecksumEvidence((string Id, RomImage Image)[] images, IReadOnlyList<P28ChecksumExportObservation> checks)
+    {
+        if (checks.Count != 9) throw new InvalidDataException("Missing native checksum evidence.");
         foreach (var (kind, image) in images)
             foreach (var pattern in new[] { 0, 85, 170 })
             {
-                var found = e.ChecksumRuns.Where(r => r.ImageKind == kind && r.ScratchPattern == pattern).ToArray();
+                var found = checks.Where(r => r.ImageKind == kind && r.ScratchPattern == pattern).ToArray();
                 var residue = P28NativeChecksumArithmetic.Calculate(image).ComputedResult;
                 if (found.Length != 1) throw new InvalidDataException("Missing/duplicate checksum receipt row.");
                 var r = found[0];
@@ -236,6 +241,5 @@ public static class P28FixedLimiterExecution
                     !r.CoverageMatches || !r.IntermediateStateMatches || r.UsedAssumptions.Count != 0)
                     throw new InvalidDataException("Invalid checksum receipt accounting.");
             }
-        ValidateRelations(e.LimiterRuns, e.AdaptiveRuns);
     }
 }

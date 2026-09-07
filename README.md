@@ -92,6 +92,14 @@ execution before new-path BIN/plan/receipt publication and independent readback.
 This is PC-only original-parent research export, not physical RPM or flash readiness.
 M1l/M1m remain closed and GUI r3 remains paused/NotRun.
 
+M1o adds [single-bank adaptive-base export](docs/M1O_ADAPTIVE_BASE_EXPORT.md)
+through `research p28-limiter adaptive-export plan|apply|verify|inspect`.
+One explicit bank and its two numeric base words are admitted, not coefficients,
+origins, both banks or a constant RPM limiter. Full unsigned-domain target checks
+and fresh strict native producer/limiter/checksum A/B/C histories precede the
+shared new-path writer and independent original-parent readback. M1m/M1n remain
+completed; GUI r3 stays paused/NotRun and hardware remains outside scope.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

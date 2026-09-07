@@ -47,17 +47,7 @@ public static class P28FixedLimiterWriter
         string receiptPath, IEnumerable<string>? protectedPaths = null, CancellationToken cancellationToken = default)
     {
         Revalidate(token); var p = token.Preview;
-        var sources = (protectedPaths ?? []).Concat(new[] { p.Original.SourcePath, p.Profile.SourcePath }.OfType<string>()).ToArray();
-        var snapshot = sources.Distinct().ToDictionary(s => s, File.ReadAllBytes);
-        void Inputs()
-        {
-            foreach (var item in snapshot)
-                if (!item.Value.AsSpan().SequenceEqual(File.ReadAllBytes(item.Key))) throw new InvalidDataException("Protected input changed before publication.");
-            if (p.Original.SourcePath is { } path && !RomImage.Load(path).Span.SequenceEqual(p.Original.Span))
-                throw new InvalidDataException("Original changed after validation.");
-            if (p.Profile.SourcePath is { } profilePath && P28VtecInspector.ComputeProfileDigest(RomProfile.Load(profilePath)) != p.Plan.ProfileDigest)
-                throw new InvalidDataException("Profile changed after validation.");
-        }
+        var (sources, Inputs) = ResearchOutputGroup.CaptureInputs(p.Original, p.Profile, p.Plan.ProfileDigest, protectedPaths);
         var receipt = P28FixedLimiterReceipt.Create(token);
         return ResearchOutputGroup.Write(p.Output, p.Plan.ToJson(), receipt.ToJson(), outputPath, savedPlanPath, receiptPath,
             sources, Inputs, paths =>
