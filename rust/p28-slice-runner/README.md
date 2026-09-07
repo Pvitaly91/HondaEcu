@@ -122,3 +122,17 @@ traces aggregate at most 128 instructions per stage, including selected replay.
 Runner 0.6.0 retains the 0.5.0 semantic-fix inventory; the DIVB refusal extent
 correction is diagnostic accounting, not new ISA semantics. Old tasks keep
 their contracts. See [M1k scope, schema and actual results](../../docs/M1K_INTEGRATED_CAPTURE_TO_VTEC.md).
+
+## Adaptive limiter task (0.8.0)
+
+`adaptiveLimiter` consumes a closed `adaptiveLimiter` stimulus: version 1,
+once-only initial state and 1..64 calls with at most 32 selected native counter
+iterations per call. It executes producer, existing limiter and consumer on the
+same CPU/RAM, never injecting produced words per call. Program table reads,
+stack, data/SFR ranges and instruction forms are bounded. No ADD/SUBB hypothesis
+permission is accepted. A terminal stop leaves downstream/suffix stages null.
+
+Version 0.8.0 adds `adaptive-exact-word-add-sub-half-carry` to the semantic-fix
+inventory. Older version/operation inventories remain explicitly recognized.
+The `limiterSequence` task keeps its original initial-RAM-snapshot contract.
+See [M1m contract, instruction audit and private results](../../docs/M1M_ADAPTIVE_LIMITER_THRESHOLDS.md).

@@ -161,14 +161,14 @@ public static class P28LimiterValidator
         var sums = images.Select((im, i) => { var sum = P28NativeChecksumArithmetic.Calculate(im); return (object)new { imageIndex = i, sum.ComputedResult, sum.ResidueMatches, scope = "Independent arithmetic only; no compensation/bypass/export" }; }).ToArray();
         return new(1, P28LimiterInspector.Inspect(baseline, profile, binding, true), scenario.Digest, root.GetProperty("entryContracts").Clone(), reports.AsReadOnly(), mutation, sums);
     }
-    private static P28LimiterState State(JsonElement e) { P28LimiterScenario.StateShape(e); return e.Deserialize<P28LimiterState>(P28StatefulScenario.Options)!; }
-    private static bool? NullableBool(JsonElement e) => e.ValueKind == JsonValueKind.Null ? null : e.GetBoolean();
-    private static int[][] Matrix(JsonElement c, string name, int width)
+    internal static P28LimiterState State(JsonElement e) { P28LimiterScenario.StateShape(e); return e.Deserialize<P28LimiterState>(P28StatefulScenario.Options)!; }
+    internal static bool? NullableBool(JsonElement e) => e.ValueKind == JsonValueKind.Null ? null : e.GetBoolean();
+    internal static int[][] Matrix(JsonElement c, string name, int width)
     {
         var a = c.GetProperty(name); Require(a.GetArrayLength() <= 96, "Journal exceeds budget.");
         return a.EnumerateArray().Select(row => { Require(row.GetArrayLength() == width, "Journal width."); var v = row.EnumerateArray().Select(x => x.GetInt32()).ToArray(); Require(v.All(x => x is >= 0 and <= 65536), "Journal value."); return v; }).ToArray();
     }
-    private static void ValidateTrace(P28AcquisitionStageResult? stage, int[][] events, bool consumer)
+    internal static void ValidateTrace(P28AcquisitionStageResult? stage, int[][] events, bool consumer)
     {
         if (stage is null) { Require(events.Length == 0, "Events without execution."); return; }
         Require(stage.UsedAssumptions.Count == 0 && stage.ProgramReads.Count == 0 && stage.Trace.Count == stage.Steps && events.Length == stage.Steps, "Unexpected permissions/reads/incomplete trace.");
@@ -184,8 +184,8 @@ public static class P28LimiterValidator
         Require(stage.Status != 0 || stage.Error is null, "Completed stage with error.");
     }
     private static bool InCode(int pc, bool consumer) => consumer ? pc is >= 0x5585 and < 0x5596 : pc is >= 0x1966 and < 0x1985 or >= 0x19AC and < 0x19B0 or >= 0x19C2 and < 0x19CB or >= 0x1A1E and < 0x1A38;
-    private static bool Equal<T, U>(T a, U b) => JsonNode.DeepEquals(JsonSerializer.SerializeToNode(a, JsonDefaults.Create(false)), JsonSerializer.SerializeToNode(b, JsonDefaults.Create(false)));
-    private static void Require(bool condition, string message) { if (!condition) throw new SliceProcessException(SliceProcessFailure.Protocol, message); }
+    internal static bool Equal<T, U>(T a, U b) => JsonNode.DeepEquals(JsonSerializer.SerializeToNode(a, JsonDefaults.Create(false)), JsonSerializer.SerializeToNode(b, JsonDefaults.Create(false)));
+    internal static void Require(bool condition, string message) { if (!condition) throw new SliceProcessException(SliceProcessFailure.Protocol, message); }
     internal static JsonElement ExpectedContracts() => JsonSerializer.SerializeToElement(new[] { new {
         id="isolatedLimiter",decisionEntry=0x1966,decisionExit=0x1A38,consumerEntry=0x5585,consumerExit=0x5596,stop="BeforeInstruction",
         precondition="Earlier decision gates have selected 1966; 0121.7=1; PSWL.4/5=0",

@@ -75,6 +75,14 @@ threshold production and surrounding scheduling remain explicit dependencies.
 M1k stays closed; this second research parameter does not complete M1, enable
 limiter export, establish physical RPM or resume GUI r3. No new BIN is produced.
 
+M1m adds [adaptive limiter threshold production and integration](docs/M1M_ADAPTIVE_LIMITER_THRESHOLDS.md)
+through headless `research p28-limiter adaptive-check`. Actual adaptive producer,
+native counter-body calls, limiter decision and mask consumer share persistent
+CPU/RAM; the independently modeled words are never injected into native RAM.
+Both banks, reset/update/hold paths and raw integer boundaries are covered by
+1,530 strict private matches. M1l stays closed; physical RPM, full boot,
+hardware and GUI remain outside scope. No limiter export or new BIN is enabled.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

@@ -139,6 +139,9 @@ public sealed partial class CliApplication
           research p28-limiter check <baseline> --profile p28-304 --confirm-profile
               --baseline-binding <private-json> --runner <rust-executable>
               --scenario <private-limiter-json> --output <new-private-json>
+          research p28-limiter adaptive-check <baseline> --profile p28-304 --confirm-profile
+              --baseline-binding <private-json> --runner <rust-executable>
+              --scenario <private-adaptive-json> --output <new-private-json>
           research p28-vtec state-check <baseline> --profile p28-304 --confirm-profile
             --baseline-binding <private-json> --runner <rust-executable>
             --scenario <private-json> --output <new-private-json>

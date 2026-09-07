@@ -11,6 +11,7 @@ pub mod exec;
 // Preserve the pinned generated opcode table verbatim.
 #[rustfmt::skip]
 pub mod full_decoder;
+pub mod adaptive;
 pub mod instruction_forms;
 pub mod limiter;
 pub mod operand;

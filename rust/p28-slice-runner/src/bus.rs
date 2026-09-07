@@ -19,6 +19,36 @@ mod capture_bus_tests {
     use crate::exec::{read_data_u16, read_data_u8, write_data_u16, write_data_u8};
 
     #[test]
+    fn adaptive_ie_is_opt_in_word_only_scoped_storage_with_same_value_journal() {
+        let mut cpu = Cpu::new();
+        let mut bus = Bus::new(vec![], 0);
+        read_data_u16(&cpu, &mut bus, 0x1A);
+        assert!(bus.take_fault().is_some());
+        bus.set_adaptive_ie(Some(0xA55A));
+        bus.configure_scoped_access(vec![[0x1A, 0x1C]], 8);
+        assert_eq!(read_data_u16(&cpu, &mut bus, 0x1A), 0xA55A);
+        bus.begin_write_journal();
+        write_data_u16(&mut cpu, &mut bus, 0x1A, 0xA55A);
+        assert_eq!(bus.end_write_journal(), [[0x1A, 16, 0xA55A]]);
+        for a in [0x1A, 0x1B] {
+            read_data_u8(&cpu, &mut bus, a);
+            assert!(bus.take_fault().is_some());
+            write_data_u8(&mut cpu, &mut bus, a, 0);
+            assert!(bus.take_fault().is_some());
+        }
+        read_data_u16(&cpu, &mut bus, 0x1C);
+        assert!(bus.take_fault().is_some());
+        assert_eq!(bus.adaptive_ie(), Some(0xA55A));
+        bus.configure_scoped_access(vec![], 8);
+        write_data_u16(&mut cpu, &mut bus, 0x1A, 0);
+        assert!(bus.take_fault().is_some());
+        assert_eq!(bus.adaptive_ie(), Some(0xA55A));
+        bus.set_adaptive_ie(None);
+        read_data_u16(&cpu, &mut bus, 0x1A);
+        assert!(bus.take_fault().is_some());
+    }
+
+    #[test]
     fn old_bus_has_no_peripheral_observations_and_word_width_is_preserved() {
         let cpu = Cpu::new();
         let mut bus = Bus::new(vec![], 0xAA);
@@ -174,6 +204,7 @@ pub struct Bus {
     p1_output_latch: Option<u8>,
     p1_access: bool,
     limiter_p4: Option<u8>,
+    adaptive_ie: Option<u16>,
     decision_events: Option<Vec<[u32; 8]>>,
     comparison_operands: [u32; 2],
     program_data_ranges: Option<Vec<[u16; 2]>>,
@@ -196,6 +227,7 @@ impl Bus {
             p1_output_latch: None,
             p1_access: false,
             limiter_p4: None,
+            adaptive_ie: None,
             decision_events: None,
             comparison_operands: [65536; 2],
             program_data_ranges: None,
@@ -400,6 +432,13 @@ impl Bus {
         self.ram[address as usize]
     }
     pub fn read_data_u16(&mut self, address: u16) -> u16 {
+        if address == 0x1A
+            && self.adaptive_ie.is_some()
+            && self.check_data_access(address, "read")
+            && self.check_data_access(address + 1, "read")
+        {
+            return self.adaptive_ie.unwrap();
+        }
         if address < 0x80 {
             if self.check_data_access(address, "read")
                 && self.check_data_access(address.saturating_add(1), "read")
@@ -445,6 +484,17 @@ impl Bus {
         }
     }
     pub fn write_data_u16(&mut self, address: u16, value: u16) {
+        if address == 0x1A
+            && self.adaptive_ie.is_some()
+            && self.check_data_access(address, "write")
+            && self.check_data_access(address + 1, "write")
+        {
+            self.adaptive_ie = Some(value);
+            if self.journal_writes {
+                self.data_writes.push([address as u32, 16, value as u32]);
+            }
+            return;
+        }
         if address < 0x80 && (self.capture.is_some() || self.p1_output_latch.is_some()) {
             self.peripheral_accesses
                 .push([address as u32, 16, 1, value as u32]);
@@ -466,5 +516,12 @@ impl Bus {
             self.data_writes.truncate(before);
             self.data_writes.push([address as u32, 16, value as u32]);
         }
+    }
+    // Explicit word-only software IE storage; no interrupt delivery or time.
+    pub(crate) fn set_adaptive_ie(&mut self, value: Option<u16>) {
+        self.adaptive_ie = value;
+    }
+    pub(crate) fn adaptive_ie(&self) -> Option<u16> {
+        self.adaptive_ie
     }
 }

@@ -31,6 +31,12 @@ M1i adds only an opt-in frozen observation boundary for three explicitly
 reviewed peripheral reads; old memory-only operations retain their denial of
 those SFRs. No upstream peripheral/engine implementation was imported.
 
+[M1m](docs/M1M_ADAPTIVE_LIMITER_THRESHOLDS.md) records a minimal HC correction
+for four exact accumulator word ADD/SUB forms, tested through decoded opcodes.
+Its new IE capability is word-only software storage for a bounded critical
+section, not upstream interrupt/peripheral simulation. Existing unresolved
+object-destination ADD permissions remain unchanged.
+
 ### Opcode-table ancestry
 
 `full_decoder.rs` identifies `66207.op` as its generation source. The related

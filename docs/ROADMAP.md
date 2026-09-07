@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1l research progress (not M1 completion)
+### M1a–M1m research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -80,6 +80,14 @@ are delivered separately from the completed M1k chain. Earlier combined gates,
 adaptive threshold production, full scheduling and electrical pulses remain
 outside this execution contract. Limiter export is not enabled; M1, physical RPM,
 cross-editor/hardware verification and GUI r3 acceptance remain incomplete.
+
+M1m completes the bounded [adaptive limiter producer integration](M1M_ADAPTIVE_LIMITER_THRESHOLDS.md):
+actual threshold production and selected native counter iterations precede the
+existing limiter/consumer on one persistent CPU/RAM. Separate C# histories check
+actual table words, gates, ordered stores, threshold selection and downstream
+mask updates. Both table banks and all recovered reset/update/hold paths have
+targeted private evidence. M1l remains closed; no acquisition integration,
+physical period, full scheduler, limiter export, GUI or hardware claim is added.
 
 See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). Missing
 ADD semantics, independent editor evidence and hardware validation remain gates.

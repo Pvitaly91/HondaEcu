@@ -132,7 +132,7 @@ pub fn entry_contracts() -> Vec<serde_json::Value> {
         "programDataReads":[],"assumptions":[],"interrupts":"NotInjected","timeAdvancement":"None"
     })]
 }
-fn contract(consumer: bool) -> SliceContract {
+pub(crate) fn contract(consumer: bool) -> SliceContract {
     SliceContract {
         entry_pc: if consumer { 0x5585 } else { 0x1966 },
         exit_pcs: vec![if consumer { 0x5596 } else { 0x1A38 }],
@@ -155,7 +155,7 @@ fn contract(consumer: bool) -> SliceContract {
         program_read_range: None,
     }
 }
-fn state(cpu: &Cpu, bus: &mut Bus) -> State {
+pub(crate) fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     State {
         data0124: read_data_u8(cpu, bus, 0x124),
         data012b: read_data_u8(cpu, bus, 0x12B),
@@ -172,7 +172,6 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     for (image_index, image) in r.images.iter().enumerate() {
         for &scratch_pattern in &r.scratch_patterns {
             let decision_contract = contract(false);
-            let consumer_contract = contract(true);
             let (mut cpu, mut bus) = seed_machine(&image.rom, &decision_contract, scratch_pattern);
             for (a, v) in [
                 (0x124, s.initial_state.data0124),
@@ -206,77 +205,8 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
             let mut stopped = false;
             let mut checkpoints = vec![];
             for call in &s.calls {
-                let before = state(&cpu, &mut bus);
-                let mut row = Checkpoint {
-                    index: call.index,
-                    status: 4,
-                    state_before: before.clone(),
-                    state_after: before,
-                    decision: None,
-                    consumer: None,
-                    decision_writes: vec![],
-                    consumer_writes: vec![],
-                    decision_events: vec![],
-                    consumer_events: vec![],
-                    overspeed_request: None,
-                    inhibit_branch: None,
-                };
-                if !stopped {
-                    write_data_u16(&mut cpu, &mut bus, 0xC4, call.raw_period);
-                    write_data_u8(
-                        &mut cpu,
-                        &mut bus,
-                        0x11B,
-                        if call.snapshot011b_bit7 { 128 } else { 0 },
-                    );
-                    bus.observe_limiter_p4(Some(if call.p4_bit0 { 1 } else { 0 }));
-                    enter(&mut cpu, &mut bus, &decision_contract);
-                    bus.begin_write_journal();
-                    bus.start_decision_observer();
-                    let result = execute_in_state_observed(
-                        &mut cpu,
-                        &mut bus,
-                        &decision_contract,
-                        &[],
-                        true,
-                        Some(admission),
-                        true,
-                    );
-                    row.decision_writes = bus.end_write_journal();
-                    row.decision_events = bus.finish_decision_observer();
-                    row.status = result.status;
-                    if result.status == 0 {
-                        row.overspeed_request = Some(read_data_u8(&cpu, &mut bus, 0x124) & 32 != 0);
-                        enter(&mut cpu, &mut bus, &consumer_contract);
-                        cpu.a = call.channel_mask as u16;
-                        bus.observe_limiter_p4(None);
-                        bus.begin_write_journal();
-                        bus.start_decision_observer();
-                        let c = execute_in_state_observed(
-                            &mut cpu,
-                            &mut bus,
-                            &consumer_contract,
-                            &[],
-                            true,
-                            Some(admission),
-                            true,
-                        );
-                        row.consumer_writes = bus.end_write_journal();
-                        row.consumer_events = bus.finish_decision_observer();
-                        row.status = c.status;
-                        if c.status == 0 {
-                            row.inhibit_branch = Some(
-                                row.consumer_events
-                                    .iter()
-                                    .any(|e| (e[0] == 0x5585 || e[0] == 0x5588) && e[1] == 0x5592),
-                            );
-                        }
-                        row.consumer = Some(c);
-                    }
-                    row.decision = Some(result);
-                    stopped = row.status != 0;
-                    row.state_after = state(&cpu, &mut bus);
-                }
+                let row = execute_call(&mut cpu, &mut bus, call, !stopped);
+                stopped = row.status != 0;
                 checkpoints.push(row);
             }
             sequences.push(Sequence {
@@ -322,4 +252,80 @@ pub fn admission(d: &Decoded) -> FormAdmission {
         | ("RC", 'U', ["95"]) => FormAdmission::Allowed,
         _ => FormAdmission::Unsupported,
     }
+}
+pub(crate) fn execute_call(cpu: &mut Cpu, bus: &mut Bus, call: &Call, run: bool) -> Checkpoint {
+    let decision_contract = contract(false);
+    let consumer_contract = contract(true);
+    let before = state(cpu, bus);
+    let mut row = Checkpoint {
+        index: call.index,
+        status: 4,
+        state_before: before.clone(),
+        state_after: before,
+        decision: None,
+        consumer: None,
+        decision_writes: vec![],
+        consumer_writes: vec![],
+        decision_events: vec![],
+        consumer_events: vec![],
+        overspeed_request: None,
+        inhibit_branch: None,
+    };
+    if run {
+        write_data_u16(cpu, bus, 0xC4, call.raw_period);
+        write_data_u8(
+            cpu,
+            bus,
+            0x11B,
+            if call.snapshot011b_bit7 { 128 } else { 0 },
+        );
+        bus.observe_limiter_p4(Some(if call.p4_bit0 { 1 } else { 0 }));
+        enter(cpu, bus, &decision_contract);
+        bus.begin_write_journal();
+        bus.start_decision_observer();
+        let result = execute_in_state_observed(
+            cpu,
+            bus,
+            &decision_contract,
+            &[],
+            true,
+            Some(admission),
+            true,
+        );
+        row.decision_writes = bus.end_write_journal();
+        row.decision_events = bus.finish_decision_observer();
+        row.status = result.status;
+        if result.status == 0 {
+            row.overspeed_request = Some(read_data_u8(cpu, bus, 0x124) & 32 != 0);
+            enter(cpu, bus, &consumer_contract);
+            cpu.a = call.channel_mask as u16;
+            bus.observe_limiter_p4(None);
+            bus.begin_write_journal();
+            bus.start_decision_observer();
+            let c = execute_in_state_observed(
+                cpu,
+                bus,
+                &consumer_contract,
+                &[],
+                true,
+                Some(admission),
+                true,
+            );
+            row.consumer_writes = bus.end_write_journal();
+            row.consumer_events = bus.finish_decision_observer();
+            row.status = c.status;
+            if c.status == 0 {
+                row.inhibit_branch = Some(
+                    row.consumer_events
+                        .iter()
+                        .any(|e| (e[0] == 0x5585 || e[0] == 0x5588) && e[1] == 0x5592),
+                );
+            }
+            row.consumer = Some(c);
+        }
+        row.decision = Some(result);
+        row.state_after = state(cpu, bus);
+    }
+
+    row
 }

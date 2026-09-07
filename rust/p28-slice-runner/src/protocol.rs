@@ -19,6 +19,7 @@ pub struct Request {
     pub stateful_vtec: Option<crate::stateful::Stimulus>,
     pub integrated_chain: Option<crate::chain::Stimulus>,
     pub limiter_sequence: Option<crate::limiter::Stimulus>,
+    pub adaptive_limiter: Option<crate::adaptive::Stimulus>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -72,6 +73,8 @@ pub struct Response {
     pub chain_sequences: Option<Vec<crate::chain::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limiter_sequences: Option<Vec<crate::limiter::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub adaptive_sequences: Option<Vec<crate::adaptive::Sequence>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -137,6 +140,7 @@ impl Response {
                 "stateful-exact-byte-add-sub-half-carry",
                 "increment-dp-half-carry",
                 "decrement-indexed-x1-byte-half-borrow",
+                "adaptive-exact-word-add-sub-half-carry",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
@@ -150,6 +154,7 @@ impl Response {
             stateful_sequences: None,
             chain_sequences: None,
             limiter_sequences: None,
+            adaptive_sequences: None,
         }
     }
 }

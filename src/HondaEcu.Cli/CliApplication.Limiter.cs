@@ -6,12 +6,13 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28LimiterResearchAsync(string[] args, CancellationToken cancellationToken)
     {
-        if (args.Length == 0 || args[0] is not ("inspect" or "check"))
-            throw new CliUsageException("Usage: hondaecu research p28-limiter <inspect|check> <baseline> --profile p28-304 --output <new-private-json> ...");
-        var check = args[0] == "check";
+        if (args.Length == 0 || args[0] is not ("inspect" or "check" or "adaptive-check"))
+            throw new CliUsageException("Usage: hondaecu research p28-limiter <inspect|check|adaptive-check> <baseline> --profile p28-304 --output <new-private-json> ...");
+        var adaptive = args[0] == "adaptive-check";
+        var check = args[0] == "check" || adaptive;
         var command = CommandLine.Parse(args[1..], new HashSet<string>(StringComparer.Ordinal) { "confirm-profile" });
         command.EnsureOnly(check ? ["profile", "confirm-profile", "baseline-binding", "runner", "scenario", "output"] : ["profile", "confirm-profile", "baseline-binding", "output"]);
-        command.RequirePositionals(1, "research p28-limiter inspect|check <baseline> --profile p28-304 --output <new-private-json>");
+        command.RequirePositionals(1, "research p28-limiter inspect|check|adaptive-check <baseline> --profile p28-304 --output <new-private-json>");
         if (check && !command.HasFlag("confirm-profile")) throw new CliUsageException("Limiter execution requires --confirm-profile and exact baseline binding.");
         var baselinePath = ResolvePath(command.Positionals[0]); var outputPath = ResolvePath(command.Required("output"));
         string? OptionPath(string name) => command.Optional(name) is { } value ? ResolvePath(value) : null;
@@ -30,7 +31,15 @@ public sealed partial class CliApplication
         var binding = bindingPath is null ? null : await Task.Run(() => P28ExactBaselineBinding.Load(bindingPath), cancellationToken).ConfigureAwait(false);
         RequireCaptureInputSnapshot(snapshot);
         object report; var failure = false;
-        if (check)
+        if (adaptive)
+        {
+            var scenario = P28AdaptiveScenario.Parse(utf8.GetString(snapshot[scenarioPath!]));
+            var validation = await P28AdaptiveValidator.ExecuteAsync(baseline, profile, binding!, true, runnerPath!, scenario, cancellationToken: cancellationToken).ConfigureAwait(false);
+            report = validation; failure = validation.HasFailure;
+            foreach (var sequence in validation.Sequences)
+                await _output.WriteLineAsync($"adaptive scratch={sequence.ScratchPattern}: requested={sequence.Counts.RequestedCalls}, completed={sequence.Counts.CompletedCalls}, strict={sequence.Counts.StrictMatches}, unresolved={sequence.Counts.Unresolved}, NotRun={sequence.Counts.NotRun}, mismatches={sequence.Counts.Mismatches}, errors={sequence.Counts.ExecutionErrors}.").ConfigureAwait(false);
+        }
+        else if (check)
         {
             var scenario = P28LimiterScenario.Parse(utf8.GetString(snapshot[scenarioPath!]));
             var validation = await P28LimiterValidator.ExecuteAsync(baseline, profile, binding!, true, runnerPath!, scenario, cancellationToken: cancellationToken).ConfigureAwait(false);

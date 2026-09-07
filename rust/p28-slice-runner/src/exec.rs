@@ -426,6 +426,16 @@ impl<'a> Exec<'a> {
                 };
                 self.cpu.cf = carry;
                 self.set_zf(res as u16, byte);
+                // M1m: only decoded DD=1 86 imm16 / 09 / A6 imm16 / 28.
+                // Instruction manual 3-13, 3-156; HC is bit-3 carry/borrow.
+                if !byte && args[0] == Arg::Reg(Reg::A) {
+                    if base == "ADD" && matches!(args[1], Arg::ImmN16 | Arg::Er(1)) {
+                        self.cpu.hc = (a & 15) + (b & 15) > 15;
+                    }
+                    if base == "SUB" && matches!(args[1], Arg::ImmN16 | Arg::Er(0)) {
+                        self.cpu.hc = (a & 15) < (b & 15);
+                    }
+                }
                 // Narrow newly audited producer form: ADCB r0,#N8.
                 // Manual 3-12 and user manual 33: half carry is bit3 carry.
                 if base == "ADC" && byte && args[0] == Arg::R(0) && args[1] == Arg::ImmN8 {

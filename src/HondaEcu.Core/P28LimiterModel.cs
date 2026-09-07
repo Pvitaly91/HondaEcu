@@ -42,4 +42,6 @@ public sealed class P28LimiterModel
         return new(before, _state, fixedContext ? "Fixed" : "InitialRamSnapshot", fixedContext ? prior ? 0x1967 : 0x196A : null,
             threshold, input.RawPeriod, threshold, request, inhibit, (byte)(_state.Data018F | 0xF0), writes.AsReadOnly(), consumer.AsReadOnly(), 0x1A38, 0x5596);
     }
+    // Used only by the independent producer model; never accepts observed Rust state.
+    internal void AcceptModeledAdaptiveWords(ushort cut, ushort resume) => _state = _state with { RamCut = cut, RamResume = resume };
 }
