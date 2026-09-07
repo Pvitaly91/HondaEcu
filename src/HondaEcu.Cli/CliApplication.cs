@@ -136,6 +136,17 @@ public sealed partial class CliApplication
                     Without scaling, numerical RPM is unavailable. Strict model mode is the default.
           research p28-limiter inspect <baseline> --profile p28-304 --output <new-private-json>
               [--confirm-profile --baseline-binding <private-json>]
+          research p28-limiter export plan <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding> --compensation-definition <reviewed-location>
+              --cut-raw <integer> --resume-raw <integer> --output <new-plan.json>
+          research p28-limiter export apply <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding> --compensation-definition <reviewed-location> --plan <plan>
+              --runner <rust-executable> --confirm-pc-only --output <new-private.bin>
+              --saved-plan <new-plan-copy.json> --report <new-receipt.json>
+          research p28-limiter export verify|inspect <output> --baseline <original> --profile p28-304
+              --baseline-binding <binding> --compensation-definition <reviewed-location>
+              --plan <saved-plan> --report <receipt> --output <new-verification.json>
+              Fixed context only; adaptive tables unchanged. Raw pair policy is not engine safety.
           research p28-limiter check <baseline> --profile p28-304 --confirm-profile
               --baseline-binding <private-json> --runner <rust-executable>
               --scenario <private-limiter-json> --output <new-private-json>

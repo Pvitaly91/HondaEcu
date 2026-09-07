@@ -44,6 +44,13 @@ public static class P28AdaptiveValidator
         { throw new SliceProcessException(SliceProcessFailure.Protocol, "Malformed adaptive response.", e); }
     }
     private sealed record Stage(P28AcquisitionStageResult Result, int[][] Writes, int[][] Events, int Ssp);
+    internal static P28AdaptiveValidationReport AnalyzeExportImage(P28FixedLimiterPreview preview, RomImage image,
+        P28AdaptiveScenario scenario, SliceProcessResponse response)
+    {
+        if (!new[] { preview.Original.Hash, preview.Intermediate.Hash, preview.Output.Hash }.Contains(image.Hash))
+            throw new InvalidDataException("Foreign adaptive export-control image.");
+        return AnalyzeCore(image, preview.Profile, scenario, response.Response);
+    }
     private static Stage? ParseStage(JsonElement e, bool tick)
     {
         if (e.ValueKind == JsonValueKind.Null) return null;

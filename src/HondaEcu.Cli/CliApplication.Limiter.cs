@@ -6,6 +6,7 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28LimiterResearchAsync(string[] args, CancellationToken cancellationToken)
     {
+        if (args.Length > 0 && args[0] == "export") return await P28FixedLimiterExportAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length == 0 || args[0] is not ("inspect" or "check" or "adaptive-check"))
             throw new CliUsageException("Usage: hondaecu research p28-limiter <inspect|check|adaptive-check> <baseline> --profile p28-304 --output <new-private-json> ...");
         var adaptive = args[0] == "adaptive-check";

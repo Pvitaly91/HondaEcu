@@ -74,37 +74,10 @@ public static class P28ChecksumPreservingCopyWriter
         cancellationToken.ThrowIfCancellationRequested();
         P28ChecksumPreservingExecution.ValidateForPublication(validated);
         var composition = validated.Composition;
-        var destinations = new[] { outputPath, planPath, reportPath }.Select(Path.GetFullPath).ToArray();
         var sources = (protectedPaths ?? []).Concat(new[] { composition.Baseline.SourcePath, composition.Profile.SourcePath }.OfType<string>()).ToArray();
-        for (var index = 0; index < destinations.Length; index++)
-        {
-            foreach (var other in destinations.Skip(index + 1).Concat(sources)) AtomicFile.EnsureDifferentPath(destinations[index], other);
-            if (File.Exists(destinations[index]) || Directory.Exists(destinations[index]))
-                throw new IOException("Each BIN, composed plan and export receipt destination must be a new file.");
-        }
-        RequireCurrentParent(composition);
-        var planJson = composition.Plan.ToJson();
-        var reportJson = P28ChecksumPreservingExportReport.From(validated).ToJson();
-        cancellationToken.ThrowIfCancellationRequested();
-        AtomicFile.WriteAllText(destinations[1], planJson);
-        try
-        {
-            // Once publication begins, finish rollback/readback rather than interrupting the file group.
-            AtomicOutputPair.Write(destinations[0], composition.Image.Span, destinations[2], reportJson, overwrite: false);
-        }
-        catch (Exception publicationError)
-        {
-            try
-            {
-                if (File.Exists(destinations[1]) && File.ReadAllText(destinations[1]) == planJson) File.Delete(destinations[1]);
-            }
-            catch (Exception rollbackError) when (rollbackError is IOException or UnauthorizedAccessException)
-            {
-                throw new AggregateException("Publication failed; the newly published plan could not be rolled back.", publicationError, rollbackError);
-            }
-            throw;
-        }
-        return VerifySavedCopy(validated, destinations[0], destinations[1], destinations[2]);
+        return ResearchOutputGroup.Write(composition.Image, composition.Plan.ToJson(), P28ChecksumPreservingExportReport.From(validated).ToJson(),
+            outputPath, planPath, reportPath, sources, () => RequireCurrentParent(composition),
+            paths => VerifySavedCopy(validated, paths[0], paths[1], paths[2]), cancellationToken);
     }
 
     public static P28ChecksumPreservingVerification VerifySavedCopy(P28VerifiedChecksumExport validated,

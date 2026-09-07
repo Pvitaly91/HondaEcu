@@ -15,10 +15,12 @@ public sealed record P28LimiterInspection(int FormatVersion, RomHash ImageHash, 
 /// <summary>Read-only exact-parent interpretation. No editor/export permission is issued.</summary>
 public static class P28LimiterInspector
 {
+    internal const string CutId = "fixed-context-cut", ResumeId = "fixed-context-resume";
+    internal const int CutOffset = 0x196A, ResumeOffset = 0x1967;
     internal static int FieldOffset(string id) => id switch
     {
-        "fixed-context-cut" => 0x196A,
-        "fixed-context-resume" => 0x1967,
+        CutId => CutOffset,
+        ResumeId => ResumeOffset,
         _ => throw new ArgumentException("Only the two established fixed-context word immediate fields are admitted for in-memory research."),
     };
     internal static ushort Word(ReadOnlySpan<byte> b, int offset) => BinaryPrimitives.ReadUInt16LittleEndian(b.Slice(offset, 2));
@@ -40,8 +42,8 @@ public static class P28LimiterInspector
         P28ByteExecutionValidator.ValidateAdmission(image, profile, binding!, true, null); OperandGuard(image);
         var fields = new List<P28LimiterField>
         {
-            new("fixed-context-cut", 0x196A, 2, Word(image.Span, 0x196A), "LittleEndianUnsignedWordImmediate", "0124.5 clear; P4.0 or 011B.7 set"),
-            new("fixed-context-resume", 0x1967, 2, Word(image.Span, 0x1967), "LittleEndianUnsignedWordImmediate", "0124.5 set; P4.0 or 011B.7 set"),
+            new(CutId, FieldOffset(CutId), 2, Word(image.Span, FieldOffset(CutId)), "LittleEndianUnsignedWordImmediate", "0124.5 clear; P4.0 or 011B.7 set"),
+            new(ResumeId, FieldOffset(ResumeId), 2, Word(image.Span, FieldOffset(ResumeId)), "LittleEndianUnsignedWordImmediate", "0124.5 set; P4.0 or 011B.7 set"),
         };
         foreach (var (id, offset) in new[] { ("bank-0-base-resume", 0x6495), ("bank-0-base-cut", 0x649B), ("bank-1-base-resume", 0x64A1), ("bank-1-base-cut", 0x64A7) })
             fields.Add(new(id, offset, 2, Word(image.Span, offset), "LittleEndianUnsignedProgramData", "Adaptive producer 487B..48F5; not a directly editable fixed threshold"));

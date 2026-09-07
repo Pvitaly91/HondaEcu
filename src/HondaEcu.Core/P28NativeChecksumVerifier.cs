@@ -228,7 +228,7 @@ public static class P28NativeChecksumVerifier
         }
     }
 
-    private static JsonElement[] ValidateEntryContract(JsonElement root)
+    internal static JsonElement[] ValidateEntryContract(JsonElement root)
     {
         var contracts = root.GetProperty("entryContracts").EnumerateArray().Select(item => item.Clone()).ToArray();
         if (contracts.Length != 1 || contracts[0].ValueKind != JsonValueKind.Object) throw Protocol("One checksum entry contract is required.");

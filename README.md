@@ -83,6 +83,15 @@ Both banks, reset/update/hold paths and raw integer boundaries are covered by
 1,530 strict private matches. M1l stays closed; physical RPM, full boot,
 hardware and GUI remain outside scope. No limiter export or new BIN is enabled.
 
+M1n adds [fixed-context checksum-preserving limiter export](docs/M1N_FIXED_LIMITER_EXPORT.md)
+through headless `research p28-limiter export plan|apply|verify|inspect`.
+Only the two established little-endian immediate operands and the separately
+reviewed compensation location are admitted; adaptive tables remain unchanged.
+Apply requires fresh strict A/B/C limiter, adaptive-control and native checksum
+execution before new-path BIN/plan/receipt publication and independent readback.
+This is PC-only original-parent research export, not physical RPM or flash readiness.
+M1l/M1m remain closed and GUI r3 remains paused/NotRun.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

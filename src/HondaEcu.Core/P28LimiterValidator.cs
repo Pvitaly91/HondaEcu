@@ -123,7 +123,7 @@ public static class P28LimiterValidator
                         var cmp = de.Where(e => e[0] == 0x197D).ToArray();
                         Check(cmp.Length == 1 && cmp[0][6] == expected.ComparisonLeft && cmp[0][7] == expected.ComparisonRight &&
                             ((cmp[0][5] & 0x8000) != 0) == expected.OverspeedRequest && ((cmp[0][5] & 0x4000) != 0) == (expected.ComparisonLeft == expected.Threshold), "Actual comparison operands/CF/ZF");
-                        Check(de.Any(e => e[0] == 0x1969 && e[3] == P28LimiterInspector.Word(images[imageIndex].Span, 0x196A)), "Actual cut immediate load");
+                        Check(de.Any(e => e[0] == 0x1969 && e[3] == P28LimiterInspector.Word(images[imageIndex].Span, P28LimiterInspector.FieldOffset(P28LimiterInspector.CutId))), "Actual cut immediate load");
                         Check(de.Any(e => e[0] == 0x1974) == (expected.Context == "InitialRamSnapshot"), "Actual context selection");
                         Check(de.Any(e => e[0] == 0x197C) == ((before.Data0124 & 32) != 0), "Actual prior-state threshold selection");
                         Check(de.Any(e => e[0] == 0x1980 && e[1] == (expected.OverspeedRequest ? 0x19AC : 0x1982)), "Actual limiter branch");
@@ -160,6 +160,15 @@ public static class P28LimiterValidator
         }
         var sums = images.Select((im, i) => { var sum = P28NativeChecksumArithmetic.Calculate(im); return (object)new { imageIndex = i, sum.ComputedResult, sum.ResidueMatches, scope = "Independent arithmetic only; no compensation/bypass/export" }; }).ToArray();
         return new(1, P28LimiterInspector.Inspect(baseline, profile, binding, true), scenario.Digest, root.GetProperty("entryContracts").Clone(), reports.AsReadOnly(), mutation, sums);
+    }
+    // Internal measured-image seam for an already admitted M1n original-parent
+    // composition. Public M1l admission and its one-field mutation stay unchanged.
+    internal static P28LimiterValidationReport AnalyzeExportImage(P28FixedLimiterPreview preview, RomImage image,
+        P28LimiterScenario scenario, SliceProcessResponse response)
+    {
+        if (scenario.Mutation is not null || !new[] { preview.Original.Hash, preview.Intermediate.Hash, preview.Output.Hash }.Contains(image.Hash))
+            throw new InvalidDataException("Foreign export image or scenario mutation.");
+        return AnalyzeCore(image, preview.Profile, preview.Binding, scenario, response.Response);
     }
     internal static P28LimiterState State(JsonElement e) { P28LimiterScenario.StateShape(e); return e.Deserialize<P28LimiterState>(P28StatefulScenario.Options)!; }
     internal static bool? NullableBool(JsonElement e) => e.ValueKind == JsonValueKind.Null ? null : e.GetBoolean();

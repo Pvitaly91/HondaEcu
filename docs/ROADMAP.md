@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1m research progress (not M1 completion)
+### M1a–M1n research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -91,6 +91,13 @@ physical period, full scheduler, limiter export, GUI or hardware claim is added.
 
 See [M1b contract and limitations](M1B_RPM_CODEC_AND_VTEC_INSPECTOR.md). Missing
 ADD semantics, independent editor evidence and hardware validation remain gates.
+
+M1n adds [fixed-context limiter export](M1N_FIXED_LIMITER_EXPORT.md): separate
+versioned operand admission plus the unchanged reviewed compensation definition,
+actual-byte sum8 compensation, mandatory independent A/B/C native histories,
+RAM-only adaptive controls, three-file publication and original-parent readback.
+No adaptive editing, new signing authority, physical RPM, GUI or hardware acceptance.
+M1l/M1m remain completed; this does not complete overall M1.
 
 ## M2 — Calibration maps
 

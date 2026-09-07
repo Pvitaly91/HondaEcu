@@ -14,7 +14,8 @@ public sealed class P28LimiterModel
     {
         ArgumentNullException.ThrowIfNull(initial);
         if (rom.Length != 32768) throw new ArgumentException("Exact 32 KiB image required.");
-        _cut = P28LimiterInspector.Word(rom, 0x196A); _resume = P28LimiterInspector.Word(rom, 0x1967); _state = initial;
+        _cut = P28LimiterInspector.Word(rom, P28LimiterInspector.FieldOffset(P28LimiterInspector.CutId));
+        _resume = P28LimiterInspector.Word(rom, P28LimiterInspector.FieldOffset(P28LimiterInspector.ResumeId)); _state = initial;
     }
     public P28LimiterModelStep Step(P28LimiterCall input)
     {
@@ -39,7 +40,7 @@ public sealed class P28LimiterModel
             _state = _state with { Data018F = (byte)(before.Data018F & input.ChannelMask), Data012A = (byte)(before.Data012A | 1) };
             consumer.Add([0x18F, 8, _state.Data018F]); consumer.Add([0x12A, 8, _state.Data012A]);
         }
-        return new(before, _state, fixedContext ? "Fixed" : "InitialRamSnapshot", fixedContext ? prior ? 0x1967 : 0x196A : null,
+        return new(before, _state, fixedContext ? "Fixed" : "InitialRamSnapshot", fixedContext ? P28LimiterInspector.FieldOffset(prior ? P28LimiterInspector.ResumeId : P28LimiterInspector.CutId) : null,
             threshold, input.RawPeriod, threshold, request, inhibit, (byte)(_state.Data018F | 0xF0), writes.AsReadOnly(), consumer.AsReadOnly(), 0x1A38, 0x5596);
     }
     // Used only by the independent producer model; never accepts observed Rust state.
