@@ -100,6 +100,14 @@ and fresh strict native producer/limiter/checksum A/B/C histories precede the
 shared new-path writer and independent original-parent readback. M1m/M1n remain
 completed; GUI r3 stays paused/NotRun and hardware remains outside scope.
 
+M1p adds [combined limiter-group export](docs/M1P_COMBINED_LIMITER_EXPORT.md)
+through `research p28-limiter combined-export plan|apply|verify|inspect`.
+An explicit settings file selects any nonempty subset of fixed/bank0/bank1 pairs.
+All words compose from one original with one final-byte-sum compensation, followed
+by fresh combined native histories, per-changed-group witnesses, checksum and
+independent three-file readback. No synchronization, child chains or RPM claims.
+Old M1n/M1o/M1g contracts remain unchanged; GUI r3 stays paused/NotRun.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

@@ -151,6 +151,7 @@ public sealed partial class CliApplication
               --baseline-binding <private-json> --runner <rust-executable>
               --scenario <private-limiter-json> --output <new-private-json>
           research p28-limiter adaptive-export <plan|apply|verify|inspect> <image>
+          research p28-limiter combined-export <plan|apply|verify|inspect> <image> (--settings <explicit-groups.json> for plan)
             plan: --bank <0|1> --base-cut-raw <integer> --base-resume-raw <integer>
             --profile p28-304 --baseline-binding <binding> --compensation-definition <reviewed-location>
             --output <new-private-json-or-bin>; apply requires --runner and --confirm-pc-only

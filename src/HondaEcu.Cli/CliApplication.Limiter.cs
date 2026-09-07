@@ -6,6 +6,7 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28LimiterResearchAsync(string[] args, CancellationToken cancellationToken)
     {
+        if (args.Length > 0 && args[0] == "combined-export") return await P28CombinedLimiterExportAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "export") return await P28FixedLimiterExportAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "adaptive-export") return await P28AdaptiveBaseExportAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length == 0 || args[0] is not ("inspect" or "check" or "adaptive-check"))

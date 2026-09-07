@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1o research progress (not M1 completion)
+### M1a–M1p research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -106,6 +106,15 @@ producer/limiter/consumer and checksum, protected publication and derived readba
 Origins/coefficients, other bank and fixed pair remain unchanged. Base words are
 not constant current RAM thresholds or physical RPM. M1m/M1n remain completed;
 hardware, full boot and GUI are explicitly excluded from this software stage.
+
+M1p adds [combined limiter-group export](M1P_COMBINED_LIMITER_EXPORT.md): all seven
+explicit nonempty selections of fixed/bank0/bank1, unchanged per-group arithmetic
+policy and one compensation computed from combined bytes of one original parent.
+Mandatory M1l/M1m/M1f A/B/C execution includes persistent context switches,
+dependency-aware controls and a decision witness for every effectively changed
+group. Publication requires fresh capability, new BIN/plan/receipt and independent
+readback. M1m/M1n/M1o remain closed; old formats and location authority unchanged.
+No GUI, hardware, physical RPM, coefficients or wider calibration scope is added.
 
 ## M2 — Calibration maps
 

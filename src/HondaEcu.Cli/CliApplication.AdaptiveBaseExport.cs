@@ -38,20 +38,11 @@ public sealed partial class CliApplication
         var outputPath = ResolvePath(c.Required("output"));
         var savedPlanPath = apply ? ResolvePath(c.Required("saved-plan")) : null;
         var receiptPath = apply ? ResolvePath(c.Required("report")) : null;
-        var profile = (await Task.Run(LoadProfileCatalog, cancellationToken).ConfigureAwait(false)).Get(c.Required("profile"));
-        var inputs = new[] { originalPath, imagePath, bindingPath, locationPath, planPath, runnerPath, inputReceipt, profile.SourcePath }.OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
-        var destinations = new[] { outputPath, savedPlanPath, receiptPath }.OfType<string>().ToArray();
-        foreach (var destination in destinations) ProtectNewResearchDestination(destination, inputs);
-        for (var i = 0; i < destinations.Length; i++)
-            foreach (var other in destinations.Skip(i + 1)) AtomicFile.EnsureDifferentPath(destinations[i], other);
-        var snapshot = await Task.Run(() => inputs.ToDictionary(p => p, p => ReadBoundedCaptureInput(p, p == inputReceipt ? P28AdaptiveBaseReceipt.MaximumJsonBytes : p == runnerPath ? 64 * 1024 * 1024 : 1024 * 1024), StringComparer.OrdinalIgnoreCase), cancellationToken).ConfigureAwait(false);
-        var utf8 = new System.Text.UTF8Encoding(false, true);
-        if (profile.SourcePath is { } pp && P28VtecInspector.ComputeProfileDigest(profile) != P28VtecInspector.ComputeProfileDigest(RomProfile.Parse(utf8.GetString(snapshot[pp]))))
-            throw new InvalidDataException("Profile changed while loading export inputs.");
-        var original = RomImage.FromBytes(snapshot[originalPath], originalPath);
-        var binding = P28ExactBaselineBinding.Load(bindingPath);
-        var location = P28ChecksumPreservingEditor.ParseLocation(utf8.GetString(snapshot[locationPath]).TrimStart('\uFEFF'));
-        RequireCaptureInputSnapshot(snapshot);
+        var captured = await CaptureResearchExportAsync(c.Required("profile"), originalPath, imagePath, bindingPath, locationPath,
+            planPath, runnerPath, inputReceipt, new[] { outputPath, savedPlanPath, receiptPath }.OfType<string>().ToArray(), [],
+            P28AdaptiveBaseReceipt.MaximumJsonBytes, cancellationToken).ConfigureAwait(false);
+        var profile = captured.Profile; var original = captured.Original; var binding = captured.Binding; var location = captured.Location;
+        var inputs = captured.Paths; var snapshot = captured.Snapshot; var utf8 = new System.Text.UTF8Encoding(false, true);
         P28AdaptiveBasePlan plan;
         if (planOnly)
         {

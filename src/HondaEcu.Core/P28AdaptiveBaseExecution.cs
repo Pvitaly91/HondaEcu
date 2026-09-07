@@ -69,24 +69,9 @@ public static class P28AdaptiveBaseExecution
             if (version is not null && (version != v || upstream != u || !fixes!.SequenceEqual(f))) throw new InvalidDataException("Runner identity changed.");
             version = v; upstream = u; fixes = f;
         }
-        var runs = new List<P28AdaptiveBaseRun>();
-        foreach (var item in P28AdaptiveBaseCorpus.Create(plan))
-            foreach (var image in images)
-            {
-                var response = await SeededSliceProcess.ExchangeAsync(runner, P28AdaptiveValidator.CreateRequest(image.Image, item.Scenario), options, cancellationToken).ConfigureAwait(false);
-                Identity(response, P28AdaptiveValidator.Operation);
-                var report = P28AdaptiveValidator.AnalyzeExportImage(preview, image.Image, item.Scenario, response);
-                if (report.HasFailure) throw new InvalidDataException($"Mandatory adaptive batch did not strictly complete: {item.Id}/{image.Id}.");
-                foreach (var s in report.Sequences)
-                {
-                    // M1m validates actual LC addresses/values, state, ordered writes, tick effects,
-                    // branches, exits, stack and critical section against each image's own model.
-                    // Its exact code/data ranges exclude the compensation byte; no permissions added.
-                    var outcomes = s.Checkpoints.Select(r => Outcome(r.Inputs, r.Expected!)).ToArray();
-                    runs.Add(new(image.Id, image.Image.Hash, item.Id, item.Scenario.Digest, s.ScratchPattern,
-                        s.Counts.RequestedCalls, s.Counts.StrictMatches, Digest(s.Checkpoints.Select(c => c.Actual).ToArray()), outcomes));
-                }
-            }
+        var runs = await P28AdaptiveExportBatch.RunAsync(images, P28AdaptiveBaseCorpus.Create(plan), runner,
+            (image, scenario, response) => P28AdaptiveValidator.AnalyzeExportImage(preview, image, scenario, response),
+            Identity, false, options, cancellationToken).ConfigureAwait(false);
         var checksum = await SeededSliceProcess.ExchangeAsync(runner, P28NativeChecksumVerifier.CreateRequest(images.Select(i => (i.Id, i.Image)).ToArray()), options, cancellationToken).ConfigureAwait(false);
         Identity(checksum, "checksumBatch");
         var checks = CompareChecksum(images, checksum); // unchanged M1n/M1f ordered 512-call parser
@@ -94,7 +79,7 @@ public static class P28AdaptiveBaseExecution
         cancellationToken.ThrowIfCancellationRequested();
         if (!snapshot.AsSpan().SequenceEqual(File.ReadAllBytes(runner))) throw new InvalidDataException("Runner changed during execution.");
         var evidence = new P28AdaptiveBaseEvidence(version!, upstream!, fixes!, plan.Digest(), P28AdaptiveBaseCorpus.Id,
-            runs.AsReadOnly(), checks, true, true, true, true);
+            runs, checks, true, true, true, true);
         RequireEvidence(preview, evidence);
         return new(preview, evidence);
     }
@@ -113,22 +98,8 @@ public static class P28AdaptiveBaseExecution
             localSemanticFixes = e.LocalSemanticFixes
         }), P28AdaptiveValidator.Operation);
         var scenarios = P28AdaptiveBaseCorpus.Create(plan);
-        if (e.Runs.Count != scenarios.Count * 9) throw new InvalidDataException("Missing/extra mandatory adaptive runs.");
         var images = new[] { (Id: "A", Image: p.Original), (Id: "B", Image: p.Intermediate), (Id: "C", Image: p.Output) };
-        foreach (var scenario in scenarios)
-            foreach (var image in images)
-                foreach (var pattern in new[] { 0, 85, 170 })
-                {
-                    var found = e.Runs.Where(r => r.ScenarioId == scenario.Id && r.ImageKind == image.Id && r.ScratchPattern == pattern).ToArray();
-                    if (found.Length != 1) throw new InvalidDataException("Duplicate/missing adaptive evidence identity.");
-                    var r = found[0];
-                    if (r.ImageHash != image.Image.Hash || r.ScenarioDigest != scenario.Scenario.Digest || r.Requested != scenario.Scenario.Calls.Count ||
-                        r.StrictMatches != r.Requested || r.Outcomes.Count != r.Requested || r.ObservationDigest.Length != 64 || !r.ObservationDigest.All(Uri.IsHexDigit))
-                        throw new InvalidDataException("Invalid adaptive execution accounting.");
-                    var model = new P28AdaptiveModel(image.Image.Span, scenario.Scenario.InitialState);
-                    var expected = scenario.Scenario.Calls.Select(call => Outcome(call, model.Step(call))).ToArray();
-                    if (!P28LimiterValidator.Equal(r.Outcomes, expected)) throw new InvalidDataException("Receipt history disagrees with independently rederived state machine.");
-                }
+        P28AdaptiveExportBatch.RequireRuns(images, scenarios, e.Runs);
         RequireChecksumEvidence(images, e.ChecksumRuns);
         Relations(e.Runs);
         if (!HasWitness(plan, e.Runs)) throw new InvalidDataException("No actual base-read -> produced RAM -> changed limiter decision witness.");

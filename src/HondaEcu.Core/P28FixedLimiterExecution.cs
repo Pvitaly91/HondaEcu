@@ -68,7 +68,7 @@ public static class P28FixedLimiterExecution
         if (string.IsNullOrWhiteSpace(runner) || !File.Exists(runner)) throw new InvalidDataException("An existing Rust runner is mandatory for export.");
         var runnerBytes = File.ReadAllBytes(runner);
         var images = new[] { (Id: "A", Image: preview.Original), (Id: "B", Image: preview.Intermediate), (Id: "C", Image: preview.Output) };
-        var limiter = new List<P28FixedLimiterRun>(); var adaptive = new List<P28FixedLimiterRun>();
+        var adaptive = new List<P28FixedLimiterRun>();
         string? version = null, upstream = null; string[]? fixes = null;
         void Identity(SliceProcessResponse response, string operation)
         {
@@ -77,31 +77,9 @@ public static class P28FixedLimiterExecution
             if (version is not null && (version != v || upstream != u || !fixes!.SequenceEqual(f))) throw new InvalidDataException("Runner identity changed during export validation.");
             version = v; upstream = u; fixes = f;
         }
-        foreach (var item in LimiterScenarios(preview.Plan))
-            foreach (var image in images)
-            {
-                var response = await SeededSliceProcess.ExchangeAsync(runner, P28LimiterValidator.CreateRequest(image.Image, item.Scenario), options, cancellationToken).ConfigureAwait(false);
-                Identity(response, P28LimiterValidator.Operation);
-                var report = P28LimiterValidator.AnalyzeExportImage(preview, image.Image, item.Scenario, response);
-                if (report.HasFailure) throw new InvalidDataException("Mandatory limiter execution did not strictly complete.");
-                foreach (var s in report.Sequences)
-                {
-                    var outcomes = new List<P28FixedLimiterOutcome>();
-                    foreach (var row in s.Checkpoints)
-                    {
-                        var decision = P28AcquisitionValidator.ParseStage(row.Actual.GetProperty("decision"), 96, 0, [], null)!;
-                        if (!P28FixedLimiterEditor.Footprint.All(decision.ExecutedInstructionBytes.Contains) || decision.ProgramReads.Contains(preview.Location.Offset))
-                            throw new InvalidDataException("Actual immediate fetch is incomplete or compensation was read.");
-                        var expected = row.Expected!;
-                        outcomes.Add(new(row.Index, item.Scenario.Calls[row.Index].RawPeriod, expected.Context, expected.Threshold,
-                            row.Actual.GetProperty("overspeedRequest").GetBoolean(), (expected.Before.Data012A & 128) != 0,
-                            row.Actual.GetProperty("inhibitBranch").GetBoolean(), expected.After.Data018F, expected.After.Data0124, expected.After.RamCut, expected.After.RamResume));
-                    }
-                    limiter.Add(new(image.Id, image.Image.Hash, item.Id, item.Scenario.Digest, s.ScratchPattern,
-                        s.Counts.RequestedCalls, s.Counts.StrictMatches, Digest(s.Checkpoints.Select(c => c.Actual).ToArray()),
-                        Digest(s.Checkpoints.Select(c => c.Actual.GetProperty("stateAfter")).ToArray()), true, true, outcomes.AsReadOnly()));
-                }
-            }
+        var limiter = await P28FixedExportBatch.RunAsync(images, LimiterScenarios(preview.Plan), runner, preview.Location.Offset,
+            (image, scenario, response) => P28LimiterValidator.AnalyzeExportImage(preview, image, scenario, response),
+            Identity, options, cancellationToken).ConfigureAwait(false);
         foreach (var item in AdaptiveScenarios())
             foreach (var image in images)
             {
@@ -133,7 +111,7 @@ public static class P28FixedLimiterExecution
         cancellationToken.ThrowIfCancellationRequested();
         if (!runnerBytes.AsSpan().SequenceEqual(File.ReadAllBytes(runner))) throw new InvalidDataException("Runner changed during validation.");
         var evidence = new P28FixedLimiterEvidence(version!, upstream!, fixes!, preview.Plan.Digest(), CorpusId,
-            limiter.AsReadOnly(), adaptive.AsReadOnly(), checks, true, true, true);
+            limiter, adaptive.AsReadOnly(), checks, true, true, true);
         RequireEvidence(preview, evidence);
         return new(preview, evidence);
     }

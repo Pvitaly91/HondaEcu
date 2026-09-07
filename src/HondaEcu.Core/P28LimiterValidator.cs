@@ -170,6 +170,13 @@ public static class P28LimiterValidator
             throw new InvalidDataException("Foreign export image or scenario mutation.");
         return AnalyzeCore(image, preview.Profile, preview.Binding, scenario, response.Response);
     }
+    internal static P28LimiterValidationReport AnalyzeExportImage(P28CombinedLimiterPreview preview, RomImage image,
+        P28LimiterScenario scenario, SliceProcessResponse response)
+    {
+        if (scenario.Mutation is not null || !new[] { preview.Original.Hash, preview.Intermediate.Hash, preview.Output.Hash }.Contains(image.Hash))
+            throw new InvalidDataException("Foreign combined image or scenario mutation.");
+        return AnalyzeCore(image, preview.Profile, preview.Binding, scenario, response.Response);
+    }
     internal static P28LimiterState State(JsonElement e) { P28LimiterScenario.StateShape(e); return e.Deserialize<P28LimiterState>(P28StatefulScenario.Options)!; }
     internal static bool? NullableBool(JsonElement e) => e.ValueKind == JsonValueKind.Null ? null : e.GetBoolean();
     internal static int[][] Matrix(JsonElement c, string name, int width)

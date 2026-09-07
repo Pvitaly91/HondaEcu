@@ -3,12 +3,13 @@ namespace HondaEcu.Core;
 internal static class P28AdaptiveBaseCorpus
 {
     internal const string Id = "single-bank-base-producer-limiter-abc-v1";
-    internal static IReadOnlyList<(string Id, P28AdaptiveScenario Scenario)> Create(P28AdaptiveBasePlan p)
+    internal static IReadOnlyList<(string Id, P28AdaptiveScenario Scenario)> Create(P28AdaptiveBasePlan p) => Create(p.Words, p.RequestedPair.Bank);
+    internal static IReadOnlyList<(string Id, P28AdaptiveScenario Scenario)> Create(IReadOnlyList<P28AdaptiveBaseWord> words, int selectedBank)
     {
         var scenarios = new List<(string, P28AdaptiveScenario)>();
-        var edges = p.Words.SelectMany(w => new[] { w.OldWord, w.NewWord }).SelectMany(w => new[] { w - 1, w, w + 1 }).Where(x => x is >= 0 and <= 65535).Distinct().Order().ToArray();
+        var edges = words.SelectMany(w => new[] { w.OldWord, w.NewWord }).SelectMany(w => new[] { w - 1, w, w + 1 }).Where(x => x is >= 0 and <= 65535).Distinct().Order().ToArray();
         var rawEdges = new SortedSet<int> { 0, 65535 };
-        foreach (var w in p.Words)
+        foreach (var w in words)
         {
             foreach (var x in new[] { w.Origin - 1, w.Origin, w.Origin + 1 }) if (x is >= 0 and <= 65535) rawEdges.Add(x);
             if (w.Coefficient != 0)
@@ -27,11 +28,11 @@ internal static class P28AdaptiveBaseCorpus
         }
         P28AdaptiveCall Call(int bank, int raw = 300, int x = 65535, byte ticks = 20) =>
             new(new(0, (ushort)raw, false, false, 254), (ushort)x, bank == 1, false, false, false, true, 0, ticks, 0);
-        foreach (var bank in new[] { p.RequestedPair.Bank, 1 - p.RequestedPair.Bank })
+        foreach (var bank in new[] { selectedBank, 1 - selectedBank })
             foreach (var prior in new byte[] { 0, 32 })
                 foreach (var inhibit in new byte[] { 0, 128 })
                 {
-                    var prefix = bank == p.RequestedPair.Bank ? "edited" : "untouched";
+                    var prefix = bank == selectedBank ? "edited" : "untouched";
                     foreach (var context in new[] { "ram", "fixed-p4", "fixed-011b" })
                     {
                         // Reset before each crossing is a native producer operation, never host RAM reseeding.
@@ -63,7 +64,7 @@ internal static class P28AdaptiveBaseCorpus
                     // Target crossings after a real adaptive update (not reset or injected RAM).
                     // Plan arithmetic determines external test inputs only; M1m independently
                     // models every image and the runner must perform every LC/store itself.
-                    var targets = p.Words.SelectMany(w => new[] { w.OldWord, w.NewWord }
+                    var targets = words.SelectMany(w => new[] { w.OldWord, w.NewWord }
                         .Select(b => b + (int)((long)(65535 - w.Origin) * w.Coefficient / 65536)))
                         .SelectMany(t => new[] { t - 1, t, t + 1 }).Where(t => t is >= 0 and <= 65535).Distinct().Order().ToArray();
                     Add($"target-crossings-bank{bank}-prior{prior}-inhibit{inhibit}", Initial(prior, inhibit, 65535, 65535),
@@ -71,7 +72,7 @@ internal static class P28AdaptiveBaseCorpus
                 }
         foreach (var bank in new[] { 0, 1 })
         {
-            var previous = p.Words.SelectMany(w => new[] { w.OldWord, w.NewWord }).SelectMany(w => new[] { w + 36, w + 37, w + 38 })
+            var previous = words.SelectMany(w => new[] { w.OldWord, w.NewWord }).SelectMany(w => new[] { w + 36, w + 37, w + 38 })
                 .Concat(new[] { 0, 36, 37, 65511, 65512, 65535 }).Where(x => x is >= 0 and <= 65535).Distinct();
             foreach (var old in previous)
                 Add($"decrease-bank{bank}-previous{old}", Initial(0, 0, old, old, counter: 1),
