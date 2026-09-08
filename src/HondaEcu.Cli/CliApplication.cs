@@ -143,6 +143,13 @@ public sealed partial class CliApplication
             --output <new-private-validation.json>
           research p28-idle contexts-inspect <baseline> --profile p28-304 --output <new-private-json>
               [--confirm-profile --baseline-binding <private-json>]
+          research p28-idle export <plan|apply|verify|inspect> <image> --profile p28-304 ...
+            plan: --confirm-profile --baseline-binding <json> --compensation-definition <json>
+              --settings <explicit-base-and-late-values-json> --output <new-plan-json>
+            apply: same original/binding/location + --plan <json> --runner <exe> --confirm-pc-only
+              --output <new-bin> --saved-plan <new-json> --report <new-receipt>
+            verify/inspect: --baseline <original> --baseline-binding <json> --compensation-definition <json>
+              --plan <saved-plan> --report <receipt> --output <new-result-json>
           research p28-idle contexts-check <baseline> --profile p28-304 --confirm-profile
             --baseline-binding <binding.json> --runner <rust-runner> --scenario <contexts-scenario.json>
             --output <new-private-contexts-validation.json>

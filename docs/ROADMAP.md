@@ -134,6 +134,15 @@ as dynamically covered. Selector updates are masked upstream software inputs,
 not native physical mode transitions; counter expiration and scheduler remain
 outside scope. No idle editor, export, BIN or GUI changes are added.
 
+M1s adds [idle-target table export](M1S_IDLE_TABLE_EXPORT.md): base/late/both explicit
+numeric selections, a separate closed fourteen-word contract and one existing
+checksum compensation from a single original. Arithmetic domain checks and fresh
+mandatory A/B/C idleContexts/checksum batches remain separate; combined-image
+table witnesses and masking summaries gate typed publication capability. CLI
+plan/apply/verify/inspect, one private BIN and independent readback are complete.
+No axes/overrides/peaks, mixed VTEC/limiter lineage, new signing authority, physical
+RPM, GUI or hardware scope is added. M1q/M1r and previous milestones stay closed.
+
 ## M2 — Calibration maps
 
 - low/high-cam fuel maps

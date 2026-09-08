@@ -6,6 +6,7 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28IdleResearchAsync(string[] args, CancellationToken cancellationToken)
     {
+        if (args.Length > 0 && args[0] == "export") return await P28IdleTableExportAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length == 0 || args[0] is not ("inspect" or "target-check" or "contexts-inspect" or "contexts-check")) throw new CliUsageException("Usage: research p28-idle <inspect|target-check|contexts-inspect|contexts-check> <baseline> --profile p28-304 --output <new-private-json> ...");
         var contexts = args[0].StartsWith("contexts-", StringComparison.Ordinal);
         var check = args[0] is "target-check" or "contexts-check"; var command = CommandLine.Parse(args[1..], new HashSet<string>(StringComparer.Ordinal) { "confirm-profile" });

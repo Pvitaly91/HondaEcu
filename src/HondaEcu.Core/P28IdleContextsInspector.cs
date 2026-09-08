@@ -25,11 +25,11 @@ public static class P28IdleContextsInspector
         var old = P28IdleInspector.Inspect(image, profile, binding, confirmed);
         if (!old.InterpretationApplied) return new(1, image.Hash, image.Size, false, old.Binding, [], [], ["General image data only; exact binding and confirmation required."]);
         TableGuard(image); var cells = new List<P28IdleCell>();
-        foreach (var table in new[] { 0x68CB, 0x68E0 }) for (var i = 0; i < 7; i++)
+        foreach (var table in new[] { 0, 1 }) for (var i = 0; i < 7; i++)
             {
-                var a = table + 3 * i;
-                cells.Add(new(table == 0x68CB ? $"context-21a0-table-cell-{i}" : $"context-late-68e0-table-cell-{i}", a, image.Span[a], a + 1,
-                    P28LimiterInspector.Word(image.Span, a + 1), table == 0x68CB ? "Base lookup only when low-domain guards permit; may be replaced by late lookup" : "Late lookup when scripted 021A.0 is clear; rawD9 0..255"));
+                var a = P28IdleTableFields.AxisOffset(table, i);
+                cells.Add(new(P28IdleTableFields.FieldId(table, i), a, image.Span[a], P28IdleTableFields.ValueOffset(table, i),
+                    P28LimiterInspector.Word(image.Span, a + 1), table == 0 ? "Base lookup only when low-domain guards permit; may be replaced by late lookup" : "Late lookup when scripted 021A.0 is clear; rawD9 0..255"));
             }
         var scalars = new List<P28IdleScalarSource>();
         foreach (var a in new[] { 0x2FE3, 0x7D9C, 0x300E, 0x3055, 0x3065 })

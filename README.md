@@ -125,6 +125,15 @@ error/sign consumer. Independent model histories match 104094 private checkpoint
 byte-domain sweeps are software snapshots, not physical mode claims. No BIN,
 idle export, GUI change or physical RPM authority is introduced.
 
+M1s adds [idle-target table checksum-preserving export](docs/M1S_IDLE_TABLE_EXPORT.md)
+through `research p28-idle export plan|apply|verify|inspect`: explicit base/late/both
+selection, fourteen code-owned numeric words, unchanged axes/overrides/peaks and
+one existing compensation from combined bytes of one original. Fresh per-image
+idleContexts/checksum execution and table witnesses gate new-path publication.
+Readback and derived inspection preserve full original-parent lineage. This is raw
+PC-only export, not physical RPM, a complete idle controller or ECU-write authority.
+GUI r3 remains paused/NotRun; M1q/M1r and older export contracts are unchanged.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;
