@@ -21,6 +21,7 @@ pub struct Request {
     pub limiter_sequence: Option<crate::limiter::Stimulus>,
     pub adaptive_limiter: Option<crate::adaptive::Stimulus>,
     pub idle_target: Option<crate::idle::Stimulus>,
+    pub idle_contexts: Option<crate::idle_contexts::Stimulus>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -78,6 +79,8 @@ pub struct Response {
     pub adaptive_sequences: Option<Vec<crate::adaptive::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub idle_sequences: Option<Vec<crate::idle::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub idle_context_sequences: Option<Vec<crate::idle_contexts::Sequence>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -160,6 +163,7 @@ impl Response {
             limiter_sequences: None,
             adaptive_sequences: None,
             idle_sequences: None,
+            idle_context_sequences: None,
         }
     }
 }

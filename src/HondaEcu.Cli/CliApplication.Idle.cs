@@ -6,8 +6,9 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28IdleResearchAsync(string[] args, CancellationToken cancellationToken)
     {
-        if (args.Length == 0 || args[0] is not ("inspect" or "target-check")) throw new CliUsageException("Usage: research p28-idle <inspect|target-check> <baseline> --profile p28-304 --output <new-private-json> ...");
-        var check = args[0] == "target-check"; var command = CommandLine.Parse(args[1..], new HashSet<string>(StringComparer.Ordinal) { "confirm-profile" });
+        if (args.Length == 0 || args[0] is not ("inspect" or "target-check" or "contexts-inspect" or "contexts-check")) throw new CliUsageException("Usage: research p28-idle <inspect|target-check|contexts-inspect|contexts-check> <baseline> --profile p28-304 --output <new-private-json> ...");
+        var contexts = args[0].StartsWith("contexts-", StringComparison.Ordinal);
+        var check = args[0] is "target-check" or "contexts-check"; var command = CommandLine.Parse(args[1..], new HashSet<string>(StringComparer.Ordinal) { "confirm-profile" });
         command.EnsureOnly(check ? ["profile", "confirm-profile", "baseline-binding", "runner", "scenario", "output"] : ["profile", "confirm-profile", "baseline-binding", "output"]);
         command.RequirePositionals(1, "research p28-idle inspect|target-check <baseline>");
         if (check && !command.HasFlag("confirm-profile")) throw new CliUsageException("Idle execution requires --confirm-profile and exact binding.");
@@ -24,13 +25,33 @@ public sealed partial class CliApplication
         var baseline = await Task.Run(() => RomImage.Load(baselinePath), cancellationToken).ConfigureAwait(false);
         var binding = bindingPath is null ? null : await Task.Run(() => P28ExactBaselineBinding.Load(bindingPath), cancellationToken).ConfigureAwait(false);
         RequireCaptureInputSnapshot(snapshot); object report; var failure = false;
-        if (check)
+        if (check && contexts)
+        {
+            var scenario = P28IdleContextsScenario.Parse(utf8.GetString(snapshot[scenarioPath!]));
+            var validation = await P28IdleContextsValidator.ExecuteAsync(baseline, profile, binding!, true, runnerPath!, scenario, cancellationToken: cancellationToken).ConfigureAwait(false);
+            report = validation; failure = validation.HasFailure;
+            await _output.WriteLineAsync("image scratch source | complete calls | rawD9 range").ConfigureAwait(false);
+            foreach (var image in validation.Images) foreach (var sequence in image.Sequences)
+                {
+                    foreach (var group in sequence.Checkpoints.Where(c => c.Disposition == "StrictMatch").GroupBy(c => c.Expected!.FinalSource))
+                        await _output.WriteLineAsync($"{image.Image} {sequence.ScratchPattern} {group.Key} | {group.Count()} | {group.Min(c => c.Inputs.RawD9)}..{group.Max(c => c.Inputs.RawD9)}").ConfigureAwait(false);
+                    foreach (var group in sequence.Checkpoints.GroupBy(c => c.Disposition))
+                        await _output.WriteLineAsync($"contexts image={image.Image}, scratch={sequence.ScratchPattern}: {group.Key}={group.Count()}").ConfigureAwait(false);
+                }
+            await _output.WriteLineAsync($"A/B witnesses={validation.Comparisons.Count(c => c.Witness == true)}, read-but-same-target={validation.Comparisons.Count(c => c.MutatedCellRead == true && c.TargetA == c.TargetB)}; physical reachability unknown.").ConfigureAwait(false);
+        }
+        else if (check)
         {
             var scenario = P28IdleScenario.Parse(utf8.GetString(snapshot[scenarioPath!]));
             var validation = await P28IdleValidator.ExecuteAsync(baseline, profile, binding!, true, runnerPath!, scenario, cancellationToken: cancellationToken).ConfigureAwait(false);
             report = validation; failure = validation.HasFailure;
             foreach (var image in validation.Images) foreach (var sequence in image.Sequences)
                     await _output.WriteLineAsync($"idle image={image.Image}, scratch={sequence.ScratchPattern}: calls={sequence.Checkpoints.Count}, strict={sequence.Checkpoints.Count(c => c.Disposition == "StrictMatch")}, other={sequence.Checkpoints.Count(c => c.Disposition != "StrictMatch")}.").ConfigureAwait(false);
+        }
+        else if (contexts)
+        {
+            var inspection = P28IdleContextsInspector.Inspect(baseline, profile, binding, command.HasFlag("confirm-profile")); report = inspection;
+            failure = binding is not null && !inspection.InterpretationApplied;
         }
         else
         {

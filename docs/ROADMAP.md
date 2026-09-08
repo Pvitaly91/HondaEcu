@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1q research progress (not M1 completion)
+### M1a–M1r research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -123,6 +123,16 @@ The private 858-checkpoint strict series includes the full supported byte-axis
 domain, history/clamp boundaries and a local one-cell in-memory A/B witness.
 No idle editing, BIN, checksum repair or export authority is added. M1p remains
 closed; physical RPM, hardware, full boot and GUI acceptance are not implied.
+
+M1r adds [idle-target contexts and overrides](M1R_IDLE_TARGET_CONTEXTS.md):
+separate native source selection, two packed tables, low-domain immediate
+overrides, persistent counter/history gates and independently stored027A.
+The final025C feeds the unchanged error/sign consumer on shared native RAM.
+104094 new-task checkpoints match; 612 fresh M1q subset pairs also match full
+observations. Two understood but unreachable3099 branch arms are not counted
+as dynamically covered. Selector updates are masked upstream software inputs,
+not native physical mode transitions; counter expiration and scheduler remain
+outside scope. No idle editor, export, BIN or GUI changes are added.
 
 ## M2 — Calibration maps
 

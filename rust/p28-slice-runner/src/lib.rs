@@ -13,6 +13,7 @@ pub mod exec;
 pub mod full_decoder;
 pub mod adaptive;
 pub mod idle;
+pub mod idle_contexts;
 pub mod instruction_forms;
 pub mod limiter;
 pub mod operand;

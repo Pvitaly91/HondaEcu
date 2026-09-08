@@ -116,6 +116,15 @@ per-image C# histories. Private testing gives 858 strict matching checkpoints
 and a one-cell in-memory A/B effect. No firmware BIN or idle export is created;
 physical RPM remains unavailable, M1p stays closed, and GUI r3 stays paused/NotRun.
 
+M1r adds [idle-target context, override and component validation](docs/M1R_IDLE_TARGET_CONTEXTS.md)
+through headless `research p28-idle contexts-inspect|contexts-check`. The native
+producer selects between two packed sources and low-domain immediate overrides,
+stores a separate component, and passes its actual final target to the existing
+error/sign consumer. Independent model histories match 104094 private checkpoints;
+612 fresh old/new pairs preserve every established M1q observation. Full selector
+byte-domain sweeps are software snapshots, not physical mode claims. No BIN,
+idle export, GUI change or physical RPM authority is introduced.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

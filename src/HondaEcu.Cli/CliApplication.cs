@@ -141,6 +141,11 @@ public sealed partial class CliApplication
           research p28-idle target-check <baseline> --profile p28-304 --confirm-profile
             --baseline-binding <binding.json> --runner <rust-runner> --scenario <idle-scenario.json>
             --output <new-private-validation.json>
+          research p28-idle contexts-inspect <baseline> --profile p28-304 --output <new-private-json>
+              [--confirm-profile --baseline-binding <private-json>]
+          research p28-idle contexts-check <baseline> --profile p28-304 --confirm-profile
+            --baseline-binding <binding.json> --runner <rust-runner> --scenario <contexts-scenario.json>
+            --output <new-private-contexts-validation.json>
           research p28-limiter export plan <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding> --compensation-definition <reviewed-location>
               --cut-raw <integer> --resume-raw <integer> --output <new-plan.json>
