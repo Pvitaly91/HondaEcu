@@ -38,6 +38,7 @@ fn request(rom: Vec<u8>, synthetic: SyntheticContract) -> Request {
         integrated_chain: None,
         limiter_sequence: None,
         adaptive_limiter: None,
+        idle_target: None,
     }
 }
 
@@ -305,6 +306,7 @@ fn synthetic_batch_cannot_launder_threshold_add_through_compact_permission() {
         integrated_chain: None,
         limiter_sequence: None,
         adaptive_limiter: None,
+        idle_target: None,
     })
     .unwrap();
     assert_eq!(result.compact_rows.len(), 393216);

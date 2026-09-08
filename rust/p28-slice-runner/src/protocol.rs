@@ -20,6 +20,7 @@ pub struct Request {
     pub integrated_chain: Option<crate::chain::Stimulus>,
     pub limiter_sequence: Option<crate::limiter::Stimulus>,
     pub adaptive_limiter: Option<crate::adaptive::Stimulus>,
+    pub idle_target: Option<crate::idle::Stimulus>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -75,6 +76,8 @@ pub struct Response {
     pub limiter_sequences: Option<Vec<crate::limiter::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub adaptive_sequences: Option<Vec<crate::adaptive::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub idle_sequences: Option<Vec<crate::idle::Sequence>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -141,6 +144,7 @@ impl Response {
                 "increment-dp-half-carry",
                 "decrement-indexed-x1-byte-half-borrow",
                 "adaptive-exact-word-add-sub-half-carry",
+                "idle-exact-arithmetic-half-carry",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
@@ -155,6 +159,7 @@ impl Response {
             chain_sequences: None,
             limiter_sequences: None,
             adaptive_sequences: None,
+            idle_sequences: None,
         }
     }
 }

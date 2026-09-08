@@ -108,6 +108,14 @@ by fresh combined native histories, per-changed-group witnesses, checksum and
 independent three-file readback. No synchronization, child chains or RPM claims.
 Old M1n/M1o/M1g contracts remain unchanged; GUI r3 stays paused/NotRun.
 
+M1q adds [scoped idle-target inspection and native validation](docs/M1Q_IDLE_TARGET_VALIDATION.md)
+through read-only `research p28-idle inspect|target-check`. One explicit raw
+context executes a packed-table target producer and its immediate unsigned
+period-error/sign/clamp consumer on the same CPU/RAM, checked against independent
+per-image C# histories. Private testing gives 858 strict matching checkpoints
+and a one-cell in-memory A/B effect. No firmware BIN or idle export is created;
+physical RPM remains unavailable, M1p stays closed, and GUI r3 stays paused/NotRun.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

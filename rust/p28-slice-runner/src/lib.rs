@@ -12,6 +12,7 @@ pub mod exec;
 #[rustfmt::skip]
 pub mod full_decoder;
 pub mod adaptive;
+pub mod idle;
 pub mod instruction_forms;
 pub mod limiter;
 pub mod operand;

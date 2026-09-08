@@ -426,6 +426,24 @@ impl<'a> Exec<'a> {
                 };
                 self.cpu.cf = carry;
                 self.set_zf(res as u16, byte);
+                // M1q exact forms only. Decoded regression first exposed stale HC.
+                // Primary instruction manual: ADD 3-13/15; SUB 3-156/157/161.
+                if base == "ADD"
+                    && !byte
+                    && ((args[0] == Arg::Reg(Reg::A) && args[1] == Arg::Er(3))
+                        || (args[0] == Arg::Reg(Reg::X1) && args[1] == Arg::ImmN16))
+                {
+                    self.cpu.hc = (a & 15) + (b & 15) > 15;
+                }
+                if base == "SUB"
+                    && ((!byte
+                        && ((args[0] == Arg::Reg(Reg::A)
+                            && matches!(args[1], Arg::Er(1 | 3) | Arg::Mem(Mem::OffPage)))
+                            || (args[0] == Arg::Er(3) && args[1] == Arg::Reg(Reg::A))))
+                        || (byte && args[0] == Arg::R(4) && args[1] == Arg::Reg(Reg::A)))
+                {
+                    self.cpu.hc = (a & 15) < (b & 15);
+                }
                 // M1m: only decoded DD=1 86 imm16 / 09 / A6 imm16 / 28.
                 // Instruction manual 3-13, 3-156; HC is bit-3 carry/borrow.
                 if !byte && args[0] == Arg::Reg(Reg::A) {
