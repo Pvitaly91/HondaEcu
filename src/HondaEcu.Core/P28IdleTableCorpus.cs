@@ -7,8 +7,10 @@ internal static class P28IdleTableCorpus
         (flags & 8) != 0, (flags & 16) != 0, (flags & 32) != 0, (flags & 64) != 0);
     internal static P28IdleContextsState Initial => new(4321, 1234, 765, 0xA0, 0x81, 0x81, 0x81, 0x81, 0x81, 0, 0, 0, 0, 0);
     internal static IReadOnlyList<(string Id, P28IdleContextsScenario Scenario)> Create(P28IdleTablePreview preview)
+        => Create(preview.Original, preview.Output, preview.Plan.Tables);
+    internal static IReadOnlyList<(string Id, P28IdleContextsScenario Scenario)> Create(RomImage original, RomImage output, IReadOnlyList<P28IdleTableGroup> tables)
     {
-        var result = new List<(string, P28IdleContextsScenario)>(); var plan = preview.Plan;
+        var result = new List<(string, P28IdleContextsScenario)>();
         void Add(string id, P28IdleContextsState initial, IEnumerable<P28IdleContextsCall> calls)
         {
             // Each bounded chunk is explicitly a separate once-seeded sequence, never a hidden reseed within one sequence.
@@ -21,7 +23,7 @@ internal static class P28IdleTableCorpus
         }
         foreach (var flags in new[] { 9, 8 })
         {
-            var model = new P28IdleContextsModel(preview.Original, Initial);
+            var model = new P28IdleContextsModel(original, Initial);
             var calls = Enumerable.Range(0, 256).Select(x =>
             {
                 var call = new P28IdleContextsCall(x, (byte)x, 0, Selectors(flags));
@@ -30,7 +32,7 @@ internal static class P28IdleTableCorpus
             }).ToArray();
             Add(flags == 9 ? "base-retained-domain" : "late-domain", Initial, calls);
         }
-        var points = plan.Tables.SelectMany(t => t.Cells).SelectMany(c => new[] { c.Axis - 1, c.Axis, c.Axis + 1 })
+        var points = tables.SelectMany(t => t.Cells).SelectMany(c => new[] { c.Axis - 1, c.Axis, c.Axis + 1 })
             .Concat(new[] { 0, 1, 21, 22, 23, 39, 40, 41, 45, 46, 47, 48, 49, 50, 51, 52, 53, 111, 120, 145, 254, 255 })
             .Where(x => x is >= 0 and <= 255).Distinct().Order().ToArray();
         foreach (var flags in new[] { 1, 5, 15, 25, 41, 73, 0, 4, 14, 24, 40, 72 })
@@ -48,7 +50,7 @@ internal static class P28IdleTableCorpus
             .Select((f, i) => new P28IdleContextsCall(i, (byte)(i < 4 ? 135 : 40), (ushort)(i % 2 == 0 ? 1450 : 0), Selectors(f))));
         foreach (var flags in new[] { 9, 8, 1, 15, 25 })
         {
-            var a = new P28IdleContextsModel(preview.Original, Initial); var c = new P28IdleContextsModel(preview.Output, Initial);
+            var a = new P28IdleContextsModel(original, Initial); var c = new P28IdleContextsModel(output, Initial);
             var calls = new List<P28IdleContextsCall>();
             foreach (var x in points)
             {

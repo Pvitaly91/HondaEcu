@@ -446,7 +446,10 @@ fn validate_request(request: &Request) -> Result<(), String> {
         || request.images.len()
             > if request.operation == "checksumBatch" {
                 32
-            } else if request.operation == "integratedCaptureVtec" {
+            } else if matches!(
+                request.operation.as_str(),
+                "integratedCaptureVtec" | "vtecThresholdPrefix" | "vtecThresholdControl"
+            ) {
                 3
             } else {
                 2
@@ -459,6 +462,23 @@ fn validate_request(request: &Request) -> Result<(), String> {
         return Err("invalid image count or size".into());
     }
     match request.operation.as_str() {
+        "vtecThresholdPrefix" | "vtecThresholdControl" => {
+            if request.synthetic.is_some()
+                || request.producer_cases.is_some()
+                || !request.allow_assumptions.is_empty()
+                || request.scratch_patterns != [0, 85, 170]
+                || request.images.len() != 3
+                || request.images.iter().any(|i| i.rom.len() != 32768)
+                || request
+                    .images
+                    .iter()
+                    .map(|i| i.id.as_str())
+                    .collect::<Vec<_>>()
+                    != ["A", "B", "C"]
+            {
+                return Err("invalid strict three-image threshold-only contract".into());
+            }
+        }
         "p28Batch" => {
             if request.synthetic.is_some()
                 || request.producer_cases.is_some()
@@ -606,49 +626,58 @@ pub fn run_request(request: Request) -> Result<Response, String> {
             "allowedProgramDataReads":[0x6542,0x654A],"codeDataSpacesSeparate":true,"freshStatePerCase":true,
             "interrupts":"NotInjected","peripherals":"Frozen"}),
     ];
-    response
-        .compact_rows
-        .reserve(65536 * 2 * request.scratch_patterns.len());
-    for &pattern in &request.scratch_patterns {
-        for s in [false, true] {
-            for raw in 0..=u16::MAX {
-                let contract = compact_contract(raw, s);
-                let result =
-                    execute_case(&request.images[0].rom, &contract, pattern, allow_add, false);
-                let completed = result.status == 0;
-                response.compact_rows.push([
-                    pattern as i32,
-                    raw as i32,
-                    i32::from(s),
-                    result.status,
-                    if completed { result.outputs[0] } else { -1 },
-                    if completed {
-                        (result.outputs[1] >> 4) & 1
-                    } else {
-                        -1
-                    },
-                    i32::from(!result.used_assumptions.is_empty()),
-                ]);
-                let selected = pattern == 0
-                    && !s
-                    && [
-                        0, 233, 234, 467, 468, 936, 937, 1874, 1875, 3749, 3750, 65535,
-                    ]
-                    .contains(&raw);
-                let failed = result.status >= 2;
-                if (selected || failed) && response.diagnostics.len() < MAX_DIAGNOSTICS {
-                    response.diagnostics.push(Diagnostic {
-                        slice: "compact",
-                        image_index: 0,
-                        inputs: vec![pattern as i32, raw as i32, i32::from(s)],
-                        result: execute_case(
-                            &request.images[0].rom,
-                            &contract,
-                            pattern,
-                            allow_add,
-                            true,
-                        ),
-                    });
+    let prefix_only = matches!(
+        request.operation.as_str(),
+        "vtecThresholdPrefix" | "vtecThresholdControl"
+    );
+    if prefix_only {
+        response.entry_contracts.remove(0);
+    }
+    if !prefix_only {
+        response
+            .compact_rows
+            .reserve(65536 * 2 * request.scratch_patterns.len());
+        for &pattern in &request.scratch_patterns {
+            for s in [false, true] {
+                for raw in 0..=u16::MAX {
+                    let contract = compact_contract(raw, s);
+                    let result =
+                        execute_case(&request.images[0].rom, &contract, pattern, allow_add, false);
+                    let completed = result.status == 0;
+                    response.compact_rows.push([
+                        pattern as i32,
+                        raw as i32,
+                        i32::from(s),
+                        result.status,
+                        if completed { result.outputs[0] } else { -1 },
+                        if completed {
+                            (result.outputs[1] >> 4) & 1
+                        } else {
+                            -1
+                        },
+                        i32::from(!result.used_assumptions.is_empty()),
+                    ]);
+                    let selected = pattern == 0
+                        && !s
+                        && [
+                            0, 233, 234, 467, 468, 936, 937, 1874, 1875, 3749, 3750, 65535,
+                        ]
+                        .contains(&raw);
+                    let failed = result.status >= 2;
+                    if (selected || failed) && response.diagnostics.len() < MAX_DIAGNOSTICS {
+                        response.diagnostics.push(Diagnostic {
+                            slice: "compact",
+                            image_index: 0,
+                            inputs: vec![pattern as i32, raw as i32, i32::from(s)],
+                            result: execute_case(
+                                &request.images[0].rom,
+                                &contract,
+                                pattern,
+                                allow_add,
+                                true,
+                            ),
+                        });
+                    }
                 }
             }
         }
@@ -659,6 +688,9 @@ pub fn run_request(request: Request) -> Result<Response, String> {
     for (image_index, image) in request.images.iter().enumerate() {
         for &pattern in &request.scratch_patterns {
             for code in 0..=u8::MAX {
+                if request.operation == "vtecThresholdControl" && ![0, 127, 255].contains(&code) {
+                    continue;
+                }
                 for context in 0..2 {
                     for prior in 0..4 {
                         for enabled in [false, true] {

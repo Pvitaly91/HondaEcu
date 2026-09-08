@@ -144,6 +144,8 @@ public sealed partial class CliApplication
           research p28-idle contexts-inspect <baseline> --profile p28-304 --output <new-private-json>
               [--confirm-profile --baseline-binding <private-json>]
           research p28-idle export <plan|apply|verify|inspect> <image> --profile p28-304 ...
+          research p28-calibration export <plan|apply|verify|inspect> <image> --profile p28-304 ...
+            One original, explicit six-group settings, one compensation; raw PC-only research, not full ECU validation.
             plan: --confirm-profile --baseline-binding <json> --compensation-definition <json>
               --settings <explicit-base-and-late-values-json> --output <new-plan-json>
             apply: same original/binding/location + --plan <json> --runner <exe> --confirm-pc-only

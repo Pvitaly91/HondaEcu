@@ -316,18 +316,7 @@ public static class P28ByteExecutionValidator
             var key = row[0] * casesPerImage + keyWithinImage;
             Unique(seenThreshold, key);
             var block = images[row[0]].Span.Slice(P28ThresholdLogic.BlockOffset, P28ThresholdLogic.BlockLength);
-            var expectedBits = row[4];
-            if (row[5] != 0)
-            {
-                expectedBits = 0;
-                for (var pair = 0; pair < 2; pair++)
-                {
-                    if (P28ThresholdLogic.EvaluatePair(block, row[3], pair, (row[4] & (1 << pair)) != 0, (byte)row[2]).NewState)
-                    {
-                        expectedBits |= 1 << pair;
-                    }
-                }
-            }
+            var expectedBits = ThresholdBits(block, row[2], row[3], row[4], row[5]);
             expected[key] = expectedBits;
             var category = row[6] switch
             {
@@ -340,12 +329,7 @@ public static class P28ByteExecutionValidator
             {
                 RequireRange(row[7], 0, 3);
                 measured[key] = row[7];
-                var readsMatch = true;
-                for (var read = 0; read < 4; read++)
-                {
-                    var address = row[5] == 0 ? -1 : P28ThresholdLogic.BlockOffset + row[3] * 4 + read;
-                    readsMatch &= row[8 + read] == address;
-                }
+                var readsMatch = ThresholdReadsMatch(row);
                 readChecks[row[0]]++;
                 if (row[5] == 0)
                 {
@@ -408,7 +392,17 @@ public static class P28ByteExecutionValidator
         return element.EnumerateArray().Select(value => value.GetInt32()).ToArray();
     }
 
-    private static void ValidateContract(JsonElement contract, bool compact)
+    internal static int ThresholdBits(ReadOnlySpan<byte> block, int code, int context, int prior, int enabled)
+    {
+        if (enabled == 0) return prior;
+        var bits = 0;
+        for (var pair = 0; pair < 2; pair++)
+            if (P28ThresholdLogic.EvaluatePair(block, context, pair, (prior & (1 << pair)) != 0, (byte)code).NewState) bits |= 1 << pair;
+        return bits;
+    }
+    internal static bool ThresholdReadsMatch(IReadOnlyList<int> row) => Enumerable.Range(0, 4).All(read =>
+        row[8 + read] == (row[5] == 0 ? -1 : P28ThresholdLogic.BlockOffset + row[3] * 4 + read));
+    internal static void ValidateContract(JsonElement contract, bool compact)
     {
         var expected = compact ? JsonNode.Parse("""
             {"id":"compact","entryPc":1991,"exitPcs":[2082],"stop":"BeforeInstruction",

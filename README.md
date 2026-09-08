@@ -134,6 +134,15 @@ Readback and derived inspection preserve full original-parent lineage. This is r
 PC-only export, not physical RPM, a complete idle controller or ECU-write authority.
 GUI r3 remains paused/NotRun; M1q/M1r and older export contracts are unchanged.
 
+M1t adds [unified basic-calibration research export](docs/M1T_BASIC_CALIBRATION_EXPORT.md)
+through `research p28-calibration export plan|apply|verify|inspect`: six explicit
+groups from one original, one actual-byte checksum compensation and a separate
+closed contract. Fresh VTEC raw-prefix, limiter/adaptive and idle suites execute
+the same full A/B/C images independently; one checksum batch and per-family
+witnesses gate new BIN/plan/receipt publication. This is not a common ECU main
+loop, physical RPM or flash readiness. Old formats remain unchanged; GUI r3,
+VTEC full-chain/P1, hardware and full boot remain NotRun for this workflow.
+
 ## Windows Desktop Research Preview — D0
 
 D0 adds a Ukrainian WPF window over the existing Core and Rust process adapter;

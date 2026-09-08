@@ -72,6 +72,9 @@ public static class P28CombinedLimiterExecution
     }
     internal static void Relations(P28CombinedLimiterPlan plan, IReadOnlyList<(string Id, P28AdaptiveScenario Scenario)> scenarios,
         IReadOnlyList<P28AdaptiveBaseRun> runs)
+        => Relations(plan.Groups, scenarios, runs);
+    internal static void Relations(IReadOnlyList<P28CombinedLimiterGroup> groups, IReadOnlyList<(string Id, P28AdaptiveScenario Scenario)> scenarios,
+        IReadOnlyList<P28AdaptiveBaseRun> runs)
     {
         foreach (var group in runs.GroupBy(r => (r.ScenarioId, r.ScratchPattern)))
         {
@@ -80,10 +83,10 @@ public static class P28CombinedLimiterExecution
                 throw new InvalidDataException("Combined B/C full non-checksum histories differ.");
             var calls = scenarios.Single(s => s.Id == a.ScenarioId).Scenario.Calls;
             var bank = calls[0].Bank1 ? 1 : 0;
-            if (!plan.Groups[bank + 1].EffectivelyChanged && calls.All(c => c.Bank1 == (bank == 1) && !c.Limiter.P4Bit0 && !c.Limiter.Snapshot011bBit7) &&
+            if (!groups[bank + 1].EffectivelyChanged && calls.All(c => c.Bank1 == (bank == 1) && !c.Limiter.P4Bit0 && !c.Limiter.Snapshot011bBit7) &&
                 !P28LimiterValidator.Equal(a.Outcomes, c.Outcomes))
                 throw new InvalidDataException("Clean never-edited-bank relevant history differs.");
-            if (!plan.Groups[0].EffectivelyChanged && calls.All(c => c.Limiter.P4Bit0 || c.Limiter.Snapshot011bBit7))
+            if (!groups[0].EffectivelyChanged && calls.All(c => c.Limiter.P4Bit0 || c.Limiter.Snapshot011bBit7))
                 for (var i = 0; i < a.Outcomes.Count; i++)
                     if (a.Outcomes[i].Limiter with { RamCut = 0, RamResume = 0 } != c.Outcomes[i].Limiter with { RamCut = 0, RamResume = 0 })
                         throw new InvalidDataException("Unedited fixed consumer differs; adaptive RAM is intentionally not equated.");
@@ -91,9 +94,12 @@ public static class P28CombinedLimiterExecution
     }
     internal static IReadOnlyList<P28CombinedLimiterWitness> Witnesses(P28CombinedLimiterPlan plan,
         IReadOnlyList<(string Id, P28AdaptiveScenario Scenario)> scenarios, IReadOnlyList<P28AdaptiveBaseRun> runs)
+        => Witnesses(plan.Groups, scenarios, runs);
+    internal static IReadOnlyList<P28CombinedLimiterWitness> Witnesses(IReadOnlyList<P28CombinedLimiterGroup> groups,
+        IReadOnlyList<(string Id, P28AdaptiveScenario Scenario)> scenarios, IReadOnlyList<P28AdaptiveBaseRun> runs)
     {
         var result = new List<P28CombinedLimiterWitness>();
-        foreach (var group in plan.Groups.Where(g => g.EffectivelyChanged))
+        foreach (var group in groups.Where(g => g.EffectivelyChanged))
         {
             P28CombinedLimiterWitness? witness = null;
             foreach (var a in runs.Where(r => r.ImageKind == "A"))

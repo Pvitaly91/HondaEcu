@@ -178,6 +178,13 @@ public static class P28LimiterValidator
         return AnalyzeCore(image, preview.Profile, preview.Binding, scenario, response.Response);
     }
     internal static P28LimiterState State(JsonElement e) { P28LimiterScenario.StateShape(e); return e.Deserialize<P28LimiterState>(P28StatefulScenario.Options)!; }
+    internal static P28LimiterValidationReport AnalyzeExportImage(P28BasicCalibrationPreview preview, RomImage image,
+        P28LimiterScenario scenario, SliceProcessResponse response)
+    {
+        preview.RequireImage(image);
+        if (scenario.Mutation is not null) throw new InvalidDataException("Mutation in basic composition suite.");
+        return AnalyzeCore(image, preview.Profile, preview.Binding, scenario, response.Response);
+    }
     internal static bool? NullableBool(JsonElement e) => e.ValueKind == JsonValueKind.Null ? null : e.GetBoolean();
     internal static int[][] Matrix(JsonElement c, string name, int width)
     {

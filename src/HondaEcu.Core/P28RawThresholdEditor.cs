@@ -438,22 +438,22 @@ internal static class P28RawEditJson
 {
     public static string Serialize<T>(T value, bool indented) => JsonSerializer.Serialize(value, JsonDefaults.Create(indented));
 
-    public static T Parse<T>(string json)
+    public static T Parse<T>(string json, Func<Type, string, bool>? permitsNullProperty = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(json);
         using var document = JsonDocument.Parse(json);
-        ValidateShape(document.RootElement, typeof(T));
+        ValidateShape(document.RootElement, typeof(T), permitsNullProperty);
         return JsonSerializer.Deserialize<T>(json, JsonDefaults.Create()) ?? throw new InvalidDataException("Empty raw-edit artifact.");
     }
 
-    public static void ValidateObject<T>(T value)
+    public static void ValidateObject<T>(T value, Func<Type, string, bool>? permitsNullProperty = null)
     {
         ArgumentNullException.ThrowIfNull(value);
         using var document = JsonDocument.Parse(Serialize(value, false));
-        ValidateShape(document.RootElement, typeof(T));
+        ValidateShape(document.RootElement, typeof(T), permitsNullProperty);
     }
 
-    private static void ValidateShape(JsonElement element, Type type)
+    private static void ValidateShape(JsonElement element, Type type, Func<Type, string, bool>? permitsNullProperty)
     {
         if (element.ValueKind == JsonValueKind.Null)
         {
@@ -505,7 +505,7 @@ internal static class P28RawEditJson
             }
             foreach (var item in element.EnumerateArray())
             {
-                ValidateShape(item, type.GetGenericArguments()[0]);
+                ValidateShape(item, type.GetGenericArguments()[0], permitsNullProperty);
             }
             return;
         }
@@ -524,7 +524,8 @@ internal static class P28RawEditJson
             {
                 throw new InvalidDataException("Duplicate or unknown raw-edit property.");
             }
-            ValidateShape(property.Value, definition.PropertyType);
+            if (property.Value.ValueKind != JsonValueKind.Null || permitsNullProperty?.Invoke(type, property.Name) != true)
+                ValidateShape(property.Value, definition.PropertyType, permitsNullProperty);
         }
         if (seen.Count != properties.Count)
         {

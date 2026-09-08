@@ -65,6 +65,12 @@ public static class P28AdaptiveValidator
             throw new InvalidDataException("Foreign adaptive export-control image.");
         return AnalyzeCore(image, preview.Profile, scenario, response.Response);
     }
+    internal static P28AdaptiveValidationReport AnalyzeExportImage(P28BasicCalibrationPreview preview, RomImage image,
+        P28AdaptiveScenario scenario, SliceProcessResponse response)
+    {
+        preview.RequireImage(image);
+        return AnalyzeCore(image, preview.Profile, scenario, response.Response);
+    }
     private static Stage? ParseStage(JsonElement e, bool tick)
     {
         if (e.ValueKind == JsonValueKind.Null) return null;

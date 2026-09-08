@@ -51,28 +51,14 @@ public static class P28IdleTableExecution
             if (version is not null && (version != v || upstream != u || !fixes!.SequenceEqual(f))) throw new InvalidDataException("Runner identity changed.");
             version = v; upstream = u; fixes = f;
         }
-        var runs = new List<P28IdleTableRun>();
-        foreach (var item in scenarios)
-            foreach (var image in images)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                var response = await SeededSliceProcess.ExchangeAsync(runner, P28IdleContextsValidator.CreateRequest(image.Image, item.Scenario), options, cancellationToken).ConfigureAwait(false);
-                Identity(response, P28IdleContextsValidator.Operation);
-                var report = AnalyzeCompositionImage(preview, image.Image, item.Scenario, response, image.Id);
-                foreach (var s in report.Sequences)
-                {
-                    if (s.Checkpoints.Any(c => c.Disposition != "StrictMatch")) throw new InvalidDataException($"Mandatory idle batch not strict: {item.Id}/{image.Id}.");
-                    var steps = s.Checkpoints.Select(c => c.Expected!).ToArray();
-                    runs.Add(new(image.Id, image.Image.Hash, item.Id, item.Scenario.Digest, s.ScratchPattern, item.Scenario.Calls.Count, s.Checkpoints.Count,
-                        Digest(s.Checkpoints.Select(c => c.Actual).ToArray()), Digest(steps), Controls(steps), s.Checkpoints.Select(c => Outcome(c.Inputs, c.Expected!)).ToArray()));
-                }
-            }
+        var runs = await P28IdleExportBatch.RunAsync(images, scenarios, runner,
+            (image, scenario, response, id) => AnalyzeCompositionImage(preview, image, scenario, response, id), Identity, options, cancellationToken).ConfigureAwait(false);
         var checksum = await SeededSliceProcess.ExchangeAsync(runner, P28NativeChecksumVerifier.CreateRequest(images), options, cancellationToken).ConfigureAwait(false);
         Identity(checksum, "checksumBatch"); var checks = CompareChecksum(images, checksum);
         Relations(runs); var witnesses = Witnesses(preview.Plan, runs); var effects = Effects(preview, scenarios, runs);
         cancellationToken.ThrowIfCancellationRequested();
         if (!snapshot.AsSpan().SequenceEqual(File.ReadAllBytes(runner))) throw new InvalidDataException("Runner changed during execution.");
-        var evidence = new P28IdleTableEvidence(version!, upstream!, fixes!, preview.Plan.Digest(), P28IdleTableCorpus.Id, runs.AsReadOnly(), checks,
+        var evidence = new P28IdleTableEvidence(version!, upstream!, fixes!, preview.Plan.Digest(), P28IdleTableCorpus.Id, runs, checks,
             witnesses, effects, true, true, true);
         RequireEvidence(preview, evidence); return new(preview, evidence);
     }
@@ -96,23 +82,7 @@ public static class P28IdleTableExecution
             localSemanticFixes = e.LocalSemanticFixes
         }), "idleContexts");
         var scenarios = P28IdleTableCorpus.Create(p); var images = Images(p);
-        if (e.Runs.Count != scenarios.Count * 9) throw new InvalidDataException("Missing/extra mandatory idle runs.");
-        foreach (var item in scenarios)
-            foreach (var image in images)
-            {
-                var model = new P28IdleContextsModel(image.Image, item.Scenario.InitialState);
-                var steps = item.Scenario.Calls.Select(model.Step).ToArray();
-                var expected = item.Scenario.Calls.Zip(steps).Select(pair => Outcome(pair.First, pair.Second)).ToArray();
-                foreach (var pattern in new[] { 0, 85, 170 })
-                {
-                    var found = e.Runs.Where(r => r.ScenarioId == item.Id && r.ImageKind == image.Id && r.ScratchPattern == pattern).ToArray();
-                    if (found.Length != 1) throw new InvalidDataException("Missing/duplicate idle evidence identity.");
-                    var r = found[0];
-                    if (r.ImageHash != image.Image.Hash || r.ScenarioDigest != item.Scenario.Digest || r.Requested != expected.Length || r.StrictMatches != r.Requested ||
-                        r.ObservationDigest.Length != 64 || !r.ObservationDigest.All(Uri.IsHexDigit) || r.ModelDigest != Digest(steps) || r.IndependentControlDigest != Controls(steps) ||
-                        !P28LimiterValidator.Equal(r.Outcomes, expected)) throw new InvalidDataException("Forged/stale/incomplete idle history.");
-                }
-            }
+        P28IdleExportBatch.RequireRuns(images, scenarios, e.Runs);
         RequireChecksumEvidence(images, e.ChecksumRuns); Relations(e.Runs);
         if (!P28LimiterValidator.Equal(e.Witnesses, Witnesses(p.Plan, e.Runs)) || !P28LimiterValidator.Equal(e.CellEffects, Effects(p, scenarios, e.Runs))) throw new InvalidDataException("Missing/forged idle witness or cell effect.");
     }
@@ -130,9 +100,11 @@ public static class P28IdleTableExecution
         }
     }
     internal static IReadOnlyList<P28IdleTableWitness> Witnesses(P28IdleTablePlan plan, IReadOnlyList<P28IdleTableRun> runs)
+        => Witnesses(plan.Tables, runs);
+    internal static IReadOnlyList<P28IdleTableWitness> Witnesses(IReadOnlyList<P28IdleTableGroup> tables, IReadOnlyList<P28IdleTableRun> runs)
     {
         var result = new List<P28IdleTableWitness>();
-        foreach (var t in plan.Tables.Where(t => t.EffectivelyChanged))
+        foreach (var t in tables.Where(t => t.EffectivelyChanged))
         {
             var table = P28IdleTableFields.Table(t.Id == "base" ? 0 : 1); P28IdleTableWitness? witness = null;
             foreach (var a in runs.Where(r => r.ImageKind == "A"))
@@ -153,15 +125,18 @@ public static class P28IdleTableExecution
         return result.AsReadOnly();
     }
     internal static IReadOnlyList<P28IdleCellEffect> Effects(P28IdleTablePreview p, IReadOnlyList<(string Id, P28IdleContextsScenario Scenario)> scenarios, IReadOnlyList<P28IdleTableRun> runs)
+        => Effects(p.Original, p.Plan.Tables, scenarios, runs);
+    internal static IReadOnlyList<P28IdleCellEffect> Effects(RomImage original, IReadOnlyList<P28IdleTableGroup> tables,
+        IReadOnlyList<(string Id, P28IdleContextsScenario Scenario)> scenarios, IReadOnlyList<P28IdleTableRun> runs)
     {
-        var result = new Dictionary<(string, string), P28IdleCellEffect>(); var plan = p.Plan;
-        foreach (var t in plan.Tables)
+        var result = new Dictionary<(string, string), P28IdleCellEffect>();
+        foreach (var t in tables)
             foreach (var cell in t.Cells.Where(c => c.OldValue != c.NewValue))
             {
                 var table = P28IdleTableFields.Table(t.Id == "base" ? 0 : 1);
                 // Separate one-cell MODEL diagnostic images only for distinguishing quantization from joint-cell masking.
                 // These are not native witnesses, not publications and never substitute for mandatory combined B/C.
-                var diagnosticImage = p.Original.CreateModifiedCopy([new BytePatch(cell.ValueOffset, cell.NewBytes.ToArray())]);
+                var diagnosticImage = original.CreateModifiedCopy([new BytePatch(cell.ValueOffset, cell.NewBytes.ToArray())]);
                 foreach (var a in runs.Where(r => r.ImageKind == "A"))
                 {
                     var scenario = scenarios.Single(s => s.Id == a.ScenarioId).Scenario; var diagnostic = new P28IdleContextsModel(diagnosticImage, scenario.InitialState);

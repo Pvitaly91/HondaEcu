@@ -40,6 +40,10 @@ public sealed record P28CombinedLimiterSettings(P28FixedLimiterPair? Fixed, P28C
     internal void Validate()
     {
         if (Fixed is null && Bank0 is null && Bank1 is null) throw new ArgumentException("At least one explicit group is required.");
+        ValidatePairs();
+    }
+    internal void ValidatePairs()
+    {
         if (Fixed is { } f) P28FixedLimiterEditor.ValidatePair(f);
         if (Bank0 is { } a) P28AdaptiveBaseEditor.PairPolicy(new(0, a.BaseCutRaw, a.BaseResumeRaw));
         if (Bank1 is { } b) P28AdaptiveBaseEditor.PairPolicy(new(1, b.BaseCutRaw, b.BaseResumeRaw));
@@ -91,7 +95,12 @@ public static class P28CombinedLimiterEditor
     public const string EditAudit = "Simultaneous M1n numeric comparison and M1o numeric reset/floor/target flows preserve pointer literals, strides, stopping keys, index bounds, instruction widths and encoded destinations under the original intact-state/source-listed location scope. Stateful source selection may change histories, not turn thresholds into program pointers. Old signed location payload unchanged; bounded non-reading is supplemental, not global proof.";
     internal static P28CombinedLimiterGroup[] Describe(RomImage original, P28CombinedLimiterSettings settings)
     {
-        settings.Validate(); original.ValidateExactSize(32768);
+        settings.Validate(); return DescribeGroups(original, settings);
+    }
+    // Pure descriptions also allow an unchanged family in a separately admitted composition.
+    internal static P28CombinedLimiterGroup[] DescribeGroups(RomImage original, P28CombinedLimiterSettings settings)
+    {
+        settings.ValidatePairs(); original.ValidateExactSize(32768);
         var oldFixed = P28FixedLimiterEditor.ReadPair(original); var f = settings.Fixed ?? oldFixed;
         var operands = new[] { P28LimiterInspector.CutId, P28LimiterInspector.ResumeId }.Select((id, i) =>
         {

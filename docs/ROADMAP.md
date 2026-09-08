@@ -35,7 +35,7 @@ M0.1 hardens the software evidence model. It does not establish any real Crome/H
 
 The original 6500/7000/7500 RPM and 4000/5000/5500 RPM series remain discovery inputs. M1 also requires separate holdouts and formula-dependent boundary cases, stable and explained editor transformations, and an unambiguous or behaviorally equivalent verified definition. No discovery fit is promoted automatically.
 
-### M1a–M1r research progress (not M1 completion)
+### M1a–M1t research progress (not M1 completion)
 
 - M1a privately obtained one unchanged archive candidate and traced contextual VTEC thresholds; factory identity and editor import/no-op remain unresolved/not tested.
 - M1b delivers a read-only, private-binding-gated threshold inspector and a scoped raw/compact model. Established edge paths, an unresolved normal-path word-add instruction, and separately labelled conditional model agreement remain distinct.
@@ -142,6 +142,15 @@ table witnesses and masking summaries gate typed publication capability. CLI
 plan/apply/verify/inspect, one private BIN and independent readback are complete.
 No axes/overrides/peaks, mixed VTEC/limiter lineage, new signing authority, physical
 RPM, GUI or hardware scope is added. M1q/M1r and previous milestones stay closed.
+
+M1t adds [unified basic-calibration export](M1T_BASIC_CALIBRATION_EXPORT.md): one
+VTEC threshold, explicit fixed/adaptive pairs and base/late idle values compose
+from one original with one checksum compensation. Separate strict local native
+suites run the actual combined images, with per-family witnesses and one M1f
+checksum batch. The closed original-parent plan/receipt, new-path publication
+and historical verification do not integrate a full ECU scheduler or authorize
+hardware use. M1s and earlier contracts remain closed and unchanged; physical
+RPM and GUI r3 remain unavailable/NotRun.
 
 ## M2 — Calibration maps
 

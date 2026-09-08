@@ -3,20 +3,23 @@ namespace HondaEcu.Core;
 internal static class P28CombinedLimiterCorpus
 {
     internal const string Id = "combined-limiter-groups-native-histories-v1";
-    internal static IReadOnlyList<(string Id, P28LimiterScenario Scenario)> Fixed(P28CombinedLimiterPlan p) => Create(p)
+    internal static IReadOnlyList<(string Id, P28LimiterScenario Scenario)> Fixed(P28CombinedLimiterPlan p) => Fixed(p.Groups);
+    internal static IReadOnlyList<(string Id, P28LimiterScenario Scenario)> Fixed(IReadOnlyList<P28CombinedLimiterGroup> groups) => Create(groups)
         .Where(s => s.Id.StartsWith("fixed-inputs", StringComparison.Ordinal)).Select(s => (s.Id,
             P28LimiterScenario.Create(s.Scenario.InitialState.Limiter, s.Scenario.Calls.Select(c => c.Limiter).ToArray(), Id + "/fixed-task/" + s.Id))).ToArray();
     internal static IReadOnlyList<(string Id, P28AdaptiveScenario Scenario)> Create(P28CombinedLimiterPlan p)
+        => Create(p.Groups);
+    internal static IReadOnlyList<(string Id, P28AdaptiveScenario Scenario)> Create(IReadOnlyList<P28CombinedLimiterGroup> groups)
     {
         var result = new List<(string, P28AdaptiveScenario)>();
         // Reuse both per-bank boundary/path generators, not old plans or child exports.
         for (var bank = 0; bank < 2; bank++)
-            foreach (var item in P28AdaptiveBaseCorpus.Create(p.Groups[bank + 1].AdaptiveWords, bank))
+            foreach (var item in P28AdaptiveBaseCorpus.Create(groups[bank + 1].AdaptiveWords, bank))
             {
                 var id = $"bases{bank}/{item.Id}";
                 result.Add((id, P28AdaptiveScenario.Create(item.Scenario.InitialState, item.Scenario.Calls, Id + "/" + id)));
             }
-        var edges = p.Groups[0].FixedOperands.SelectMany(w => new[] { w.OriginalWord, w.NewWord })
+        var edges = groups[0].FixedOperands.SelectMany(w => new[] { w.OriginalWord, w.NewWord })
             .SelectMany(w => new[] { w - 1, w, w + 1 }).Where(w => w is >= 0 and <= 65535).Distinct().Order().ToArray();
         foreach (var prior in new byte[] { 0, 32 })
             foreach (var inhibit in new byte[] { 0, 128 })
@@ -34,7 +37,7 @@ internal static class P28CombinedLimiterCorpus
                     // Only the FIRST native producer resets. Bank switches hold and inherit
                     // thresholds/request/counters/masks, then native expiry/decrease/reset evolve them.
                     var banks = reverse ? new[] { 1, 1, 0, 0 } : new[] { 0, 0, 1, 1 };
-                    var raw = p.Groups[1].AdaptiveWords[0].NewWord;
+                    var raw = groups[1].AdaptiveWords[0].NewWord;
                     var calls = new List<P28AdaptiveCall>();
                     for (var round = 0; round < 3; round++)
                         for (var i = 0; i < 4; i++)
