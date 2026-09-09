@@ -29,7 +29,10 @@ public static class P28BasicCalibrationWriter
         new(1, P28BasicCalibrationReceipt.ReceiptPurpose, p.ContractId, p.Digest(), p.OriginalHash, p.OutputHash, p.LocationDigest, e,
             P28FixedLimiterReceipt.HistoricalScope, p.Readiness);
     public static P28BasicCalibrationVerification Save(P28VerifiedBasicCalibrationExport token, string outputPath, string savedPlanPath,
-        string receiptPath, IEnumerable<string>? protectedPaths = null, CancellationToken cancellationToken = default)
+        string receiptPath, IEnumerable<string>? protectedPaths = null, CancellationToken cancellationToken = default) =>
+        Save(token, outputPath, savedPlanPath, receiptPath, null, protectedPaths, cancellationToken);
+    public static P28BasicCalibrationVerification Save(P28VerifiedBasicCalibrationExport token, string outputPath, string savedPlanPath,
+        string receiptPath, IProgress<P28BasicCalibrationStage>? progress, IEnumerable<string>? protectedPaths = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested(); ArgumentNullException.ThrowIfNull(token);
         var p = token.Preview; p = P28BasicCalibrationEditor.Reproduce(p.Original, p.Profile, p.Binding, true, p.Location, p.Plan);
@@ -39,8 +42,10 @@ public static class P28BasicCalibrationWriter
             throw new InvalidDataException("Basic artifact exceeds bound; publication not attempted.");
         var (sources, recheck) = ResearchOutputGroup.CaptureInputs(p.Original, p.Profile, plan.ProfileDigest, protectedPaths);
         // Shared staged new-path publisher owns alias checks, cancellation, rollback and independent readback.
+        progress?.Report(P28BasicCalibrationStage.Publication);
         return ResearchOutputGroup.Write(p.Output, planJson, receiptJson, outputPath, savedPlanPath, receiptPath, sources, recheck, paths =>
         {
+            progress?.Report(P28BasicCalibrationStage.Readback);
             recheck(); var saved = P28BasicCalibrationPlan.Load(paths[1]); var recorded = P28BasicCalibrationReceipt.Load(paths[2]);
             if (saved.ToJson() != planJson || recorded.ToJson() != receiptJson) throw new InvalidDataException("Basic readback differs from live capability.");
             return Verify(RomImage.Load(paths[0]), p.Original, p.Profile, p.Binding, p.Location, saved, recorded);

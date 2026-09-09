@@ -46,10 +46,14 @@ internal static class P28BasicCalibrationCorpus
         return [("unchanged-idle-controls", P28IdleContextsScenario.Create(P28IdleTableCorpus.Initial, calls, IdleControl))];
     }
 }
+public enum P28BasicCalibrationStage { VtecPrefix, LimiterAdaptive, Idle, Checksum, EvidenceVerification, Publication, Readback }
 public static class P28BasicCalibrationExecution
 {
+    public static Task<P28VerifiedBasicCalibrationExport> ValidateAsync(P28BasicCalibrationPreview preview, string runner,
+        SliceProcessOptions? options = null, CancellationToken cancellationToken = default) =>
+        ValidateAsync(preview, runner, null, options, cancellationToken);
     public static async Task<P28VerifiedBasicCalibrationExport> ValidateAsync(P28BasicCalibrationPreview preview, string runner,
-        SliceProcessOptions? options = null, CancellationToken cancellationToken = default)
+        IProgress<P28BasicCalibrationStage>? progress, SliceProcessOptions? options = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         preview = Reproduce(preview.Original, preview.Profile, preview.Binding, true, preview.Location, preview.Plan);
@@ -65,13 +69,16 @@ public static class P28BasicCalibrationExecution
             if (version is not null && (version != v || upstream != u || !fixes!.SequenceEqual(f))) throw new InvalidDataException("Runner identity changed between suites.");
             version = v; upstream = u; fixes = f;
         }
+        progress?.Report(P28BasicCalibrationStage.VtecPrefix);
         var prefix = await SeededSliceProcess.ExchangeAsync(runner, P28BasicVtecBatch.Request(preview), options, cancellationToken).ConfigureAwait(false);
         Identity(prefix, P28BasicVtecBatch.Operation(plan.Groups[0].EffectivelyChanged)); var vtec = P28BasicVtecBatch.Analyze(preview, prefix);
+        progress?.Report(P28BasicCalibrationStage.LimiterAdaptive);
         var fixedScenarios = P28BasicCalibrationCorpus.Fixed(plan); var adaptiveScenarios = P28BasicCalibrationCorpus.Adaptive(plan);
         var fixedRuns = await P28FixedExportBatch.RunAsync(images, fixedScenarios, runner, preview.Location.Offset,
             (image, scenario, response) => P28LimiterValidator.AnalyzeExportImage(preview, image, scenario, response), Identity, options, cancellationToken).ConfigureAwait(false);
         var adaptiveRuns = await P28AdaptiveExportBatch.RunAsync(images, adaptiveScenarios, runner,
             (image, scenario, response) => P28AdaptiveValidator.AnalyzeExportImage(preview, image, scenario, response), Identity, true, options, cancellationToken).ConfigureAwait(false);
+        progress?.Report(P28BasicCalibrationStage.Idle);
         var idleScenarios = P28BasicCalibrationCorpus.Idle(preview);
         var idleRuns = await P28IdleExportBatch.RunAsync(images, idleScenarios, runner, (image, scenario, response, id) =>
         {
@@ -80,6 +87,7 @@ public static class P28BasicCalibrationExecution
             return P28IdleContextsValidator.AnalyzeImage(image, scenario, response, id);
         }, Identity, options, cancellationToken).ConfigureAwait(false);
         // Exactly one native checksum batch for the three final composition images.
+        progress?.Report(P28BasicCalibrationStage.Checksum);
         var checksum = await SeededSliceProcess.ExchangeAsync(runner, P28NativeChecksumVerifier.CreateRequest(images), options, cancellationToken).ConfigureAwait(false);
         Identity(checksum, "checksumBatch"); var checks = CompareChecksum(images, checksum);
         var limiter = new P28BasicLimiterEvidence(P28BasicCalibrationCorpus.LimiterId(plan), fixedRuns, adaptiveRuns,
@@ -87,6 +95,7 @@ public static class P28BasicCalibrationExecution
         var idle = new P28BasicIdleEvidence(P28BasicCalibrationCorpus.IdleId(plan), idleRuns, P28IdleTableExecution.Witnesses(IdleGroups(plan), idleRuns),
             P28IdleTableExecution.Effects(preview.Original, IdleGroups(plan), idleScenarios, idleRuns));
         var evidence = new P28BasicCalibrationEvidence(version!, upstream!, fixes!, plan.Digest(), vtec, limiter, idle, checks, "NotRun", "NotRun");
+        progress?.Report(P28BasicCalibrationStage.EvidenceVerification);
         RequireEvidence(preview, evidence);
         cancellationToken.ThrowIfCancellationRequested(); recheck();
         if (!runnerSnapshot.AsSpan().SequenceEqual(File.ReadAllBytes(runner))) throw new InvalidDataException("Runner changed during fresh validation.");

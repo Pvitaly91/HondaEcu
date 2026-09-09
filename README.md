@@ -1,5 +1,12 @@
 # HondaEcu
 
+The [D1 basic-calibration desktop workspace](docs/D1_BASIC_CALIBRATION_DESKTOP.md)
+integrates the completed M1t six-group workflow into the Ukrainian WPF application:
+explicit original inputs, raw draft/settings, preview/diff/graphs, fresh validation
+and one PC-only copy, followed by read-only M1t child inspection. Legacy tools
+remain available. Headless/offscreen checks are not interactive GUI acceptance;
+D1 GUI acceptance remains NotRun and outputs remain NotFlashReady.
+
 HondaEcu is a cross-platform, profile-driven ROM inspection and controlled-editing toolkit. Milestone M0 establishes a safety-first core and desktop validation harness for one explicitly scoped target: the 32 KiB P28-304 Honda OBD1 ROM revision. M0.1 hardens how the oracle harness distinguishes observations, fitted hypotheses, and independent validation before any real P28-304 definition can advance toward M1.
 
 The project starts with P28-304 because public research material names `304stock.bin` as the basis of the available P28 map, making revision scope explicit enough for reproducible investigation. Published offsets remain research leads, not universal P28 facts. P07 main-CPU research is the next major family direction after the P28/P30/P72 workflow is proven; no P28 offsets will be assumed compatible with P07.

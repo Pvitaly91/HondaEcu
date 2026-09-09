@@ -21,7 +21,9 @@ public partial class App : Application
                     File.Exists(resources.BundledRunnerPath) &&
                     File.Exists(Path.Combine(resources.ApplicationDirectory, "coreclr.dll")) &&
                     File.Exists(Path.Combine(resources.ApplicationDirectory, "PresentationFramework.dll")) &&
-                    File.Exists(Path.Combine(resources.ApplicationDirectory, "THIRD_PARTY_NOTICES.md"));
+                    File.Exists(Path.Combine(resources.ApplicationDirectory, "THIRD_PARTY_NOTICES.md")) &&
+                    File.Exists(Path.Combine(resources.ApplicationDirectory, "docs", "D1_BASIC_CALIBRATION_DESKTOP.md")) &&
+                    File.Exists(Path.Combine(resources.ApplicationDirectory, "docs", "M1T_BASIC_CALIBRATION_EXPORT.md"));
                 Shutdown(complete ? 0 : 1);
             }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or ArgumentException)

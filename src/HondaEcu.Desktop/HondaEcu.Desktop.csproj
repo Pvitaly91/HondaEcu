@@ -12,6 +12,7 @@
     <PublishAot>false</PublishAot>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="HondaEcu.Desktop.Tests" />
     <ProjectReference Include="../HondaEcu.Core/HondaEcu.Core.csproj" />
     <Content Include="../../definitions/**/*.json" Link="definitions/%(RecursiveDir)%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

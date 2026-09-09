@@ -100,6 +100,20 @@ public static class P28IdleTableEditor
         return groups.ToArray();
     }
     // Wide-integer arithmetic audit, separate from native producer reachability and the stateful M1r model.
+    public static IReadOnlyList<int> ProjectLookup(IReadOnlyList<P28IdleTableCell> cells)
+    {
+        _ = CheckDomain(cells);
+        return Array.AsReadOnly(Enumerable.Range(0, 256).Select(x => (int)LookupPoint(cells, x).Value).ToArray());
+    }
+    private static (long Value, long Product, long Delta, int Distance, int Denominator, P28IdleTableCell Upper, P28IdleTableCell Lower)
+        LookupPoint(IReadOnlyList<P28IdleTableCell> cells, int x)
+    {
+        var index = 0; while (index < 5 && x < cells[index + 1].Axis) index++;
+        var upper = cells[index]; var lower = cells[index + 1]; var distance = x - lower.Axis; var denominator = upper.Axis - lower.Axis;
+        var product = (long)Math.Abs(upper.NewValue - lower.NewValue) * distance; var delta = product / denominator;
+        var value = lower.NewValue + (upper.NewValue < lower.NewValue ? -delta : delta);
+        return (value, product, delta, distance, denominator, upper, lower);
+    }
     internal static P28IdleTableDomain CheckDomain(IReadOnlyList<P28IdleTableCell> cells)
     {
         if (cells.Count != 7 || cells[0].Axis != 255 || cells[6].Axis != 0 || cells.Any(c => c.NewValue is < 1 or > 65534) ||
@@ -107,10 +121,7 @@ public static class P28IdleTableEditor
         var minimum = 65535; var maximum = 0; var maxProduct = 0;
         for (var x = 0; x <= 255; x++)
         {
-            var index = 0; while (index < 5 && x < cells[index + 1].Axis) index++;
-            var upper = cells[index]; var lower = cells[index + 1]; var distance = x - lower.Axis; var denominator = upper.Axis - lower.Axis;
-            var product = (long)Math.Abs(upper.NewValue - lower.NewValue) * distance; var delta = product / denominator;
-            var value = lower.NewValue + (upper.NewValue < lower.NewValue ? -delta : delta);
+            var (value, product, delta, distance, denominator, upper, lower) = LookupPoint(cells, x);
             if (distance < 0 || distance > denominator || denominator <= 0 || product > uint.MaxValue || delta > 65535 ||
                 value < Math.Min(upper.NewValue, lower.NewValue) || value > Math.Max(upper.NewValue, lower.NewValue) ||
                 value is < 1 or > 65534 || cells.Any(c => c.Axis == x && c.NewValue != value) ||

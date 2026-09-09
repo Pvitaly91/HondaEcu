@@ -37,11 +37,12 @@ public sealed partial class MainViewModel
         PreviewChecksumExportCommand = new(PreviewChecksumExport, () => CanPreviewChecksumExport);
         ValidateChecksumExportCommand = new(ValidateChecksumExportAsync, () => CanValidateChecksumExport);
         SaveChecksumExportCommand = new(SaveChecksumFromDialogsAsync, () => CanSaveChecksumExport);
-        OpenChecksumChildCommand = new(OpenChecksumFromDialogsAsync, () => !IsBusy);
+        OpenChecksumChildCommand = new(() => RunDocumentLoadAsync(OpenChecksumFromDialogsAsync), () => !IsBusy);
     }
 
     public void SelectCompensationDefinition(string path)
     {
+        if (IsBusy) return;
         InvalidateSession();
         _compensationLocation = null;
         _compensationPath = null;
@@ -218,6 +219,7 @@ public sealed partial class MainViewModel
     public async Task OpenChecksumChildAsync(string output, string parent, string profile, string binding,
         string plan, string report, string location, bool acknowledged)
     {
+        if (_basicJobActive) return;
         var session = InvalidateSession();
         try
         {

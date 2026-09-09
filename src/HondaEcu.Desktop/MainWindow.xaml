@@ -15,7 +15,7 @@
         <Border Background="#142D43" Padding="22,16">
             <StackPanel>
                 <TextBlock Text="HondaEcu" FontSize="27" FontWeight="SemiBold" Foreground="White" />
-                <TextBlock Text="Windows Desktop Research Preview · D0 + M1f + M1g + M1h" Foreground="#CBD9E6" Margin="0,3,0,12" />
+                <TextBlock Text="Windows Desktop Research Preview · D0 + M1f + M1g + M1h + D1" Foreground="#CBD9E6" Margin="0,3,0,12" />
                 <WrapPanel>
                     <Button x:Name="OpenBinButton" Command="{Binding OpenBinCommand}" Content="_Відкрити BIN" AutomationProperties.Name="Відкрити BIN" />
                     <Button x:Name="DemoButton" Command="{Binding DemoCommand}" Content="_Демонстраційний режим" AutomationProperties.Name="Демонстраційний режим" />
@@ -31,7 +31,7 @@
             </StackPanel>
         </Border>
         <TabControl Grid.Row="2" Margin="14,12,14,0" BorderBrush="#D9E2EC" Background="#F3F6FA">
-            <TabItem Header="Огляд і зміна">
+            <TabItem Header="Огляд і зміна" IsEnabled="{Binding CanUseLegacyWorkspace}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14"
                               CanContentScroll="False">
                     <StackPanel>
@@ -128,10 +128,10 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="M1h · умовні RPM">
+            <TabItem Header="M1h · умовні RPM" IsEnabled="{Binding CanUseLegacyWorkspace}">
                 <controls:RpmPlanningPanel />
             </TabItem>
-            <TabItem Header="M1g · окремий експорт">
+            <TabItem Header="M1g · окремий експорт" IsEnabled="{Binding CanUseLegacyWorkspace}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14">
                     <StackPanel>
                         <Border Style="{StaticResource Card}">
@@ -171,7 +171,10 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
-            <TabItem Header="Перевірки">
+            <TabItem Header="Базові налаштування">
+                <controls:BasicCalibrationPanel DataContext="{Binding Basic}" />
+            </TabItem>
+            <TabItem Header="Перевірки" IsEnabled="{Binding CanUseLegacyWorkspace}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14">
                     <StackPanel>
                         <Border Style="{StaticResource Card}">

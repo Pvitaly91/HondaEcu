@@ -177,6 +177,17 @@ M1h adds a conditional RPM scenario/query section and explicit raw-candidate
 transfer into the existing M1g plan; mathematical and execution statuses stay separate.
 This is not completion of the entire M3 editor milestone or of M1.
 
+### D1 — Unified basic-calibration desktop workspace
+
+[D1](D1_BASIC_CALIBRATION_DESKTOP.md) integrates completed M1t Core contracts into
+the existing Ukrainian WPF window: six independent raw groups, settings import/
+export, original-parent preview and exact diff, Core-generated model graphs,
+fresh validation/publication/readback and read-only child inspection. It retains
+legacy tools and the shared session/job/cancellation mechanism. Synthetic tests,
+offscreen bindings/layout, real subprocess and private real-ROM service evidence
+are distinct from interactive GUI acceptance (NotRun). No new calibration fields,
+physical RPM proof, hardware writes or full-ECU integration are implied.
+
 ## M4 — Additional OBD1 profiles
 
 - additional P28/P30/P72-family profiles

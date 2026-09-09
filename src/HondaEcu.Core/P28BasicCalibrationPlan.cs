@@ -9,6 +9,17 @@ public sealed class P28BasicCalibrationSettings
     public P28BasicVtecSetting? Vtec { get; }
     public P28CombinedLimiterSettings Limiter { get; }
     public P28IdleTableSettings Idle { get; }
+    public string ToJson() => JsonSerializer.Serialize(new
+    {
+        formatVersion = 1,
+        purpose = "explicit-basic-calibration-selection",
+        vtec = Vtec,
+        @fixed = Limiter.Fixed,
+        bank0 = Limiter.Bank0,
+        bank1 = Limiter.Bank1,
+        baseTable = Idle.BaseTable,
+        lateTable = Idle.LateTable
+    }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, WriteIndented = true });
     public P28BasicCalibrationSettings(P28BasicVtecSetting? vtec, P28FixedLimiterPair? fixedPair,
         P28CombinedBankPair? bank0, P28CombinedBankPair? bank1, IReadOnlyList<int>? baseTable, IReadOnlyList<int>? lateTable)
     {
@@ -91,6 +102,17 @@ public sealed class P28BasicCalibrationPreview
 }
 public static class P28BasicCalibrationEditor
 {
+    /// <summary>Read-only fields after exact admission; no compensation or export authority.</summary>
+    public static IReadOnlyList<P28BasicCalibrationGroup> InspectFields(RomImage original, RomProfile profile,
+        P28ExactBaselineBinding binding, bool confirmed, P28BasicCalibrationSettings? settings = null)
+    {
+        P28ByteExecutionValidator.ValidateAdmission(original, profile, binding, confirmed, null);
+        P28LimiterInspector.OperandGuard(original); P28AdaptiveBaseEditor.MappingGuard(original);
+        return Describe(original, settings ?? new(null, null, null, null, null, null));
+    }
+    /// <summary>Recover selection only, never admission or fresh capability.</summary>
+    public static P28BasicCalibrationSettings GetSettings(P28BasicCalibrationPlan plan)
+    { Shape(plan); return Settings(plan); }
     public const string Purpose = "pc-only-basic-calibration-checksum-preserving-export";
     public const string ContractId = "p28-basic-calibration-composition-v1";
     public const string EditAudit = "Simultaneous source-listed numeric comparison, limiter reset/floor/targets and idle interpolation/downstream numeric flows preserve all pointer literals, axes, strides, stopping keys, bounds, instruction widths, vectors and encoded destinations under ordinary intact-state and valid-stack scope. Disjoint fields do not establish behavioral independence. Unchanged signed compensation location; no arbitrary-PC, corrupt-state or full-boot extension.";

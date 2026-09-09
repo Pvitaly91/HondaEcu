@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media;
 using HondaEcu.Desktop.Controls;
 using HondaEcu.Desktop.ViewModels;
@@ -32,6 +34,36 @@ public sealed class DesktopLayoutTests
                 Assert.Contains(viewModel.PlotRows, row => row.Before != row.After);
                 var content = Assert.IsAssignableFrom<FrameworkElement>(window.Content);
                 var tabs = Descendants<TabControl>(content).Single();
+                using var bindingErrors = new BindingErrors();
+                PresentationTraceSources.DataBindingSource.Listeners.Add(bindingErrors);
+                tabs.SelectedIndex = 3;
+                foreach (var group in viewModel.Basic.Draft!.Groups) group.Included = true;
+                content.Measure(new Size(1100, 850)); content.Arrange(new Rect(new Size(1100, 850))); content.UpdateLayout();
+                var basicPanel = Descendants<BasicCalibrationPanel>(content).Single();
+                Assert.Same(viewModel.Basic, basicPanel.DataContext);
+                Assert.Equal(6, Descendants<DataGrid>(basicPanel).Count(g => g.ItemsSource is IReadOnlyList<BasicRawField>));
+                var editableTable = Descendants<DataGrid>(basicPanel).First(g => g.ItemsSource is IReadOnlyList<BasicRawField>);
+                Assert.All(editableTable.Columns.Take(3), column => Assert.True(column.IsReadOnly));
+                var editor = Descendants<TextBox>(editableTable).First(t => t.DataContext is BasicRawField);
+                var field = Assert.IsType<BasicRawField>(editor.DataContext);
+                editor.SetCurrentValue(TextBox.TextProperty, ""); editor.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+                Assert.Equal("", field.Text); Assert.True(Validation.GetHasError(editor)); Assert.False(basicPanel.CommitDraftEdits());
+                RunBasicPreview(); Assert.Contains("cell/row", viewModel.Basic.Error); Assert.Null(viewModel.Basic.CurrentPlan);
+                editor.SetCurrentValue(TextBox.TextProperty, "21"); editor.GetBindingExpression(TextBox.TextProperty)!.UpdateSource();
+                Assert.False(Validation.GetHasError(editor)); Assert.True(basicPanel.CommitDraftEdits());
+                RunBasicPreview(); Assert.Empty(viewModel.Basic.Error); Assert.Equal(2, viewModel.Basic.IdlePlots.Count);
+                Assert.False(viewModel.Basic.SaveCommand.CanExecute(null));
+                foreach (var fontSize in new[] { 14.0, 20.0 })
+                {
+                    basicPanel.FontSize = fontSize;
+                    content.Measure(new Size(850, 600)); content.Arrange(new Rect(new Size(850, 600))); content.UpdateLayout();
+                    var scroller = Descendants<ScrollViewer>(basicPanel).First(); Assert.True(scroller.ScrollableHeight > 0);
+                    Assert.All(Descendants<TextBlock>(basicPanel).Where(t => t.GetBindingExpression(TextBlock.TextProperty)?.ParentBinding.Path.Path is "PreviewText" or "Prerequisites" or "ResultText"),
+                        t => Assert.Equal(TextWrapping.Wrap, t.TextWrapping));
+                }
+                basicPanel.FontSize = 14;
+                Assert.Empty(bindingErrors.Messages);
+                PresentationTraceSources.DataBindingSource.Listeners.Remove(bindingErrors);
                 tabs.SelectedIndex = 1;
                 viewModel.LoadDemoRpmScenario();
                 RunRpmPreview();
@@ -116,6 +148,16 @@ public sealed class DesktopLayoutTests
                     if (previewFailure is not null) ExceptionDispatchInfo.Capture(previewFailure).Throw();
                     Assert.Empty(viewModel.ErrorText);
                 }
+                void RunBasicPreview()
+                {
+                    var frame = new System.Windows.Threading.DispatcherFrame();
+                    _ = window.Dispatcher.BeginInvoke(new Action(async () =>
+                    {
+                        try { await viewModel.Basic.PreviewAsync(); }
+                        finally { frame.Continue = false; }
+                    }));
+                    System.Windows.Threading.Dispatcher.PushFrame(frame);
+                }
             }
             catch (Exception exception)
             {
@@ -137,5 +179,11 @@ public sealed class DesktopLayoutTests
             if (child is T value) yield return value;
             foreach (var descendant in Descendants<T>(child)) yield return descendant;
         }
+    }
+    private sealed class BindingErrors : TraceListener
+    {
+        public List<string> Messages { get; } = [];
+        public override void Write(string? message) { if (!string.IsNullOrWhiteSpace(message)) Messages.Add(message); }
+        public override void WriteLine(string? message) => Write(message);
     }
 }

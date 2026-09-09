@@ -28,7 +28,8 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool _allowAddEr1;
     private bool _allowAddEr3;
 
-    public MainViewModel(IDialogService dialogs, IDesktopOperations? operations = null, DesktopResources? resources = null)
+    public MainViewModel(IDialogService dialogs, IDesktopOperations? operations = null, DesktopResources? resources = null,
+        IBasicCalibrationOperations? basicOperations = null)
     {
         _dialogs = dialogs;
         _operations = operations ?? new DesktopOperations();
@@ -37,11 +38,11 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         OpenBinCommand = new(async () =>
         {
             var path = _dialogs.OpenFile("Відкрити BIN для огляду", BinFilter);
-            if (path is not null) await OpenBinAsync(path);
+            if (path is not null) await RunDocumentLoadAsync(() => OpenBinAsync(path));
         }, () => !IsBusy);
         DemoCommand = new(EnterDemo, () => !IsBusy);
-        BindBaselineCommand = new(BindFromDialogsAsync, () => Mode == DesktopAccessMode.RawOnly && !IsBusy);
-        OpenDerivedCommand = new(DerivedFromDialogsAsync, () => !IsBusy);
+        BindBaselineCommand = new(() => RunDocumentLoadAsync(BindFromDialogsAsync), () => Mode == DesktopAccessMode.RawOnly && !IsBusy);
+        OpenDerivedCommand = new(() => RunDocumentLoadAsync(DerivedFromDialogsAsync), () => !IsBusy);
         PreviewCommand = new(PreviewChange, () => CanEdit && SelectedSlot is not null);
         RevertCommand = new(RevertChange, () => _pendingSlot is not null && !IsBusy);
         SaveCopyCommand = new(SaveFromDialogsAsync, () => CanSave);
@@ -59,9 +60,12 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
             () => _resultJson is not null && !IsBusy);
         InitializeChecksumExportCommands();
         InitializeRpmCommands();
+        Basic = new(this, dialogs, basicOperations ?? new BasicCalibrationService());
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+    public BasicCalibrationViewModel Basic { get; }
+    public bool CanUseLegacyWorkspace => !_basicJobActive;
     public AsyncCommand OpenBinCommand { get; }
     public RelayCommand DemoCommand { get; }
     public AsyncCommand BindBaselineCommand { get; }
@@ -84,6 +88,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         DesktopAccessMode.BoundBaseline => "Оригінальний baseline — приватний research binding перевірено",
         DesktopAccessMode.VerifiedDerived => "Перевірений похідний файл — редагування заборонено",
         DesktopAccessMode.VerifiedChecksumDerived => "Перевірений M1g child original parent — PcInspectionOnly / NotFlashReady",
+        DesktopAccessMode.VerifiedBasicDerived => "Перевірений M1t child — read-only; historical consistency, не fresh execution",
         DesktopAccessMode.Demo => "Синтетичний приклад — не прошивка Honda",
         _ => "Відкрийте BIN або демонстраційний режим",
     };
@@ -98,6 +103,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         DesktopAccessMode.BoundBaseline => "Matched — analyst-declared, не автентифікація ECU",
         DesktopAccessMode.VerifiedDerived => "Original parent binding + перевірені plan/report; child не є новим baseline",
         DesktopAccessMode.VerifiedChecksumDerived => "Original parent + складений план + reviewed CompensationLocation; не новий baseline",
+        DesktopAccessMode.VerifiedBasicDerived => "M1t tuple: exact original parent. Child не є новим baseline.",
         DesktopAccessMode.Demo => "Binding відсутній; демонстрація не створює binding",
         _ => "NotProvided — лише нейтральні байти",
     };
@@ -108,6 +114,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         get => _selectedSlot;
         set
         {
+            if (_basicJobActive) { Notify(nameof(SelectedSlot)); return; }
             if (_selectedSlot?.Id == value?.Id) return;
             if (_pendingSlot is not null && value?.Id != _pendingSlot)
             {
@@ -128,6 +135,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         get => _proposedRaw;
         set
         {
+            if (_basicJobActive) { Notify(nameof(ProposedRaw)); return; }
             if (_proposedRaw == value) return;
             InvalidateSession();
             _proposedRaw = value;
@@ -164,6 +172,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public async Task OpenBinAsync(string path)
     {
+        if (_basicJobActive) return;
         var session = InvalidateSession();
         try
         {
@@ -176,6 +185,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public async Task BindBaselineAsync(string profilePath, string bindingPath, bool acknowledged)
     {
+        if (_basicJobActive) return;
         if (_document is null || Mode != DesktopAccessMode.RawOnly) { SetError("Спочатку відкрийте оригінальний BIN у raw-only режимі."); return; }
         var snapshot = _document;
         var session = InvalidateSession();
@@ -203,6 +213,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
     public async Task OpenDerivedAsync(string outputPath, string parentPath, string profilePath,
         string bindingPath, string planPath, string reportPath, bool acknowledged)
     {
+        if (_basicJobActive) return;
         var session = InvalidateSession();
         try
         {
@@ -227,6 +238,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public void EnterDemo()
     {
+        if (_basicJobActive) return;
         InvalidateSession();
         // Exactly eight invented values, not an OEM-sized image or a trusted research binding.
         SetDocument(new(DesktopAccessMode.Demo, RomImage.FromBytes(new byte[] { 40, 55, 80, 95, 120, 135, 160, 175 })));
@@ -410,6 +422,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
 
     public void SelectRunner(string path)
     {
+        if (_basicJobActive) return;
         InvalidateSession();
         RunnerPath = Path.GetFullPath(path);
         NotifyAll();
@@ -463,6 +476,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         // started against the previously displayed document during asynchronous I/O.
         InvalidateSession();
         _document = document;
+        Basic?.ResetDocument(document);
         ResetCompensationDefinition(document);
         ResetRpmScenario();
         ClearPending();
@@ -502,6 +516,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         Cancel();
         ClearChecksumPreview();
         ClearRpmPreview();
+        Basic?.Invalidate();
         _resultJson = null;
         Counters = DesktopCounters.Empty;
         ChecksumSummary = null;
@@ -542,6 +557,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         ExecuteCommand.Refresh(); ProducerCommand.Refresh(); ChecksumCommand.Refresh(); CancelCommand.Refresh(); SelectRunnerCommand.Refresh(); OpenResultsCommand.Refresh();
         RefreshChecksumExportCommands();
         RefreshRpmCommands();
+        Basic?.Refresh();
     }
 
     private async Task BindFromDialogsAsync()
