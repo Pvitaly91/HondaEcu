@@ -9,6 +9,14 @@ D1 GUI acceptance remains NotRun and outputs remain NotFlashReady.
 
 HondaEcu is a cross-platform, profile-driven ROM inspection and controlled-editing toolkit. Milestone M0 establishes a safety-first core and desktop validation harness for one explicitly scoped target: the 32 KiB P28-304 Honda OBD1 ROM revision. M0.1 hardens how the oracle harness distinguishes observations, fitted hypotheses, and independent validation before any real P28-304 definition can advance toward M1.
 
+M2a adds [read-only fuel-map inspection and native lookup validation](docs/M2A_FUEL_MAP_VALIDATION.md)
+through `research p28-fuel maps-inspect|lookup-check`. For the exact private parent,
+two 20×10 row-major byte maps, their shared load/separate RPM raw axes,
+per-column multipliers, cached Q16 lookup, software selector and `DATA0140`
+consumer are verified against an independent model. Both one-cell A/B witnesses
+exist only in memory. Physical units, ignition maps, editing/export, checksum
+repair, hardware/full boot and GUI work remain outside M2a; M2 is not complete.
+
 The project starts with P28-304 because public research material names `304stock.bin` as the basis of the available P28 map, making revision scope explicit enough for reproducible investigation. Published offsets remain research leads, not universal P28 facts. P07 main-CPU research is the next major family direction after the P28/P30/P72 workflow is proven; no P28 offsets will be assumed compatible with P07.
 
 ## M0 and M0.1 status

@@ -138,6 +138,12 @@ public sealed partial class CliApplication
               [--confirm-profile --baseline-binding <private-json>]
           research p28-idle inspect <baseline> --profile p28-304 --output <new-private-json>
               [--confirm-profile --baseline-binding <private-json>]
+          research p28-fuel maps-inspect <baseline> --profile p28-304 --output <new-private-json>
+              [--confirm-profile --baseline-binding <private-json>]
+          research p28-fuel lookup-check <baseline> --profile p28-304 --confirm-profile
+              --baseline-binding <private-json> --runner <rust-executable>
+              --scenario <private-json> --output <new-private-json>
+              Read-only map_0/map_1 raw lookup research; no BIN, physical units or GUI.
           research p28-idle target-check <baseline> --profile p28-304 --confirm-profile
             --baseline-binding <binding.json> --runner <rust-runner> --scenario <idle-scenario.json>
             --output <new-private-validation.json>

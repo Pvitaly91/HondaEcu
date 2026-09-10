@@ -45,7 +45,7 @@ public sealed class BasicCalibrationSubprocessTests
             }
         });
         Assert.Equal("synthetic", response.Response.GetProperty("operation").GetString());
-        Assert.Equal("0.11.0", response.Response.GetProperty("runnerVersion").GetString());
+        Assert.Equal("0.12.0", response.Response.GetProperty("runnerVersion").GetString());
         var r = response.Response.GetProperty("syntheticResult"); Assert.Equal(0, r.GetProperty("status").GetInt32());
         Assert.Equal(73, r.GetProperty("outputs")[0].GetInt32());
     }

@@ -159,6 +159,16 @@ RPM and GUI r3 remain unavailable/NotRun.
 - RPM/MAP axes
 - one-cell and full-table validation
 
+M2a adds [fuel-map structure and native lookup validation](M2A_FUEL_MAP_VALIDATION.md):
+two exact-parent 20×10 unsigned row-major maps, a shared raw load axis, separate
+raw RPM axes, per-column multipliers, native cached Q16 position production and
+ROM-owned `DATA0127.1` selection. A bounded same-CPU/RAM runner and independent
+C# history match 1,050 actual checkpoints and read all 400 cells. Separate
+one-byte in-memory mutations for both contexts change the native lookup and its
+`DATA0140` software consumer, with opposite-context controls. This is read-only
+research: no BIN/export/checksum repair, physical units, ignition maps, hardware,
+full boot, GUI change, or completion of all M2/M1 is implied.
+
 ## M3 — Desktop GUI
 
 - desktop GUI

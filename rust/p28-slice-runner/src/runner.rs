@@ -396,6 +396,9 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "fuelMapLookup" && request.fuel_map_lookup.is_some() {
+        return Err("fuel-map stimulus is unavailable to other operations".into());
+    }
     if request.operation != "idleContexts" && request.idle_contexts.is_some() {
         return Err("idle contexts stimulus is unavailable to other operations".into());
     }
@@ -544,6 +547,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "adaptiveLimiter" => crate::adaptive::validate_request(request)?,
         "idleTarget" => crate::idle::validate_request(request)?,
         "idleContexts" => crate::idle_contexts::validate_request(request)?,
+        "fuelMapLookup" => crate::fuel::validate_request(request)?,
         "integratedCaptureVtec" => crate::chain::validate_request(request)?,
         _ => return Err("unsupported operation".into()),
     }
@@ -553,6 +557,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "fuelMapLookup" {
+        return crate::fuel::run(request, response);
+    }
     if request.operation == "idleContexts" {
         return crate::idle_contexts::run(request, response);
     }

@@ -8,7 +8,7 @@ public sealed partial class CliApplication
     {
         if (args.Length == 0)
         {
-            throw new CliUsageException("Usage: hondaecu research p28-vtec <inspect|plan|apply|verify|execute-check|producer-check|rpm-preview|checksum-check|compensation-check|checksum-export-plan|checksum-export-apply|checksum-export-verify|checksum-export-inspect> ...");
+            throw new CliUsageException("Usage: hondaecu research <p28-vtec|p28-limiter|p28-idle|p28-fuel|p28-calibration> ...");
         }
 
         return args[0] switch
@@ -16,6 +16,7 @@ public sealed partial class CliApplication
             "p28-vtec" => await P28VtecResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "p28-limiter" => await P28LimiterResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "p28-idle" => await P28IdleResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "p28-fuel" => await P28FuelResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "p28-calibration" => await P28BasicCalibrationExportAsync(args[1..], cancellationToken).ConfigureAwait(false),
             _ => throw new CliUsageException($"Unknown research command '{args[0]}'."),
         };
