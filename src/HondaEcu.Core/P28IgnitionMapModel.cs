@@ -7,6 +7,10 @@ public sealed record P28IgnitionMapOperands(IReadOnlyList<int> CellAddresses, IR
     int TopColumnResult, int BottomColumnResult, int LookupResult, long TopProduct, long BottomProduct,
     long FinalProduct, IReadOnlyList<int> OrderedProgramReads);
 public sealed record P28IgnitionConsumerObservation(int RawFactor, long Product, bool ScalingExecuted, int Output);
+public readonly record struct P28IgnitionNumericProjection(int LoadIndex, int LoadFraction, int RpmIndex,
+    int RpmFraction, int TopLeft, int TopRight, int BottomLeft, int BottomRight, int TopColumnResult,
+    int BottomColumnResult, int LookupResult, long TopInterpolationProduct, long BottomInterpolationProduct,
+    long FinalInterpolationProduct);
 public sealed record P28IgnitionMapModelStep(P28IgnitionMapState Before, P28IgnitionMapState AfterInputs,
     P28IgnitionMapState After, P28IgnitionAxisPosition Map0Rpm, P28IgnitionAxisPosition Map1Rpm,
     P28IgnitionAxisPosition Load, string SelectedMap, int SelectedOrigin, P28IgnitionMapOperands Operands,
@@ -91,6 +95,44 @@ public sealed class P28IgnitionMapModel
         var lookup = Interpolate(top, bottom, rpm.Fraction);
         return new(Array.AsReadOnly(addresses), Array.AsReadOnly(cells), top, bottom, lookup, topProduct,
             bottomProduct, finalProduct, Array.AsReadOnly(addresses));
+    }
+
+    /// <summary>History-free projection used only by the exporter's exhaustive finite-domain audit.</summary>
+    internal static P28IgnitionNumericProjection ProjectNumeric(ReadOnlySpan<byte> rom, string mapId,
+        int rawRpm, int rawLoad)
+    {
+        if (rom.Length != P28NativeChecksumArithmetic.RomSize || rawRpm is < 0 or > 255 || rawLoad is < 0 or > 255)
+            throw new ArgumentOutOfRangeException(nameof(rawRpm), "Ignition projection requires a 32 KiB image and byte-domain inputs.");
+        var map = P28IgnitionMapContract.Map(mapId);
+        var rpmOrigin = mapId == "ignition_map_0" ? P28IgnitionMapContract.Map0RpmAxisOrigin : P28IgnitionMapContract.Map1RpmAxisOrigin;
+        var rpm = DirectPosition(rom, rpmOrigin, P28IgnitionMapContract.Rows, rawRpm);
+        var load = DirectPosition(rom, P28IgnitionMapContract.LoadAxisOrigin, P28IgnitionMapContract.Columns, rawLoad);
+        var topLeftAddress = P28IgnitionMapContract.CellOffset(mapId, rpm.Index, load.Index);
+        var topLeft = rom[topLeftAddress]; var topRight = rom[topLeftAddress + 1];
+        var bottomLeft = rom[topLeftAddress + P28IgnitionMapContract.Columns];
+        var bottomRight = rom[topLeftAddress + P28IgnitionMapContract.Columns + 1];
+        var topProduct = (long)Math.Abs(topRight - topLeft) * (ushort)load.Fraction;
+        var bottomProduct = (long)Math.Abs(bottomRight - bottomLeft) * (ushort)load.Fraction;
+        var top = Interpolate(topLeft, topRight, load.Fraction);
+        var bottom = Interpolate(bottomLeft, bottomRight, load.Fraction);
+        var finalProduct = (long)Math.Abs(bottom - top) * (ushort)rpm.Fraction;
+        return new(load.Index, load.Fraction, rpm.Index, rpm.Fraction, topLeft, topRight, bottomLeft, bottomRight,
+            top, bottom, Interpolate(top, bottom, rpm.Fraction), topProduct, bottomProduct, finalProduct);
+    }
+
+    private static (int Index, int Fraction) DirectPosition(ReadOnlySpan<byte> rom, int origin, int count, int raw)
+    {
+        var index = 0;
+        while (index < count - 2)
+        {
+            var next = rom[origin + index + 1];
+            if (next == 0 || next > raw) break;
+            index++;
+        }
+        var lower = rom[origin + index]; var upper = rom[origin + index + 1];
+        var denominator = (byte)(upper - lower);
+        if (denominator == 0) throw new InvalidDataException("Ignition axis selected a zero-width interval.");
+        return (index, (int)(((long)(byte)(raw - lower) << 16) / denominator));
     }
 
     internal static int Interpolate(int lower, int upper, int weightQ16)

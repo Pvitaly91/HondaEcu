@@ -190,6 +190,19 @@ consumer witnesses for both contexts. Physical degrees/RPM, alternate maps,
 downstream corrections, ignition export, GUI, hardware and full boot remain
 outside scope; completion of all M2 or independent M1 gates is not implied.
 
+M2d adds [primary ignition-map cell checksum-preserving export](M2D_IGNITION_MAP_EXPORT.md):
+a new closed contract selects up to 400 explicit raw u8 cells from the two M2c
+primary maps, while axes, selector/gates, alternate maps, lookup/consumer code
+and all other bytes remain immutable except the existing reviewed `7FFF`
+checksum compensation byte. Each map receives a full 65,536-pair lookup audit
+and the immediate consumer receives a full 65,536-pair lookup/factor audit.
+Mandatory native A/B/C histories cover all cells/rectangles at factor zero and
+separate once-seeded factors 1/127/128/173/255, followed by the native checksum
+batch. Typed capability, grouped new-path publication and exact-original
+readback remain PC-only/NotFlashReady. Physical units, alternate/downstream
+calibrations, GUI, hardware, full boot and completion of all M2 remain outside
+scope; M2a/M2b/M2c and all M1 contracts stay closed.
+
 ## M3 — Desktop GUI
 
 - desktop GUI

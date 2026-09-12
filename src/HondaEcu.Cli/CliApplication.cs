@@ -152,6 +152,8 @@ public sealed partial class CliApplication
               Read-only ignition_map_0/1 raw lookup research; no BIN, degree conversion or GUI.
           research p28-fuel export <plan|apply|verify|inspect> <image> --profile p28-304 ...
               Explicit 20x10 unsigned numeric cells, one compensation, fresh A/B/C native validation.
+          research p28-ignition export <plan|apply|verify|inspect> <image> --profile p28-304 ...
+              Explicit primary 20x10 unsigned numeric cells, one compensation, factor-aware A/B/C validation.
           research p28-idle target-check <baseline> --profile p28-304 --confirm-profile
             --baseline-binding <binding.json> --runner <rust-runner> --scenario <idle-scenario.json>
             --output <new-private-validation.json>

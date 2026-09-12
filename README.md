@@ -27,6 +27,16 @@ one-cell in-memory A/B witnesses through the immediate `DATA0248` consumer.
 No ignition BIN/export, physical degree conversion, GUI, hardware or full boot
 is added; all of M2 remains incomplete.
 
+M2d adds [checksum-preserving primary ignition-map cell export](docs/M2D_IGNITION_MAP_EXPORT.md)
+through `research p28-ignition export plan|apply|verify|inspect`. Its separate
+closed contract accepts up to 400 explicit u8 cells, exhaustively audits both
+map domains and the immediate factor consumer, and requires fresh native A/B/C
+histories for factor 0 plus once-seeded factors 1/127/128/173/255 before typed,
+new-path BIN/plan/receipt publication. Axes, selectors, gates, alternate maps,
+code and all other bytes stay immutable except the one existing reviewed
+checksum compensation byte. Results remain raw, PC-only and NotFlashReady;
+GUI, hardware and full boot remain NotRun and all of M2 is still incomplete.
+
 The project starts with P28-304 because public research material names `304stock.bin` as the basis of the available P28 map, making revision scope explicit enough for reproducible investigation. Published offsets remain research leads, not universal P28 facts. P07 main-CPU research is the next major family direction after the P28/P30/P72 workflow is proven; no P28 offsets will be assumed compatible with P07.
 
 ## M0 and M0.1 status
