@@ -179,6 +179,17 @@ capability, new-path BIN/plan/receipt publication and original-parent readback
 remain PC-only. M2a stays closed; ignition maps, physical units, GUI, hardware,
 full boot and completion of all M2 remain outside scope.
 
+M2c adds [ignition-map structure and native lookup validation](M2C_IGNITION_MAP_VALIDATION.md):
+two exact-parent primary 20×10 unsigned row-major maps, the shared raw load
+axis, separate raw RPM axes, ROM-owned `DATA0227.5` selection and the
+no-column-metadata entry of the shared interpolation helper. Native axes,
+source selection, direct cell reads and the immediate `DATA0248` consumer
+match an independent persistent C# model for all 400 cells and every reachable
+primary interval. Separate one-byte in-memory A/B children provide lookup and
+consumer witnesses for both contexts. Physical degrees/RPM, alternate maps,
+downstream corrections, ignition export, GUI, hardware and full boot remain
+outside scope; completion of all M2 or independent M1 gates is not implied.
+
 ## M3 — Desktop GUI
 
 - desktop GUI

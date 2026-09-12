@@ -18,6 +18,15 @@ fresh strict A/B/C lookup/checksum execution, and one private BIN/plan/receipt
 with readback. Physical units, ignition maps, hardware/full boot and GUI work
 remain outside M2b; M2 is not complete.
 
+M2c adds [read-only ignition-map inspection and native lookup validation](docs/M2C_IGNITION_MAP_VALIDATION.md)
+through `research p28-ignition maps-inspect|lookup-check`. Two exact-original
+primary 20×10 unsigned raw maps use native cached axes, ROM-owned software
+selection and direct sequential interpolation without fuel column multipliers.
+An independent C# history matches full cell/interval coverage and separate
+one-cell in-memory A/B witnesses through the immediate `DATA0248` consumer.
+No ignition BIN/export, physical degree conversion, GUI, hardware or full boot
+is added; all of M2 remains incomplete.
+
 The project starts with P28-304 because public research material names `304stock.bin` as the basis of the available P28 map, making revision scope explicit enough for reproducible investigation. Published offsets remain research leads, not universal P28 facts. P07 main-CPU research is the next major family direction after the P28/P30/P72 workflow is proven; no P28 offsets will be assumed compatible with P07.
 
 ## M0 and M0.1 status

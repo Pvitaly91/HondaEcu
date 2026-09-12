@@ -81,6 +81,16 @@ The source gives byte lengths/ranges and labels but no cell encoding, mathematic
 | Low-cam ignition/timing table | `0x72E4..0x73AB`, 200 bytes inclusive | Region only; cell encoding/shape/units unspecified | `PGMFI-P28` | P28 map assuming `304stock.bin` | `public-documentation` | Prove boundaries/references, dimensions/order, signedness and degree convention, formula/rounding, axes, and one-cell/full-table diffs | No—candidate/read-only |
 | High-cam ignition/timing table | `0x73AC..0x7473`, 200 bytes inclusive | Region only; cell encoding/shape/units unspecified | `PGMFI-P28` | P28 map assuming `304stock.bin` | `public-documentation` | Same checks as low-cam timing; also prove high-cam selection | No—candidate/read-only |
 
+M2c does not alter those public-source evidence labels, but adds a separate
+exact-private-original research result: both ignition leads are confirmed as
+primary 20×10 unsigned row-major raw tables, selected by native
+`DATA0227.5` and evaluated without fuel-style column metadata. Native axes,
+selection, lookup and the immediate `DATA0248` consumer match an independent
+model for both contexts. See [M2c ignition-map validation](M2C_IGNITION_MAP_VALIDATION.md).
+This remains read-only and revision-bound; physical degree conversion,
+alternate paths, hardware behavior and public-profile write authority are not
+promoted.
+
 ## Explicitly absent from the cited map
 
 The requested initial Crome/HTS series includes `rev_limit_rpm`, but P28.html does not identify a rev-limiter offset or formula. It must begin as an oracle discovery target, not a P28-304 profile parameter with a guessed offset.

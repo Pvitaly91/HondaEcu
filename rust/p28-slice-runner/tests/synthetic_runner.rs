@@ -41,6 +41,7 @@ fn request(rom: Vec<u8>, synthetic: SyntheticContract) -> Request {
         idle_target: None,
         idle_contexts: None,
         fuel_map_lookup: None,
+        ignition_map_lookup: None,
     }
 }
 
@@ -311,6 +312,7 @@ fn synthetic_batch_cannot_launder_threshold_add_through_compact_permission() {
         idle_target: None,
         idle_contexts: None,
         fuel_map_lookup: None,
+        ignition_map_lookup: None,
     })
     .unwrap();
     assert_eq!(result.compact_rows.len(), 393216);

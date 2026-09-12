@@ -15,6 +15,7 @@ pub mod adaptive;
 pub mod fuel;
 pub mod idle;
 pub mod idle_contexts;
+pub mod ignition;
 pub mod instruction_forms;
 pub mod limiter;
 pub mod operand;
