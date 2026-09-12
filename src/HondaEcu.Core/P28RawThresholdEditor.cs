@@ -469,9 +469,10 @@ internal static class P28RawEditJson
             return;
         }
 
-        if (type == typeof(int) || type == typeof(byte) || type == typeof(ushort))
+        if (type == typeof(int) || type == typeof(long) || type == typeof(byte) || type == typeof(ushort))
         {
-            if (element.ValueKind != JsonValueKind.Number || !element.TryGetInt32(out var number) ||
+            if (element.ValueKind != JsonValueKind.Number || !element.TryGetInt64(out var number) ||
+                (type == typeof(int) && number is < int.MinValue or > int.MaxValue) ||
                 (type == typeof(byte) && number is < 0 or > 255) || (type == typeof(ushort) && number is < 0 or > 65535))
             {
                 throw new InvalidDataException("Raw-edit numeric fields must be in-range integers.");

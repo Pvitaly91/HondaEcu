@@ -169,6 +169,16 @@ one-byte in-memory mutations for both contexts change the native lookup and its
 research: no BIN/export/checksum repair, physical units, ignition maps, hardware,
 full boot, GUI change, or completion of all M2/M1 is implied.
 
+M2b adds [fuel-map cell checksum-preserving export](M2B_FUEL_MAP_EXPORT.md): a
+closed settings schema selects up to 400 code-owned numeric bytes from either
+or both maps while axes, multipliers, selector/gates and every other byte remain
+immutable except the existing reviewed compensation location. Each map gets a
+65,536-input integer audit; mandatory A/B/C native lookup histories cover all
+342 rectangles and 400 cells, followed by one full checksum batch. Typed
+capability, new-path BIN/plan/receipt publication and original-parent readback
+remain PC-only. M2a stays closed; ignition maps, physical units, GUI, hardware,
+full boot and completion of all M2 remain outside scope.
+
 ## M3 — Desktop GUI
 
 - desktop GUI

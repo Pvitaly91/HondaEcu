@@ -6,8 +6,10 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28FuelResearchAsync(string[] args, CancellationToken cancellationToken)
     {
+        if (args.Length > 0 && args[0] == "export")
+            return await P28FuelMapExportAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length == 0 || args[0] is not ("maps-inspect" or "lookup-check"))
-            throw new CliUsageException("Usage: hondaecu research p28-fuel <maps-inspect|lookup-check> <baseline.bin> --profile p28-304 --confirm-profile --baseline-binding <private-binding.json> --output <new-private-report.json> [--runner <runner> --scenario <scenario.json>]");
+            throw new CliUsageException("Usage: hondaecu research p28-fuel <maps-inspect|lookup-check|export> ...");
         var check = args[0] == "lookup-check";
         var command = CommandLine.Parse(args[1..], new HashSet<string>(StringComparer.Ordinal) { "confirm-profile" });
         command.EnsureOnly(check

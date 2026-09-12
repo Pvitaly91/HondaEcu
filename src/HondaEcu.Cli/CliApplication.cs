@@ -144,6 +144,8 @@ public sealed partial class CliApplication
               --baseline-binding <private-json> --runner <rust-executable>
               --scenario <private-json> --output <new-private-json>
               Read-only map_0/map_1 raw lookup research; no BIN, physical units or GUI.
+          research p28-fuel export <plan|apply|verify|inspect> <image> --profile p28-304 ...
+              Explicit 20x10 unsigned numeric cells, one compensation, fresh A/B/C native validation.
           research p28-idle target-check <baseline> --profile p28-304 --confirm-profile
             --baseline-binding <binding.json> --runner <rust-runner> --scenario <idle-scenario.json>
             --output <new-private-validation.json>

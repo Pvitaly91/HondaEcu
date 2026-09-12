@@ -10,6 +10,11 @@ public sealed record P28FuelConsumerObservation(int GateByte, bool CorrectionExe
 public sealed record P28FuelMapModelStep(P28FuelMapState Before, P28FuelMapState AfterInputs, P28FuelMapState After,
     P28FuelAxisPosition Map0Rpm, P28FuelAxisPosition Map1Rpm, P28FuelAxisPosition Load, string SelectedMap, int SelectedOrigin,
     P28FuelMapOperands Operands, P28FuelConsumerObservation Consumer);
+public readonly record struct P28FuelNumericProjection(int LoadIndex, int LoadFraction, int RpmIndex, int RpmFraction,
+    int TopLeft, int TopRight, int BottomLeft, int BottomRight, int MultiplierLeft, int MultiplierRight,
+    int ScaledTopLeft, int ScaledTopRight, int ScaledBottomLeft, int ScaledBottomRight,
+    int TopColumnResult, int BottomColumnResult, int LookupResult,
+    long TopInterpolationProduct, long BottomInterpolationProduct, long FinalInterpolationProduct);
 
 /// <summary>Independent integer model with its own ROM bytes and persistent axis-cache history.</summary>
 public sealed class P28FuelMapModel
@@ -83,8 +88,38 @@ public sealed class P28FuelMapModel
             numerator, denominator, quotient, priorFraction, fraction, reads.AsReadOnly());
     }
 
+    /// <summary>The exporter arithmetic audit calls the same fixed-point lookup primitive as the stateful model.</summary>
+    internal static P28FuelNumericProjection ProjectNumeric(ReadOnlySpan<byte> rom, string mapId, int rawRpm, int rawLoad)
+    {
+        if (rom.Length != P28NativeChecksumArithmetic.RomSize || rawRpm is < 0 or > 255 || rawLoad is < 0 or > 255)
+            throw new ArgumentOutOfRangeException(nameof(rawRpm), "Fuel projection requires a 32 KiB image and byte-domain inputs.");
+        var map = P28FuelMapContract.Map(mapId);
+        var rpmOrigin = mapId == "map_0" ? P28FuelMapContract.Map0RpmAxisOrigin : P28FuelMapContract.Map1RpmAxisOrigin;
+        var rpm = DirectPosition(rom, rpmOrigin, P28FuelMapContract.Rows, rawRpm);
+        var load = DirectPosition(rom, P28FuelMapContract.LoadAxisOrigin, P28FuelMapContract.Columns, rawLoad);
+        return LookupNumeric(rom, map, load.Index, load.Fraction, rpm.Index, rpm.Fraction);
+    }
+
+    private static (int Index, int Fraction) DirectPosition(ReadOnlySpan<byte> rom, int origin, int count, int raw)
+    {
+        var index = 0;
+        while (index < count - 2)
+        {
+            var next = rom[origin + index + 1];
+            if (next == 0 || next > raw) break;
+            index++;
+        }
+        var lower = rom[origin + index];
+        var upper = rom[origin + index + 1];
+        var denominator = (byte)(upper - lower);
+        if (denominator == 0) throw new InvalidDataException("Fuel axis selected a zero-width interval.");
+        var numerator = (byte)(raw - lower);
+        return (index, (int)(((long)numerator << 16) / denominator));
+    }
+
     private P28FuelMapOperands Lookup(P28FuelMapContractRow map, P28FuelAxisPosition load, P28FuelAxisPosition rpm)
     {
+        var numeric = LookupNumeric(_rom, map, load.Index, load.Fraction, rpm.Index, rpm.Fraction);
         var topLeft = P28FuelMapContract.CellOffset(map.Id, rpm.Index, load.Index);
         var topRight = topLeft + 1;
         var bottomLeft = topLeft + P28FuelMapContract.Columns;
@@ -95,14 +130,36 @@ public sealed class P28FuelMapModel
         var cells = cellAddresses.Select(address => (int)_rom[address]).ToArray();
         var multiplierAddresses = new[] { multiplierLeft, multiplierRight };
         var multipliers = multiplierAddresses.Select(address => (int)_rom[address]).ToArray();
-        var scaled = new[] { cells[0] * multipliers[0], cells[1] * multipliers[1], cells[2] * multipliers[0], cells[3] * multipliers[1] };
-        var top = Interpolate(scaled[0], scaled[1], load.Fraction);
-        var bottom = Interpolate(scaled[2], scaled[3], load.Fraction);
-        var result = Interpolate(top, bottom, rpm.Fraction);
+        var scaled = new[] { numeric.ScaledTopLeft, numeric.ScaledTopRight, numeric.ScaledBottomLeft, numeric.ScaledBottomRight };
         // Native order: metadata word, top-row word, next-row word, then the caller's 60E5 byte.
         var reads = new[] { multiplierLeft, multiplierRight, topLeft, topRight, bottomLeft, bottomRight, 0x60E5 };
         return new(Array.AsReadOnly(cellAddresses), Array.AsReadOnly(cells), Array.AsReadOnly(multiplierAddresses),
-            Array.AsReadOnly(multipliers), Array.AsReadOnly(scaled), top, bottom, result, Array.AsReadOnly(reads));
+            Array.AsReadOnly(multipliers), Array.AsReadOnly(scaled), numeric.TopColumnResult, numeric.BottomColumnResult,
+            numeric.LookupResult, Array.AsReadOnly(reads));
+    }
+
+    private static P28FuelNumericProjection LookupNumeric(ReadOnlySpan<byte> rom, P28FuelMapContractRow map,
+        int loadIndex, int loadFraction, int rpmIndex, int rpmFraction)
+    {
+        var topLeftAddress = P28FuelMapContract.CellOffset(map.Id, rpmIndex, loadIndex);
+        var topRightAddress = topLeftAddress + 1;
+        var bottomLeftAddress = topLeftAddress + P28FuelMapContract.Columns;
+        var bottomRightAddress = bottomLeftAddress + 1;
+        var multiplierLeft = rom[map.MetadataOrigin + loadIndex];
+        var multiplierRight = rom[map.MetadataOrigin + loadIndex + 1];
+        var scaledTopLeft = rom[topLeftAddress] * multiplierLeft;
+        var scaledTopRight = rom[topRightAddress] * multiplierRight;
+        var scaledBottomLeft = rom[bottomLeftAddress] * multiplierLeft;
+        var scaledBottomRight = rom[bottomRightAddress] * multiplierRight;
+        var topProduct = (long)Math.Abs(scaledTopRight - scaledTopLeft) * (ushort)loadFraction;
+        var bottomProduct = (long)Math.Abs(scaledBottomRight - scaledBottomLeft) * (ushort)loadFraction;
+        var top = Interpolate(scaledTopLeft, scaledTopRight, loadFraction);
+        var bottom = Interpolate(scaledBottomLeft, scaledBottomRight, loadFraction);
+        var finalProduct = (long)Math.Abs(bottom - top) * (ushort)rpmFraction;
+        return new(loadIndex, loadFraction, rpmIndex, rpmFraction,
+            rom[topLeftAddress], rom[topRightAddress], rom[bottomLeftAddress], rom[bottomRightAddress],
+            multiplierLeft, multiplierRight, scaledTopLeft, scaledTopRight, scaledBottomLeft, scaledBottomRight,
+            top, bottom, Interpolate(top, bottom, rpmFraction), topProduct, bottomProduct, finalProduct);
     }
 
     internal static int Interpolate(int lower, int upper, int weightQ16)
