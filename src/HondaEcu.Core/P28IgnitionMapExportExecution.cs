@@ -44,7 +44,10 @@ public static class P28IgnitionMapExportCorpus
     private static P28IgnitionMapCall Call(int index, string mapId, int load, int rpm) =>
         new(index, mapId, (byte)load, (byte)rpm, (byte)((index * 37 + 19) & 255));
 
-    public static P28IgnitionMapScenario Create(P28IgnitionMapExportPreview preview)
+    public static P28IgnitionMapScenario Create(P28IgnitionMapExportPreview preview) =>
+        Create(preview, preview.Output);
+
+    internal static P28IgnitionMapScenario Create(P28IgnitionMapExportPreview preview, RomImage output)
     {
         var image = preview.Original; var calls = new List<(string MapId, int Load, int Rpm)>();
         int Axis(int origin, int index) => image.Span[origin + index];
@@ -69,7 +72,7 @@ public static class P28IgnitionMapExportCorpus
             var found = false;
             for (var rpm = 0; rpm <= 255 && !found; rpm++) for (var load = 0; load <= 255 && !found; load++)
                     if (P28IgnitionMapModel.ProjectNumeric(preview.Original.Span, map.MapId, rpm, load).LookupResult !=
-                        P28IgnitionMapModel.ProjectNumeric(preview.Output.Span, map.MapId, rpm, load).LookupResult)
+                        P28IgnitionMapModel.ProjectNumeric(output.Span, map.MapId, rpm, load).LookupResult)
                     { calls.Add((map.MapId, load, rpm)); found = true; }
             if (!found) throw new InvalidDataException("Domain audit predicts a changed ignition result but no witness input exists.");
         }
@@ -86,7 +89,11 @@ public static class P28IgnitionMapExportCorpus
             Id + "; mandatory/internal/not-externally-shortenable", null);
     }
 
-    public static P28IgnitionMapScenario CreateFactor(P28IgnitionMapExportPreview preview, int factor)
+    public static P28IgnitionMapScenario CreateFactor(P28IgnitionMapExportPreview preview, int factor) =>
+        CreateFactor(preview, preview.Output, factor);
+
+    internal static P28IgnitionMapScenario CreateFactor(P28IgnitionMapExportPreview preview,
+        RomImage output, int factor)
     {
         if (!RequiredFactors.Contains(factor)) throw new ArgumentOutOfRangeException(nameof(factor));
         var selected = new List<(string MapId, int Load, int Rpm)>
@@ -102,7 +109,7 @@ public static class P28IgnitionMapExportCorpus
                 for (var load = 0; load <= 255 && (effect is null || masked is null); load++)
                 {
                     var a = P28IgnitionMapModel.ProjectNumeric(preview.Original.Span, map.MapId, rpm, load).LookupResult;
-                    var c = P28IgnitionMapModel.ProjectNumeric(preview.Output.Span, map.MapId, rpm, load).LookupResult;
+                    var c = P28IgnitionMapModel.ProjectNumeric(output.Span, map.MapId, rpm, load).LookupResult;
                     if (a == c) continue;
                     var outputA = P28IgnitionMapModel.Consume(a, factor).Output;
                     var outputC = P28IgnitionMapModel.Consume(c, factor).Output;
@@ -154,7 +161,42 @@ public static class P28IgnitionMapExportExecution
             preview.Location, preview.Plan);
         if (preview.Plan.IsNoOp) throw new InvalidDataException("A no-op ignition-map plan cannot export a firmware BIN.");
         if (string.IsNullOrWhiteSpace(runner) || !File.Exists(runner)) throw new InvalidDataException("The existing Rust runner is mandatory.");
-        var runnerBytes = File.ReadAllBytes(runner); var mainScenario = P28IgnitionMapExportCorpus.Create(preview);
+        var runnerBytes = File.ReadAllBytes(runner);
+        var local = await ValidateSuitesAsync(preview, runner, options, cancellationToken).ConfigureAwait(false);
+        var checksumResponse = await SeededSliceProcess.ExchangeAsync(runner,
+            P28NativeChecksumVerifier.CreateRequest(Images(preview).Select(image => (image.Id, image.Image)).ToArray()),
+            options, cancellationToken).ConfigureAwait(false);
+        var checksumFixes = SliceRunnerIdentity.Validate(checksumResponse.Response, "checksumBatch");
+        if (local.RunnerVersion != checksumResponse.Response.GetProperty("runnerVersion").GetString() ||
+            local.UpstreamCommit != checksumResponse.Response.GetProperty("upstreamCommit").GetString() ||
+            !local.LocalSemanticFixes.SequenceEqual(checksumFixes))
+            throw new InvalidDataException("Runner identity changed before checksum validation.");
+        var evidence = local with { ChecksumRuns = CompareChecksum(Images(preview), checksumResponse) };
+        if (!runnerBytes.AsSpan().SequenceEqual(File.ReadAllBytes(runner))) throw new InvalidDataException("Runner changed during validation.");
+        RequireEvidence(preview, evidence);
+        return new(preview, evidence);
+    }
+
+    internal static async Task<P28IgnitionMapExportEvidence> ValidateSuitesAsync(
+        P28IgnitionMapExportPreview preview, string runner, SliceProcessOptions? options = null,
+        CancellationToken cancellationToken = default)
+        => await ValidateSuitesCoreAsync(preview, Images(preview), runner, options,
+            cancellationToken).ConfigureAwait(false);
+
+    internal static async Task<P28IgnitionMapExportEvidence> ValidateSuitesAsync(
+        P28IgnitionMapExportPreview family, P28UnifiedCalibrationPreview combined, string runner,
+        SliceProcessOptions? options = null, CancellationToken cancellationToken = default)
+        => await ValidateSuitesCoreAsync(family, combined.Images, runner, options,
+            cancellationToken).ConfigureAwait(false);
+
+    private static async Task<P28IgnitionMapExportEvidence> ValidateSuitesCoreAsync(
+        P28IgnitionMapExportPreview preview, (string Id, RomImage Image)[] images, string runner,
+        SliceProcessOptions? options, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (string.IsNullOrWhiteSpace(runner) || !File.Exists(runner)) throw new InvalidDataException("The existing Rust runner is mandatory.");
+        var output = images.Single(image => image.Id == "C").Image;
+        var mainScenario = P28IgnitionMapExportCorpus.Create(preview, output);
         var mainRuns = new List<P28IgnitionMapExportRun>(); var factorRuns = new List<P28IgnitionMapExportRun>();
         string? version = null, upstream = null; string[]? fixes = null;
         void Identity(SliceProcessResponse response)
@@ -168,7 +210,7 @@ public static class P28IgnitionMapExportExecution
         }
         async Task RunScenario(P28IgnitionMapScenario scenario, string kind, ICollection<P28IgnitionMapExportRun> target)
         {
-            foreach (var image in Images(preview))
+            foreach (var image in images)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var response = await SeededSliceProcess.ExchangeAsync(runner,
@@ -188,25 +230,14 @@ public static class P28IgnitionMapExportExecution
         }
         await RunScenario(mainScenario, "factor0-main", mainRuns).ConfigureAwait(false);
         foreach (var factor in P28IgnitionMapExportCorpus.RequiredFactors)
-            await RunScenario(P28IgnitionMapExportCorpus.CreateFactor(preview, factor), $"factor-{factor}", factorRuns).ConfigureAwait(false);
+            await RunScenario(P28IgnitionMapExportCorpus.CreateFactor(preview, output, factor), $"factor-{factor}", factorRuns).ConfigureAwait(false);
         ValidateRelations(mainRuns); ValidateFactorRelations(factorRuns);
         var effects = Effects(preview, mainScenario, mainRuns); var witnesses = Witnesses(preview, mainRuns);
         var factorEvidence = FactorEvidence(preview, factorRuns);
-        var checksumResponse = await SeededSliceProcess.ExchangeAsync(runner,
-            P28NativeChecksumVerifier.CreateRequest(Images(preview).Select(image => (image.Id, image.Image)).ToArray()),
-            options, cancellationToken).ConfigureAwait(false);
-        var checksumIdentity = SliceRunnerIdentity.Validate(checksumResponse.Response, "checksumBatch");
-        if (version != checksumResponse.Response.GetProperty("runnerVersion").GetString() ||
-            upstream != checksumResponse.Response.GetProperty("upstreamCommit").GetString() || !fixes!.SequenceEqual(checksumIdentity))
-            throw new InvalidDataException("Runner identity changed before checksum validation.");
-        var checks = CompareChecksum(Images(preview), checksumResponse);
-        if (!runnerBytes.AsSpan().SequenceEqual(File.ReadAllBytes(runner))) throw new InvalidDataException("Runner changed during validation.");
-        var evidence = new P28IgnitionMapExportEvidence(version!, upstream!, fixes!, preview.Plan.Digest(),
+        return new P28IgnitionMapExportEvidence(version!, upstream!, fixes!, preview.Plan.Digest(),
             P28IgnitionMapExportCorpus.Id, mainScenario.Digest, mainScenario.Calls.Count,
-            P28IgnitionMapExportCorpus.RectangleCorners, mainRuns, factorRuns, factorEvidence, checks, effects,
+            P28IgnitionMapExportCorpus.RectangleCorners, mainRuns, factorRuns, factorEvidence, [], effects,
             witnesses, AllRequestedCellsRead(preview, mainRuns), true, true, true, true);
-        RequireEvidence(preview, evidence);
-        return new(preview, evidence);
     }
 
     internal static P28IgnitionMapCellEffect[] Effects(P28IgnitionMapExportPreview preview,
@@ -312,10 +343,11 @@ public static class P28IgnitionMapExportExecution
         }).ToArray();
     }
 
-    private static void RequireRuns(P28IgnitionMapExportPreview preview, P28IgnitionMapScenario scenario,
+    private static void RequireRuns(P28IgnitionMapExportPreview preview,
+        (string Id, RomImage Image)[] images, P28IgnitionMapScenario scenario,
         IReadOnlyList<P28IgnitionMapExportRun> runs, string kind)
     {
-        foreach (var image in Images(preview)) foreach (var pattern in new[] { 0, 85, 170 })
+        foreach (var image in images) foreach (var pattern in new[] { 0, 85, 170 })
             {
                 var found = runs.Where(run => run.ImageKind == image.Id && run.ScratchPattern == pattern).ToArray();
                 if (found.Length != 1) throw new InvalidDataException("Missing or duplicate ignition-map run.");
@@ -330,20 +362,28 @@ public static class P28IgnitionMapExportExecution
     }
 
     internal static void RequireEvidence(P28IgnitionMapExportPreview preview,
-        P28IgnitionMapExportEvidence evidence)
+        P28IgnitionMapExportEvidence evidence) => RequireEvidenceCore(preview, Images(preview), evidence);
+
+    internal static void RequireEvidence(P28IgnitionMapExportPreview family,
+        P28UnifiedCalibrationPreview combined, P28IgnitionMapExportEvidence evidence) =>
+        RequireEvidenceCore(family, combined.Images, evidence);
+
+    private static void RequireEvidenceCore(P28IgnitionMapExportPreview preview,
+        (string Id, RomImage Image)[] images, P28IgnitionMapExportEvidence evidence)
     {
-        var main = P28IgnitionMapExportCorpus.Create(preview); var images = Images(preview);
+        var output = images.Single(image => image.Id == "C").Image;
+        var main = P28IgnitionMapExportCorpus.Create(preview, output);
         if (evidence.PlanDigest != preview.Plan.Digest() || evidence.CorpusId != P28IgnitionMapExportCorpus.Id ||
             evidence.ScenarioDigest != main.Digest || evidence.ScenarioCalls != main.Calls.Count ||
             evidence.RectangleCorners != P28IgnitionMapExportCorpus.RectangleCorners || evidence.MainRuns.Count != 9 ||
             evidence.FactorRuns.Count != 45 || !evidence.AllRequestedCellsRead || !evidence.IntermediateAndOutputAgree ||
             !evidence.AxisCacheSelectorControlsAgree || !evidence.FactorOnceSeeded || !evidence.NativeValidationComplete)
             throw new InvalidDataException("Stale or incomplete ignition-map execution evidence.");
-        RequireRuns(preview, main, evidence.MainRuns, "factor0-main"); ValidateRelations(evidence.MainRuns);
+        RequireRuns(preview, images, main, evidence.MainRuns, "factor0-main"); ValidateRelations(evidence.MainRuns);
         foreach (var factor in P28IgnitionMapExportCorpus.RequiredFactors)
         {
-            var scenario = P28IgnitionMapExportCorpus.CreateFactor(preview, factor);
-            RequireRuns(preview, scenario, evidence.FactorRuns.Where(run => run.ConsumerFactor == factor).ToArray(),
+            var scenario = P28IgnitionMapExportCorpus.CreateFactor(preview, output, factor);
+            RequireRuns(preview, images, scenario, evidence.FactorRuns.Where(run => run.ConsumerFactor == factor).ToArray(),
                 $"factor-{factor}");
         }
         ValidateFactorRelations(evidence.FactorRuns);

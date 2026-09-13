@@ -1,5 +1,14 @@
 # HondaEcu
 
+M2e adds the [unified known-calibration checksum-preserving export](docs/M2E_UNIFIED_CALIBRATION_EXPORT.md)
+through `research p28-calibration combined-export plan|apply|verify|inspect`.
+One closed settings document selects the six established basic groups and four
+primary raw maps, composes all values from one exact original, performs the
+separate mandatory suites on the same complete A/B/C images and runs exactly one
+native checksum batch before one BIN/plan/receipt publication and readback.
+Family-only firmware remains byte-compatible with M1t/M2b/M2d. Physical units,
+GUI/D2, hardware/full boot and flash readiness remain unavailable/NotRun.
+
 The [D1 basic-calibration desktop workspace](docs/D1_BASIC_CALIBRATION_DESKTOP.md)
 integrates the completed M1t six-group workflow into the Ukrainian WPF application:
 explicit original inputs, raw draft/settings, preview/diff/graphs, fresh validation

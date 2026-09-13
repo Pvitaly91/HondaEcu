@@ -203,6 +203,18 @@ readback remain PC-only/NotFlashReady. Physical units, alternate/downstream
 calibrations, GUI, hardware, full boot and completion of all M2 remain outside
 scope; M2a/M2b/M2c and all M1 contracts stay closed.
 
+M2e adds [unified known-calibration checksum-preserving export](M2E_UNIFIED_CALIBRATION_EXPORT.md):
+the six M1t basic groups and four M2b/M2d primary maps compose from one exact
+original under a new closed ten-group contract. All established family suites
+receive the same complete A/B/C images, retain their distinct selector/cache/
+consumer semantics, and are followed by exactly one native checksum batch.
+A single typed capability gates one new BIN/saved-plan/receipt group with
+independent readback, reverse restoration and historical verify/inspect.
+Family-only bytes remain compatible with M1t/M2b/M2d. Physical units, alternate
+maps, GUI/D2, a common ECU scheduler, hardware/full boot and flash readiness
+remain outside scope; M2 and the independent M1 evidence gates are not declared
+complete.
+
 ## M3 — Desktop GUI
 
 - desktop GUI

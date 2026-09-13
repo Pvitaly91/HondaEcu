@@ -168,6 +168,9 @@ public sealed partial class CliApplication
               --output <new-bin> --saved-plan <new-json> --report <new-receipt>
             verify/inspect: --baseline <original> --baseline-binding <json> --compensation-definition <json>
               --plan <saved-plan> --report <receipt> --output <new-result-json>
+          research p28-calibration combined-export <plan|apply|verify|inspect> <image> --profile p28-304 ...
+            Ten closed basic/fuel/ignition groups from one original; one compensation and one checksum batch.
+            Uses the same plan/apply/verify/inspect input roles as above; plan takes the M2e combined settings format.
           research p28-idle contexts-check <baseline> --profile p28-304 --confirm-profile
             --baseline-binding <binding.json> --runner <rust-runner> --scenario <contexts-scenario.json>
             --output <new-private-contexts-validation.json>

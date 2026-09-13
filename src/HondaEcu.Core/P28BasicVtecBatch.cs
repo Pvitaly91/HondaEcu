@@ -12,15 +12,19 @@ internal static class P28BasicVtecBatch
     internal const string ControlId = "basic-vtec-unchanged-0-127-255-contexts-priors-enable-scratch-v1";
     internal static string Operation(bool changed) => changed ? "vtecThresholdPrefix" : "vtecThresholdControl";
     internal static int[] Codes(bool changed) => changed ? Enumerable.Range(0, 256).ToArray() : [0, 127, 255];
-    internal static object Request(P28BasicCalibrationPreview p) => new
+    internal static object Request(P28BasicCalibrationPreview p) => Request(p, p.Images);
+    internal static object Request(P28BasicCalibrationPreview p, (string Id, RomImage Image)[] images) => new
     {
         protocolVersion = 1,
         operation = Operation(p.Plan.Groups[0].EffectivelyChanged),
-        images = p.Images.Select(i => new { id = i.Id, rom = i.Image.ToArray().Select(b => (int)b).ToArray() }).ToArray(),
+        images = images.Select(i => new { id = i.Id, rom = i.Image.ToArray().Select(b => (int)b).ToArray() }).ToArray(),
         allowAssumptions = Array.Empty<string>(),
         scratchPatterns = new[] { 0, 85, 170 }
     };
-    internal static P28BasicVtecEvidence Analyze(P28BasicCalibrationPreview p, SliceProcessResponse response)
+    internal static P28BasicVtecEvidence Analyze(P28BasicCalibrationPreview p,
+        SliceProcessResponse response) => Analyze(p, p.Images, response);
+    internal static P28BasicVtecEvidence Analyze(P28BasicCalibrationPreview p,
+        (string Id, RomImage Image)[] images, SliceProcessResponse response)
     {
         var changed = p.Plan.Groups[0].EffectivelyChanged; var operation = Operation(changed); var r = response.Response;
         _ = SliceRunnerIdentity.Validate(r, operation);
@@ -29,19 +33,24 @@ internal static class P28BasicVtecBatch
             throw new InvalidDataException("Prefix-only task/contract required.");
         P28ByteExecutionValidator.ValidateContract(r.GetProperty("entryContracts")[0], false);
         var rows = r.GetProperty("thresholdRows").EnumerateArray().Select(row => (IReadOnlyList<int>)row.EnumerateArray().Select(v => v.GetInt32()).ToArray()).ToArray();
-        var (count, witnesses) = Check(p, rows);
-        return new(operation, changed ? FullId : ControlId, p.Images.Select(i => i.Image.Hash).ToArray(), rows, Codes(changed).Length * 48, count, witnesses);
+        var (count, witnesses) = Check(p, images, rows);
+        return new(operation, changed ? FullId : ControlId, images.Select(i => i.Image.Hash).ToArray(), rows, Codes(changed).Length * 48, count, witnesses);
     }
-    internal static void Require(P28BasicCalibrationPreview p, P28BasicVtecEvidence e)
+    internal static void Require(P28BasicCalibrationPreview p, P28BasicVtecEvidence e) =>
+        Require(p, p.Images, e);
+    internal static void Require(P28BasicCalibrationPreview p,
+        (string Id, RomImage Image)[] images, P28BasicVtecEvidence e)
     {
         var changed = p.Plan.Groups[0].EffectivelyChanged;
         if (e.Operation != Operation(changed) || e.CorpusId != (changed ? FullId : ControlId) ||
-            !e.ImageHashes.SequenceEqual(p.Images.Select(i => i.Image.Hash)) || e.ComparedCasesPerImage != Codes(changed).Length * 48)
+            !e.ImageHashes.SequenceEqual(images.Select(i => i.Image.Hash)) || e.ComparedCasesPerImage != Codes(changed).Length * 48)
             throw new InvalidDataException("Stale/foreign VTEC prefix evidence.");
-        var (count, witnesses) = Check(p, e.Rows);
+        var (count, witnesses) = Check(p, images, e.Rows);
         if (e.ChangedResultCases != count || !e.Witnesses.SequenceEqual(witnesses)) throw new InvalidDataException("Forged VTEC changed set or witness.");
     }
-    private static (int Count, IReadOnlyList<P28BasicVtecWitness> Witnesses) Check(P28BasicCalibrationPreview p, IReadOnlyList<IReadOnlyList<int>> rows)
+    private static (int Count, IReadOnlyList<P28BasicVtecWitness> Witnesses) Check(
+        P28BasicCalibrationPreview p, (string Id, RomImage Image)[] images,
+        IReadOnlyList<IReadOnlyList<int>> rows)
     {
         var plan = p.Plan; var codes = Codes(plan.Groups[0].EffectivelyChanged); var perImage = codes.Length * 48;
         if (rows.Count != perImage * 3) throw new InvalidDataException("Missing/extra threshold cases.");
@@ -51,7 +60,7 @@ internal static class P28BasicVtecBatch
             if (row.Count != 12 || row[0] is < 0 or > 2 || row[1] is not (0 or 85 or 170) || !codes.Contains(row[2]) ||
                 row[3] is < 0 or > 1 || row[4] is < 0 or > 3 || row[5] is < 0 or > 1 || row[6] != 0 ||
                 !index.TryAdd((row[0], row[1], row[2], row[3], row[4], row[5]), row)) throw new InvalidDataException("Invalid, non-strict or duplicate threshold case.");
-            var image = p.Images[row[0]].Image;
+            var image = images[row[0]].Image;
             if (row[7] != P28ByteExecutionValidator.ThresholdBits(image.Span.Slice(P28ThresholdLogic.BlockOffset, 8), row[2], row[3], row[4], row[5]) ||
                 !P28ByteExecutionValidator.ThresholdReadsMatch(row)) throw new InvalidDataException("Threshold predicate/actual-read mismatch.");
         }

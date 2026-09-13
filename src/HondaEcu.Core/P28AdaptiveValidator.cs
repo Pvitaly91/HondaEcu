@@ -67,8 +67,13 @@ public static class P28AdaptiveValidator
     }
     internal static P28AdaptiveValidationReport AnalyzeExportImage(P28BasicCalibrationPreview preview, RomImage image,
         P28AdaptiveScenario scenario, SliceProcessResponse response)
+        => AnalyzeExportImage(preview, preview.Images, image, scenario, response);
+    internal static P28AdaptiveValidationReport AnalyzeExportImage(P28BasicCalibrationPreview preview,
+        (string Id, RomImage Image)[] images, RomImage image,
+        P28AdaptiveScenario scenario, SliceProcessResponse response)
     {
-        preview.RequireImage(image);
+        if (!images.Any(candidate => candidate.Image.Span.SequenceEqual(image.Span)))
+            throw new InvalidDataException("Foreign admitted calibration-suite image.");
         return AnalyzeCore(image, preview.Profile, scenario, response.Response);
     }
     private static Stage? ParseStage(JsonElement e, bool tick)

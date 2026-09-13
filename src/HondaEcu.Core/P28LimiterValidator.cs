@@ -180,8 +180,13 @@ public static class P28LimiterValidator
     internal static P28LimiterState State(JsonElement e) { P28LimiterScenario.StateShape(e); return e.Deserialize<P28LimiterState>(P28StatefulScenario.Options)!; }
     internal static P28LimiterValidationReport AnalyzeExportImage(P28BasicCalibrationPreview preview, RomImage image,
         P28LimiterScenario scenario, SliceProcessResponse response)
+        => AnalyzeExportImage(preview, preview.Images, image, scenario, response);
+    internal static P28LimiterValidationReport AnalyzeExportImage(P28BasicCalibrationPreview preview,
+        (string Id, RomImage Image)[] images, RomImage image,
+        P28LimiterScenario scenario, SliceProcessResponse response)
     {
-        preview.RequireImage(image);
+        if (!images.Any(candidate => candidate.Image.Span.SequenceEqual(image.Span)))
+            throw new InvalidDataException("Foreign admitted calibration-suite image.");
         if (scenario.Mutation is not null) throw new InvalidDataException("Mutation in basic composition suite.");
         return AnalyzeCore(image, preview.Profile, preview.Binding, scenario, response.Response);
     }

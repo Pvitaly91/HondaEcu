@@ -34,7 +34,10 @@ public static class P28FuelMapExportCorpus
     public const string Id = "fuel-map-export-abc-all-rectangles-history-effects-v1";
     public const int RectangleCorners = 342;
 
-    public static P28FuelMapScenario Create(P28FuelMapExportPreview preview)
+    public static P28FuelMapScenario Create(P28FuelMapExportPreview preview) =>
+        Create(preview, preview.Output);
+
+    internal static P28FuelMapScenario Create(P28FuelMapExportPreview preview, RomImage output)
     {
         var image = preview.Original; var calls = new List<(string MapId, int Load, int Rpm)>();
         int Axis(int origin, int index) => image.Span[origin + index];
@@ -60,7 +63,7 @@ public static class P28FuelMapExportCorpus
             var found = false;
             for (var rpm = 0; rpm <= 255 && !found; rpm++) for (var load = 0; load <= 255 && !found; load++)
                     if (P28FuelMapModel.ProjectNumeric(preview.Original.Span, map.MapId, rpm, load).LookupResult !=
-                        P28FuelMapModel.ProjectNumeric(preview.Output.Span, map.MapId, rpm, load).LookupResult)
+                        P28FuelMapModel.ProjectNumeric(output.Span, map.MapId, rpm, load).LookupResult)
                     { calls.Add((map.MapId, load, rpm)); found = true; }
             if (!found) throw new InvalidDataException("Domain audit predicts a changed result but no witness input exists.");
         }
@@ -117,7 +120,42 @@ public static class P28FuelMapExportExecution
         preview = P28FuelMapExportEditor.Reproduce(preview.Original, preview.Profile, preview.Binding, true, preview.Location, preview.Plan);
         if (preview.Plan.IsNoOp) throw new InvalidDataException("A no-op fuel-map plan cannot export a firmware BIN.");
         if (string.IsNullOrWhiteSpace(runner) || !File.Exists(runner)) throw new InvalidDataException("The existing Rust runner is mandatory.");
-        var runnerBytes = File.ReadAllBytes(runner); var scenario = P28FuelMapExportCorpus.Create(preview); var runs = new List<P28FuelMapExportRun>();
+        var runnerBytes = File.ReadAllBytes(runner);
+        var local = await ValidateSuitesAsync(preview, runner, options, cancellationToken).ConfigureAwait(false);
+        var checksumResponse = await SeededSliceProcess.ExchangeAsync(runner,
+            P28NativeChecksumVerifier.CreateRequest(Images(preview).Select(image => (image.Id, image.Image)).ToArray()),
+            options, cancellationToken).ConfigureAwait(false);
+        var checksumFixes = SliceRunnerIdentity.Validate(checksumResponse.Response, "checksumBatch");
+        if (local.RunnerVersion != checksumResponse.Response.GetProperty("runnerVersion").GetString() ||
+            local.UpstreamCommit != checksumResponse.Response.GetProperty("upstreamCommit").GetString() ||
+            !local.LocalSemanticFixes.SequenceEqual(checksumFixes))
+            throw new InvalidDataException("Runner identity changed before checksum validation.");
+        var evidence = local with { ChecksumRuns = CompareChecksum(Images(preview), checksumResponse) };
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!runnerBytes.AsSpan().SequenceEqual(File.ReadAllBytes(runner))) throw new InvalidDataException("Runner changed during validation.");
+        RequireEvidence(preview, evidence);
+        return new(preview, evidence);
+    }
+
+    internal static async Task<P28FuelMapExportEvidence> ValidateSuitesAsync(P28FuelMapExportPreview preview,
+        string runner, SliceProcessOptions? options = null, CancellationToken cancellationToken = default)
+        => await ValidateSuitesCoreAsync(preview, Images(preview), runner, options,
+            cancellationToken).ConfigureAwait(false);
+
+    internal static async Task<P28FuelMapExportEvidence> ValidateSuitesAsync(P28FuelMapExportPreview family,
+        P28UnifiedCalibrationPreview combined, string runner, SliceProcessOptions? options = null,
+        CancellationToken cancellationToken = default)
+        => await ValidateSuitesCoreAsync(family, combined.Images, runner, options,
+            cancellationToken).ConfigureAwait(false);
+
+    private static async Task<P28FuelMapExportEvidence> ValidateSuitesCoreAsync(
+        P28FuelMapExportPreview preview, (string Id, RomImage Image)[] images, string runner,
+        SliceProcessOptions? options, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (string.IsNullOrWhiteSpace(runner) || !File.Exists(runner)) throw new InvalidDataException("The existing Rust runner is mandatory.");
+        var scenario = P28FuelMapExportCorpus.Create(preview, images.Single(image => image.Id == "C").Image);
+        var runs = new List<P28FuelMapExportRun>();
         string? version = null, upstream = null; string[]? fixes = null;
         void Identity(SliceProcessResponse response, string operation)
         {
@@ -128,7 +166,7 @@ public static class P28FuelMapExportExecution
                 throw new InvalidDataException("Runner identity changed during fuel-map export validation.");
             version = nextVersion; upstream = nextUpstream; fixes = found;
         }
-        foreach (var image in Images(preview))
+        foreach (var image in images)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var response = await SeededSliceProcess.ExchangeAsync(runner, P28FuelMapValidator.CreateRequest(image.Image, scenario), options, cancellationToken).ConfigureAwait(false);
@@ -146,17 +184,9 @@ public static class P28FuelMapExportExecution
         }
         ValidateRelations(runs);
         var effects = Effects(preview, scenario, runs); var witnesses = Witnesses(preview, runs);
-        var checksumResponse = await SeededSliceProcess.ExchangeAsync(runner,
-            P28NativeChecksumVerifier.CreateRequest(Images(preview).Select(image => (image.Id, image.Image)).ToArray()), options, cancellationToken).ConfigureAwait(false);
-        Identity(checksumResponse, "checksumBatch");
-        var checks = CompareChecksum(Images(preview), checksumResponse);
-        cancellationToken.ThrowIfCancellationRequested();
-        if (!runnerBytes.AsSpan().SequenceEqual(File.ReadAllBytes(runner))) throw new InvalidDataException("Runner changed during validation.");
-        var evidence = new P28FuelMapExportEvidence(version!, upstream!, fixes!, preview.Plan.Digest(), P28FuelMapExportCorpus.Id,
-            scenario.Digest, scenario.Calls.Count, P28FuelMapExportCorpus.RectangleCorners, runs, checks, effects, witnesses,
+        return new P28FuelMapExportEvidence(version!, upstream!, fixes!, preview.Plan.Digest(), P28FuelMapExportCorpus.Id,
+            scenario.Digest, scenario.Calls.Count, P28FuelMapExportCorpus.RectangleCorners, runs, [], effects, witnesses,
             effects.All(effect => effect.CorpusReadCount > 0), true, true, true);
-        RequireEvidence(preview, evidence);
-        return new(preview, evidence);
     }
 
     internal static P28FuelMapCellEffect[] Effects(P28FuelMapExportPreview preview, P28FuelMapScenario scenario,
@@ -214,9 +244,17 @@ public static class P28FuelMapExportExecution
         }
     }
 
-    internal static void RequireEvidence(P28FuelMapExportPreview preview, P28FuelMapExportEvidence evidence)
+    internal static void RequireEvidence(P28FuelMapExportPreview preview, P28FuelMapExportEvidence evidence) =>
+        RequireEvidenceCore(preview, Images(preview), evidence);
+
+    internal static void RequireEvidence(P28FuelMapExportPreview family,
+        P28UnifiedCalibrationPreview combined, P28FuelMapExportEvidence evidence) =>
+        RequireEvidenceCore(family, combined.Images, evidence);
+
+    private static void RequireEvidenceCore(P28FuelMapExportPreview preview,
+        (string Id, RomImage Image)[] images, P28FuelMapExportEvidence evidence)
     {
-        var scenario = P28FuelMapExportCorpus.Create(preview); var images = Images(preview);
+        var scenario = P28FuelMapExportCorpus.Create(preview, images.Single(image => image.Id == "C").Image);
         if (evidence.PlanDigest != preview.Plan.Digest() || evidence.CorpusId != P28FuelMapExportCorpus.Id ||
             evidence.ScenarioDigest != scenario.Digest || evidence.ScenarioCalls != scenario.Calls.Count ||
             evidence.RectangleCorners != P28FuelMapExportCorpus.RectangleCorners || evidence.Runs.Count != 9 ||
