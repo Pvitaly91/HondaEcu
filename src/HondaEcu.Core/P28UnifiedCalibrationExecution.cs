@@ -135,6 +135,17 @@ public static class P28UnifiedCalibrationExecution
             evidence.Fuel with { ChecksumRuns = evidence.Checksum });
         P28IgnitionMapExportExecution.RequireEvidence(views.Ignition, preview,
             evidence.Ignition with { ChecksumRuns = evidence.Checksum });
+        RequireCanonicalChecksumOrder(preview.Images, evidence.Checksum);
         RequireChecksumEvidence(preview.Images, evidence.Checksum);
+    }
+
+    internal static void RequireCanonicalChecksumOrder((string Id, RomImage Image)[] images,
+        IReadOnlyList<P28ChecksumExportObservation> checks)
+    {
+        var expected = images.SelectMany(image => new[] { 0, 85, 170 }
+            .Select(pattern => (image.Id, Pattern: pattern))).ToArray();
+        var actual = checks.Select(check => (check.ImageKind, Pattern: check.ScratchPattern)).ToArray();
+        if (!actual.SequenceEqual(expected))
+            throw new InvalidDataException("Unified checksum evidence is not in canonical A/B/C and 00/55/AA order.");
     }
 }

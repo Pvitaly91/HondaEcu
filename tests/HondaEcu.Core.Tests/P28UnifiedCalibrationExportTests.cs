@@ -255,4 +255,19 @@ public sealed class P28UnifiedCalibrationExportTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             P28UnifiedCalibrationExecution.ValidateAsync(Preview(), "missing", cancellationToken: cancellation.Token));
     }
+
+    [Fact]
+    public void UnifiedChecksumEvidenceRequiresCanonicalImageAndScratchOrder()
+    {
+        var preview = Preview();
+        var checks = preview.Images.SelectMany(image => new[] { 0, 85, 170 }.Select(pattern =>
+            new P28ChecksumExportObservation(image.Id, image.Image.Hash, pattern,
+                NativeChecksumExecutionStatus.Match, true, 0, "ResidueZero", 512, 104963,
+                32768, true, true, Array.Empty<string>()))).ToArray();
+
+        P28UnifiedCalibrationExecution.RequireCanonicalChecksumOrder(preview.Images, checks);
+        Assert.Throws<InvalidDataException>(() =>
+            P28UnifiedCalibrationExecution.RequireCanonicalChecksumOrder(preview.Images,
+                checks.Reverse().ToArray()));
+    }
 }
