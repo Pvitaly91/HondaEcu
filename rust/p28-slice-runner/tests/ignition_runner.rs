@@ -81,7 +81,7 @@ fn real_process_completes_newly_composed_selection_lookup_and_consumer_flow() {
 #[test]
 fn bounded_zero_program_stops_and_leaves_suffix_null() {
     let response = run(request());
-    assert_eq!(response["runnerVersion"], "0.13.0");
+    assert_eq!(response["runnerVersion"], "0.14.0");
     for sequence in response["ignitionMapSequences"].as_array().unwrap() {
         assert_eq!(sequence["checkpoints"][0]["status"], 3);
         assert!(!sequence["checkpoints"][0]["selection"].is_null());
