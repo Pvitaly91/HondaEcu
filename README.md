@@ -1,5 +1,13 @@
 # HondaEcu
 
+M2f adds [read-only native VTEC-decision → fuel-map selection validation](docs/M2F_VTEC_FUEL_CHAIN_VALIDATION.md)
+through `research p28-fuel vtec-chain-check`. A new single-machine runner
+task carries native `DATA0127.1` through `12FC` into ROM map selection,
+lookup and `DATA0140`; there is no per-event host map selector. The counter/
+axis caller schedule remains explicit, and conditional SUBB evidence stays
+conditional for the dependent fuel result. No new firmware export, GUI test,
+physical VTEC claim or flash-readiness upgrade is implied.
+
 M2e adds the [unified known-calibration checksum-preserving export](docs/M2E_UNIFIED_CALIBRATION_EXPORT.md)
 through `research p28-calibration combined-export plan|apply|verify|inspect`.
 One closed settings document selects the six established basic groups and four

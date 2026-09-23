@@ -41,6 +41,7 @@ fn request(rom: Vec<u8>, synthetic: SyntheticContract) -> Request {
         idle_target: None,
         idle_contexts: None,
         fuel_map_lookup: None,
+        vtec_fuel_chain: None,
         ignition_map_lookup: None,
     }
 }
@@ -312,6 +313,7 @@ fn synthetic_batch_cannot_launder_threshold_add_through_compact_permission() {
         idle_target: None,
         idle_contexts: None,
         fuel_map_lookup: None,
+        vtec_fuel_chain: None,
         ignition_map_lookup: None,
     })
     .unwrap();

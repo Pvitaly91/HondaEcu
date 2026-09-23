@@ -10,6 +10,7 @@ public sealed record P28FuelConsumerObservation(int GateByte, bool CorrectionExe
 public sealed record P28FuelMapModelStep(P28FuelMapState Before, P28FuelMapState AfterInputs, P28FuelMapState After,
     P28FuelAxisPosition Map0Rpm, P28FuelAxisPosition Map1Rpm, P28FuelAxisPosition Load, string SelectedMap, int SelectedOrigin,
     P28FuelMapOperands Operands, P28FuelConsumerObservation Consumer);
+public sealed record P28FuelAxisCall(int Index, byte RawLoad, byte RawMap0Rpm, byte RawMap1Rpm);
 public readonly record struct P28FuelNumericProjection(int LoadIndex, int LoadFraction, int RpmIndex, int RpmFraction,
     int TopLeft, int TopRight, int BottomLeft, int BottomRight, int MultiplierLeft, int MultiplierRight,
     int ScaledTopLeft, int ScaledTopRight, int ScaledBottomLeft, int ScaledBottomRight,
@@ -30,8 +31,16 @@ public sealed class P28FuelMapModel
 
     public P28FuelMapModelStep Step(P28FuelMapCall call)
     {
+        var selector = (byte)((_state.Selector0127 & ~2) | (call.MapId == "map_1" ? 2 : 0));
+        return StepCore(new(call.Index, call.RawLoad, call.RawMap0Rpm, call.RawMap1Rpm), selector);
+    }
+
+    /// <summary>M2f composition: consume the independent decision model's complete shared byte, never a requested map ID.</summary>
+    public P28FuelMapModelStep StepFromNativeSelector(P28FuelAxisCall call, byte selector0127) => StepCore(call, selector0127);
+
+    private P28FuelMapModelStep StepCore(P28FuelAxisCall call, byte selector)
+    {
         var before = _state;
-        var selector = (byte)((before.Selector0127 & ~2) | (call.MapId == "map_1" ? 2 : 0));
         var afterInputs = before with { Selector0127 = selector };
         var map0 = Position("map_0_rpm", P28FuelMapContract.Map0RpmAxisOrigin, 20, call.RawMap0Rpm,
             before.Map0RpmIndex, before.Map0RpmFraction);

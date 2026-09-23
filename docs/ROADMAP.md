@@ -215,6 +215,14 @@ maps, GUI/D2, a common ECU scheduler, hardware/full boot and flash readiness
 remain outside scope; M2 and the independent M1 evidence gates are not declared
 complete.
 
+M2f adds [read-only native VTEC-to-fuel selection-chain validation](M2F_VTEC_FUEL_CHAIN_VALIDATION.md):
+one CPU/RAM continues from decision `122C` through `12FC` into ROM fuel
+selection, lookup and immediate `DATA0140`, with no host selector/map pointer
+injection. Counter/axis entry remains an explicit scripted caller schedule;
+the only permitted unresolved SUBB form taints downstream whole-chain
+checkpoints when actually used. No firmware, physical VTEC, full capture-to-fuel
+schedule, GUI/hardware acceptance or flash readiness is added.
+
 ## M3 — Desktop GUI
 
 - desktop GUI

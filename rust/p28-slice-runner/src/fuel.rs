@@ -110,7 +110,7 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
     Ok(())
 }
 
-fn data_ranges() -> Vec<[u16; 2]> {
+pub(crate) fn data_ranges() -> Vec<[u16; 2]> {
     vec![
         [0, 8],
         [0x88, 0x90],
@@ -142,7 +142,7 @@ fn code(stage: &str) -> Vec<[u32; 2]> {
     }
 }
 
-fn program(stage: &str) -> Vec<[u16; 2]> {
+pub(crate) fn program(stage: &str) -> Vec<[u16; 2]> {
     match stage {
         "rpmAxes" => vec![[0x7014, 0x703C]],
         "loadAxis" => vec![[0x7000, 0x700A]],
@@ -151,7 +151,7 @@ fn program(stage: &str) -> Vec<[u16; 2]> {
     }
 }
 
-fn contract(stage: &str) -> SliceContract {
+pub(crate) fn contract(stage: &str) -> SliceContract {
     let (entry, exit, lrb, usp, budget) = match stage {
         "rpmAxes" => (0x0A0C, 0x0A45, 0x40, 0x180, 384),
         "loadAxis" => (0x0A62, 0x0A77, 0x40, 0x180, 192),
@@ -191,7 +191,7 @@ pub fn entry_contracts() -> Vec<serde_json::Value> {
     })]
 }
 
-fn state(cpu: &Cpu, bus: &mut Bus) -> State {
+pub(crate) fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     State {
         load_index: read_data_u8(cpu, bus, 0x1BC),
         map0_rpm_index: read_data_u8(cpu, bus, 0x1C6),

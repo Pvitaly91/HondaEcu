@@ -144,6 +144,11 @@ public sealed partial class CliApplication
               --baseline-binding <private-json> --runner <rust-executable>
               --scenario <private-json> --output <new-private-json>
               Read-only map_0/map_1 raw lookup research; no BIN, physical units or GUI.
+          research p28-fuel vtec-chain-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <private-json> --runner <v0.14.0-rust-executable>
+              --scenario <bounded-m2f-scenario.json> --output <new-private-json>
+              [--allow-assumption oki.subb-a-off-n8-encoding]
+              One native decision→selection→lookup→DATA0140 tail; scripted axis caller, no BIN or physical VTEC claim.
           research p28-ignition maps-inspect <baseline> --profile p28-304 --output <new-private-json>
               [--confirm-profile --baseline-binding <private-json>]
           research p28-ignition lookup-check <baseline> --profile p28-304 --confirm-profile

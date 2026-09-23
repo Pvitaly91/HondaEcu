@@ -174,7 +174,7 @@ pub(crate) fn contract(entry: u16, exit: u16) -> SliceContract {
         program_read_range: None,
     }
 }
-fn enter(cpu: &mut Cpu, bus: &mut Bus, c: &SliceContract) {
+pub(crate) fn enter(cpu: &mut Cpu, bus: &mut Bus, c: &SliceContract) {
     cpu.pc = c.entry_pc;
     write_data_u16(cpu, bus, 2, c.lrb);
     write_data_u16(cpu, bus, 4, c.psw);

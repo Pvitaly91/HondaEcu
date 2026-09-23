@@ -396,6 +396,9 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "vtecFuelChain" && request.vtec_fuel_chain.is_some() {
+        return Err("VTEC-fuel chain stimulus is unavailable to other operations".into());
+    }
     if request.operation != "ignitionMapLookup" && request.ignition_map_lookup.is_some() {
         return Err("ignition-map stimulus is unavailable to other operations".into());
     }
@@ -436,7 +439,8 @@ fn validate_request(request: &Request) -> Result<(), String> {
             s != ADD_ASSUMPTION
                 && s != PRODUCER_ADD_ASSUMPTION
                 && !((request.operation == "statefulVtec"
-                    || request.operation == "integratedCaptureVtec")
+                    || request.operation == "integratedCaptureVtec"
+                    || request.operation == "vtecFuelChain")
                     && s == crate::stateful_forms::SUBB_OFF_ASSUMPTION)
         })
         || request
@@ -551,6 +555,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "idleTarget" => crate::idle::validate_request(request)?,
         "idleContexts" => crate::idle_contexts::validate_request(request)?,
         "fuelMapLookup" => crate::fuel::validate_request(request)?,
+        "vtecFuelChain" => crate::vtec_fuel::validate_request(request)?,
         "ignitionMapLookup" => crate::ignition::validate_request(request)?,
         "integratedCaptureVtec" => crate::chain::validate_request(request)?,
         _ => return Err("unsupported operation".into()),
@@ -566,6 +571,9 @@ pub fn run_request(request: Request) -> Result<Response, String> {
     }
     if request.operation == "fuelMapLookup" {
         return crate::fuel::run(request, response);
+    }
+    if request.operation == "vtecFuelChain" {
+        return crate::vtec_fuel::run(request, response);
     }
     if request.operation == "idleContexts" {
         return crate::idle_contexts::run(request, response);

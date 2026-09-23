@@ -13,6 +13,7 @@ pub mod exec;
 pub mod full_decoder;
 pub mod adaptive;
 pub mod fuel;
+pub mod vtec_fuel;
 pub mod idle;
 pub mod idle_contexts;
 pub mod ignition;
