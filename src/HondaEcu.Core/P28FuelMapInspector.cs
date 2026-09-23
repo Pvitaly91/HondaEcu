@@ -19,7 +19,7 @@ public sealed record P28FuelMapsInspection(int FormatVersion, RomHash ImageHash,
 
 public static class P28FuelMapInspector
 {
-    internal static void LayoutGuard(RomImage image)
+    public static void LayoutGuard(RomImage image)
     {
         image.ValidateExactSize(32768);
         var b = image.Span;

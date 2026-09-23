@@ -244,6 +244,17 @@ offscreen bindings/layout, real subprocess and private real-ROM service evidence
 are distinct from interactive GUI acceptance (NotRun). No new calibration fields,
 physical RPM proof, hardware writes or full-ECU integration are implied.
 
+### D2 — Unified calibration maps Desktop workspace
+
+[D2](D2_CALIBRATION_MAPS_DESKTOP.md) extends the same WPF application and D1
+document/draft gate with four M2e primary raw maps. It keeps one combined
+settings/preview context, bounded TSV and undo/redo, read-only axes and fuel
+multipliers, model-only probes, fresh Core validation/publication/readback and
+read-only M2e child inspection. Headless/offscreen delivery does not constitute
+interactive GUI acceptance; GUI r3, D1 and D2 interactive checks remain
+paused/NotRun. Physical units, hardware/full boot and flash readiness are not
+promoted.
+
 ## M4 — Additional OBD1 profiles
 
 - additional P28/P30/P72-family profiles

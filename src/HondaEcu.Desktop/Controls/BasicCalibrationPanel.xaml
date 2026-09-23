@@ -34,7 +34,7 @@
           <DataGridTextColumn Header="Original raw" Binding="{Binding Original}" IsReadOnly="True" Width="115" />
           <DataGridTemplateColumn Header="Requested raw" Width="140">
            <DataGridTemplateColumn.CellTemplate><DataTemplate>
-            <TextBox Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" />
+            <TextBox Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=LostFocus, ValidatesOnDataErrors=True, NotifyOnValidationError=True}" />
            </DataTemplate></DataGridTemplateColumn.CellTemplate>
           </DataGridTemplateColumn>
          </DataGrid.Columns>
@@ -69,7 +69,7 @@
      <local:BasicLookupPlotControl Plot="{Binding}" Height="240" />
     </StackPanel></DataTemplate></ItemsControl.ItemTemplate>
    </ItemsControl>
-   <WrapPanel Margin="0,12"><Button x:Name="SaveButton" Content="Перевірити та зберегти PC-only копію" Command="{Binding SaveCommand}" /></WrapPanel>
+   <WrapPanel Margin="0,12"><Button x:Name="SaveButton" Content="Зберегти тільки базові налаштування — PC-only" Command="{Binding SaveCommand}" /></WrapPanel>
    <ProgressBar IsIndeterminate="{Binding IsBusy}" Height="5" />
    <TextBlock Text="{Binding ProgressText}" TextWrapping="Wrap" Margin="0,8" />
    <TextBlock Text="{Binding ResultText}" TextWrapping="Wrap" />

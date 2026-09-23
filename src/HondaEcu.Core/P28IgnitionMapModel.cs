@@ -98,7 +98,7 @@ public sealed class P28IgnitionMapModel
     }
 
     /// <summary>History-free projection used only by the exporter's exhaustive finite-domain audit.</summary>
-    internal static P28IgnitionNumericProjection ProjectNumeric(ReadOnlySpan<byte> rom, string mapId,
+    public static P28IgnitionNumericProjection ProjectNumeric(ReadOnlySpan<byte> rom, string mapId,
         int rawRpm, int rawLoad)
     {
         if (rom.Length != P28NativeChecksumArithmetic.RomSize || rawRpm is < 0 or > 255 || rawLoad is < 0 or > 255)
@@ -141,7 +141,7 @@ public sealed class P28IgnitionMapModel
         return upper < lower ? lower - delta : lower + delta;
     }
 
-    internal static P28IgnitionConsumerObservation Consume(int lookupResult, int rawFactor)
+    public static P28IgnitionConsumerObservation Consume(int lookupResult, int rawFactor)
     {
         var product = (long)(byte)lookupResult * (byte)rawFactor;
         return new(rawFactor, product, rawFactor != 0, rawFactor == 0 ? lookupResult : (int)(product >> 8));

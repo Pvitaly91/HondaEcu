@@ -62,6 +62,34 @@ public sealed class DesktopLayoutTests
                         t => Assert.Equal(TextWrapping.Wrap, t.TextWrapping));
                 }
                 basicPanel.FontSize = 14;
+                tabs.SelectedIndex = 4;
+                content.Measure(new Size(900, 650)); content.Arrange(new Rect(new Size(900, 650))); content.UpdateLayout();
+                var mapPanel = Descendants<UnifiedCalibrationPanel>(content).Single();
+                Assert.Same(viewModel.Unified, mapPanel.DataContext);
+                var mapGrid = Descendants<DataGrid>(mapPanel).Single(grid => grid.ItemsSource is IReadOnlyList<UnifiedMapRow>);
+                Assert.Equal(12, mapGrid.Columns.Count);
+                Assert.All(mapGrid.Columns.Take(2), column => Assert.True(column.IsReadOnly));
+                Assert.False(mapGrid.CanUserReorderColumns); Assert.False(mapGrid.CanUserSortColumns);
+                Assert.Equal(20, mapGrid.Items.Count);
+                var cell = viewModel.Unified.Maps[0].Cell(19, 9);
+                viewModel.Unified.SelectedMapIndex = 3;
+                viewModel.Unified.SelectedMapIndex = 0;
+                Assert.Same(cell, viewModel.Unified.Maps[0].Cell(19, 9));
+                viewModel.Unified.Maps[0].Included = true;
+                cell.Text = "";
+                Assert.False(mapPanel.CommitDraftEdits() && cell.Error.Length == 0);
+                cell.Text = cell.Original.ToString(CultureInfo.InvariantCulture);
+                Assert.True(mapPanel.CommitDraftEdits());
+                viewModel.Unified.Fail(new string('Д', 400));
+                foreach (var fontSize in new[] { 14.0, 20.0 })
+                {
+                    mapPanel.FontSize = fontSize;
+                    content.Measure(new Size(850, 600)); content.Arrange(new Rect(new Size(850, 600))); content.UpdateLayout();
+                    Assert.True(Descendants<ScrollViewer>(mapPanel).First().ScrollableHeight > 0);
+                    Assert.All(Descendants<TextBlock>(mapPanel).Where(t => t.GetBindingExpression(TextBlock.TextProperty)?.ParentBinding.Path.Path is "Error" or "PreviewText" or "ResultText"),
+                        t => Assert.Equal(TextWrapping.Wrap, t.TextWrapping));
+                }
+                mapPanel.FontSize = 14;
                 Assert.Empty(bindingErrors.Messages);
                 PresentationTraceSources.DataBindingSource.Listeners.Remove(bindingErrors);
                 tabs.SelectedIndex = 1;

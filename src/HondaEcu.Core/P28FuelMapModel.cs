@@ -89,7 +89,7 @@ public sealed class P28FuelMapModel
     }
 
     /// <summary>The exporter arithmetic audit calls the same fixed-point lookup primitive as the stateful model.</summary>
-    internal static P28FuelNumericProjection ProjectNumeric(ReadOnlySpan<byte> rom, string mapId, int rawRpm, int rawLoad)
+    public static P28FuelNumericProjection ProjectNumeric(ReadOnlySpan<byte> rom, string mapId, int rawRpm, int rawLoad)
     {
         if (rom.Length != P28NativeChecksumArithmetic.RomSize || rawRpm is < 0 or > 255 || rawLoad is < 0 or > 255)
             throw new ArgumentOutOfRangeException(nameof(rawRpm), "Fuel projection requires a 32 KiB image and byte-domain inputs.");

@@ -1,0 +1,111 @@
+<UserControl x:Class="HondaEcu.Desktop.Controls.UnifiedCalibrationPanel"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:local="clr-namespace:HondaEcu.Desktop.Controls">
+ <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="14">
+  <StackPanel>
+   <TextBlock Text="D2 · unified calibration maps" FontSize="22" FontWeight="SemiBold" />
+   <TextBlock Text="{Binding Status}" TextWrapping="Wrap" Margin="0,8" />
+   <TextBlock Text="{Binding BasicDraftNote}" TextWrapping="Wrap" />
+   <WrapPanel Margin="0,10">
+    <Button Content="Обрати reviewed definition" Command="{Binding SelectLocationCommand}" />
+    <Button Content="Відкрити M2e child" Command="{Binding OpenChildCommand}" />
+    <Button Content="Редагувати налаштування цього плану" Command="{Binding ReuseCommand}" />
+   </WrapPanel>
+   <TabControl>
+    <TabItem Header="Паливні карти / карти запалювання">
+     <StackPanel Margin="8">
+      <TextBlock Text="Чотири нейтральні software IDs. Осям, множникам і offsets заборонено редагування. Raw values не є RPM, kPa/mbar або градусами." TextWrapping="Wrap" />
+      <WrapPanel Margin="0,8">
+       <TextBlock Text="Карта" VerticalAlignment="Center" Margin="0,0,8,0" />
+       <ComboBox x:Name="MapSelector" ItemsSource="{Binding Maps}" DisplayMemberPath="Id" SelectedIndex="{Binding SelectedMapIndex, Mode=TwoWay}" Width="190" />
+       <CheckBox Content="Включити карту у M2e settings" IsChecked="{Binding SelectedMap.Included, Mode=TwoWay}" Margin="16,0" VerticalAlignment="Center" />
+       <ComboBox ItemsSource="{Binding DisplayModes}" SelectedItem="{Binding DisplayMode, Mode=TwoWay}" Width="120" Margin="10,0" />
+      </WrapPanel>
+      <TextBlock Text="Original/Requested heatmap: спільна raw шкала 0..255, світле → синє; Delta: біле=0, червоне=збільшення, синє=зменшення. Колір не оцінює безпечність. Числа залишаються видимими." TextWrapping="Wrap" />
+      <TextBlock Text="Load axes, raw: " FontWeight="SemiBold" Margin="0,8,0,2" />
+      <ItemsControl ItemsSource="{Binding SelectedMap.LoadAxes}">
+       <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+       <ItemsControl.ItemTemplate><DataTemplate><Border BorderBrush="#D9E2EC" BorderThickness="1" Padding="4" Margin="1"><TextBlock Text="{Binding}" FontSize="11" /></Border></DataTemplate></ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Text="Fuel column multipliers (readonly); ignition maps have none:" FontWeight="SemiBold" Margin="0,8,0,2" />
+      <ItemsControl ItemsSource="{Binding SelectedMap.Multipliers}">
+       <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+       <ItemsControl.ItemTemplate><DataTemplate><Border BorderBrush="#D9E2EC" BorderThickness="1" Padding="5" Margin="1"><TextBlock Text="{Binding}" /></Border></DataTemplate></ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <DataGrid x:Name="MapGrid" ItemsSource="{Binding SelectedMap.Rows}" AutoGenerateColumns="False"
+       CanUserAddRows="False" CanUserDeleteRows="False" CanUserReorderColumns="False" CanUserSortColumns="False"
+       SelectionUnit="Cell" SelectionMode="Extended" EnableRowVirtualization="False" EnableColumnVirtualization="False"
+       HeadersVisibility="Column" RowHeaderWidth="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+       Height="525" RowHeight="46" IsEnabled="{Binding CanEdit}" SelectedCellsChanged="MapGrid_SelectedCellsChanged" />
+      <TextBlock Text="{Binding SelectedCell.Detail}" TextWrapping="Wrap" Margin="0,5" />
+      <TextBlock Text="Порожній або невалідний текст не перетворюється на попереднє число. Paste — лише явна дія, прямокутний decimal TSV 0..255; весь блок приймається або відхиляється." TextWrapping="Wrap" />
+      <WrapPanel Margin="0,7">
+       <Button Content="Paste TSV" Command="{Binding PasteCommand}" />
+       <TextBox Text="{Binding FillRaw, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="60" Margin="8,0" />
+       <Button Content="Fill вибраного блоку" Command="{Binding FillCommand}" />
+       <Button Content="Reset cells" Command="{Binding ResetCellsCommand}" />
+       <Button Content="Reset map" Command="{Binding ResetMapCommand}" />
+       <Button Content="Undo" Command="{Binding UndoCommand}" />
+       <Button Content="Redo" Command="{Binding RedoCommand}" />
+      </WrapPanel>
+      <TextBlock Text="Reset до original також очищує explicit requested provenance для цих cells; імпортовані unchanged entries інакше зберігаються." TextWrapping="Wrap" />
+      <TextBlock Text="Графік вибраного рядка: raw cells, не кінцева fuel surface і не фізичний кут" FontWeight="SemiBold" Margin="0,12,0,4" />
+      <local:MapRawPlotControl Plot="{Binding MapPlot}" Height="200" />
+      <TextBlock Text="Model-only lookup probe — не виконання ROM; фактор ignition не входить до settings" FontWeight="SemiBold" Margin="0,12,0,4" />
+      <WrapPanel>
+       <TextBlock Text="raw RPM" VerticalAlignment="Center" /><TextBox Text="{Binding ProbeRpm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="55" Margin="4" />
+       <TextBlock Text="raw load" VerticalAlignment="Center" /><TextBox Text="{Binding ProbeLoad, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="55" Margin="4" />
+       <TextBlock Text="ignition factor" VerticalAlignment="Center" /><TextBox Text="{Binding ProbeFactor, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Width="55" Margin="4" />
+       <Button Content="Обчислити model probe" Command="{Binding ProbeCommand}" />
+      </WrapPanel>
+      <TextBlock Text="{Binding ProbeText}" TextWrapping="Wrap" Margin="0,6" />
+     </StackPanel>
+    </TabItem>
+    <TabItem Header="План змін і перевірка">
+     <StackPanel Margin="8">
+      <TextBlock Text="Один settings документ, один preview snapshot для всіх десяти груп. Basic-поля — у сусідній вкладці; map edits не входять у старий M1t-only export." TextWrapping="Wrap" />
+      <WrapPanel Margin="0,8">
+       <Button Content="Імпорт M2e settings JSON" Command="{Binding ImportCommand}" />
+       <Button Content="Зберегти M2e settings JSON" Command="{Binding SaveSettingsCommand}" />
+       <Button Content="Переглянути всі зміни" Command="{Binding PreviewCommand}" />
+      </WrapPanel>
+      <TextBlock Text="{Binding PreviewText}" TextWrapping="Wrap" />
+      <TextBlock Text="Explicit requested values (включно з unchanged provenance)" FontWeight="SemiBold" Margin="0,8,0,2" />
+      <DataGrid ItemsSource="{Binding RequestedRows}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserSortColumns="False" MaxHeight="280">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="Group" Binding="{Binding Group}" Width="*" />
+        <DataGridTextColumn Header="Field/cell" Binding="{Binding Field}" Width="*" />
+        <DataGridTextColumn Header="Offset" Binding="{Binding Offset}" Width="90" />
+        <DataGridTextColumn Header="Original" Binding="{Binding Original}" Width="80" />
+        <DataGridTextColumn Header="Requested" Binding="{Binding Requested}" Width="90" />
+       </DataGrid.Columns>
+      </DataGrid>
+      <TextBlock Text="Exact full byte diff (A→C)" FontWeight="SemiBold" Margin="0,8,0,2" />
+      <DataGrid ItemsSource="{Binding Diff}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserSortColumns="False" MaxHeight="300" Margin="0,8">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="Offset" Binding="{Binding Offset}" Width="100" />
+        <DataGridTextColumn Header="Old" Binding="{Binding Old}" Width="70" />
+        <DataGridTextColumn Header="New" Binding="{Binding New}" Width="70" />
+        <DataGridTextColumn Header="Scope" Binding="{Binding Purpose}" Width="*" />
+       </DataGrid.Columns>
+      </DataGrid>
+      <Button Content="Перевірити та зберегти всі вибрані зміни — PC-only" Command="{Binding SaveCommand}" HorizontalAlignment="Left" Margin="0,8" />
+      <TextBlock Text="{Binding Error}" Foreground="#A51F28" TextWrapping="Wrap" />
+      <ProgressBar IsIndeterminate="{Binding IsBusy}" Height="5" />
+      <TextBlock Text="{Binding ProgressText}" TextWrapping="Wrap" Margin="0,6" />
+      <TextBlock Text="{Binding ResultText}" TextWrapping="Wrap" />
+      <DataGrid ItemsSource="{Binding Evidence}" AutoGenerateColumns="False" IsReadOnly="True" CanUserAddRows="False" CanUserSortColumns="False" Margin="0,8">
+       <DataGrid.Columns>
+        <DataGridTextColumn Header="Suite" Binding="{Binding Suite}" Width="*" />
+        <DataGridTextColumn Header="Strict" Binding="{Binding Completed}" Width="90" />
+        <DataGridTextColumn Header="Required" Binding="{Binding Required}" Width="90" />
+        <DataGridTextColumn Header="Units" Binding="{Binding Unit}" Width="*" />
+       </DataGrid.Columns>
+      </DataGrid>
+      <TextBlock Text="D2 delivery/build — окремо від історичного M2e D2Status=NotStarted. D2 interactive acceptance: NotRun. GUI r3: paused/NotRun. Hardware/full boot: NotRun." TextWrapping="Wrap" />
+     </StackPanel>
+    </TabItem>
+   </TabControl>
+  </StackPanel>
+ </ScrollViewer>
+</UserControl>

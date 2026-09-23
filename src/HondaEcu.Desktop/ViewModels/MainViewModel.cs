@@ -29,7 +29,8 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
     private bool _allowAddEr3;
 
     public MainViewModel(IDialogService dialogs, IDesktopOperations? operations = null, DesktopResources? resources = null,
-        IBasicCalibrationOperations? basicOperations = null)
+        IBasicCalibrationOperations? basicOperations = null, IUnifiedCalibrationOperations? unifiedOperations = null,
+        IClipboardTextProvider? clipboard = null)
     {
         _dialogs = dialogs;
         _operations = operations ?? new DesktopOperations();
@@ -61,10 +62,12 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         InitializeChecksumExportCommands();
         InitializeRpmCommands();
         Basic = new(this, dialogs, basicOperations ?? new BasicCalibrationService());
+        Unified = new(this, dialogs, unifiedOperations ?? new UnifiedCalibrationService(), clipboard);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
     public BasicCalibrationViewModel Basic { get; }
+    public UnifiedCalibrationViewModel Unified { get; }
     public bool CanUseLegacyWorkspace => !_basicJobActive;
     public AsyncCommand OpenBinCommand { get; }
     public RelayCommand DemoCommand { get; }
@@ -89,6 +92,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         DesktopAccessMode.VerifiedDerived => "Перевірений похідний файл — редагування заборонено",
         DesktopAccessMode.VerifiedChecksumDerived => "Перевірений M1g child original parent — PcInspectionOnly / NotFlashReady",
         DesktopAccessMode.VerifiedBasicDerived => "Перевірений M1t child — read-only; historical consistency, не fresh execution",
+        DesktopAccessMode.VerifiedUnifiedDerived => "Перевірений M2e child — read-only; historical consistency, не fresh execution",
         DesktopAccessMode.Demo => "Синтетичний приклад — не прошивка Honda",
         _ => "Відкрийте BIN або демонстраційний режим",
     };
@@ -104,6 +108,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         DesktopAccessMode.VerifiedDerived => "Original parent binding + перевірені plan/report; child не є новим baseline",
         DesktopAccessMode.VerifiedChecksumDerived => "Original parent + складений план + reviewed CompensationLocation; не новий baseline",
         DesktopAccessMode.VerifiedBasicDerived => "M1t tuple: exact original parent. Child не є новим baseline.",
+        DesktopAccessMode.VerifiedUnifiedDerived => "M2e tuple: exact original parent. Child не є новим baseline.",
         DesktopAccessMode.Demo => "Binding відсутній; демонстрація не створює binding",
         _ => "NotProvided — лише нейтральні байти",
     };
@@ -477,6 +482,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         InvalidateSession();
         _document = document;
         Basic?.ResetDocument(document);
+        Unified?.ResetDocument(document);
         ResetCompensationDefinition(document);
         ResetRpmScenario();
         ClearPending();
@@ -517,6 +523,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         ClearChecksumPreview();
         ClearRpmPreview();
         Basic?.Invalidate();
+        Unified?.Invalidate();
         _resultJson = null;
         Counters = DesktopCounters.Empty;
         ChecksumSummary = null;
@@ -558,6 +565,7 @@ public sealed partial class MainViewModel : INotifyPropertyChanged, IDisposable
         RefreshChecksumExportCommands();
         RefreshRpmCommands();
         Basic?.Refresh();
+        Unified?.Refresh();
     }
 
     private async Task BindFromDialogsAsync()

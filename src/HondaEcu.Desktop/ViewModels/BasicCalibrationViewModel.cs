@@ -102,6 +102,24 @@ public sealed class BasicCalibrationViewModel : INotifyPropertyChanged
             BasicCalibrationDraft.FromFields(_originalFields ?? throw new InvalidOperationException("Поля original недоступні."), Changed, Editable);
         return draft;
     }
+    internal void ApplyUnifiedBasicSettings(P28BasicCalibrationSettings settings, bool notify = true)
+    {
+        var replacement = NewDraft(); replacement.Apply(settings);
+        Draft = replacement; if (notify) _host.BasicDraftChanged(); Refresh();
+    }
+    internal BasicDraftRawState CaptureRaw() => new(Draft!.SelectedSlot,
+        Draft.Groups.Select(group => new BasicGroupRawState(group.Included, group.Fields.Select(field => field.Text).ToArray())).ToArray());
+    internal void RestoreRaw(BasicDraftRawState state)
+    {
+        var replacement = NewDraft(); replacement.SelectedSlot = state.SelectedSlot;
+        for (var group = 0; group < replacement.Groups.Count; group++)
+        {
+            replacement.Groups[group].Included = state.Groups[group].Included;
+            for (var field = 0; field < replacement.Groups[group].Fields.Count; field++)
+                replacement.Groups[group].Fields[field].Text = state.Groups[group].Texts[field];
+        }
+        Draft = replacement; Refresh();
+    }
     private P28BasicCalibrationSettings Snapshot()
     {
         if (CommitEdits?.Invoke() == false) throw new ArgumentException("Активна cell/row не пройшла validation; snapshot не створено.");

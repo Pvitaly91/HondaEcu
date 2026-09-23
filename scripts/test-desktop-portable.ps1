@@ -13,6 +13,27 @@ if (-not (Test-Path -LiteralPath (Join-Path $source 'HondaEcu.Desktop.exe') -Pat
 if (@(Get-ChildItem -LiteralPath $source -Recurse -Force | Where-Object {
     $_.Attributes.HasFlag([IO.FileAttributes]::ReparsePoint)
 }).Count -ne 0) { throw 'Portable test input cannot contain links.' }
+$manifestPath = Join-Path $source 'PUBLISH-MANIFEST.json'
+if (-not (Test-Path -LiteralPath $manifestPath -PathType Leaf)) { throw 'Portable manifest is missing.' }
+$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+$listed = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+foreach ($entry in $manifest.files) {
+    $relative = [string]$entry.path
+    $full = [IO.Path]::GetFullPath((Join-Path $source $relative))
+    if (-not $full.StartsWith($source + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or
+        -not (Test-Path -LiteralPath $full -PathType Leaf) -or -not $listed.Add($relative)) {
+        throw "Invalid or missing portable manifest entry: $relative"
+    }
+    if ((Get-FileHash -LiteralPath $full -Algorithm SHA256).Hash.ToLowerInvariant() -ne [string]$entry.sha256) {
+        throw "Portable manifest hash mismatch: $relative"
+    }
+}
+$actual = @(Get-ChildItem -LiteralPath $source -File -Recurse | Where-Object { $_.FullName -ne $manifestPath } |
+    ForEach-Object { [IO.Path]::GetRelativePath($source, $_.FullName).Replace('\', '/') })
+if ($actual.Count -ne $listed.Count -or @($actual | Where-Object { -not $listed.Contains($_) }).Count -ne 0) {
+    throw 'Portable manifest inventory does not match package files.'
+}
+Write-Host "PASS: portable manifest inventory and $($listed.Count) SHA-256 hashes."
 
 # A fresh copy outside the repository; retain it for diagnostics, never delete a
 # computed user/temp directory recursively. Only the no-window diagnostic runs.

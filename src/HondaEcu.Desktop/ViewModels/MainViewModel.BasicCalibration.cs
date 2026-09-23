@@ -10,7 +10,7 @@ public sealed partial class MainViewModel
     internal DesktopDocument? BasicDocument => _document;
     internal VerifiedCompensationLocation? BasicLocation => _compensationLocation;
     internal string? BasicLocationPath => _compensationPath;
-    internal void BasicDraftChanged() { InvalidateSession(); NotifyAll(); }
+    internal void BasicDraftChanged() { Unified?.RecordDraftChange(); InvalidateSession(); NotifyAll(); }
     internal void AttachBasicDocument(DesktopDocument document) => SetDocument(document);
     internal void ClearBasicLocation()
     {
@@ -34,6 +34,20 @@ public sealed partial class MainViewModel
             try { await work(token, session, job); }
             catch (OperationCanceledException) { if (session == SessionId) Basic.Fail("Скасовано до publication; завершений результат не заявляється."); }
             catch (Exception e) { if (session == SessionId) { Basic.Fail(e.Message); SetError(e, session); } }
+            finally { _basicJobActive = false; EndJob(); }
+        }
+    }
+    internal Task RunUnifiedJobAsync(Func<CancellationToken, long, long, Task> work)
+    {
+        if (IsBusy || _disposed) return Task.CompletedTask;
+        _basicJobActive = true;
+        BeginJob(); var token = _cancellation!.Token; var session = SessionId; var job = JobId;
+        _activeTask = Run(); return _activeTask;
+        async Task Run()
+        {
+            try { await work(token, session, job); }
+            catch (OperationCanceledException) { if (session == SessionId) Unified.Fail("Скасовано до publication або завершено штатний readback/rollback."); }
+            catch (Exception e) { if (session == SessionId) { Unified.Fail(e.Message); SetError(e, session); } }
             finally { _basicJobActive = false; EndJob(); }
         }
     }

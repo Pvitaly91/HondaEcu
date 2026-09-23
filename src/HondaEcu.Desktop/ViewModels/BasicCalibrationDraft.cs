@@ -19,6 +19,7 @@ public sealed class BasicRawField : INotifyPropertyChanged, IDataErrorInfo
         get => _text;
         set { if (_text == value || !_editable()) return; _text = value; PropertyChanged?.Invoke(this, new(nameof(Text))); _changed(); }
     }
+    internal void AssignText(string value) { _text = value; PropertyChanged?.Invoke(this, new(nameof(Text))); }
     public int Number() => int.TryParse(Text, NumberStyles.None, CultureInfo.InvariantCulture, out var n) && Text.All(char.IsAsciiDigit)
         ? n : throw new ArgumentException($"{Id}: введіть десяткове ціле raw; порожній/невалідний текст не є попереднім значенням.");
     public string Error => this[nameof(Text)];
@@ -41,8 +42,14 @@ public sealed class BasicDraftGroup : INotifyPropertyChanged
     public string Title { get; }
     public IReadOnlyList<BasicRawField> Fields { get; }
     public bool Included { get => _included; set { if (_included == value || !_editable()) return; _included = value; PropertyChanged?.Invoke(this, new(nameof(Included))); _changed(); } }
+    internal void AssignIncluded(bool value) { _included = value; PropertyChanged?.Invoke(this, new(nameof(Included))); }
     public RelayCommand ResetCommand { get; }
-    public void Reset() { if (!_editable()) return; foreach (var f in Fields) f.Text = f.Original.ToString(CultureInfo.InvariantCulture); Included = false; }
+    public void Reset()
+    {
+        if (!_editable()) return;
+        foreach (var field in Fields) field.AssignText(field.Original.ToString(CultureInfo.InvariantCulture));
+        AssignIncluded(false); _changed();
+    }
     public event PropertyChangedEventHandler? PropertyChanged;
 }
 
@@ -66,7 +73,7 @@ public sealed class BasicCalibrationDraft : INotifyPropertyChanged
         {
             if (_slot == value || !_editable()) return;
             _ = P28ThresholdLogic.ResolveSlot(value);
-            var included = Vtec.Included; _slot = value; Vtec = MakeVtec(); Vtec.Included = included;
+            var included = Vtec.Included; _slot = value; Vtec = MakeVtec(); Vtec.AssignIncluded(included);
             Groups = new[] { Vtec }.Concat(Groups.Skip(1)).ToArray();
             PropertyChanged?.Invoke(this, new("")); _changed();
         }
@@ -117,3 +124,6 @@ public sealed class BasicCalibrationDraft : INotifyPropertyChanged
     }
     public event PropertyChangedEventHandler? PropertyChanged;
 }
+
+internal sealed record BasicGroupRawState(bool Included, string[] Texts);
+internal sealed record BasicDraftRawState(string SelectedSlot, BasicGroupRawState[] Groups);

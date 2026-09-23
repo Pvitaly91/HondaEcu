@@ -13,6 +13,24 @@ fn main() {
 }
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {
+    if std::env::args_os().len() == 2
+        && std::env::args_os().nth(1).as_deref() == Some(std::ffi::OsStr::new("--capabilities"))
+    {
+        // A no-ROM, no-window packaging probe. The normal JSON request/response format is unchanged.
+        println!(
+            "{}",
+            serde_json::json!({
+                "protocolVersion": 1,
+                "runnerVersion": env!("CARGO_PKG_VERSION"),
+                "operations": [
+                    "vtecThresholdPrefix", "vtecThresholdControl", "limiterSequence",
+                    "adaptiveLimiter", "idleTarget", "fuelMapLookup", "ignitionMapLookup",
+                    "checksumBatch"
+                ]
+            })
+        );
+        return Ok(());
+    }
     if std::env::args_os().len() != 1 {
         return Err("runner accepts one JSON request on stdin, no arguments".into());
     }

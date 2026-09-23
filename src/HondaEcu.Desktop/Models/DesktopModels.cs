@@ -3,7 +3,7 @@ using HondaEcu.Core;
 
 namespace HondaEcu.Desktop.Models;
 
-public enum DesktopAccessMode { Empty, RawOnly, BoundBaseline, VerifiedDerived, Demo, VerifiedChecksumDerived, VerifiedBasicDerived }
+public enum DesktopAccessMode { Empty, RawOnly, BoundBaseline, VerifiedDerived, Demo, VerifiedChecksumDerived, VerifiedBasicDerived, VerifiedUnifiedDerived }
 public enum DesktopValidationKind { Execute, Producer, Checksum }
 
 public sealed class ThresholdSlotView(string id, int context, int pair, bool priorState,
@@ -72,7 +72,15 @@ public sealed record DesktopDocument(DesktopAccessMode Mode, RomImage Image, Rom
     IReadOnlyList<string>? InputPaths = null, DesktopLineagePaths? LineagePaths = null, string? BindingPath = null,
     P28VerifiedChecksumComposition? ChecksumComposition = null, string? CompensationDefinitionPath = null,
     P28ChecksumPreservingExportReport? ChecksumExportReport = null,
-    P28BasicCalibrationPlan? BasicPlan = null, P28BasicCalibrationInspection? BasicInspection = null);
+    P28BasicCalibrationPlan? BasicPlan = null, P28BasicCalibrationInspection? BasicInspection = null,
+    P28UnifiedCalibrationPlan? UnifiedPlan = null, P28UnifiedCalibrationInspection? UnifiedInspection = null,
+    UnifiedLineagePaths? UnifiedLineagePaths = null);
+
+public sealed record UnifiedLineagePaths(string ChildPath, string OriginalPath, string ProfilePath,
+    string BindingPath, string LocationPath, string PlanPath, string ReceiptPath)
+{
+    public IEnumerable<string> All => [ChildPath, OriginalPath, ProfilePath, BindingPath, LocationPath, PlanPath, ReceiptPath];
+}
 
 public sealed record DesktopLineagePaths(string OutputPath, string ParentPath, string ProfilePath,
     string BindingPath, string PlanPath, string ReportPath);

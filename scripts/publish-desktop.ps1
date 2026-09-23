@@ -100,6 +100,8 @@ try {
     Copy-RequiredFile (Join-Path $repository 'THIRD_PARTY_NOTICES.md') (Join-Path $stage 'THIRD_PARTY_NOTICES.md')
     Copy-RequiredFile (Join-Path $repository 'docs/D0_DESKTOP_PREVIEW.md') (Join-Path $stage 'docs/D0_DESKTOP_PREVIEW.md')
     Copy-RequiredFile (Join-Path $repository 'docs/D1_BASIC_CALIBRATION_DESKTOP.md') (Join-Path $stage 'docs/D1_BASIC_CALIBRATION_DESKTOP.md')
+    Copy-RequiredFile (Join-Path $repository 'docs/D2_CALIBRATION_MAPS_DESKTOP.md') (Join-Path $stage 'docs/D2_CALIBRATION_MAPS_DESKTOP.md')
+    Copy-RequiredFile (Join-Path $repository 'docs/M2E_UNIFIED_CALIBRATION_EXPORT.md') (Join-Path $stage 'docs/M2E_UNIFIED_CALIBRATION_EXPORT.md')
     Copy-RequiredFile (Join-Path $repository 'docs/M1T_BASIC_CALIBRATION_EXPORT.md') (Join-Path $stage 'docs/M1T_BASIC_CALIBRATION_EXPORT.md')
     Copy-RequiredFile (Join-Path $repository 'docs/M1F_NATIVE_CHECKSUM_VALIDATION.md') (Join-Path $stage 'docs/M1F_NATIVE_CHECKSUM_VALIDATION.md')
     Copy-RequiredFile (Join-Path $repository 'docs/M1G_CHECKSUM_PRESERVING_EXPORT.md') (Join-Path $stage 'docs/M1G_CHECKSUM_PRESERVING_EXPORT.md')
@@ -164,7 +166,7 @@ try {
     })
     if ($forbidden.Count -ne 0) { throw 'Portable build contains forbidden data, source/debug artifacts or links; it will not be published.' }
     $manifest = [ordered]@{
-        formatVersion = 1; purpose = 'D0 + M1f/M1g/M1h + D1 basic calibration Windows Desktop Research Preview'; safety = 'PcInspectionOnly / NotFlashReady'
+        formatVersion = 1; purpose = 'D0 + M1f/M1g/M1h + D1 + D2 unified calibration Windows Desktop Research Preview'; safety = 'PcInspectionOnly / NotFlashReady'
         runtimeIdentifier = 'win-x64'; selfContained = $true; trimmed = $false; nativeAot = $false
         dotnetSdk = $sdkVersion; rustCompiler = $rustVersion; rustStaticCrt = $true; runtimePacks = @($runtimeInventory)
         files = @(Get-ChildItem -LiteralPath $stage -File -Recurse | Sort-Object FullName | ForEach-Object {

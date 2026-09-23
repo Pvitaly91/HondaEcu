@@ -7,7 +7,13 @@ primary raw maps, composes all values from one exact original, performs the
 separate mandatory suites on the same complete A/B/C images and runs exactly one
 native checksum batch before one BIN/plan/receipt publication and readback.
 Family-only firmware remains byte-compatible with M1t/M2b/M2d. Physical units,
-GUI/D2, hardware/full boot and flash readiness remain unavailable/NotRun.
+hardware/full boot and flash readiness remain unavailable/NotRun.
+
+The [D2 unified calibration maps Desktop workspace](docs/D2_CALIBRATION_MAPS_DESKTOP.md)
+adds four 20×10 raw map grids to the existing D1 six-group draft and uses the
+completed M2e Core for combined preview and PC-only native-gated export.
+Headless/offscreen validation is distinct from interactive GUI acceptance:
+GUI r3 is paused, and D1/D2 interactive acceptance remains NotRun.
 
 The [D1 basic-calibration desktop workspace](docs/D1_BASIC_CALIBRATION_DESKTOP.md)
 integrates the completed M1t six-group workflow into the Ukrainian WPF application:

@@ -21,7 +21,7 @@ public sealed record P28IgnitionMapsInspection(int FormatVersion, RomHash ImageH
 
 public static class P28IgnitionMapInspector
 {
-    internal static void LayoutGuard(RomImage image)
+    public static void LayoutGuard(RomImage image)
     {
         image.ValidateExactSize(32768);
         var b = image.Span;
