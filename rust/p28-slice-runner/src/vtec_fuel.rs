@@ -54,7 +54,11 @@ pub struct CpuBoundary {
     pub pc: u16,
     pub accumulator: u16,
     pub psw: u16,
+    pub dd: bool,
     pub lrb: u16,
+    pub x1: u16,
+    pub x2: u16,
+    pub dp: u16,
     pub usp: u16,
     pub ssp: u16,
     pub registers: [u8; 8],
@@ -179,6 +183,7 @@ fn ranges() -> Vec<[u16; 2]> {
 
 fn boundary(cpu: &Cpu, bus: &mut Bus) -> CpuBoundary {
     let base = cpu.bank_base();
+    let pointing = 0x80 + cpu.scb() * 8;
     let mut registers = [0; 8];
     for (i, register) in registers.iter_mut().enumerate() {
         *register = read_data_u8(cpu, bus, base + i as u16);
@@ -187,8 +192,12 @@ fn boundary(cpu: &Cpu, bus: &mut Bus) -> CpuBoundary {
         pc: cpu.pc,
         accumulator: cpu.a,
         psw: cpu.psw_u16(),
+        dd: cpu.dd,
         lrb: cpu.lrb,
-        usp: read_data_u16(cpu, bus, 0x8E),
+        x1: read_data_u16(cpu, bus, pointing),
+        x2: read_data_u16(cpu, bus, pointing + 2),
+        dp: read_data_u16(cpu, bus, pointing + 4),
+        usp: read_data_u16(cpu, bus, pointing + 6),
         ssp: cpu.ssp,
         registers,
     }

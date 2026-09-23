@@ -211,11 +211,12 @@ public static class P28VtecFuelValidator
                         var boundary = row.GetProperty("boundary12fc"); var entry = row.GetProperty("selectionEntry");
                         Check(boundary.ValueKind != JsonValueKind.Null && Equal(boundary, entry) &&
                             boundary.GetProperty("pc").GetInt32() == 0x12FC && decision!.Events.Length > 0 && selection!.Events.Length > 0 &&
+                            boundary.GetProperty("dd").GetBoolean() == ((boundary.GetProperty("psw").GetInt32() & 0x1000) != 0) &&
                             decision.Events[^1][1] == 0x12FC && decision.Events[^1][3] == boundary.GetProperty("accumulator").GetInt32() &&
                             decision.Events[^1][5] == boundary.GetProperty("psw").GetInt32() &&
                             selection.Events[0][0] == 0x12FC && selection.Events[0][2] == boundary.GetProperty("accumulator").GetInt32() &&
                             selection.Events[0][4] == boundary.GetProperty("psw").GetInt32(),
-                            "Unbroken PC/accumulator/PSW/LRB/USP/register/stack boundary 12FC");
+                            "Unbroken PC/accumulator/DD/PSW/LRB/pointing-registers/banked-registers/stack boundary 12FC");
                         Check(Number(row, "selectorBeforeReader131a") == afterVtec.Data0127 &&
                             selection!.Events.Any(e => e[0] == 0x131A) &&
                             selection.Writes.All(w => w[0] != 0x127) &&

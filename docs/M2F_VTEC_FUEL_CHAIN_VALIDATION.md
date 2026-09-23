@@ -30,7 +30,7 @@ ROM selection `12FC..1340`, lookup `1340..1347` (helper `59E4..5A46`), and
 consumer `1347..1350`, stop-before `1350`. Observation checkpoints and scoped
 access/program-data admission may change; machine state does not. The
 decision-to-selection boundary records all bank registers, accumulator,
-PSW/LRB/USP/SSP, the full shared byte, last native writes, selector reader
+DD/PSW/LRB/X1/X2/DP/USP/SSP, the full shared byte, last native writes, selector reader
 and ROM-selected origin. A separate invented two-fragment program tests this
 seam, including a negative reinitializer that leaves the final number equal
 but changes the boundary context.
