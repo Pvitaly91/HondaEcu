@@ -103,13 +103,21 @@ pub struct Sequence {
 }
 
 pub fn validate_request(r: &Request) -> Result<(), String> {
-    let s = r.vtec_fuel_chain.as_ref().ok_or("VTEC-fuel stimulus required")?;
+    let s = r
+        .vtec_fuel_chain
+        .as_ref()
+        .ok_or("VTEC-fuel stimulus required")?;
     if s.format_version != 1
         || s.calls.is_empty()
         || s.calls.len() > 256
         || s.trace_call_indexes.len() > 8
-        || s.trace_call_indexes.iter().any(|i| *i as usize >= s.calls.len())
-        || s.trace_call_indexes.iter().collect::<std::collections::HashSet<_>>().len()
+        || s.trace_call_indexes
+            .iter()
+            .any(|i| *i as usize >= s.calls.len())
+        || s.trace_call_indexes
+            .iter()
+            .collect::<std::collections::HashSet<_>>()
+            .len()
             != s.trace_call_indexes.len()
         || s.initial_fuel.load_index > 8
         || s.initial_fuel.map0_rpm_index > 18
@@ -156,9 +164,15 @@ pub fn entry_contracts() -> Vec<serde_json::Value> {
 fn ranges() -> Vec<[u16; 2]> {
     let mut ranges = fuel::data_ranges();
     ranges.extend([
-        [0x22, 0x23], [0xCC, 0xCD], [0xD9, 0xDA], [0xF3, 0xF4],
-        [0x119, 0x11F], [0x131, 0x134], [0x198, 0x19A],
-        [0x1D8, 0x1DA], [0x1DF, 0x1E0],
+        [0x22, 0x23],
+        [0xCC, 0xCD],
+        [0xD9, 0xDA],
+        [0xF3, 0xF4],
+        [0x119, 0x11F],
+        [0x131, 0x134],
+        [0x198, 0x19A],
+        [0x1D8, 0x1DA],
+        [0x1DF, 0x1E0],
     ]);
     ranges
 }
@@ -183,7 +197,10 @@ fn boundary(cpu: &Cpu, bus: &mut Bus) -> CpuBoundary {
 fn seed(cpu: &mut Cpu, bus: &mut Bus, s: &Stimulus) {
     cpu.ssp = 0x7FE;
     bus.set_p1_output_latch(Some(s.initial_vtec.p1_output_data));
-    for (address, value) in stateful::STATE_ADDRESSES.into_iter().zip(s.initial_vtec.bytes()) {
+    for (address, value) in stateful::STATE_ADDRESSES
+        .into_iter()
+        .zip(s.initial_vtec.bytes())
+    {
         if address != 0x22 {
             write_data_u8(cpu, bus, address, value);
         }
@@ -229,7 +246,8 @@ fn stage(cpu: &mut Cpu, bus: &mut Bus, name: &str, enter_stage: bool, trace: boo
     bus.set_program_data_ranges(fuel::program(name));
     bus.begin_write_journal();
     bus.start_decision_observer();
-    let result = execute_in_state_observed(cpu, bus, &contract, &[], trace, Some(fuel::admission), true);
+    let result =
+        execute_in_state_observed(cpu, bus, &contract, &[], trace, Some(fuel::admission), true);
     Stage {
         result,
         writes: bus.end_write_journal(),
@@ -238,28 +256,56 @@ fn stage(cpu: &mut Cpu, bus: &mut Bus, name: &str, enter_stage: bool, trace: boo
     }
 }
 
-fn sequence(rom: &[u8], image_index: usize, scratch_pattern: u8, s: &Stimulus, allowed: &[&str]) -> Sequence {
+fn sequence(
+    rom: &[u8],
+    image_index: usize,
+    scratch_pattern: u8,
+    s: &Stimulus,
+    allowed: &[&str],
+) -> Sequence {
     let decision_contract = stateful::contract(0x122C, 0x12FC);
     let (mut cpu, mut bus) = seed_machine(rom, &decision_contract, scratch_pattern);
     seed(&mut cpu, &mut bus, s);
     bus.configure_scoped_access(ranges(), 8192);
     let mut sequence = Sequence {
-        image_index, scratch_pattern, checkpoints: Vec::with_capacity(s.calls.len()),
-        completed_calls: 0, stop_call_index: -1,
+        image_index,
+        scratch_pattern,
+        checkpoints: Vec::with_capacity(s.calls.len()),
+        completed_calls: 0,
+        stop_call_index: -1,
     };
     let mut conditional_dependency = false;
     for input in &s.calls {
         let vtec_before = stateful::snapshot(&cpu, &mut bus);
         let fuel_before = fuel::state(&cpu, &mut bus);
         let mut cp = Checkpoint {
-            index: input.index, status: NOT_RUN, conditional_dependency,
-            input: None, vtec_before: vtec_before.clone(), vtec_after: vtec_before,
-            fuel_before: fuel_before.clone(), fuel_after: fuel_before,
-            tick_runs: vec![], tick_writes: vec![], rpm_axes: None, load_axis: None,
-            decision: None, boundary12fc: None, selection_entry: None, selector_before_reader131a: None,
-            selection: None, selected_origin: None, lookup: None, lookup_result: None,
-            consumer: None, consumer_output0140: None, request_p1: None,
-            request_mirror0127: None, selector0127: None, used_assumptions: vec![], error: None,
+            index: input.index,
+            status: NOT_RUN,
+            conditional_dependency,
+            input: None,
+            vtec_before: vtec_before.clone(),
+            vtec_after: vtec_before,
+            fuel_before: fuel_before.clone(),
+            fuel_after: fuel_before,
+            tick_runs: vec![],
+            tick_writes: vec![],
+            rpm_axes: None,
+            load_axis: None,
+            decision: None,
+            boundary12fc: None,
+            selection_entry: None,
+            selector_before_reader131a: None,
+            selection: None,
+            selected_origin: None,
+            lookup: None,
+            lookup_result: None,
+            consumer: None,
+            consumer_output0140: None,
+            request_p1: None,
+            request_mirror0127: None,
+            selector0127: None,
+            used_assumptions: vec![],
+            error: None,
         };
         if sequence.stop_call_index >= 0 {
             sequence.checkpoints.push(cp);
@@ -268,11 +314,20 @@ fn sequence(rom: &[u8], image_index: usize, scratch_pattern: u8, s: &Stimulus, a
         cp.input = Some(input.clone());
         let d = &input.decision;
         for (address, value) in [
-            (0x238, input.raw_map0_rpm), (0xC2, input.raw_map1_rpm), (0xBF, input.raw_load),
-            (0x133, d.compact_code), (0xCC, d.raw00cc), (0xD9, d.raw00d9),
-            (0x11C, d.snapshot011c), (0x119, d.snapshot0119),
-            (0x132, d.raw0132), (0x199, d.raw0199),
-            (0x11E, if d.context == 0 { 8 } else { 0 } | if d.enabled { 16 } else { 0 }),
+            (0x238, input.raw_map0_rpm),
+            (0xC2, input.raw_map1_rpm),
+            (0xBF, input.raw_load),
+            (0x133, d.compact_code),
+            (0xCC, d.raw00cc),
+            (0xD9, d.raw00d9),
+            (0x11C, d.snapshot011c),
+            (0x119, d.snapshot0119),
+            (0x132, d.raw0132),
+            (0x199, d.raw0199),
+            (
+                0x11E,
+                if d.context == 0 { 8 } else { 0 } | if d.enabled { 16 } else { 0 },
+            ),
         ] {
             write_data_u8(&mut cpu, &mut bus, address, value);
         }
@@ -289,11 +344,22 @@ fn sequence(rom: &[u8], image_index: usize, scratch_pattern: u8, s: &Stimulus, a
                 write_data_u16(&mut cpu, &mut bus, 0x88, target);
                 bus.begin_write_journal();
                 let result = execute_in_state_observed(
-                    &mut cpu, &mut bus, &tick, &[], false,
-                    Some(stateful_forms::admission), true,
+                    &mut cpu,
+                    &mut bus,
+                    &tick,
+                    &[],
+                    false,
+                    Some(stateful_forms::admission),
+                    true,
                 );
                 cp.tick_writes.extend(bus.end_write_journal());
-                cp.tick_runs.push([entry as u32, target as u32, result.stop_pc as u32, result.status as u32, result.steps]);
+                cp.tick_runs.push([
+                    entry as u32,
+                    target as u32,
+                    result.stop_pc as u32,
+                    result.status as u32,
+                    result.steps,
+                ]);
                 if result.status != 0 {
                     cp.status = result.status;
                     cp.error = result.error;
@@ -320,8 +386,13 @@ fn sequence(rom: &[u8], image_index: usize, scratch_pattern: u8, s: &Stimulus, a
             bus.begin_write_journal();
             bus.start_decision_observer();
             let result = execute_in_state_observed(
-                &mut cpu, &mut bus, &decision_contract, allowed, trace,
-                Some(stateful_forms::admission), true,
+                &mut cpu,
+                &mut bus,
+                &decision_contract,
+                allowed,
+                trace,
+                Some(stateful_forms::admission),
+                true,
             );
             cp.used_assumptions = result.used_assumptions.clone();
             conditional_dependency |= !cp.used_assumptions.is_empty();
@@ -340,7 +411,8 @@ fn sequence(rom: &[u8], image_index: usize, scratch_pattern: u8, s: &Stimulus, a
             cp.selector_before_reader131a = Some(read_data_u8(&cpu, &mut bus, 0x127));
             if cpu.pc != 0x12FC || !supported_caller(&cpu, &mut bus) {
                 cp.status = 1;
-                cp.error = Some("decision did not reach supported continuous fuel caller boundary".into());
+                cp.error =
+                    Some("decision did not reach supported continuous fuel caller boundary".into());
             }
         }
         // No CPU/RAM/stack/port/register write by this task between the
@@ -384,15 +456,23 @@ fn sequence(rom: &[u8], image_index: usize, scratch_pattern: u8, s: &Stimulus, a
 }
 
 pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
-    let stimulus = r.vtec_fuel_chain.as_ref().ok_or("missing VTEC-fuel stimulus")?;
+    let stimulus = r
+        .vtec_fuel_chain
+        .as_ref()
+        .ok_or("missing VTEC-fuel stimulus")?;
     let allowed: Vec<_> = r.allow_assumptions.iter().map(String::as_str).collect();
     response.entry_contracts = entry_contracts();
     response.vtec_fuel_sequences = Some(
-        r.images.iter().enumerate().flat_map(|(index, image)| {
-            r.scratch_patterns.iter().map(|pattern| {
-                sequence(&image.rom, index, *pattern, stimulus, &allowed)
-            }).collect::<Vec<_>>()
-        }).collect(),
+        r.images
+            .iter()
+            .enumerate()
+            .flat_map(|(index, image)| {
+                r.scratch_patterns
+                    .iter()
+                    .map(|pattern| sequence(&image.rom, index, *pattern, stimulus, &allowed))
+                    .collect::<Vec<_>>()
+            })
+            .collect(),
     );
     Ok(response)
 }
@@ -404,9 +484,16 @@ mod tests {
 
     fn seam_contract(entry: u16, exit: u16) -> SliceContract {
         SliceContract {
-            entry_pc: entry, exit_pcs: vec![exit], code_ranges: vec![[entry as u32, exit as u32]],
-            psw: 0x0101, lrb: 0x20, usp: 0x280, instruction_budget: 8,
-            data_seeds: vec![], output_addresses: vec![], program_read_range: None,
+            entry_pc: entry,
+            exit_pcs: vec![exit],
+            code_ranges: vec![[entry as u32, exit as u32]],
+            psw: 0x0101,
+            lrb: 0x20,
+            usp: 0x280,
+            instruction_budget: 8,
+            data_seeds: vec![],
+            output_addresses: vec![],
+            program_read_range: None,
         }
     }
     fn toy() -> (Cpu, Bus) {
@@ -422,14 +509,31 @@ mod tests {
             0xD4, 0x40, // STB A,off 40 -> DATA0140
         ]);
         let (cpu, mut bus) = seed_machine(&rom, &seam_contract(0x100, 0x106), 0);
-        bus.configure_scoped_access(vec![[0, 8], [0x88, 0x90], [0x100, 0x108], [0x127, 0x128], [0x140, 0x141]], 64);
+        bus.configure_scoped_access(
+            vec![
+                [0, 8],
+                [0x88, 0x90],
+                [0x100, 0x108],
+                [0x127, 0x128],
+                [0x140, 0x141],
+            ],
+            64,
+        );
         (cpu, bus)
     }
 
     #[test]
     fn invented_writer_to_reader_uses_one_machine_without_host_selector_injection() {
         let (mut cpu, mut bus) = toy();
-        let first = execute_in_state_observed(&mut cpu, &mut bus, &seam_contract(0x100, 0x106), &[], true, None, true);
+        let first = execute_in_state_observed(
+            &mut cpu,
+            &mut bus,
+            &seam_contract(0x100, 0x106),
+            &[],
+            true,
+            None,
+            true,
+        );
         assert_eq!(first.status, 0, "{:?}", first.error);
         let before = boundary(&cpu, &mut bus);
         assert_eq!(before.pc, 0x106);
@@ -437,7 +541,15 @@ mod tests {
         assert_eq!(read_data_u8(&cpu, &mut bus, 0x127), 2);
         let entry = boundary(&cpu, &mut bus);
         assert_eq!(before, entry);
-        let second = execute_in_state_observed(&mut cpu, &mut bus, &seam_contract(0x106, 0x10A), &[], true, None, true);
+        let second = execute_in_state_observed(
+            &mut cpu,
+            &mut bus,
+            &seam_contract(0x106, 0x10A),
+            &[],
+            true,
+            None,
+            true,
+        );
         assert_eq!(second.status, 0, "{:?}", second.error);
         assert_eq!(read_data_u8(&cpu, &mut bus, 0x140), 2);
     }
@@ -445,7 +557,15 @@ mod tests {
     #[test]
     fn boundary_guard_catches_reinitialization_even_when_final_number_matches() {
         let (mut cpu, mut bus) = toy();
-        let first = execute_in_state_observed(&mut cpu, &mut bus, &seam_contract(0x100, 0x106), &[], false, None, true);
+        let first = execute_in_state_observed(
+            &mut cpu,
+            &mut bus,
+            &seam_contract(0x100, 0x106),
+            &[],
+            false,
+            None,
+            true,
+        );
         assert_eq!(first.status, 0);
         let producer_boundary = boundary(&cpu, &mut bus);
         // Deliberate bad host initializer, as in an accidental second task.
@@ -453,7 +573,15 @@ mod tests {
         let consumer_entry = boundary(&cpu, &mut bus);
         assert_ne!(producer_boundary, consumer_entry);
         assert_eq!(read_data_u8(&cpu, &mut bus, 0x127), 2);
-        let second = execute_in_state_observed(&mut cpu, &mut bus, &seam_contract(0x106, 0x10A), &[], false, None, true);
+        let second = execute_in_state_observed(
+            &mut cpu,
+            &mut bus,
+            &seam_contract(0x106, 0x10A),
+            &[],
+            false,
+            None,
+            true,
+        );
         assert_eq!(second.status, 0);
         assert_eq!(read_data_u8(&cpu, &mut bus, 0x140), 2);
     }
