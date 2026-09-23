@@ -14,7 +14,8 @@ public sealed class BasicCalibrationSubprocessTests
             for (var d = new DirectoryInfo(AppContext.BaseDirectory); d is not null; d = d.Parent)
                 if (File.Exists(Path.Combine(d.FullName, "Directory.Build.props")))
                 {
-                    var path = Path.Combine(d.FullName, "rust", "p28-slice-runner", "target", "release", "p28-slice-runner.exe");
+                    var path = Environment.GetEnvironmentVariable("HONDAECU_SLICE_RUNNER") ?? Path.Combine(
+                        d.FullName, "rust", "p28-slice-runner", "target", "release", "p28-slice-runner.exe");
                     Assert.True(File.Exists(path), "Build the pinned Rust runner; missing integration is not a silent skip."); return path;
                 }
             throw new DirectoryNotFoundException("Test repository not found.");
