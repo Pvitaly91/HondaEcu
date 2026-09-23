@@ -94,6 +94,28 @@ cannot legitimately change selector/counters under equal inputs and matters
 only if native lookup reads that selected cell. Uncorrected B is not an ECU
 image. Any checksum arithmetic is diagnostic, never compensation.
 
+On the locally admitted exact original, the bounded headless witnesses found
+four native selection transitions per `00/55/AA` sequence, including both
+`0→1` and `1→0`. Request and selection disagree in both directions: a
+no-request call can retain/select map 1, and a request call can select map 0.
+The same zero raw axes selected distinct maps and gave distinct lookup and
+`DATA0140` observations. A separate retention sequence completed four
+strict calls per scratch pattern. A mixed sequence completed ten strict calls
+before its first actually used SUBB permission and five dependent conditional
+calls per pattern; without that permission, the corresponding three strict
+sequences each stopped once and left four suffix calls `NotRun`.
+
+The threshold A/B changed an accessed code-owned predicate and downstream
+request/selector/map/consumer histories on fifteen comparable events across
+three scratch patterns; other events were masked by gates/history. The fuel
+cell A/B changed only one map-1 cell in memory. Its byte was read in three
+completed comparable lookups; only those three lookup/consumer results
+changed. Request, full VTEC state/counters, selector and selected origin
+remained controlled, with zero control failures. These are software-snapshot
+observations under the explicit caller/conditional scope, not physical
+measurements. Detailed actual-ROM evidence and hashes stay in the ignored
+private M2f report area and are never uploaded to public CI.
+
 The report is bounded to event summaries plus selected traces/first
 discrepancy. A process success code alone is not a model match. Input file
 snapshots, new-path/alias protection, timeout/cancellation and exact

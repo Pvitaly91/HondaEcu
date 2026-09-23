@@ -43,9 +43,22 @@ public sealed partial class CliApplication
                 $"strict={rows.Count(row => row.Disposition == "StrictMatch")}, conditional={rows.Count(row => row.Disposition == "ConditionalMatch")}, " +
                 $"unresolved={rows.Count(row => row.Disposition == "Unresolved")}, NotRun={rows.Count(row => row.Disposition == "NotRun")}; " +
                 $"selector transitions={rows.Count(row => row.Status == 0 && row.SelectorBefore != row.Selector0127)}.").ConfigureAwait(false);
-            foreach (var row in rows.Where(row => row.Status == 0))
-                await _output.WriteLineAsync($"  event={row.Index}: P1 request={row.RequestP1}, mirror0127.2={row.RequestMirror0127}, " +
-                    $"selector0127.1={row.Selector0127}, map={row.SelectedMap}, lookup={row.Lookup}, DATA0140={row.Data0140}; {row.Disposition}; {row.SelectorCause}.").ConfigureAwait(false);
+            foreach (var row in rows)
+            {
+                if (row.Status != 0)
+                {
+                    await _output.WriteLineAsync($"  event={row.Index}: {row.Disposition}; fuel lookup/consumer NotRun; " +
+                        (row.Disposition == "NotRun" ? "no next-event inputs applied." : "stopped before the fuel tail.")).ConfigureAwait(false);
+                    continue;
+                }
+                var call = scenario.Calls[row.Index];
+                await _output.WriteLineAsync($"  event={row.Index}: raw load/rpm0/rpm1={call.RawLoad}/{call.RawMap0Rpm}/{call.RawMap1Rpm}, " +
+                    $"compact={call.Decision.CompactCode}, feedback0119={call.Decision.Snapshot0119}, " +
+                    $"native ticks fast/slow={call.Decision.FastTicks}/{call.Decision.SlowTicks}; " +
+                    $"P1 request={row.RequestP1}, mirror0127.2={row.RequestMirror0127}, " +
+                    $"selector0127.1={row.Selector0127}, actual map={row.SelectedMap}, lookup={row.Lookup}, " +
+                    $"DATA0140={row.Data0140}, consumerChanged={row.ConsumerChanged}; {row.Disposition}; {row.SelectorCause}.").ConfigureAwait(false);
+            }
         }
         await _output.WriteLineAsync("M2f read-only native decision→fuel tail; scripted axis/counter caller, no physical VTEC/RPM/MAP/AFR or full boot. PcInspectionOnly / NotFlashReady. GUI and hardware NotRun. No BIN written.").ConfigureAwait(false);
         return report.HasFailure ? VerificationFailed : Success;

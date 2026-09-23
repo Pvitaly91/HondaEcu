@@ -117,8 +117,11 @@ public sealed class P28VtecFuelModelTests
     {
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(new
         {
-            protocolVersion = 1, operation = P28VtecFuelValidator.Operation, runnerVersion = "0.13.0",
-            upstreamCommit = P28ByteExecutionValidator.UpstreamCommit, localSemanticFixes = Array.Empty<string>(),
+            protocolVersion = 1,
+            operation = P28VtecFuelValidator.Operation,
+            runnerVersion = "0.13.0",
+            upstreamCommit = P28ByteExecutionValidator.UpstreamCommit,
+            localSemanticFixes = Array.Empty<string>(),
         }));
         Assert.Throws<SliceProcessException>(() => SliceRunnerIdentity.Validate(document.RootElement, P28VtecFuelValidator.Operation));
     }

@@ -5,7 +5,7 @@ namespace HondaEcu.Core;
 
 public sealed record P28VtecFuelCheckpoint(int Index, string Disposition, int Status, bool ConditionalDependency,
     bool? RequestP1, bool? RequestMirror0127, bool? Selector0127, bool? SelectorBefore,
-    int? SelectedOrigin, string? SelectedMap, int? Lookup, int? Data0140,
+    int? SelectedOrigin, string? SelectedMap, int? Lookup, int? Data0140, bool? ConsumerChanged,
     string SelectorCause, bool? ChangedByteRead, P28VtecPersistentState VtecState,
     IReadOnlyList<string> Differences, JsonElement? Witness);
 public sealed record P28VtecFuelSequence(int ImageIndex, int ScratchPattern, int CompletedCalls, int StopCallIndex,
@@ -246,10 +246,12 @@ public static class P28VtecFuelValidator
                     if (nextSelector != priorSelector) transitionWriter = write;
                     priorSelector = nextSelector;
                 }
+                var nativeBranch = decision?.Events.Any(e => e[0] == 0x12F9) == true ? "12F9 set-path" :
+                    decision?.Events.Any(e => e[0] == 0x12DF) == true ? "12DF clear-path" : "decision path";
                 var cause = status != 0 ? "NotRun/unresolved" : transitionWriter is not null ?
-                    $"native DATA0127.1 transition at store value {transitionWriter[2]}" :
-                    decision?.Writes.Any(w => w[0] == 0x127) == true ? "native DATA0127 store retained selector bit" :
-                    "selector retained from prior native/initial state";
+                    $"native {nativeBranch} changed DATA0127.1 at store value {transitionWriter[2]}" :
+                    decision?.Writes.Any(w => w[0] == 0x127) == true ? $"native {nativeBranch} stored but retained DATA0127.1" :
+                    $"native {nativeBranch} retained selector from prior native/initial state";
                 var disposition = differences.Count > 0 ? "Mismatch" : status switch
                 {
                     0 when conditional => "ConditionalMatch",
@@ -269,7 +271,9 @@ public static class P28VtecFuelValidator
                     status == 0 ? (afterVtec.Data0127 & 4) != 0 : null,
                     selectorAfter, status == 0 ? selectorBefore : null,
                     Number(row, "selectedOrigin"), status == 0 ? (afterVtec.Data0127 & 2) == 0 ? "map_0" : "map_1" : null,
-                    Number(row, "lookupResult"), Number(row, "consumerOutput0140"), cause, changedByteRead, afterVtec,
+                    Number(row, "lookupResult"), Number(row, "consumerOutput0140"),
+                    status == 0 ? beforeFuel.ConsumerOutput0140 != afterFuel.ConsumerOutput0140 : null,
+                    cause, changedByteRead, afterVtec,
                     differences.AsReadOnly(), witness));
                 previousVtec = afterVtec; previousFuel = afterFuel;
             }
