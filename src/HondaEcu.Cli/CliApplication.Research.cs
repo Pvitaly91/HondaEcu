@@ -18,9 +18,11 @@ public sealed partial class CliApplication
             "p28-idle" => await P28IdleResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "p28-fuel" => await P28FuelResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
             "p28-ignition" => await P28IgnitionResearchAsync(args[1..], cancellationToken).ConfigureAwait(false),
-            "p28-calibration" => args.Length > 1 && args[1] == "combined-export"
-                ? await P28UnifiedCalibrationExportAsync(args[2..], cancellationToken).ConfigureAwait(false)
-                : await P28BasicCalibrationExportAsync(args[1..], cancellationToken).ConfigureAwait(false),
+            "p28-calibration" => args.Length > 1 && args[1] == "shared-chain-check"
+                ? await P28SharedChainCheckAsync(args[2..], cancellationToken).ConfigureAwait(false)
+                : args.Length > 1 && args[1] == "combined-export"
+                    ? await P28UnifiedCalibrationExportAsync(args[2..], cancellationToken).ConfigureAwait(false)
+                    : await P28BasicCalibrationExportAsync(args[1..], cancellationToken).ConfigureAwait(false),
             _ => throw new CliUsageException($"Unknown research command '{args[0]}'."),
         };
     }

@@ -40,10 +40,23 @@ jobs:
         run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
 
       - name: Rust build and instruction tests (synthetic only)
+        shell: pwsh
         run: |
-          cargo +1.85.1 build --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml
-          cargo +1.85.1 test --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml
-          cargo +1.85.1 fmt --check --manifest-path rust/p28-slice-runner/Cargo.toml
+          cargo +1.85.1 build --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml 2>&1 | Tee-Object -FilePath rust-qa.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --release --locked --manifest-path rust/p28-slice-runner/Cargo.toml 2>&1 | Tee-Object -FilePath rust-qa.log -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 fmt --check --manifest-path rust/p28-slice-runner/Cargo.toml 2>&1 | Tee-Object -FilePath rust-qa.log -Append
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Preserve public Rust diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-qa-${{ matrix.os }}
+          path: rust-qa.log
+          if-no-files-found: ignore
+          retention-days: 3
 
       - name: Build (Release)
         run: dotnet build HondaEcu.sln --configuration Release --no-restore

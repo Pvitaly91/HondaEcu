@@ -73,6 +73,11 @@ pub struct Checkpoint {
     pub input: Option<Call>,
     pub state_before: State,
     pub state_after_inputs: Option<State>,
+    pub state_after_ticks: Option<State>,
+    pub state_after_producer: Option<State>,
+    pub state_after_axis: Option<State>,
+    pub state_after_ignition: Option<State>,
+    pub state_after_decision: Option<State>,
     pub state_after: State,
     pub tick_runs: Vec<[u32; 5]>,
     pub tick_writes: Vec<[u32; 3]>,
@@ -98,9 +103,13 @@ pub struct Checkpoint {
     pub boundary12fc: Option<CpuBoundary>,
     pub fuel_selection_entry: Option<CpuBoundary>,
     pub fuel_selection: Option<Stage>,
+    pub fuel_selection_exit: Option<CpuBoundary>,
     pub fuel_origin: Option<u16>,
+    pub fuel_lookup_entry: Option<CpuBoundary>,
     pub fuel_lookup: Option<Stage>,
+    pub fuel_lookup_exit: Option<CpuBoundary>,
     pub fuel_value: Option<u16>,
+    pub fuel_consumer_entry: Option<CpuBoundary>,
     pub fuel_consumer: Option<Stage>,
     pub fuel_output: Option<u16>,
     pub request_p1: Option<bool>,
@@ -248,7 +257,9 @@ fn sequence(rom:&[u8],image_index:usize,pattern:u8,s:&Stimulus,allowed:&[&str]) 
         let before=snapshot(&cpu,&mut bus);
         let mut cp=Checkpoint {
             index:input.index,status:NOT_RUN,conditional_dependency:conditional,input:None,
-            state_before:before.clone(),state_after_inputs:None,state_after:before,
+            state_before:before.clone(),state_after_inputs:None,state_after_ticks:None,
+            state_after_producer:None,state_after_axis:None,state_after_ignition:None,
+            state_after_decision:None,state_after:before,
             tick_runs:vec![],tick_writes:vec![],producer:None,producer_exit:None,
             axis_entry:None,axis:None,axis_exit:None,
             ignition_entry:None,ignition_selection:None,ignition_selection_exit:None,
@@ -256,8 +267,9 @@ fn sequence(rom:&[u8],image_index:usize,pattern:u8,s:&Stimulus,allowed:&[&str]) 
             ignition_lookup_exit:None,ignition_value:None,ignition_consumer_entry:None,
             ignition_consumer:None,ignition_output:None,ignition_completed:false,
             decision_entry:None,decision:None,boundary12fc:None,
-            fuel_selection_entry:None,fuel_selection:None,fuel_origin:None,
-            fuel_lookup:None,fuel_value:None,fuel_consumer:None,fuel_output:None,
+            fuel_selection_entry:None,fuel_selection:None,fuel_selection_exit:None,fuel_origin:None,
+            fuel_lookup_entry:None,fuel_lookup:None,fuel_lookup_exit:None,
+            fuel_value:None,fuel_consumer_entry:None,fuel_consumer:None,fuel_output:None,
             request_p1:None,request_mirror0127:None,fuel_selector0127:None,
             used_assumptions:vec![],error:None,
         };
@@ -270,7 +282,7 @@ fn sequence(rom:&[u8],image_index:usize,pattern:u8,s:&Stimulus,allowed:&[&str]) 
             (0x133,d.compact_code),(0xCC,d.raw00cc),(0xD9,d.raw00d9),
             (0x11C,d.snapshot011c),(0x119,d.snapshot0119),
             (0x132,d.raw0132),(0x199,d.raw0199),
-            (0x11E,if d.context==0 {8} else {0} | if d.enabled {16} else {0}),
+            (0x11E,(if d.context==0 {8} else {0}) | (if d.enabled {16} else {0})),
         ] { write_data_u8(&mut cpu,&mut bus,address,value); }
         write_data_u16(&mut cpu,&mut bus,0x11A,d.snapshot011a);
         cp.state_after_inputs=Some(snapshot(&cpu,&mut bus));
@@ -287,9 +299,11 @@ fn sequence(rom:&[u8],image_index:usize,pattern:u8,s:&Stimulus,allowed:&[&str]) 
             cp.tick_runs.push([entry as u32,target as u32,result.stop_pc as u32,result.status as u32,result.steps]);
             if result.status != 0 { cp.status=result.status; cp.error=result.error; break; }
         }
+        if cp.status == NOT_RUN { cp.state_after_ticks=Some(snapshot(&cpu,&mut bus)); }
         if cp.status == NOT_RUN {
             let p=ignition_selector::producer(&mut cpu,&mut bus,trace);
             cp.status=p.result.status; cp.error=p.result.error.clone(); cp.producer=Some(p);
+            cp.state_after_producer=Some(snapshot(&cpu,&mut bus));
         }
         if cp.status == 0 {
             cp.producer_exit=Some(boundary(&cpu,&mut bus));
@@ -303,6 +317,7 @@ fn sequence(rom:&[u8],image_index:usize,pattern:u8,s:&Stimulus,allowed:&[&str]) 
             cp.axis_entry=Some(boundary(&cpu,&mut bus));
             let a=axis(&mut cpu,&mut bus,trace);
             cp.status=a.result.status;cp.error=a.result.error.clone();cp.axis=Some(a);
+            cp.state_after_axis=Some(snapshot(&cpu,&mut bus));
             if cp.status==0 { cp.axis_exit=Some(boundary(&cpu,&mut bus)); }
         }
         if cp.status == 0 {
@@ -327,6 +342,7 @@ fn sequence(rom:&[u8],image_index:usize,pattern:u8,s:&Stimulus,allowed:&[&str]) 
             if cp.status==0 {
                 cp.ignition_output=Some(read_data_u8(&cpu,&mut bus,0x248));
                 cp.ignition_completed=true;
+                cp.state_after_ignition=Some(snapshot(&cpu,&mut bus));
             }
         }
         if cp.status == 0 {
@@ -340,6 +356,7 @@ fn sequence(rom:&[u8],image_index:usize,pattern:u8,s:&Stimulus,allowed:&[&str]) 
             cp.used_assumptions=result.used_assumptions.clone();
             cp.status=result.status;cp.error=result.error.clone();
             cp.decision=Some(Stage { result,writes:bus.end_write_journal(),events:bus.finish_decision_observer(),ssp_after:cpu.ssp });
+            cp.state_after_decision=Some(snapshot(&cpu,&mut bus));
         }
         if cp.status == 0 {
             cp.boundary12fc=Some(boundary(&cpu,&mut bus));
@@ -351,14 +368,18 @@ fn sequence(rom:&[u8],image_index:usize,pattern:u8,s:&Stimulus,allowed:&[&str]) 
             cp.fuel_selection_entry=Some(boundary(&cpu,&mut bus));
             let x=vtec_fuel::stage(&mut cpu,&mut bus,"selection",false,trace);
             cp.status=x.result.status;cp.error=x.result.error.clone();cp.fuel_selection=Some(x);
+            if cp.status==0 { cp.fuel_selection_exit=Some(boundary(&cpu,&mut bus)); }
         }
         if cp.status == 0 {
             cp.fuel_origin=Some(read_data_u16(&cpu,&mut bus,0x88));
+            cp.fuel_lookup_entry=Some(boundary(&cpu,&mut bus));
             let x=vtec_fuel::stage(&mut cpu,&mut bus,"lookup",false,trace);
             cp.status=x.result.status;cp.error=x.result.error.clone();cp.fuel_lookup=Some(x);
+            if cp.status==0 { cp.fuel_lookup_exit=Some(boundary(&cpu,&mut bus)); }
         }
         if cp.status == 0 {
             cp.fuel_value=Some(read_data_u16(&cpu,&mut bus,0x104));
+            cp.fuel_consumer_entry=Some(boundary(&cpu,&mut bus));
             let x=vtec_fuel::stage(&mut cpu,&mut bus,"consumer",false,trace);
             cp.status=x.result.status;cp.error=x.result.error.clone();cp.fuel_consumer=Some(x);
         }
