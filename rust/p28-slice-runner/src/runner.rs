@@ -396,6 +396,9 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "ignitionSelectorChain" && request.ignition_selector_chain.is_some() {
+        return Err("M2g selector-chain stimulus is unavailable to other operations".into());
+    }
     if request.operation != "vtecFuelChain" && request.vtec_fuel_chain.is_some() {
         return Err("VTEC-fuel chain stimulus is unavailable to other operations".into());
     }
@@ -557,6 +560,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "fuelMapLookup" => crate::fuel::validate_request(request)?,
         "vtecFuelChain" => crate::vtec_fuel::validate_request(request)?,
         "ignitionMapLookup" => crate::ignition::validate_request(request)?,
+        "ignitionSelectorChain" => crate::ignition_selector::validate_request(request)?,
         "integratedCaptureVtec" => crate::chain::validate_request(request)?,
         _ => return Err("unsupported operation".into()),
     }
@@ -566,6 +570,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "ignitionSelectorChain" {
+        return crate::ignition_selector::run(request, response);
+    }
     if request.operation == "ignitionMapLookup" {
         return crate::ignition::run(request, response);
     }

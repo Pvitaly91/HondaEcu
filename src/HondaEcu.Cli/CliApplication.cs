@@ -155,6 +155,10 @@ public sealed partial class CliApplication
               --baseline-binding <private-json> --runner <rust-executable>
               --scenario <private-json> --output <new-private-json>
               Read-only ignition_map_0/1 raw lookup research; no BIN, degree conversion or GUI.
+          research p28-ignition selector-chain-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <private-json> --runner <v0.15.0-rust-executable>
+              --scenario <bounded-m2g-scenario.json> --output <new-private-json>
+              Native selector production before ignition axes/lookup/DATA0248; no map-ID input or BIN.
           research p28-fuel export <plan|apply|verify|inspect> <image> --profile p28-304 ...
               Explicit 20x10 unsigned numeric cells, one compensation, fresh A/B/C native validation.
           research p28-ignition export <plan|apply|verify|inspect> <image> --profile p28-304 ...

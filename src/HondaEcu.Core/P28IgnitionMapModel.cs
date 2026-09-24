@@ -27,17 +27,23 @@ public sealed class P28IgnitionMapModel
 
     public P28IgnitionMapModelStep Step(P28IgnitionMapCall call)
     {
-        var before = _state;
-        var selector = (byte)((before.Selector0227 & ~P28IgnitionMapContract.SelectorMask) |
+        var selector = (byte)((_state.Selector0227 & ~P28IgnitionMapContract.SelectorMask) |
             (call.MapId == "ignition_map_1" ? P28IgnitionMapContract.SelectorMask : 0));
+        return StepWithSelector(selector, call.RawLoad, call.RawMap0Rpm, call.RawMap1Rpm);
+    }
+
+    /// <summary>Shared arithmetic without the isolated M2c caller's map-ID injection.</summary>
+    internal P28IgnitionMapModelStep StepWithSelector(byte selector, byte rawLoad, byte rawMap0Rpm, byte rawMap1Rpm)
+    {
+        var before = _state;
         var afterInputs = before with { Selector0227 = selector };
         var map0 = Position("ignition_map_0_rpm", P28IgnitionMapContract.Map0RpmAxisOrigin, 20,
-            call.RawMap0Rpm, before.Map0RpmIndex, before.Map0RpmFraction);
+            rawMap0Rpm, before.Map0RpmIndex, before.Map0RpmFraction);
         // Native 0A32..0A38 substitutes DATA0238 for the second-axis input while context bit 5 is set.
-        var map1Raw = (selector & P28IgnitionMapContract.SelectorMask) == 0 ? call.RawMap1Rpm : call.RawMap0Rpm;
+        var map1Raw = (selector & P28IgnitionMapContract.SelectorMask) == 0 ? rawMap1Rpm : rawMap0Rpm;
         var map1 = Position("ignition_map_1_rpm", P28IgnitionMapContract.Map1RpmAxisOrigin, 20,
             map1Raw, before.Map1RpmIndex, before.Map1RpmFraction);
-        var load = Position("load", P28IgnitionMapContract.LoadAxisOrigin, 10, call.RawLoad,
+        var load = Position("load", P28IgnitionMapContract.LoadAxisOrigin, 10, rawLoad,
             before.LoadIndex, before.LoadFraction);
         var selectedMap = (selector & P28IgnitionMapContract.SelectorMask) == 0 ? "ignition_map_0" : "ignition_map_1";
         var map = P28IgnitionMapContract.Map(selectedMap);

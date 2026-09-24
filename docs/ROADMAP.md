@@ -223,6 +223,15 @@ the only permitted unresolved SUBB form taints downstream whole-chain
 checkpoints when actually used. No firmware, physical VTEC, full capture-to-fuel
 schedule, GUI/hardware acceptance or flash readiness is added.
 
+M2g adds [read-only native ignition-selector-to-lookup validation](M2G_IGNITION_SELECTOR_CHAIN.md):
+the ROM writes `DATA0227.5` before the scripted native ignition axes,
+selection, lookup and immediate `DATA0248` consumer. The bound original's
+unchanged program configuration yields only selector 0 in this scope; initial
+selector 1 is overwritten, not counted as a reachable map-1 transition.
+The upstream `03C7` writer and caller scheduler are static-only. M2f is not
+composed with M2g. No new firmware, physical degrees, GUI/hardware acceptance
+or flash readiness is added.
+
 ## M3 — Desktop GUI
 
 - desktop GUI

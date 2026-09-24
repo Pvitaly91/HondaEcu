@@ -107,7 +107,7 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
     Ok(())
 }
 
-fn data_ranges() -> Vec<[u16; 2]> {
+pub(crate) fn data_ranges() -> Vec<[u16; 2]> {
     vec![
         [0, 8],
         [0x88, 0x90],
@@ -125,7 +125,7 @@ fn data_ranges() -> Vec<[u16; 2]> {
     ]
 }
 
-fn code(stage: &str) -> Vec<[u32; 2]> {
+pub(crate) fn code(stage: &str) -> Vec<[u32; 2]> {
     match stage {
         "axes" => vec![[0x0A0C, 0x0A62], [0x59B2, 0x59E4]],
         "selection" => vec![[0x0B64, 0x0BAF]],
@@ -135,7 +135,7 @@ fn code(stage: &str) -> Vec<[u32; 2]> {
     }
 }
 
-fn program(stage: &str) -> Vec<[u16; 2]> {
+pub(crate) fn program(stage: &str) -> Vec<[u16; 2]> {
     match stage {
         "axes" => vec![[0x7000, 0x700A], [0x7014, 0x703C]],
         "lookup" => vec![[0x72E4, 0x7474]],
@@ -143,7 +143,7 @@ fn program(stage: &str) -> Vec<[u16; 2]> {
     }
 }
 
-fn contract(stage: &str) -> SliceContract {
+pub(crate) fn contract(stage: &str) -> SliceContract {
     let (entry, exit, budget) = match stage {
         "axes" => (0x0A0C, 0x0A62, 576),
         "selection" => (0x0B64, 0x0BAF, 64),
@@ -181,7 +181,7 @@ pub fn entry_contracts() -> Vec<serde_json::Value> {
     })]
 }
 
-fn state(cpu: &Cpu, bus: &mut Bus) -> State {
+pub(crate) fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     State {
         load_index: read_data_u8(cpu, bus, 0x1BB),
         map0_rpm_index: read_data_u8(cpu, bus, 0x1C6),
@@ -195,7 +195,7 @@ fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     }
 }
 
-fn execute(cpu: &mut Cpu, bus: &mut Bus, stage: &str, enter_stage: bool) -> crate::adaptive::Stage {
+pub(crate) fn execute(cpu: &mut Cpu, bus: &mut Bus, stage: &str, enter_stage: bool) -> crate::adaptive::Stage {
     let c = contract(stage);
     if enter_stage {
         enter(cpu, bus, &c);
@@ -214,7 +214,7 @@ fn execute(cpu: &mut Cpu, bus: &mut Bus, stage: &str, enter_stage: bool) -> crat
     }
 }
 
-fn seed_state(cpu: &mut Cpu, bus: &mut Bus, initial: &State) {
+pub(crate) fn seed_state(cpu: &mut Cpu, bus: &mut Bus, initial: &State) {
     for (address, value) in [
         (0x1BE, initial.load_fraction),
         (0x1C2, initial.map0_rpm_fraction),

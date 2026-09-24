@@ -1,5 +1,12 @@
 # HondaEcu
 
+M2g adds [read-only native ignition-selector → lookup → DATA0248 validation](docs/M2G_IGNITION_SELECTOR_CHAIN.md)
+through `research p28-ignition selector-chain-check`. The exact original's
+native producer clears `DATA0227.5` under its unchanged configuration, so
+only primary map 0 is dynamically reachable in this scoped caller schedule;
+an initial selector 1 is an overwrite test, not map-1 producer evidence.
+There is no new firmware export, GUI test or physical timing claim.
+
 M2f adds [read-only native VTEC-decision → fuel-map selection validation](docs/M2F_VTEC_FUEL_CHAIN_VALIDATION.md)
 through `research p28-fuel vtec-chain-check`. A new single-machine runner
 task carries native `DATA0127.1` through `12FC` into ROM map selection,

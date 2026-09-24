@@ -181,7 +181,7 @@ fn ranges() -> Vec<[u16; 2]> {
     ranges
 }
 
-fn boundary(cpu: &Cpu, bus: &mut Bus) -> CpuBoundary {
+pub(crate) fn boundary(cpu: &Cpu, bus: &mut Bus) -> CpuBoundary {
     let base = cpu.bank_base();
     let pointing = 0x80 + cpu.scb() * 8;
     let mut registers = [0; 8];

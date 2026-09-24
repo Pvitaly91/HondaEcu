@@ -25,6 +25,7 @@ pub struct Request {
     pub fuel_map_lookup: Option<crate::fuel::Stimulus>,
     pub vtec_fuel_chain: Option<crate::vtec_fuel::Stimulus>,
     pub ignition_map_lookup: Option<crate::ignition::Stimulus>,
+    pub ignition_selector_chain: Option<crate::ignition_selector::Stimulus>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -90,6 +91,8 @@ pub struct Response {
     pub vtec_fuel_sequences: Option<Vec<crate::vtec_fuel::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub ignition_map_sequences: Option<Vec<crate::ignition::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ignition_selector_sequences: Option<Vec<crate::ignition_selector::Sequence>>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -176,6 +179,7 @@ impl Response {
             fuel_map_sequences: None,
             vtec_fuel_sequences: None,
             ignition_map_sequences: None,
+            ignition_selector_sequences: None,
         }
     }
 }
