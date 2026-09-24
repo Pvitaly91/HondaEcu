@@ -79,6 +79,7 @@ public static class P28IgnitionSelectorValidator
         Require(contracts.GetArrayLength() == 1 && contracts[0].GetProperty("id").GetString() == Operation &&
             contracts[0].GetProperty("producer").GetProperty("entry").GetInt32() == 0x5F93 &&
             contracts[0].GetProperty("producer").GetProperty("exit").GetInt32() == 0x5FAF &&
+            contracts[0].GetProperty("producer").GetProperty("lrb").GetInt32() == 0x41 &&
             contracts[0].GetProperty("sourceInputs").GetArrayLength() == 1 &&
             contracts[0].GetProperty("sourceInputs")[0].GetString() == "DATA03C7" &&
             !contracts[0].GetProperty("perCallMapId").GetBoolean() &&
@@ -152,7 +153,10 @@ public static class P28IgnitionSelectorValidator
                         Check(producer.Events.Any(e => e[0] == 0x5F96 && (e[3] & 255) == scenario.Calls[index].Source03c7) &&
                             producer.Events.Any(e => e[0] == 0x5F98 && (e[5] & 0x8000) == 0) &&
                             producer.Events.Any(e => e[0] == 0x5FA4 && e[1] == 0x5FAC) &&
-                            producer.Writes.Any(w => w[0] == 0x227 && w[1] == 8 && w[2] == expected.SelectorAfterProducer),
+                            producer.Writes.Where(w => w[0] is 0x209 or 0x208 or 0x227)
+                                .Select(w => (w[0], w[1], w[2]))
+                                .SequenceEqual(new[] { (0x209, 8, (int)scenario.Calls[index].Source03c7),
+                                    (0x208, 8, 0), (0x227, 8, (int)expected.SelectorAfterProducer) }),
                             "Native source value, carry reset, config branch and DATA0227.5 store");
                         Check((before.Selector0227 & ~0x20) == (after.Selector0227 & ~0x20) &&
                             (after.Selector0227 & 0x20) == 0,
@@ -190,6 +194,7 @@ public static class P28IgnitionSelectorValidator
                         Check(SameBoundary(cp, "selectionExit", "lookupEntry") &&
                             SameBoundary(cp, "lookupExit", "consumerEntry") &&
                             cp.GetProperty("producerExit").GetProperty("pc").GetInt32() == 0x5FAF &&
+                            cp.GetProperty("producerExit").GetProperty("lrb").GetInt32() == 0x41 &&
                             cp.GetProperty("axesEntry").GetProperty("pc").GetInt32() == 0x0A0C &&
                             cp.GetProperty("selectionEntry").GetProperty("pc").GetInt32() == 0x0B64,
                             "Scripted caller boundaries or unbroken selection-to-consumer tail");

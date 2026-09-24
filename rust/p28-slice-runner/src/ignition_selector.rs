@@ -91,7 +91,7 @@ fn producer_contract() -> SliceContract {
         exit_pcs: vec![0x5FAF],
         code_ranges: vec![[0x5F93, 0x5FAF], [0x7DF4, 0x7E02]],
         psw: 0x0101,
-        lrb: 0xD0,
+        lrb: 0x41,
         usp: 0x180,
         instruction_budget: 32,
         data_seeds: vec![],
@@ -102,7 +102,7 @@ fn producer_contract() -> SliceContract {
 
 fn data_ranges() -> Vec<[u16; 2]> {
     let mut ranges = ignition::data_ranges();
-    ranges.extend([[0x3C7, 0x3C8], [0x680, 0x688]]);
+    ranges.extend([[0x208, 0x210], [0x3C7, 0x3C8]]);
     ranges
 }
 
@@ -110,7 +110,7 @@ pub fn entry_contracts() -> Vec<serde_json::Value> {
     vec![serde_json::json!({
         "id":"ignitionSelectorChain", "formatVersion":1,
         "producer":{"entry":0x5F93,"exit":0x5FAF,"code":[[0x5F93,0x5FAF],[0x7DF4,0x7E02]],
-            "programData":[[0x60EA,0x60EB],[0x60FB,0x60FC],[0x7E02,0x7E03]],"lrb":0xD0,"usp":0x180,"budget":32},
+        "programData":[[0x60EA,0x60EB],[0x60FB,0x60FC],[0x7E02,0x7E03]],"lrb":0x41,"usp":0x180,"budget":32},
         "scriptedStages":[[0x0A0C,0x0A62],[0x0B64,0x0BAF]],
         "unbrokenTail":[[0x0B64,0x0BAF],[0x0BAF,0x0BB4],[0x0BB4,0x0BD4]],
         "sourceInputs":["DATA03C7"], "perCallMapId":false,

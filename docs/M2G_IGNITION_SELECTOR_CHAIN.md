@@ -10,8 +10,8 @@ The separate M2f VTEC/fuel task is **not** executed by this operation.
 The matching listing and exact bound original establish the smallest
 semantically closed selector subfragment at `5F93`, stopping **before** `5FAF`.
 The entry is an explicit scripted call into the larger `5F45` configuration
-routine, not a recovered ECU scheduler. It uses byte mode, SCB1, `LRB=D0`
-(off-page `0200`), `USP=0180`, and `SSP=07FE`. `5F93` loads `DP=03C7`;
+routine, not a recovered ECU scheduler. It uses byte mode, SCB1, `LRB=0041`
+(bank `0208..020F`, off-page `0200`), `USP=0180`, and `SSP=07FE`. `5F93` loads `DP=03C7`;
 `5F96` reads that RAM byte; `5F97` saves it in banked `r1`; `5F98 RC`
 clears live carry. `5F99` reads the program byte at `60FB`, and the jump
 through `7DF4..7DF7` enters `5FA0` when that byte is zero. `5FA0` reads
