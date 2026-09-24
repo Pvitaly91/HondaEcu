@@ -195,7 +195,12 @@ pub(crate) fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     }
 }
 
-pub(crate) fn execute(cpu: &mut Cpu, bus: &mut Bus, stage: &str, enter_stage: bool) -> crate::adaptive::Stage {
+pub(crate) fn execute(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    stage: &str,
+    enter_stage: bool,
+) -> crate::adaptive::Stage {
     let c = contract(stage);
     if enter_stage {
         enter(cpu, bus, &c);

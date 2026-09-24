@@ -43,6 +43,7 @@ fn request(rom: Vec<u8>, synthetic: SyntheticContract) -> Request {
         fuel_map_lookup: None,
         vtec_fuel_chain: None,
         ignition_map_lookup: None,
+        ignition_selector_chain: None,
     }
 }
 
@@ -315,6 +316,7 @@ fn synthetic_batch_cannot_launder_threshold_add_through_compact_permission() {
         fuel_map_lookup: None,
         vtec_fuel_chain: None,
         ignition_map_lookup: None,
+        ignition_selector_chain: None,
     })
     .unwrap();
     assert_eq!(result.compact_rows.len(), 393216);

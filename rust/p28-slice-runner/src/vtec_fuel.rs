@@ -7,7 +7,7 @@ use crate::{
     cpu::Cpu,
     exec::{read_data_u16, read_data_u8, write_data_u16, write_data_u8},
     fuel,
-    protocol::{CaseResult, Request, Response},
+    protocol::{Request, Response},
     runner::{execute_in_state_observed, seed_machine},
     stateful, stateful_forms,
 };
