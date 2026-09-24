@@ -45,10 +45,13 @@ public sealed class P28SharedCalibrationModel
             call.RawLoad, a.IgnitionLoadIndex, a.IgnitionLoadFraction);
         var fuelLoad = Position("fuel-load", P28FuelMapContract.LoadAxisOrigin, 10,
             call.RawLoad, a.FuelLoadIndex, a.FuelLoadFraction);
-        var afterAxis = afterProducer with { Axes = new P28SharedAxes((byte)ignitionLoad.Index,
+        var afterAxis = afterProducer with
+        {
+            Axes = new P28SharedAxes((byte)ignitionLoad.Index,
             (byte)fuelLoad.Index, (byte)rpm0.Index, (byte)rpm1.Index,
             (ushort)ignitionLoad.Fraction, (ushort)fuelLoad.Fraction,
-            (ushort)rpm0.Fraction, (ushort)rpm1.Fraction) };
+            (ushort)rpm0.Fraction, (ushort)rpm1.Fraction)
+        };
         var ignitionMap = P28IgnitionMapContract.Map("ignition_map_0");
         var ignitionBase = P28IgnitionMapContract.CellOffset(ignitionMap.Id, rpm0.Index, ignitionLoad.Index);
         var ignitionAddresses = new[] { ignitionBase, ignitionBase + 1,

@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace HondaEcu.Core.Tests;
 
 public sealed class SeededSliceProcessTests
@@ -41,6 +43,52 @@ public sealed class SeededSliceProcessTests
         using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
             SeededSliceProcess.ExchangeAsync("dotnet", new { protocolVersion = 1 }, HostOptions("timeout"), cancellation.Token));
+    }
+
+    [Fact]
+    public async Task AlreadyCancelledRequestNeverStartsAChild()
+    {
+        var marker = Path.Combine(Path.GetTempPath(), $"hondaecu-m2h-never-started-{Guid.NewGuid():N}.pid");
+        try
+        {
+            using var cancellation = new CancellationTokenSource();
+            cancellation.Cancel();
+            var options = HostOptions("pid-sleep") with { Arguments = [.. HostOptions("pid-sleep").Arguments, marker] };
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                SeededSliceProcess.ExchangeAsync("dotnet", new { protocolVersion = 1 }, options, cancellation.Token));
+            Assert.False(File.Exists(marker));
+        }
+        finally { if (File.Exists(marker)) File.Delete(marker); }
+    }
+
+    [Fact]
+    public async Task ActiveCancellationKillsObservedChildProcessTree()
+    {
+        var marker = Path.Combine(Path.GetTempPath(), $"hondaecu-m2h-active-{Guid.NewGuid():N}.pid");
+        Process? child = null;
+        using var cancellation = new CancellationTokenSource();
+        try
+        {
+            var options = HostOptions("pid-sleep") with { Arguments = [.. HostOptions("pid-sleep").Arguments, marker] };
+            var running = SeededSliceProcess.ExchangeAsync("dotnet", new { protocolVersion = 1 }, options, cancellation.Token);
+            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+            while (!File.Exists(marker) && DateTime.UtcNow < deadline) await Task.Delay(20);
+            Assert.True(File.Exists(marker), "The child must publish its PID before cancellation.");
+            var pid = int.Parse(await File.ReadAllTextAsync(marker), System.Globalization.CultureInfo.InvariantCulture);
+            child = Process.GetProcessById(pid);
+            Assert.False(child.HasExited);
+            Assert.False(running.IsCompleted);
+            cancellation.Cancel();
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => running);
+            child.Refresh();
+            Assert.True(child.HasExited, $"Child PID {pid} survived cancellation.");
+        }
+        finally
+        {
+            cancellation.Cancel();
+            child?.Dispose();
+            if (File.Exists(marker)) File.Delete(marker);
+        }
     }
 
     [Fact]

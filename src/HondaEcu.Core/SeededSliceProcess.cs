@@ -40,6 +40,7 @@ public static class SeededSliceProcess
         {
             throw new ArgumentOutOfRangeException(nameof(options));
         }
+        cancellationToken.ThrowIfCancellationRequested();
 
         var start = new ProcessStartInfo
         {

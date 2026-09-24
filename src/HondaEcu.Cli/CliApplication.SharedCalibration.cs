@@ -12,7 +12,9 @@ public sealed partial class CliApplication
         if (!command.HasFlag("confirm-profile"))
             throw new CliUsageException("M2h requires explicit profile confirmation and exact baseline binding.");
         var assumption = command.Optional("allow-assumption");
-        var allowed = P28SharedCalibrationValidator.ValidateAssumptions(assumption is null ? [] : [assumption]);
+        IReadOnlyList<string> allowed;
+        try { allowed = P28SharedCalibrationValidator.ValidateAssumptions(assumption is null ? [] : [assumption]); }
+        catch (ArgumentException exception) { throw new CliUsageException(exception.Message); }
         var originalPath = ResolvePath(command.Positionals[0]);
         var bindingPath = ResolvePath(command.Required("baseline-binding"));
         var runnerPath = ResolvePath(command.Required("runner"));
@@ -51,7 +53,7 @@ public sealed partial class CliApplication
                 }
                 await _output.WriteLineAsync($"  event={cp.Index}: {cp.Disposition}; ignition selector={cp.SelectorBefore0227:X2}->{cp.SelectorAfter0227:X2}, origin={cp.IgnitionOrigin?.ToString() ?? "NotRun"}, lookup={cp.IgnitionLookup?.ToString() ?? "NotRun"}, DATA0248={cp.Data0248?.ToString() ?? "NotRun"}; " +
                     $"VTEC request={cp.RequestP1?.ToString() ?? "NotRun"}, fuel selector={cp.FuelSelector0127?.ToString() ?? "NotRun"}, origin={cp.FuelOrigin?.ToString() ?? "NotRun"}, lookup={cp.FuelLookup?.ToString() ?? "NotRun"}, DATA0140={cp.Data0140?.ToString() ?? "NotRun"}; " +
-                    $"ignitionCompleted={cp.IgnitionCompleted}, wholeEventCompleted={cp.WholeEventCompleted}, cumulativeConditional={cp.ConditionalDependency}.").ConfigureAwait(false);
+                    $"ignitionCompleted={cp.IgnitionCompleted}, wholeEventCompleted={cp.WholeEventCompleted}, cumulativeConditional={cp.ConditionalDependency}, reason={cp.StopReason ?? "none"}.").ConfigureAwait(false);
             }
         }
         await _output.WriteLineAsync("M2h scripted caller schedule, one native axis pass, two continuous tails. PcInspectionOnly / NotFlashReady; raw units only; GUI/hardware NotRun. No BIN written.").ConfigureAwait(false);

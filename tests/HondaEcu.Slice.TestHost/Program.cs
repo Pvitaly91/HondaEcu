@@ -24,6 +24,10 @@ switch (args[0])
     case "timeout":
         await Task.Delay(TimeSpan.FromMinutes(1));
         break;
+    case "pid-sleep":
+        await File.WriteAllTextAsync(args[1], Environment.ProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        await Task.Delay(TimeSpan.FromMinutes(1));
+        break;
     case "stdout-limit":
         Console.Write(new string('x', 8192));
         await Task.Delay(TimeSpan.FromMinutes(1));

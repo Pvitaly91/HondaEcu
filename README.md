@@ -1,5 +1,14 @@
 # HondaEcu
 
+M2h adds [read-only shared-axis VTEC/fuel/ignition execution validation](docs/M2H_SHARED_AXIS_FUEL_IGNITION_CHAIN.md)
+through `research p28-calibration shared-chain-check`. A single CPU/RAM
+history runs the native ignition-selector producer, one continuous RPM/load
+axis pass, an unbroken ignition lookup/consumer tail and an unbroken
+VTEC-decision/fuel lookup/consumer tail. Transitions between these routines
+are an explicit test schedule, not an established ECU scheduler. Strict,
+conditional and partially completed events remain distinct. No new firmware,
+export capability, physical units, GUI or hardware claim is added.
+
 M2g adds [read-only native ignition-selector → lookup → DATA0248 validation](docs/M2G_IGNITION_SELECTOR_CHAIN.md)
 through `research p28-ignition selector-chain-check`. The exact original's
 native producer clears `DATA0227.5` under its unchanged configuration, so

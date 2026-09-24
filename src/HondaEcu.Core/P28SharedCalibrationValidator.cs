@@ -10,7 +10,7 @@ public sealed record P28SharedCheckpoint(int Index, string Disposition, int Stat
     bool? RequestP1, bool? RequestMirror0127, bool? FuelSelector0127,
     int? IgnitionOrigin, int? IgnitionLookup, int? Data0248,
     int? FuelOrigin, int? FuelLookup, int? Data0140, bool? ChangedByteRead,
-    P28SharedState StateAfter, IReadOnlyList<P28SharedStageEvidence> Stages,
+    P28SharedState StateAfter, string? StopReason, IReadOnlyList<P28SharedStageEvidence> Stages,
     IReadOnlyList<string> Differences, JsonElement? Witness);
 public sealed record P28SharedSequence(int ImageIndex, int ScratchPattern, int CompletedCalls,
     int StopCallIndex, IReadOnlyList<P28SharedCheckpoint> Checkpoints);
@@ -278,8 +278,14 @@ public static class P28SharedCalibrationValidator
                     }
                 }
                 var disposition = differences.Count != 0 ? "Mismatch" : status switch
-                { 0 when conditional => "ConditionalMatch", 0 => "StrictMatch", 1 => "Unresolved",
-                    2 => "ExecutionError", 3 => "BudgetExceeded", _ => "NotRun" };
+                {
+                    0 when conditional => "ConditionalMatch",
+                    0 => "StrictMatch",
+                    1 => "Unresolved",
+                    2 => "ExecutionError",
+                    3 => "BudgetExceeded",
+                    _ => "NotRun"
+                };
                 bool? read = null;
                 if (scenario.Mutation is { } mutation && ignitionDone)
                 {
@@ -296,6 +302,7 @@ public static class P28SharedCalibrationValidator
                     status == 0 ? cp.GetProperty("requestMirror0127").GetBoolean() : null,
                     status == 0 ? cp.GetProperty("fuelSelector0127").GetBoolean() : null,
                     originI, valueI, outputI, originF, valueF, outputF, read, after,
+                    cp.GetProperty("error").ValueKind == JsonValueKind.Null ? null : cp.GetProperty("error").GetString(),
                     stages.AsReadOnly(), differences.AsReadOnly(), witness));
                 prior = after; stopped |= status != 0;
             }
@@ -331,8 +338,11 @@ public static class P28SharedCalibrationValidator
                 var vtecSame = x.StateAfter.Vtec == y.StateAfter.Vtec;
                 var fuelSame = x.FuelOrigin == y.FuelOrigin && x.FuelLookup == y.FuelLookup && x.Data0140 == y.Data0140;
                 var control = axesSame && selectorSame && (scenario.Mutation.Kind switch
-                { "vtecThreshold" => ignitionSame, "fuelCell" => ignitionSame && vtecSame,
-                    _ => vtecSame && fuelSame });
+                {
+                    "vtecThreshold" => ignitionSame,
+                    "fuelCell" => ignitionSame && vtecSame,
+                    _ => vtecSame && fuelSame
+                });
                 var effect = !control ? "ControlFailure" : y.ChangedByteRead != true ? "ByteNotRead" :
                     ignitionSame && vtecSame && fuelSame ? "ReadNoEffectOrMasked" :
                     "NativeReadAndDownstreamEffect";
@@ -364,7 +374,7 @@ public static class P28SharedCalibrationValidator
         var value = cp.GetProperty(field);
         return value.ValueKind != JsonValueKind.Null && value.GetProperty("pc").GetInt32() == pc ? value : null;
     }
-    private static bool SameBoundary(JsonElement cp, string left, string right) =>
+    internal static bool SameBoundary(JsonElement cp, string left, string right) =>
         cp.GetProperty(left).ValueKind != JsonValueKind.Null &&
         cp.GetProperty(left).GetRawText() == cp.GetProperty(right).GetRawText();
     private static int? Number(JsonElement row, string field) => row.GetProperty(field).ValueKind == JsonValueKind.Null ?

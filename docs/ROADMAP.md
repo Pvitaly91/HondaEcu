@@ -232,6 +232,16 @@ The upstream `03C7` writer and caller scheduler are static-only. M2f is not
 composed with M2g. No new firmware, physical degrees, GUI/hardware acceptance
 or flash readiness is added.
 
+M2h adds [read-only shared-axis VTEC/fuel/ignition execution validation](M2H_SHARED_AXIS_FUEL_IGNITION_CHAIN.md):
+one CPU/RAM history carries the native `0227.5` producer into a **single**
+continuous `0A0C..0A77` axis pass, then a continuous ignition tail and a
+continuous VTEC/fuel tail. The inter-routine entries remain disclosed
+scripted test ABI; no main-loop/IRQ scheduler or physical timing is inferred.
+The independent combined model checks both consumers, partial ignition-before-
+VTEC-stop events and cumulative conditional dependencies. M2e/D2 publication
+gates remain unchanged; no new BIN, GUI acceptance, hardware/full boot or
+flash-readiness claim is added.
+
 ## M3 — Desktop GUI
 
 - desktop GUI

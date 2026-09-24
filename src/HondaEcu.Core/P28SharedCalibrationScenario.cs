@@ -40,8 +40,10 @@ public sealed class P28SharedCalibrationScenario
 
     private P28SharedCalibrationScenario(P28SharedState initial, IReadOnlyList<P28SharedCall> calls,
         IReadOnlyList<int> traces, string provenance, P28SharedMutation? mutation)
-    { Initial = initial; Calls = Array.AsReadOnly(calls.ToArray()); TraceCallIndexes = Array.AsReadOnly(traces.ToArray());
-        Provenance = provenance; Mutation = mutation; }
+    {
+        Initial = initial; Calls = Array.AsReadOnly(calls.ToArray()); TraceCallIndexes = Array.AsReadOnly(traces.ToArray());
+        Provenance = provenance; Mutation = mutation;
+    }
 
     public static P28SharedCalibrationScenario Create(P28SharedState initial, IReadOnlyList<P28SharedCall> calls,
         IReadOnlyList<int> traces, string provenance, P28SharedMutation? mutation = null)
