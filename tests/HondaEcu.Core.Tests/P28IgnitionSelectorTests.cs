@@ -72,11 +72,11 @@ public sealed class P28IgnitionSelectorTests
         // Fully invented program. It does not reproduce the OEM producer or helpers.
         new byte[] { 0x62, 0xC7, 0x03, 0xF2, 0x53, 0xC4, 0x27, 0x3D,
             0x03, 0xAF, 0x5F }.CopyTo(bytes, 0x5F93);
-        new byte[] { 0x03, 0x62, 0x0A }.CopyTo(bytes, 0x0A0C);
-        new byte[] { 0xED, 0x27, 0x06, 0x60, 0xE4, 0x72, 0x03, 0xAF, 0x0B,
-            0x60, 0xAC, 0x73, 0x03, 0xAF, 0x0B }.CopyTo(bytes, 0x0B64);
-        new byte[] { 0x90, 0xAA, 0x03, 0xB4, 0x0B }.CopyTo(bytes, 0x0BAF);
-        new byte[] { 0xD4, 0x48, 0x03, 0xD4, 0x0B }.CopyTo(bytes, 0x0BB4);
+        new byte[] { 0xCB, 0x54 }.CopyTo(bytes, 0x0A0C);
+        new byte[] { 0xED, 0x27, 0x05, 0x60, 0xE4, 0x72, 0xCB, 0x43,
+            0x60, 0xAC, 0x73, 0xCB, 0x3E }.CopyTo(bytes, 0x0B64);
+        new byte[] { 0x90, 0xAA, 0xCB, 0x01 }.CopyTo(bytes, 0x0BAF);
+        new byte[] { 0xD4, 0x48, 0xCB, 0x1C }.CopyTo(bytes, 0x0BB4);
         bytes[0x72E4] = 0x11; bytes[0x73AC] = 0x22;
         var scenario = P28IgnitionSelectorScenario.Create(
             new(new(0, 0, 0, 0, 0, 0, 0x20, 0, 0), 0),
@@ -87,8 +87,10 @@ public sealed class P28IgnitionSelectorTests
         Assert.Equal("0.15.0", root.GetProperty("runnerVersion").GetString());
         var cps = root.GetProperty("ignitionSelectorSequences")[0].GetProperty("checkpoints");
         Assert.Equal(2, cps.GetArrayLength());
-        Assert.Equal(0, cps[0].GetProperty("status").GetInt32());
-        Assert.Equal(0, cps[1].GetProperty("status").GetInt32());
+        Assert.True(cps[0].GetProperty("status").GetInt32() == 0,
+            cps[0].GetProperty("error").ToString() + " " + cps[0].GetProperty("producer").GetProperty("result").GetProperty("error"));
+        Assert.True(cps[1].GetProperty("status").GetInt32() == 0,
+            cps[1].GetProperty("error").ToString());
         Assert.Equal(0, cps[0].GetProperty("stateAfter").GetProperty("selector0227").GetByte() & 0x20);
         Assert.Equal(0x20, cps[1].GetProperty("stateAfter").GetProperty("selector0227").GetByte() & 0x20);
         Assert.Equal(0x72E4, cps[0].GetProperty("selectedOrigin").GetInt32());

@@ -410,7 +410,7 @@ mod tests {
                 &invented(0x100, 0x106),
                 &[],
                 true,
-                None,
+                Some(admission),
                 true,
             );
             assert_eq!(p.status, 0, "{:?}", p.error);
@@ -427,7 +427,7 @@ mod tests {
                 &invented(0x106, 0x111),
                 &[],
                 true,
-                None,
+                Some(admission),
                 true,
             );
             assert_eq!(r.status, 0, "{:?}", r.error);
@@ -461,7 +461,7 @@ mod tests {
             &invented(0x100, 0x106),
             &[],
             false,
-            None,
+            Some(admission),
             true,
         );
         assert_eq!(p.status, 0);
@@ -475,7 +475,7 @@ mod tests {
             &invented(0x106, 0x111),
             &[],
             false,
-            None,
+            Some(admission),
             true,
         );
         assert_eq!(r.status, 0);
