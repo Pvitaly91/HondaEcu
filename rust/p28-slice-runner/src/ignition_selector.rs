@@ -385,14 +385,14 @@ mod tests {
         // Invented program, not an OEM fragment: raw bit7 -> carry ->
         // off-page bit5, followed by an independent branch selecting a byte.
         rom[0x100..0x111].copy_from_slice(&[
-            0xF5, 0x40, 0x53, 0xC4, 0x27, 0x3D, // producer
+            0xF5, 0xC0, 0x53, 0xC4, 0x27, 0x3D, // producer
             0xED, 0x27, 0x04, 0x77, 0x11, 0xCB, 0x02, 0x77, 0x22, 0xD4, 0x48, // reader
         ]);
         let (mut cpu, mut bus) = seed_machine(&rom, &invented(0x100, 0x106), 0);
         bus.configure_scoped_access(
             vec![
                 [0, 8],
-                [0x40, 0x41],
+                [0xC0, 0xC1],
                 [0x80, 0x90],
                 [0x127, 0x128],
                 [0x148, 0x149],
@@ -402,7 +402,7 @@ mod tests {
         );
         write_data_u8(&mut cpu, &mut bus, 0x127, 0x20);
         for (raw, expected_selector, expected_output) in [(0u8, 0u8, 0x11u8), (0x80, 0x20, 0x22)] {
-            write_data_u8(&mut cpu, &mut bus, 0x40, raw);
+            write_data_u8(&mut cpu, &mut bus, 0xC0, raw);
             enter(&mut cpu, &mut bus, &invented(0x100, 0x106));
             let p = execute_in_state_observed(
                 &mut cpu,
@@ -439,14 +439,14 @@ mod tests {
     fn invented_equal_output_does_not_hide_bad_reinitializer() {
         let mut rom = vec![0; 32768];
         rom[0x100..0x111].copy_from_slice(&[
-            0xF5, 0x40, 0x53, 0xC4, 0x27, 0x3D, 0xED, 0x27, 0x04, 0x77, 0x11, 0xCB, 0x02, 0x77,
+            0xF5, 0xC0, 0x53, 0xC4, 0x27, 0x3D, 0xED, 0x27, 0x04, 0x77, 0x11, 0xCB, 0x02, 0x77,
             0x22, 0xD4, 0x48,
         ]);
         let (mut cpu, mut bus) = seed_machine(&rom, &invented(0x100, 0x106), 0);
         bus.configure_scoped_access(
             vec![
                 [0, 8],
-                [0x40, 0x41],
+                [0xC0, 0xC1],
                 [0x80, 0x90],
                 [0x127, 0x128],
                 [0x148, 0x149],
@@ -454,7 +454,7 @@ mod tests {
             ],
             64,
         );
-        write_data_u8(&mut cpu, &mut bus, 0x40, 0x80);
+        write_data_u8(&mut cpu, &mut bus, 0xC0, 0x80);
         let p = execute_in_state_observed(
             &mut cpu,
             &mut bus,
