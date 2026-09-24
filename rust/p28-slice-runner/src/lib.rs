@@ -23,6 +23,7 @@ pub mod operand;
 pub mod producer;
 pub mod protocol;
 pub mod runner;
+pub mod shared_calibration;
 pub mod stateful;
 pub mod stateful_forms;
 pub mod vtec_fuel;

@@ -85,7 +85,7 @@ pub struct Sequence {
     pub stop_call_index: i32,
 }
 
-fn producer_contract() -> SliceContract {
+pub(crate) fn producer_contract() -> SliceContract {
     SliceContract {
         entry_pc: 0x5F93,
         exit_pcs: vec![0x5FAF],
@@ -100,7 +100,7 @@ fn producer_contract() -> SliceContract {
     }
 }
 
-fn data_ranges() -> Vec<[u16; 2]> {
+pub(crate) fn data_ranges() -> Vec<[u16; 2]> {
     let mut ranges = ignition::data_ranges();
     ranges.extend([[0x208, 0x210], [0x3C7, 0x3C8]]);
     ranges
@@ -179,7 +179,7 @@ fn admission(d: &Decoded) -> FormAdmission {
     }
 }
 
-fn producer(cpu: &mut Cpu, bus: &mut Bus, trace: bool) -> Stage {
+pub(crate) fn producer(cpu: &mut Cpu, bus: &mut Bus, trace: bool) -> Stage {
     let c = producer_contract();
     enter(cpu, bus, &c);
     bus.set_program_data_ranges(vec![[0x60EA, 0x60EB], [0x60FB, 0x60FC], [0x7E02, 0x7E03]]);
@@ -194,7 +194,7 @@ fn producer(cpu: &mut Cpu, bus: &mut Bus, trace: bool) -> Stage {
     }
 }
 
-fn supported_caller(cpu: &Cpu, bus: &mut Bus) -> bool {
+pub(crate) fn supported_caller(cpu: &Cpu, bus: &mut Bus) -> bool {
     read_data_u8(cpu, bus, 0xB8) & 0x18 == 0
         && read_data_u8(cpu, bus, 0x212) & 0x14 == 0
         && read_data_u8(cpu, bus, 0x21D) & 0x10 == 0

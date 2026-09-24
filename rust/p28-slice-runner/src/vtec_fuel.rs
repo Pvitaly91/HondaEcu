@@ -165,7 +165,7 @@ pub fn entry_contracts() -> Vec<serde_json::Value> {
     })]
 }
 
-fn ranges() -> Vec<[u16; 2]> {
+pub(crate) fn ranges() -> Vec<[u16; 2]> {
     let mut ranges = fuel::data_ranges();
     ranges.extend([
         [0x22, 0x23],
@@ -237,7 +237,7 @@ fn seed(cpu: &mut Cpu, bus: &mut Bus, s: &Stimulus) {
     }
 }
 
-fn supported_caller(cpu: &Cpu, bus: &mut Bus) -> bool {
+pub(crate) fn supported_caller(cpu: &Cpu, bus: &mut Bus) -> bool {
     read_data_u8(cpu, bus, 0xB8) & 0x18 == 0
         && read_data_u8(cpu, bus, 0x227) & 0x20 == 0
         && read_data_u8(cpu, bus, 0x120) & 0x20 == 0
@@ -245,7 +245,7 @@ fn supported_caller(cpu: &Cpu, bus: &mut Bus) -> bool {
         && read_data_u8(cpu, bus, 0x11C) & 0x20 == 0
 }
 
-fn stage(cpu: &mut Cpu, bus: &mut Bus, name: &str, enter_stage: bool, trace: bool) -> Stage {
+pub(crate) fn stage(cpu: &mut Cpu, bus: &mut Bus, name: &str, enter_stage: bool, trace: bool) -> Stage {
     let contract = fuel::contract(name);
     if enter_stage {
         crate::acquisition::enter(cpu, bus, &contract);
