@@ -41,11 +41,18 @@ public sealed partial class CliApplication
                 $"other={sequence.Checkpoints.Count(c => c.Disposition != "StrictMatch")}").ConfigureAwait(false);
             foreach (var row in sequence.Checkpoints)
             {
-                var input = row.Index < scenario.Calls.Count ? scenario.Calls[row.Index] : null;
-                await _output.WriteLineAsync($"  event={row.Index} source03C7={input?.Source03c7} " +
-                    $"selector={row.SelectorBefore:X2}->{row.SelectorAfter:X2} map={row.ActualMap ?? "NotRun"} " +
-                    $"lookup={row.Lookup?.ToString() ?? "NotRun"} DATA0248={row.Data0248?.ToString() ?? "NotRun"} " +
-                    row.Disposition).ConfigureAwait(false);
+                if (row.Disposition == "NotRun")
+                {
+                    await _output.WriteLineAsync($"  event={row.Index}: NotRun; inputs not applied; " +
+                        $"retained DATA0248={row.Actual.GetProperty("stateAfter").GetProperty("consumerOutput0248").GetByte()} (not a new lookup).").ConfigureAwait(false);
+                    continue;
+                }
+                var input = scenario.Calls[row.Index];
+                await _output.WriteLineAsync($"  event={row.Index} source03C7={input.Source03c7} " +
+                    $"raw load/rpm0/rpm1={input.RawLoad}/{input.RawMap0Rpm}/{input.RawMap1Rpm} " +
+                    $"selector={row.SelectorBefore:X2}->{row.SelectorAfter:X2} producer={row.Disposition} " +
+                    $"map={row.ActualMap ?? "NotRun"} lookup={row.Lookup?.ToString() ?? "NotRun"} " +
+                    $"DATA0248={row.Data0248?.ToString() ?? "NotRun"}.").ConfigureAwait(false);
             }
         }
         await _output.WriteLineAsync("M2g read-only native selector→ignition lookup→DATA0248; staged caller entry is scripted. " +
