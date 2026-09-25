@@ -396,6 +396,10 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "ignitionCorrectionChain" && request.ignition_correction_chain.is_some()
+    {
+        return Err("M2i correction-chain stimulus is unavailable to other operations".into());
+    }
     if request.operation != "vtecFuelIgnitionChain" && request.shared_calibration_chain.is_some() {
         return Err("M2h shared-chain stimulus is unavailable to other operations".into());
     }
@@ -565,6 +569,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "vtecFuelChain" => crate::vtec_fuel::validate_request(request)?,
         "ignitionMapLookup" => crate::ignition::validate_request(request)?,
         "ignitionSelectorChain" => crate::ignition_selector::validate_request(request)?,
+        "ignitionCorrectionChain" => crate::ignition_correction::validate_request(request)?,
         "vtecFuelIgnitionChain" => crate::shared_calibration::validate_request(request)?,
         "integratedCaptureVtec" => crate::chain::validate_request(request)?,
         _ => return Err("unsupported operation".into()),
@@ -575,6 +580,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "ignitionCorrectionChain" {
+        return crate::ignition_correction::run(request, response);
+    }
     if request.operation == "vtecFuelIgnitionChain" {
         return crate::shared_calibration::run(request, response);
     }

@@ -220,6 +220,17 @@ pub(crate) fn execute(
 }
 
 pub(crate) fn seed_state(cpu: &mut Cpu, bus: &mut Bus, initial: &State) {
+    seed_state_with_data0212(cpu, bus, initial, 0);
+}
+
+/// The M2i direct caller sets only bit 5 at the same once-only initializer.
+/// M2c/M2g/M2h keep their established zero-gate seed through `seed_state`.
+pub(crate) fn seed_state_with_data0212(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    initial: &State,
+    data0212: u8,
+) {
     for (address, value) in [
         (0x1BE, initial.load_fraction),
         (0x1C2, initial.map0_rpm_fraction),
@@ -241,7 +252,7 @@ pub(crate) fn seed_state(cpu: &mut Cpu, bus: &mut Bus, initial: &State) {
     for (address, value) in [
         (0xB8, 0),
         (0xBC, 0),
-        (0x212, 0),
+        (0x212, data0212),
         (0x214, 0),
         (0x218, 0),
         (0x219, 0),

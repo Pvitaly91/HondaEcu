@@ -44,6 +44,7 @@ fn request(rom: Vec<u8>, synthetic: SyntheticContract) -> Request {
         vtec_fuel_chain: None,
         ignition_map_lookup: None,
         ignition_selector_chain: None,
+        ignition_correction_chain: None,
         shared_calibration_chain: None,
     }
 }
@@ -318,6 +319,7 @@ fn synthetic_batch_cannot_launder_threshold_add_through_compact_permission() {
         vtec_fuel_chain: None,
         ignition_map_lookup: None,
         ignition_selector_chain: None,
+        ignition_correction_chain: None,
         shared_calibration_chain: None,
     })
     .unwrap();

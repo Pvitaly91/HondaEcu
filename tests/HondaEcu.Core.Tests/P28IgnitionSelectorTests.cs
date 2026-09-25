@@ -84,7 +84,7 @@ public sealed class P28IgnitionSelectorTests
         var response = await SeededSliceProcess.ExchangeAsync(ExecutionTestPaths.RustRunner,
             P28IgnitionSelectorValidator.CreateRequest(RomImage.FromBytes(bytes), null, scenario));
         var root = response.Response;
-        Assert.Equal("0.16.0", root.GetProperty("runnerVersion").GetString());
+        Assert.Equal("0.17.0", root.GetProperty("runnerVersion").GetString());
         var cps = root.GetProperty("ignitionSelectorSequences")[0].GetProperty("checkpoints");
         Assert.Equal(2, cps.GetArrayLength());
         Assert.True(cps[0].GetProperty("status").GetInt32() == 0,

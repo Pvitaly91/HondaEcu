@@ -8,10 +8,12 @@ public sealed partial class CliApplication
     {
         if (args.Length > 0 && args[0] == "selector-chain-check")
             return await P28IgnitionSelectorChainCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
+        if (args.Length > 0 && args[0] == "timing-chain-check")
+            return await P28IgnitionTimingChainCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "export")
             return await P28IgnitionMapExportAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length == 0 || args[0] is not ("maps-inspect" or "lookup-check"))
-            throw new CliUsageException("Usage: hondaecu research p28-ignition <maps-inspect|lookup-check|selector-chain-check|export> ...");
+            throw new CliUsageException("Usage: hondaecu research p28-ignition <maps-inspect|lookup-check|selector-chain-check|timing-chain-check|export> ...");
         var check = args[0] == "lookup-check";
         var command = CommandLine.Parse(args[1..], new HashSet<string>(StringComparer.Ordinal) { "confirm-profile" });
         command.EnsureOnly(check

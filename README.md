@@ -1,5 +1,13 @@
 # HondaEcu
 
+M2i adds [read-only ignition correction/clamp handoff validation](docs/M2I_IGNITION_CORRECTION_CHAIN.md)
+through `research p28-ignition timing-chain-check`. The native M2g prefix
+writes `DATA0248`; a disclosed scripted entry executes the recovered native
+correction to raw software results `035B/024A`. Strict execution stops at an
+unverified exact `ADD er3,A` form; explicit permission yields conditional,
+not strict, matches. This is not delivered spark timing, dwell, ECU scheduling,
+firmware export, GUI or hardware validation.
+
 M2h adds [read-only shared-axis VTEC/fuel/ignition execution validation](docs/M2H_SHARED_AXIS_FUEL_IGNITION_CHAIN.md)
 through `research p28-calibration shared-chain-check`. A single CPU/RAM
 history runs the native ignition-selector producer, one continuous RPM/load

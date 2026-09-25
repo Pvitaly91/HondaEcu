@@ -242,6 +242,15 @@ VTEC-stop events and cumulative conditional dependencies. M2e/D2 publication
 gates remain unchanged; no new BIN, GUI acceptance, hardware/full boot or
 flash-readiness claim is added.
 
+M2i adds [read-only native ignition correction/clamp handoff validation](M2I_IGNITION_CORRECTION_CHAIN.md):
+an ignition-only M2g prefix produces `DATA0248` on one machine; a scripted
+entry executes a bounded software-only correction path through native
+`035B/024A` stores, stopping before the next scheduling/helper reader.
+The mandatory exact `ADD er3,A` form remains instruction-unresolved in strict
+mode; explicitly permitted completed events are ConditionalMatch only. The
+M2h contract is not retroactively extended. No new BIN/export, physical
+degrees, GUI/hardware acceptance or flash readiness is added.
+
 ## M3 — Desktop GUI
 
 - desktop GUI
