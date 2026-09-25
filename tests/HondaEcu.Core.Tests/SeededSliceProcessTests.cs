@@ -66,16 +66,34 @@ public sealed class SeededSliceProcessTests
     {
         var marker = Path.Combine(Path.GetTempPath(), $"hondaecu-m2h-active-{Guid.NewGuid():N}.pid");
         Process? child = null;
+        Task<SliceProcessResponse>? running = null;
         using var cancellation = new CancellationTokenSource();
         try
         {
             var options = HostOptions("pid-sleep") with { Arguments = [.. HostOptions("pid-sleep").Arguments, marker] };
-            var running = SeededSliceProcess.ExchangeAsync("dotnet", new { protocolVersion = 1 }, options, cancellation.Token);
+            running = SeededSliceProcess.ExchangeAsync("dotnet", new { protocolVersion = 1 }, options, cancellation.Token);
             var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
-            while (!File.Exists(marker) && DateTime.UtcNow < deadline) await Task.Delay(20);
-            Assert.True(File.Exists(marker), "The child must publish its PID before cancellation.");
-            var pid = int.Parse(await File.ReadAllTextAsync(marker), System.Globalization.CultureInfo.InvariantCulture);
-            child = Process.GetProcessById(pid);
+            int? pid = null;
+            while (DateTime.UtcNow < deadline)
+            {
+                if (File.Exists(marker))
+                {
+                    try
+                    {
+                        var value = await File.ReadAllTextAsync(marker);
+                        if (int.TryParse(value, System.Globalization.NumberStyles.None,
+                            System.Globalization.CultureInfo.InvariantCulture, out var observed) && observed > 0)
+                        {
+                            pid = observed;
+                            break;
+                        }
+                    }
+                    catch (IOException) { /* The child may still hold the new marker open. */ }
+                }
+                await Task.Delay(20);
+            }
+            Assert.True(pid.HasValue, "The child must publish a readable PID before cancellation.");
+            child = Process.GetProcessById(pid.Value);
             Assert.False(child.HasExited);
             Assert.False(running.IsCompleted);
             cancellation.Cancel();
@@ -86,8 +104,17 @@ public sealed class SeededSliceProcessTests
         finally
         {
             cancellation.Cancel();
+            if (running is not null)
+            {
+                try { await running; }
+                catch (Exception) { /* Preserve the original test failure after stopping the child. */ }
+            }
             child?.Dispose();
-            if (File.Exists(marker)) File.Delete(marker);
+            for (var attempt = 0; File.Exists(marker) && attempt < 10; attempt++)
+            {
+                try { File.Delete(marker); }
+                catch (IOException) when (attempt < 9) { await Task.Delay(50); }
+            }
         }
     }
 
