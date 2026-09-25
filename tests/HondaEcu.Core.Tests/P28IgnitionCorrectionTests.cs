@@ -114,6 +114,7 @@ public sealed class P28IgnitionCorrectionTests
         Assert.True(File.Exists(host));
         var marker = Path.Combine(Path.GetTempPath(), $"hondaecu-m2i-active-{Guid.NewGuid():N}.pid");
         Process? child = null;
+        using var active = new CancellationTokenSource();
         try
         {
             using (var cancelled = new CancellationTokenSource())
@@ -133,7 +134,6 @@ public sealed class P28IgnitionCorrectionTests
                         Timeout = TimeSpan.FromMilliseconds(300)
                     }));
             Assert.Equal(SliceProcessFailure.Timeout, timeout.Failure);
-            using var active = new CancellationTokenSource();
             var running = P28IgnitionCorrectionValidator.ExecuteAsync(image, profile, binding, true,
                 "dotnet", Scenario(), new SliceProcessOptions
                 {
@@ -141,10 +141,27 @@ public sealed class P28IgnitionCorrectionTests
                     Timeout = TimeSpan.FromSeconds(15)
                 }, active.Token);
             var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
-            while (!File.Exists(marker) && DateTime.UtcNow < deadline) await Task.Delay(20);
-            Assert.True(File.Exists(marker), "M2i child PID must exist before cancellation.");
-            var pid = int.Parse(await File.ReadAllTextAsync(marker), System.Globalization.CultureInfo.InvariantCulture);
-            child = Process.GetProcessById(pid);
+            int? pid = null;
+            while (DateTime.UtcNow < deadline)
+            {
+                if (File.Exists(marker))
+                {
+                    try
+                    {
+                        var value = await File.ReadAllTextAsync(marker);
+                        if (int.TryParse(value, System.Globalization.NumberStyles.None,
+                            System.Globalization.CultureInfo.InvariantCulture, out var observed) && observed > 0)
+                        {
+                            pid = observed;
+                            break;
+                        }
+                    }
+                    catch (IOException) { /* The child may still hold the new marker open. */ }
+                }
+                await Task.Delay(20);
+            }
+            Assert.True(pid.HasValue, "M2i child must publish a readable PID before cancellation.");
+            child = Process.GetProcessById(pid.Value);
             Assert.False(child.HasExited);
             Assert.False(running.IsCompleted);
             active.Cancel();
@@ -154,6 +171,7 @@ public sealed class P28IgnitionCorrectionTests
         }
         finally
         {
+            active.Cancel();
             child?.Dispose();
             // Windows may briefly retain the just-exited child's marker handle.
             for (var attempt = 0; File.Exists(marker) && attempt < 10; attempt++)
