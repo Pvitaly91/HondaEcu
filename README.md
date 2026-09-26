@@ -3,8 +3,9 @@
 M2k completes [read-only native fuel calculation after DATA0140](docs/M2K_FUEL_CALCULATION_CHAIN.md)
 through `research p28-fuel calculation-chain-check` in runner0.19.0.
 One persistent CPU/RAM carries native lookup/store0140 into a disclosed scripted
-entry, then native word read/scaling/saturation to er2. The later reader227A is
-static-only; raw output is not final pulse width or physical fuel/time units.
+entry, then native word read/scaling/saturation to A/er2. Immediate consumer21F2
+is static-only; original ROM60F8=0 bypasses the later gated er2 reader227A.
+Raw output is not final pulse width or physical fuel/time units.
 Both initial map contexts and independent one-cell A/B controls are checked.
 No BIN/export, GUI, hardware or ISA-permission expansion; strict M2i stays Blocked.
 

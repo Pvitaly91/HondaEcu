@@ -2,8 +2,10 @@
 
 The bounded read-only chain is complete: native fuel lookup → word store at
 `134E` → same-machine word read at `21DB` → unsigned arithmetic → native
-`er2` result at `21F1`, stopping **before `21F2`**. Its nearest identified
-subsequent `er2` load is `227A` (static-only). The result is a raw
+`A/er2` result at `21F1`, stopping **before `21F2`**. The immediate software
+consumer is `21F2 XCHG A,er3` (static-only), using the identical A value
+retained by the native er2 store. A later conditional `er2` load is `227A`;
+unchanged original ROM60F8=0 bypasses that reload. The result is a raw
 scaled/saturated fuel component, not final pulse width, milliseconds, fuel
 quantity, AFR, dead time, or electrical injector output. Physical scale is unknown.
 Strict M2i remains **Blocked** on its own `47 81` dependency.
@@ -55,7 +57,11 @@ loop follow additional gates. `227A` specifically reloads the still-preserved
 er2 word; `227B` can bypass per-channel multiplication, otherwise `2280..228A`
 loads a table byte, multiplies, shifts and saturates. `228D..2295` applies the
 er3/X2 correction and stores through DP. `226F/2273` also gates whether that
-loop runs. This downstream consumer is static-only, not native coverage of
+loop runs: original ROM60F8=0 takes the bypass to229F, so227A is not claimed
+reachable in the unchanged original continuation. Immediate21F2/VCAL4 instead
+consumes the live A component and additive correction; that consumer is also
+static-only. The helpers5958..596A and5991..59A5 preserve er2; this is a static
+lifetime check, not execution. These consumers are not native coverage of
 timers, IRQs, scheduling values, or an electrical driver.
 
 ## Ownership and boundaries
@@ -117,7 +123,7 @@ Saturation is exactly `product >= 2^25`; this is narrowing derived from the
 operations, **not** an asserted fixed-point physical scale or unity coefficient.
 There is no division instruction, divisor-zero rule, or floating-point shortcut.
 Ordered banked word writes are factor→0100, high16→0102, shifted high→0102,
-result→0104. Carry, DD, comparison operands/ZF, saturation branch, bank aliases,
+result→0104, with identical result retained in A. Carry, DD, comparison operands/ZF, saturation branch, bank aliases,
 stack, extents and final value are compared, not merely the product.
 
 Primary source: OKI *MSM66201 Instruction Manual*, first edition September1991,

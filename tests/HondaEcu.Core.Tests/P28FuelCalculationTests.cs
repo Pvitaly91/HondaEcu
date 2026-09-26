@@ -89,7 +89,7 @@ public sealed class P28FuelCalculationTests
         var writes = new[] { new[] { 0x100, 16, 513 }, new[] { 0x102, 16, 4 }, new[] { 0x102, 16, 2 }, new[] { 0x104, 16, 601 } };
         int[][] accesses = [[0x21DD, 0x158, 16, 0, 513]];
         var stage = JsonSerializer.SerializeToElement(new { events, writes });
-        var exit = JsonSerializer.SerializeToElement(new { registers = new[] { 1, 2, 2, 0, 89, 2, 165, 165 } });
+        var exit = JsonSerializer.SerializeToElement(new { accumulator = 601, registers = new[] { 1, 2, 2, 0, 89, 2, 165, 165 } });
         P28FuelCalculationValidator.ValidateNumbers(stage, accesses, exit, e, 601);
         var swapped = JsonNode.Parse(stage.GetRawText())!; swapped["events"]![0]![3] = 513;
         Assert.Throws<SliceProcessException>(() => P28FuelCalculationValidator.ValidateNumbers(JsonSerializer.SerializeToElement(swapped), accesses, exit, e, 601));
@@ -97,6 +97,8 @@ public sealed class P28FuelCalculationTests
         var bank = JsonNode.Parse(stage.GetRawText())!; bank["writes"]![3]![0] = 0x204;
         Assert.Throws<SliceProcessException>(() => P28FuelCalculationValidator.ValidateNumbers(JsonSerializer.SerializeToElement(bank), accesses, exit, e, 601));
         Assert.Throws<SliceProcessException>(() => P28FuelCalculationValidator.ValidateNumbers(stage, accesses, exit, e, 600));
+        Assert.Throws<SliceProcessException>(() => P28FuelCalculationValidator.ValidateNumbers(stage, accesses,
+            JsonSerializer.SerializeToElement(new { accumulator = 600, registers = new[] { 1, 2, 2, 0, 89, 2, 165, 165 } }), e, 601));
         var wrongFlags = JsonNode.Parse(stage.GetRawText())!; wrongFlags["events"]![4]![5] = 0x9DC9;
         Assert.Throws<SliceProcessException>(() => P28FuelCalculationValidator.ValidateNumbers(JsonSerializer.SerializeToElement(wrongFlags), accesses, exit, e, 601));
     }

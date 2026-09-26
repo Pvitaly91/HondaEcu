@@ -12,7 +12,7 @@ public sealed record P28FuelCalculationComparison(int ScratchPattern, int Index,
     int? Data0140A, int? Data0140B, int? OutputA, int? OutputB, bool? Witness, string Effect);
 public sealed record P28FuelCalculationReport(int FormatVersion, string Purpose, RomHash OriginalHash, string ProfileId,
     string ScenarioDigest, string RunnerVersion, P28FuelMapMutation? Mutation, IReadOnlyList<int> ChangedOffsets,
-    IReadOnlyList<P28FuelCalculationSequence> Sequences, IReadOnlyList<P28FuelCalculationComparison> Comparisons, JsonElement EntryContract)
+    IReadOnlyList<P28FuelCalculationSequence> Sequences, IReadOnlyList<P28FuelCalculationComparison> Comparisons, JsonElement EntryContract, byte Er2ReaderGate60f8)
 {
     public bool HasFailure => Sequences.SelectMany(s => s.Checkpoints).Any(c => c.Disposition != "StrictMatch") || Comparisons.Any(c => c.Controls == false);
     public object Summary => new
@@ -22,7 +22,8 @@ public sealed record P28FuelCalculationReport(int FormatVersion, string Purpose,
         Witnesses = Comparisons.Count(c => c.Witness == true),
         Effects = Comparisons.GroupBy(c => c.Effect).ToDictionary(g => g.Key, g => g.Count())
     };
-    public string SoftwareRole => "Raw scaled/saturated fuel component in er2; static reader 227A; not final electrical pulse width";
+    public string SoftwareRole => "Raw scaled/saturated fuel component in A/er2; immediate A consumer 21F2 static-only; not final electrical pulse width";
+    public string Er2Reader227a => Er2ReaderGate60f8 == 0 ? "Static-only; unchanged ROM60F8=0 bypasses this reload in the original continuation" : "Static-only; ROM60F8 permits the later gated reload, not executed here";
     public bool PhysicalRpmAvailable => false;
     public string Units => "raw; physical fuel/time units and degrees unavailable";
     public string Readiness => "PcInspectionOnly / NotFlashReady";
@@ -84,7 +85,7 @@ public static class P28FuelCalculationValidator
         }
         IReadOnlyList<int> changed = child is null ? [] : Array.AsReadOnly(Enumerable.Range(0, original.Size).Where(i => original.Span[i] != child.Span[i]).ToArray());
         return new(1, "fuel-calculation-native-software-test", original.Hash, profile.Id, scenario.Digest,
-            SliceRunnerIdentity.CurrentVersion, scenario.Mutation, changed, sequences.AsReadOnly(), comparisons.AsReadOnly(), contract);
+            SliceRunnerIdentity.CurrentVersion, scenario.Mutation, changed, sequences.AsReadOnly(), comparisons.AsReadOnly(), contract, original.Span[0x60F8]);
     }
     internal static JsonElement ExpectedContracts() => JsonSerializer.SerializeToElement(new[] { new {
         id = Operation, formatVersion = 1, prefixEntries = new[] { 0x0A0C, 0x0A62, 0x12FC }, continuousFuelTail = new[] { 0x12FC, 0x1350 },
@@ -273,7 +274,9 @@ public static class P28FuelCalculationValidator
         Require(accesses.Count(a => a.SequenceEqual(new[] { 0x21DD, 0x158, 16, 0, e.Factor0158 })) == 1, "M2k second operand provenance differs.");
         Require(writes.SelectMany(v => v).SequenceEqual(new[] { 0x100, 16, e.Factor0158, 0x102, 16, e.HighWord, 0x102, 16, e.ShiftedHighWord, 0x104, 16, e.Output }), "M2k ordered banked word writes differ.");
         var registers = exit.GetProperty("registers").EnumerateArray().Select(v => v.GetInt32()).ToArray();
-        Require(registers.Length == 8 && (registers[4] | registers[5] << 8) == e.Output && output == e.Output && At(0x21F1)[2] == e.Output, "M2k native result/word aliases differ.");
+        Require(registers.Length == 8 && (registers[4] | registers[5] << 8) == e.Output && output == e.Output &&
+            At(0x21F1)[2] == e.Output && At(0x21F1)[3] == e.Output && exit.GetProperty("accumulator").GetInt32() == e.Output,
+            "M2k native A/er2 result/word aliases differ.");
     }
     private static JsonElement ReportRow(JsonElement row, bool trace)
     {

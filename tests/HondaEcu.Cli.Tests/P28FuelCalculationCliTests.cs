@@ -49,6 +49,9 @@ public sealed class P28FuelCalculationCliTests
         Assert.Equal(CliApplication.VerificationFailed, result.Code);
         var report = JsonNode.Parse(File.ReadAllText(w.Output))!;
         Assert.Equal("Blocked; M2k does not resolve 47 81", report["strictM2i"]!.GetValue<string>());
+        Assert.Equal(0, report["er2ReaderGate60f8"]!.GetValue<int>());
+        Assert.Contains("bypasses", report["er2Reader227a"]!.GetValue<string>());
+        Assert.Contains("21F2", report["softwareRole"]!.GetValue<string>());
         foreach (var sequence in report["sequences"]!.AsArray())
         {
             var first = sequence!["checkpoints"]![0]!; var next = sequence["checkpoints"]![1]!;

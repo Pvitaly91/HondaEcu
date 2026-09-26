@@ -49,7 +49,7 @@ public sealed partial class CliApplication
                     $"product={row.Product?.ToString() ?? "NotRun"} narrowed={narrowed?.ToString() ?? "NotRun"} er2={row.Output?.ToString() ?? "NotRun"} stop={stop}.").ConfigureAwait(false);
             }
         }
-        await _output.WriteLineAsync("Read-only strict fuel numeric fragment; 1350→21DB is scripted on the same CPU/RAM. er2 is a raw scaled component; reader227A static-only. PcInspectionOnly / NotFlashReady; physical units unknown; GUI/hardware NotRun. No BIN written. Strict M2i remains Blocked.").ConfigureAwait(false);
+        await _output.WriteLineAsync($"Read-only strict fuel numeric fragment; 1350→21DB is scripted on the same CPU/RAM. A/er2 is a raw scaled component; immediate consumer21F2 static-only. er2 reader227A: {report.Er2Reader227a}. PcInspectionOnly / NotFlashReady; physical units unknown; GUI/hardware NotRun. No BIN written. Strict M2i remains Blocked.").ConfigureAwait(false);
         return report.HasFailure ? VerificationFailed : Success;
     }
 }
