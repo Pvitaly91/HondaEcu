@@ -8,7 +8,7 @@ public sealed partial class CliApplication
     {
         var command = CommandLine.Parse(args, new HashSet<string>(StringComparer.Ordinal) { "confirm-profile" });
         command.EnsureOnly("profile", "confirm-profile", "baseline-binding", "runner", "scenario", "output");
-        command.RequirePositionals(1, "hondaecu research p28-ignition timing-chain-check <original.bin> --profile p28-304 --confirm-profile --baseline-binding <binding.json> --runner <v0.17.0-rust-executable> --scenario <m2i-scenario.json> --output <new-private-report.json>");
+        command.RequirePositionals(1, "hondaecu research p28-ignition timing-chain-check <original.bin> --profile p28-304 --confirm-profile --baseline-binding <binding.json> --runner <v0.18.0-rust-executable> --scenario <m2i-scenario.json> --output <new-private-report.json>");
         if (!command.HasFlag("confirm-profile"))
             throw new CliUsageException("M2i requires explicit profile confirmation and exact baseline binding.");
         var originalPath = ResolvePath(command.Positionals[0]);

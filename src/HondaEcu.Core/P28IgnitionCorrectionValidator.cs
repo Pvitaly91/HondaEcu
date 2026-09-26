@@ -16,7 +16,7 @@ public sealed record P28IgnitionCorrectionValidationReport(int FormatVersion, st
     RomHash OriginalHash, RomHash? MutatedHash, string ProfileId, string ScenarioDigest,
     string RunnerVersion, P28IgnitionMapMutation? Mutation, IReadOnlyList<int> ChangedOffsets,
     IReadOnlyList<P28IgnitionCorrectionSequence> Sequences,
-    IReadOnlyList<P28IgnitionCorrectionComparison> Comparisons)
+    IReadOnlyList<P28IgnitionCorrectionComparison> Comparisons, JsonElement EntryContract)
 {
     public bool HasFailure => Sequences.SelectMany(s => s.Checkpoints)
         .Any(c => c.Disposition is not ("StrictMatch" or "ConditionalMatch")) ||
@@ -71,14 +71,7 @@ public static class P28IgnitionCorrectionValidator
         RomProfile profile, P28IgnitionCorrectionScenario scenario, JsonElement root)
     {
         _ = SliceRunnerIdentity.Validate(root, Operation);
-        var contracts = root.GetProperty("entryContracts");
-        Require(contracts.GetArrayLength() == 1 && contracts[0].GetProperty("id").GetString() == Operation &&
-            contracts[0].GetProperty("producer").GetProperty("entry").GetInt32() == 0x5F93 &&
-            contracts[0].GetProperty("correction").GetProperty("entry").GetInt32() == 0x0F85 &&
-            contracts[0].GetProperty("correction").GetProperty("exit").GetInt32() == 0x1076 &&
-            contracts[0].GetProperty("nativeReader0248").GetInt32() == 0x0FF4 &&
-            contracts[0].GetProperty("assumptions").GetArrayLength() == 0,
-            "M2i runner capability/entry contract differs.");
+        ValidateEntryContract(root.GetProperty("entryContracts"), scenario.PermitAddEr3Assumption);
         var rows = root.GetProperty("ignitionCorrectionSequences");
         Require(rows.GetArrayLength() == (mutated is null ? 3 : 6), "M2i image/scratch count differs.");
         var sequences = new List<P28IgnitionCorrectionSequence>();
@@ -200,7 +193,7 @@ public static class P28IgnitionCorrectionValidator
                                     "Native software-result stores or exit");
                                 Check(cp.GetProperty("conditionalDependency").GetBoolean() &&
                                     correction.GetProperty("result").GetProperty("usedAssumptions")
-                                        .EnumerateArray().Any(x => x.GetString() == "oki.add-er3-a"),
+                                        .EnumerateArray().Select(x => x.GetString()).SequenceEqual(["oki.add-er3-a"]),
                                     "Reached er3 form was not disclosed as conditional");
                             }
                             else if (!scenario.PermitAddEr3Assumption)
@@ -208,6 +201,8 @@ public static class P28IgnitionCorrectionValidator
                                 Check(status == 1 && correction.GetProperty("result").GetProperty("stopPc")
                                     .GetInt32() == 0x0FEC && reader0248 is null && corrected is null &&
                                     bounded is null && next is null && result is null &&
+                                    !cp.GetProperty("conditionalDependency").GetBoolean() &&
+                                    correction.GetProperty("result").GetProperty("usedAssumptions").GetArrayLength() == 0 &&
                                     cp.GetProperty("error").GetString()!.Contains("oki.add-er3-a", StringComparison.Ordinal),
                                     "Strict unresolved boundary or partial-output nulls");
                             }
@@ -237,9 +232,35 @@ public static class P28IgnitionCorrectionValidator
         var changed = scenario.Mutation is null ? Array.Empty<int>() :
             new[] { P28IgnitionMapContract.CellOffset(scenario.Mutation.MapId,
                 scenario.Mutation.Row, scenario.Mutation.Column) };
-        return new(1, "native-ignition-correction-chain", original.Hash, mutated?.Hash, profile.Id,
+        return new(2, "native-ignition-correction-chain", original.Hash, mutated?.Hash, profile.Id,
             scenario.Digest, root.GetProperty("runnerVersion").GetString()!, scenario.Mutation,
-            changed, sequences.AsReadOnly(), comparisons);
+            changed, sequences.AsReadOnly(), comparisons, root.GetProperty("entryContracts")[0].Clone());
+    }
+
+    internal static void ValidateEntryContract(JsonElement contracts, bool permitAdd)
+    {
+        Require(contracts.GetArrayLength() == 1, "M2i entry contract count differs.");
+        var c = contracts[0];
+        string?[] Strings(string name) => c.GetProperty(name).EnumerateArray().Select(x => x.GetString()).ToArray();
+        Require(c.GetProperty("id").GetString() == Operation && c.GetProperty("formatVersion").GetInt32() == 2 &&
+            c.GetProperty("producer").GetProperty("entry").GetInt32() == 0x5F93 &&
+            c.GetProperty("correction").GetProperty("entry").GetInt32() == 0x0F85 &&
+            c.GetProperty("correction").GetProperty("exit").GetInt32() == 0x1076 &&
+            c.GetProperty("nativeReader0248").GetInt32() == 0x0FF4 &&
+            Strings("assumptions").SequenceEqual(["oki.add-er3-a"]) &&
+            Strings("allowedAssumptions").SequenceEqual(["oki.add-er3-a"]) &&
+            Strings("acceptedAssumptions").SequenceEqual(permitAdd ? ["oki.add-er3-a"] : Array.Empty<string>()) &&
+            c.GetProperty("dependencyScope").GetString() == "local-and-cumulative",
+            "M2i runner capability/permission disclosure differs.");
+        var forms = c.GetProperty("reviewedInstructionForms");
+        Require(forms.GetArrayLength() == 1 && forms[0].GetProperty("bytes").EnumerateArray()
+                .Select(x => x.GetInt32()).SequenceEqual([0x47, 0x81]) &&
+            forms[0].GetProperty("mnemonic").GetString() == "ADD er3, A" &&
+            forms[0].GetProperty("admission").GetString() == "Assumption" &&
+            forms[0].GetProperty("assumptionId").GetString() == "oki.add-er3-a" &&
+            forms[0].GetProperty("encodingEvidence").GetString() == "DerivedOnly" &&
+            forms[0].GetProperty("runtimeEvidence").GetString() == "Unestablished",
+            "M2j exact-form evidence status differs; no strict promotion is established.");
     }
 
     private static int[][] Writes(JsonElement stage) => Matrix(stage, "writes", 3);

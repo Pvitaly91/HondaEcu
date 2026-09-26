@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2j delivers an [exact `47 81` evidence dossier](docs/M2J_ADD_ER3_ISA_EVIDENCE.md),
+conditional decoded probes and explicit permission/evidence metadata in runner
+0.18.0. Independent instruction proof remains partial; full strict M2i closure
+is Blocked. Existing conditional reports are not reclassified.
+
 M2i adds [read-only ignition correction/clamp handoff validation](docs/M2I_IGNITION_CORRECTION_CHAIN.md)
 through `research p28-ignition timing-chain-check`. The native M2g prefix
 writes `DATA0248`; a disclosed scripted entry executes the recovered native

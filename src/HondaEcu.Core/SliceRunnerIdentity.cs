@@ -5,7 +5,8 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.17.0";
+    internal const string CurrentVersion = "0.18.0";
+    internal const string LegacyCorrectionVersion = "0.17.0";
     internal const string SharedVersion = "0.16.0";
     internal const string PreviousVersion = "0.14.0";
     internal const string SelectorVersion = "0.15.0";
@@ -37,6 +38,10 @@ internal static class SliceRunnerIdentity
     internal static string[] Validate(JsonElement root, string operation)
     {
         var version = root.GetProperty("runnerVersion").GetString();
+        // M2j changes only the correction capability disclosure/validation.
+        // Other operations retain the exact 0.17.0 semantic-fix inventory.
+        if (version == LegacyCorrectionVersion && operation != "ignitionCorrectionChain")
+            version = CurrentVersion;
         if (root.GetProperty("protocolVersion").GetInt32() != 1 || root.GetProperty("operation").GetString() != operation ||
             root.GetProperty("upstreamCommit").GetString() != P28ByteExecutionValidator.UpstreamCommit ||
             version is not ("0.1.0" or "0.2.0" or "0.3.0" or "0.4.0" or "0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||

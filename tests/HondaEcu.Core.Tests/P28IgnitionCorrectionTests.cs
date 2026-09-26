@@ -37,6 +37,7 @@ public sealed class P28IgnitionCorrectionTests
 
     [Theory]
     [InlineData("0.16.0", "ignitionCorrectionChain")]
+    [InlineData("0.17.0", "ignitionCorrectionChain")]
     [InlineData("0.17.0", "ignitionSelectorChain")]
     public void M2iCapabilityRejectsWrongVersionOrOperation(string version, string operation)
     {
@@ -50,6 +51,48 @@ public sealed class P28IgnitionCorrectionTests
         }));
         Assert.Throws<SliceProcessException>(() =>
             SliceRunnerIdentity.Validate(document.RootElement, P28IgnitionCorrectionValidator.Operation));
+    }
+
+    private static JsonNode Contract(bool permitted)
+    {
+        var node = JsonNode.Parse("""
+        [{"id":"ignitionCorrectionChain","formatVersion":2,"producer":{"entry":24467},
+          "correction":{"entry":3973,"exit":4214},"nativeReader0248":4084,
+          "assumptions":["oki.add-er3-a"],"allowedAssumptions":["oki.add-er3-a"],
+          "acceptedAssumptions":[],"dependencyScope":"local-and-cumulative",
+          "reviewedInstructionForms":[{"bytes":[71,129],"mnemonic":"ADD er3, A",
+            "admission":"Assumption","assumptionId":"oki.add-er3-a",
+            "encodingEvidence":"DerivedOnly","runtimeEvidence":"Unestablished"}]}]
+        """)!;
+        if (permitted) node[0]!["acceptedAssumptions"] = new JsonArray("oki.add-er3-a");
+        return node;
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void M2jCapabilityDisclosesAllowedAndAcceptedPermissionsSeparately(bool permitted)
+    {
+        using var document = JsonDocument.Parse(Contract(permitted).ToJsonString());
+        P28IgnitionCorrectionValidator.ValidateEntryContract(document.RootElement, permitted);
+    }
+
+    [Theory]
+    [InlineData("hiddenAllowed")]
+    [InlineData("hiddenAccepted")]
+    [InlineData("forgedStrict")]
+    [InlineData("neighbor")]
+    public void M2jCapabilityRejectsHiddenPermissionAndUnsupportedPromotion(string mutation)
+    {
+        var node = Contract(true);
+        var c = node[0]!;
+        if (mutation == "hiddenAllowed") c["allowedAssumptions"] = new JsonArray();
+        if (mutation == "hiddenAccepted") c["acceptedAssumptions"] = new JsonArray();
+        if (mutation == "forgedStrict") c["reviewedInstructionForms"]![0]!["admission"] = "Allowed";
+        if (mutation == "neighbor") c["reviewedInstructionForms"]![0]!["bytes"]![0] = 0x45;
+        using var document = JsonDocument.Parse(node.ToJsonString());
+        Assert.Throws<SliceProcessException>(() =>
+            P28IgnitionCorrectionValidator.ValidateEntryContract(document.RootElement, true));
     }
 
     [Fact]

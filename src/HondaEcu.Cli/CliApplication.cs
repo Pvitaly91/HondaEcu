@@ -160,7 +160,7 @@ public sealed partial class CliApplication
               --scenario <bounded-m2g-scenario.json> --output <new-private-json>
               Native selector production before ignition axes/lookup/DATA0248; no map-ID input or BIN.
           research p28-ignition timing-chain-check <original> --profile p28-304 --confirm-profile
-              --baseline-binding <private-json> --runner <v0.17.0-rust-executable>
+              --baseline-binding <private-json> --runner <v0.18.0-rust-executable>
               --scenario <bounded-m2i-scenario.json> --output <new-private-json>
               Raw software DATA0248 correction/clamp handoff; explicit assumption may be conditional; no physical degrees or BIN.
           research p28-calibration shared-chain-check <original> --profile p28-304 --confirm-profile

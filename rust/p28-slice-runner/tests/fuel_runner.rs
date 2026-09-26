@@ -22,7 +22,7 @@ fn run(value: Value) -> Value {
 #[test]
 fn unsupported_first_form_stops_sequence_and_leaves_suffix_null() {
     let response = run(request());
-    assert_eq!(response["runnerVersion"], "0.17.0");
+    assert_eq!(response["runnerVersion"], env!("CARGO_PKG_VERSION"));
     for sequence in response["fuelMapSequences"].as_array().unwrap() {
         assert_eq!(sequence["checkpoints"][0]["status"], 1);
         assert!(sequence["checkpoints"][0]["loadAxis"].is_null());

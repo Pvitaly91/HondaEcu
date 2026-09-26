@@ -109,9 +109,9 @@ pub(crate) fn correction_contract() -> SliceContract {
     }
 }
 
-pub fn entry_contracts() -> Vec<serde_json::Value> {
+pub fn entry_contracts(accepted_assumptions: &[String]) -> Vec<serde_json::Value> {
     vec![serde_json::json!({
-        "id":"ignitionCorrectionChain", "formatVersion":1,
+        "id":"ignitionCorrectionChain", "formatVersion":2,
         "producer":{"entry":0x5F93,"exit":0x5FAF},
         "scriptedEntries":[0x0A0C,0x0B64,0x0F85],
         "unbrokenPrefix":[0x0B64,0x0BD4],
@@ -119,7 +119,16 @@ pub fn entry_contracts() -> Vec<serde_json::Value> {
             "pathGate":"DATA0212.5=1, once-only; other M2g primary gates remain clear"},
         "nativeReader0248":0x0FF4,
         "nativeOutputs":[0x035B,0x024A],
-        "units":"raw", "physicalRpmAvailable":false, "assumptions":[]
+        "units":"raw", "physicalRpmAvailable":false,
+        "assumptions":[crate::protocol::ADD_ASSUMPTION],
+        "allowedAssumptions":[crate::protocol::ADD_ASSUMPTION],
+        "acceptedAssumptions":accepted_assumptions,
+        "dependencyScope":"local-and-cumulative",
+        "reviewedInstructionForms":[{
+            "bytes":[0x47,0x81], "mnemonic":"ADD er3, A", "admission":"Assumption",
+            "assumptionId":crate::protocol::ADD_ASSUMPTION,
+            "encodingEvidence":"DerivedOnly", "runtimeEvidence":"Unestablished"
+        }]
     })]
 }
 
@@ -410,7 +419,7 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
         .ignition_correction_chain
         .as_ref()
         .ok_or("missing M2i stimulus")?;
-    response.entry_contracts = entry_contracts();
+    response.entry_contracts = entry_contracts(&r.allow_assumptions);
     response.ignition_correction_sequences = Some(
         r.images
             .iter()

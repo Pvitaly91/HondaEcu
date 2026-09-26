@@ -82,7 +82,7 @@ fn invented_real_subprocess_keeps_one_history_and_producer_precedes_gate() {
         String::from_utf8_lossy(&output.stderr)
     );
     let response: Value = serde_json::from_slice(&output.stdout).unwrap();
-    assert_eq!(response["runnerVersion"], "0.17.0");
+    assert_eq!(response["runnerVersion"], env!("CARGO_PKG_VERSION"));
     for sequence in response["sharedCalibrationSequences"].as_array().unwrap() {
         let checkpoints = sequence["checkpoints"].as_array().unwrap();
         let first = &checkpoints[0];

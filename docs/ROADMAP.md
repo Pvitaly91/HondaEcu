@@ -251,6 +251,13 @@ mode; explicitly permitted completed events are ConditionalMatch only. The
 M2h contract is not retroactively extended. No new BIN/export, physical
 degrees, GUI/hardware acceptance or flash readiness is added.
 
+M2j delivers [exact `47 81` ISA research and conditional probes](M2J_ADD_ER3_ISA_EVIDENCE.md).
+New primary vendor documents establish a compatible assembler lead and reject
+cross-family binary inference, but do not close the word-object suffix/semantic
+gap. Runner 0.18.0 discloses accepted permissions and exact evidence status;
+the strict stop remains. Research/code delivery complete; exact proof partial;
+full strict M2i Blocked. No old conditional result is relabeled.
+
 ## M3 — Desktop GUI
 
 - desktop GUI
