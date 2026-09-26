@@ -26,6 +26,37 @@ pub struct Sources {
     pub source014c: u16,
     pub counter00f2: u8,
 }
+/// Factor-free snapshots shared by the native0158 research task. Never writes0158.
+pub(crate) struct CorrectionSources {
+    pub words: [u16; 5],
+    pub bytes: [u8; 3],
+}
+impl Sources {
+    fn correction(&self) -> CorrectionSources {
+        CorrectionSources {
+            words: [
+                self.source0142,
+                self.source0144,
+                self.source0146,
+                self.source014a,
+                self.source014c,
+            ],
+            bytes: [self.source0148, self.source0149, self.counter00f2],
+        }
+    }
+}
+pub(crate) fn set_correction_sources(
+    cpu: &mut crate::cpu::Cpu,
+    bus: &mut crate::bus::Bus,
+    s: &CorrectionSources,
+) {
+    for (a, v) in [0x142, 0x144, 0x146, 0x14A, 0x14C].into_iter().zip(s.words) {
+        write_data_u16(cpu, bus, a, v);
+    }
+    for (a, v) in [0x148, 0x149, 0xF2].into_iter().zip(s.bytes) {
+        write_data_u8(cpu, bus, a, v);
+    }
+}
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Call {
@@ -208,23 +239,93 @@ fn sources(cpu: &crate::cpu::Cpu, bus: &mut crate::bus::Bus) -> Sources {
     }
 }
 fn set_sources(cpu: &mut crate::cpu::Cpu, bus: &mut crate::bus::Bus, s: &Sources) {
-    for (a, v) in [
-        (0x158, s.factor0158),
-        (0x142, s.source0142),
-        (0x144, s.source0144),
-        (0x146, s.source0146),
-        (0x14A, s.source014a),
-        (0x14C, s.source014c),
-    ] {
-        write_data_u16(cpu, bus, a, v)
+    // Historical isolated M2l alone still owns this explicit snapshot.
+    write_data_u16(cpu, bus, 0x158, s.factor0158);
+    set_correction_sources(cpu, bus, &s.correction());
+}
+pub(crate) struct TailExecution {
+    pub status: i32,
+    pub boundaries: Vec<CpuBoundary>,
+    pub stages: Vec<Stage>,
+    pub accesses: Vec<[u32; 5]>,
+    pub correction: Option<u16>,
+    pub component: Option<u16>,
+    pub corrected: Option<u16>,
+    pub store03a2: Option<u16>,
+    pub store03b4: Option<u16>,
+}
+/// Caller already applied the disclosed2194 ABI. No enter/reset at internal boundaries.
+pub(crate) fn execute_tail(cpu: &mut crate::cpu::Cpu, bus: &mut crate::bus::Bus) -> TailExecution {
+    let mut tail = TailExecution {
+        status: 0,
+        boundaries: vec![],
+        stages: vec![],
+        accesses: vec![],
+        correction: None,
+        component: None,
+        corrected: None,
+        store03a2: None,
+        store03b4: None,
+    };
+    bus.configure_scoped_access(
+        vec![
+            [0, 8],
+            [0x88, 0x90],
+            [0x100, 0x108],
+            [0x124, 0x125],
+            [0x12B, 0x12C],
+            [0xF2, 0xF3],
+            [0x140, 0x14E],
+            [0x158, 0x15A],
+            [0x3A2, 0x3A4],
+            [0x3B4, 0x3B6],
+            [0x7FE, 0x800],
+        ],
+        4096,
+    );
+    for n in 0..3 {
+        tail.boundaries.push(boundary(cpu, bus));
+        bus.clear_program_reads();
+        bus.set_program_data_ranges(if n == 2 { vec![[0x30, 0x32]] } else { vec![] });
+        bus.begin_native_accesses();
+        bus.begin_write_journal();
+        bus.start_decision_observer();
+        let result = execute_in_state_observed(
+            cpu,
+            bus,
+            &contract(n),
+            &[],
+            true,
+            Some(if n == 1 {
+                fuel_calculation::admission
+            } else {
+                admission
+            }),
+            true,
+        );
+        tail.accesses.extend(bus.end_native_accesses());
+        tail.status = result.status;
+        tail.stages.push(Stage {
+            result,
+            writes: bus.end_write_journal(),
+            events: bus.finish_decision_observer(),
+            ssp_after: cpu.ssp,
+        });
+        tail.boundaries.push(boundary(cpu, bus));
+        if tail.status != 0 {
+            break;
+        }
+        match n {
+            0 => tail.correction = Some(read_data_u16(cpu, bus, 0x106)),
+            1 => tail.component = Some(read_data_u16(cpu, bus, 0x104)),
+            _ => {
+                tail.corrected = Some(read_data_u16(cpu, bus, 0x106));
+                tail.store03a2 = Some(read_data_u16(cpu, bus, 0x3A2));
+                tail.store03b4 = Some(read_data_u16(cpu, bus, 0x3B4));
+            }
+        }
     }
-    for (a, v) in [
-        (0x148, s.source0148),
-        (0x149, s.source0149),
-        (0xF2, s.counter00f2),
-    ] {
-        write_data_u8(cpu, bus, a, v)
-    }
+    tail
 }
 pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     let s = r
@@ -341,69 +442,16 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                     enter(&mut cpu, &mut bus, &contract(0));
                     row.host_transition_writes =
                         vec![[2, 16, 0x20], [4, 16, 0x0101], [0x8E, 16, 0x280]];
-                    // Tight tail-only footprint, especially the single two-byte native near-call stack slot.
-                    bus.configure_scoped_access(
-                        vec![
-                            [0, 8],
-                            [0x88, 0x90],
-                            [0x100, 0x108],
-                            [0x124, 0x125],
-                            [0x12B, 0x12C],
-                            [0xF2, 0xF3],
-                            [0x140, 0x14E],
-                            [0x158, 0x15A],
-                            [0x3A2, 0x3A4],
-                            [0x3B4, 0x3B6],
-                            [0x7FE, 0x800],
-                        ],
-                        4096,
-                    );
-                    for n in 0..3 {
-                        row.boundaries.push(boundary(&cpu, &mut bus));
-                        bus.clear_program_reads();
-                        bus.set_program_data_ranges(if n == 2 {
-                            vec![[0x30, 0x32]]
-                        } else {
-                            vec![]
-                        });
-                        bus.begin_native_accesses();
-                        bus.begin_write_journal();
-                        bus.start_decision_observer();
-                        let result = execute_in_state_observed(
-                            &mut cpu,
-                            &mut bus,
-                            &contract(n),
-                            &[],
-                            true,
-                            Some(if n == 1 {
-                                fuel_calculation::admission
-                            } else {
-                                admission
-                            }),
-                            true,
-                        );
-                        row.accesses.extend(bus.end_native_accesses());
-                        row.status = result.status;
-                        row.stages.push(Stage {
-                            result,
-                            writes: bus.end_write_journal(),
-                            events: bus.finish_decision_observer(),
-                            ssp_after: cpu.ssp,
-                        });
-                        row.boundaries.push(boundary(&cpu, &mut bus));
-                        if row.status != 0 {
-                            break;
-                        }
-                        match n {
-                            0 => row.correction = Some(read_data_u16(&cpu, &mut bus, 0x106)),
-                            1 => row.component = Some(read_data_u16(&cpu, &mut bus, 0x104)),
-                            _ => {
-                                row.corrected = Some(read_data_u16(&cpu, &mut bus, 0x106));
-                                row.store03a2 = Some(read_data_u16(&cpu, &mut bus, 0x3A2));
-                                row.store03b4 = Some(read_data_u16(&cpu, &mut bus, 0x3B4));
-                            }
-                        }
-                    }
+                    let tail = execute_tail(&mut cpu, &mut bus);
+                    row.accesses.extend(tail.accesses);
+                    row.status = tail.status;
+                    row.boundaries = tail.boundaries;
+                    row.stages = tail.stages;
+                    row.correction = tail.correction;
+                    row.component = tail.component;
+                    row.corrected = tail.corrected;
+                    row.store03a2 = tail.store03a2;
+                    row.store03b4 = tail.store03b4;
                 }
                 row.sources_after = sources(&cpu, &mut bus);
                 row.mode_after = read_data_u8(&cpu, &mut bus, 0x12B);

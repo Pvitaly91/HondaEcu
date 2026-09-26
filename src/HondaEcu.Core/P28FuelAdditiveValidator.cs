@@ -212,7 +212,7 @@ public static class P28FuelAdditiveValidator
             Require(boundary.GetProperty("dd").GetBoolean() == ((boundary.GetProperty("psw").GetInt32() & 0x1000) != 0), "M2l boundary DD contradicts PSW.");
         }
     }
-    private static P28AcquisitionStageResult ValidateStage(JsonElement stage, JsonElement entry, JsonElement exit, int n, P28FuelAdditiveOracle own, int[][] accesses)
+    internal static P28AcquisitionStageResult ValidateStage(JsonElement stage, JsonElement entry, JsonElement exit, int n, P28FuelAdditiveOracle own, int[][] accesses)
     {
         P28LimiterScenario.Shape(stage, "result", "writes", "events", "sspAfter"); var budget = new[] { 96, 32, 48 }[n];
         var r = P28AcquisitionValidator.ParseStage(stage.GetProperty("result"), budget, 0, [], null)!; var events = Matrix(stage.GetProperty("events"), 8, budget); var writes = Matrix(stage.GetProperty("writes"), 3, budget);
@@ -238,9 +238,9 @@ public static class P28FuelAdditiveValidator
         }
         return r;
     }
-    private static int Word(JsonElement b, int n) { var r = b.GetProperty("registers"); Require(r.GetArrayLength() == 8, "M2l register bank shape."); return r[n * 2].GetByte() | r[n * 2 + 1].GetByte() << 8; }
+    internal static int Word(JsonElement b, int n) { var r = b.GetProperty("registers"); Require(r.GetArrayLength() == 8, "M2l register bank shape."); return r[n * 2].GetByte() | r[n * 2 + 1].GetByte() << 8; }
     private static int? Nullable(JsonElement r, string key) => r.GetProperty(key).ValueKind == JsonValueKind.Null ? null : r.GetProperty(key).GetInt32();
-    private static int[][] Matrix(JsonElement v, int width, int limit) { Require(v.GetArrayLength() <= limit, "Unbounded M2l journal."); return v.EnumerateArray().Select(r => { var a = r.EnumerateArray().Select(n => n.GetInt32()).ToArray(); Require(a.Length == width && a.All(n => n is >= 0 and <= 65536), "Malformed M2l journal."); return a; }).ToArray(); }
+    internal static int[][] Matrix(JsonElement v, int width, int limit) { Require(v.GetArrayLength() <= limit, "Unbounded M2l journal."); return v.EnumerateArray().Select(r => { var a = r.EnumerateArray().Select(n => n.GetInt32()).ToArray(); Require(a.Length == width && a.All(n => n is >= 0 and <= 65536), "Malformed M2l journal."); return a; }).ToArray(); }
     private static JsonElement ReportRow(JsonElement row, bool trace)
     {
         if (trace) return row.Clone(); var node = JsonNode.Parse(row.GetRawText())!;

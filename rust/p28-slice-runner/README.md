@@ -1,6 +1,6 @@
 # Bounded P28 research runner
 
-Runner **0.20.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
+Runner **0.21.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
 upstream CPU provenance and license are retained in
 [the third-party notices](../../THIRD_PARTY_NOTICES.md). No OEM image or native
 program fixture is distributed here.
@@ -29,10 +29,18 @@ A successful process exit is not an execution match or a hardware result.
 | `acquisitionSequence` | Frozen capture observations and optional scheduled G/F/threshold, one persistent CPU/RAM per image and scratch pattern |
 | `fuelCalculationChain` | Historical M2k strict word0140 reader/scaling; stop-before21F2 |
 | `fuelAdditiveCorrectionChain` | M2l strict native correction producer→scaling→XCHG/VCAL4/return→first software stores; one continuous tail2194..2204 |
+| `fuelFactorProductionChain` | M2m strict native0158 producer and actual word handoff to21DD, followed by the shared continuous M2l tail; no ready factor input |
 
 The acquisition guide below describes its existing operation, not all later
 milestones. The closed M2l sources, lifetime, exact-form evidence and read-only
 CLI are documented in [M2l](../../docs/M2L_ADDITIVE_FUEL_CORRECTION_CHAIN.md).
+The factor-free input contract, native1F43→7A99→1FB7 detour, separate0140/0158
+generations and disclosed same-machine scripted schedule are documented in
+[M2m](../../docs/M2M_NATIVE_FUEL_FACTOR_CHAIN.md). This producer does not recover
+physical units, source acquisition, boot or the ECU scheduler. Historical M2k/M2l
+operations retain their isolated factor-snapshot contracts. Exact word ROL er0
+and SLL A fixes are disclosed in the semantic-fix inventory; disputed47 81/45 81
+and SUBB permissions are not inherited by M2m.
 
 Old task entry contracts and optional response-field shapes are unchanged.
 Every old operation rejects an acquisition payload. `Bus::new` remains

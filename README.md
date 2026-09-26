@@ -1,5 +1,15 @@
 # HondaEcu
 
+M2m completes bounded [native DATA0158 fuel-factor production and consumption](docs/M2M_NATIVE_FUEL_FACTOR_CHAIN.md)
+with `research p28-fuel factor-chain-check` in runner0.21.0. The new closed
+scenario has no supplied factor: one persistent CPU/RAM carries native lookup0140
+through the native1F43 producer/detour/store, then unchanged M2l to03A2/03B4.
+Routine scheduling stays explicit/scripted;3228 strict native events,660 A/B
+comparisons and96 unmasked03B4 witnesses are separate from model-only audits.
+Physical units, GUI/hardware, full controller and new
+firmware/export remain outside scope; strict M2i stays Blocked.
+Historical standalone M2k/M2l commands retain their previous contracts below.
+
 M2l completes the bounded [native additive fuel-correction chain](docs/M2L_ADDITIVE_FUEL_CORRECTION_CHAIN.md)
 with `research p28-fuel additive-chain-check` in runner0.20.0: native correction
 producer, unchanged M2k scaling, actual XCHG/VCAL4/return and software stores03A2/03B4

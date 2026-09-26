@@ -15,6 +15,7 @@ pub mod adaptive;
 pub mod fuel;
 pub mod fuel_additive;
 pub mod fuel_calculation;
+pub mod fuel_factor;
 pub mod idle;
 pub mod idle_contexts;
 pub mod ignition;

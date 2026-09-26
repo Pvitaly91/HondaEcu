@@ -406,6 +406,11 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "fuelFactorProductionChain"
+        && request.fuel_factor_production_chain.is_some()
+    {
+        return Err("M2m stimulus is unavailable to other operations".into());
+    }
     if request.operation != "fuelCalculationChain" && request.fuel_calculation_chain.is_some() {
         return Err("fuel calculation stimulus unavailable to other tasks".into());
     }
@@ -586,6 +591,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "fuelMapLookup" => crate::fuel::validate_request(request)?,
         "fuelCalculationChain" => crate::fuel_calculation::validate_request(request)?,
         "fuelAdditiveCorrectionChain" => crate::fuel_additive::validate_request(request)?,
+        "fuelFactorProductionChain" => crate::fuel_factor::validate_request(request)?,
         "vtecFuelChain" => crate::vtec_fuel::validate_request(request)?,
         "ignitionMapLookup" => crate::ignition::validate_request(request)?,
         "ignitionSelectorChain" => crate::ignition_selector::validate_request(request)?,
@@ -600,6 +606,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "fuelFactorProductionChain" {
+        return crate::fuel_factor::run(request, response);
+    }
     if request.operation == "fuelAdditiveCorrectionChain" {
         return crate::fuel_additive::run(request, response);
     }

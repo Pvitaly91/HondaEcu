@@ -150,6 +150,10 @@ public sealed partial class CliApplication
           research p28-fuel additive-chain-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding.json> --runner <runner-0.20.0>
               --scenario <m2l-scenario.json> --output <new-private-report.json>
+          research p28-fuel factor-chain-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding.json> --runner <runner-0.21.0>
+              --scenario <m2m-scenario.json> --output <new-private-report.json>
+              Native DATA0158 production and consumption; no supplied factor, physical units, GUI or BIN.
           research p28-fuel vtec-chain-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <private-json> --runner <v0.14.0-rust-executable>
               --scenario <bounded-m2f-scenario.json> --output <new-private-json>

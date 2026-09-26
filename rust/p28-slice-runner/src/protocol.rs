@@ -25,6 +25,7 @@ pub struct Request {
     pub fuel_map_lookup: Option<crate::fuel::Stimulus>,
     pub fuel_calculation_chain: Option<crate::fuel_calculation::Stimulus>,
     pub fuel_additive_correction_chain: Option<crate::fuel_additive::Stimulus>,
+    pub fuel_factor_production_chain: Option<crate::fuel_factor::Stimulus>,
     pub vtec_fuel_chain: Option<crate::vtec_fuel::Stimulus>,
     pub ignition_map_lookup: Option<crate::ignition::Stimulus>,
     pub ignition_selector_chain: Option<crate::ignition_selector::Stimulus>,
@@ -95,6 +96,8 @@ pub struct Response {
     pub fuel_calculation_sequences: Option<Vec<crate::fuel_calculation::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fuel_additive_sequences: Option<Vec<crate::fuel_additive::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuel_factor_sequences: Option<Vec<crate::fuel_factor::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vtec_fuel_sequences: Option<Vec<crate::vtec_fuel::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -174,6 +177,8 @@ impl Response {
                 "idle-exact-arithmetic-half-carry",
                 "word-rol-accumulator-through-carry-preserves-noncarry-flags",
                 "word-add-accumulator-er0-offpage-half-carry",
+                "word-rol-er0-through-carry-preserves-noncarry-flags",
+                "word-sll-accumulator-preserves-noncarry-flags",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
@@ -193,6 +198,7 @@ impl Response {
             fuel_map_sequences: None,
             fuel_calculation_sequences: None,
             fuel_additive_sequences: None,
+            fuel_factor_sequences: None,
             vtec_fuel_sequences: None,
             ignition_map_sequences: None,
             ignition_selector_sequences: None,

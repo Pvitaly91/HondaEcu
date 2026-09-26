@@ -53,6 +53,14 @@ updates HC (printed3-13). No generic ISA completeness, disputed ADD/SUBB closure
 or OEM fixture is implied. Native near-call/vector/return uses the existing bounded
 executor; the newly composed subprocess test does not reproduce an OEM routine.
 
+[M2m](docs/M2M_NATIVE_FUEL_FACTOR_CHAIN.md) fixes only exact word ROL er0
+(`44 B7`, printed3-118: through incoming CF, preserving non-CF flags) and word
+SLL A (`53`, printed3-142: CF only), after failing decoded regressions and
+primary-manual visual checks. Native factor production reuses execute-in-state
+helpers; no OEM program fixture, new dependency or disputed-form permission is
+introduced. ABI observations include actual CPU-alias writer invocations, not
+only RAM-bus writes; historical entry helpers keep their existing behavior.
+
 `full_decoder.rs` identifies `66207.op` as its generation source. The related
 [asm662 source](https://github.com/VIRUXE/asm662/tree/94612d10370eb4ddf97d4f349168298e1a3da8a0)
 at `94612d10370eb4ddf97d4f349168298e1a3da8a0` retains an older BSD statement

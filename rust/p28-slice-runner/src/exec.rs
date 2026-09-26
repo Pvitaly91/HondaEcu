@@ -626,8 +626,8 @@ impl<'a> Exec<'a> {
                 let msb = 1u32 << (bits - 1);
                 let v32 = v as u32 & (msb * 2 - 1);
                 let (res, carry) = match base {
-                    // Exact word 33/DD1, manual3-117: through incoming CF.
-                    "ROL" if !byte && args[0] == Arg::Reg(Reg::A) => (
+                    // Exact33/DD1 (3-117) and44 B7 (3-118): through incomingCF.
+                    "ROL" if !byte && matches!(args[0], Arg::Reg(Reg::A) | Arg::Er(0)) => (
                         ((v32 << 1) | u32::from(self.cpu.cf)) & (msb * 2 - 1),
                         v32 & msb != 0,
                     ),
@@ -645,9 +645,12 @@ impl<'a> Exec<'a> {
                 // Reviewed word ROR and SRL forms change only CF (manual
                 // printed 3-122, 3-150 and 3-151).
                 // M1i SLLB A (53/DD0), manual 3-144, also changes CF only.
-                let reviewed_sllb_a = base == "SLL" && byte && args[0] == Arg::Reg(Reg::A);
-                let reviewed_rol_a = base == "ROL" && !byte && args[0] == Arg::Reg(Reg::A);
-                if !matches!(base, "ROR" | "SRL") && !reviewed_sllb_a && !reviewed_rol_a {
+                // M2m exact53/DD1 (printed3-142) and44 B7 (printed3-118).
+                // No other word ROL-object form is silently broadened.
+                let reviewed_sll_a = base == "SLL" && args[0] == Arg::Reg(Reg::A);
+                let reviewed_rol_a_or_er0 =
+                    base == "ROL" && !byte && matches!(args[0], Arg::Reg(Reg::A) | Arg::Er(0));
+                if !matches!(base, "ROR" | "SRL") && !reviewed_sll_a && !reviewed_rol_a_or_er0 {
                     self.set_zf(res as u16, byte);
                 }
                 self.write(&args[0], byte, res as u16);

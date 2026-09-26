@@ -6,6 +6,8 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28FuelResearchAsync(string[] args, CancellationToken cancellationToken)
     {
+        if (args.Length > 0 && args[0] == "factor-chain-check")
+            return await P28FuelFactorChainCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "additive-chain-check")
             return await P28FuelAdditiveChainCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "calculation-chain-check")
@@ -15,7 +17,7 @@ public sealed partial class CliApplication
         if (args.Length > 0 && args[0] == "vtec-chain-check")
             return await P28FuelVtecChainCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length == 0 || args[0] is not ("maps-inspect" or "lookup-check"))
-            throw new CliUsageException("Usage: hondaecu research p28-fuel <maps-inspect|lookup-check|vtec-chain-check|export> ...");
+            throw new CliUsageException("Usage: hondaecu research p28-fuel <maps-inspect|lookup-check|calculation-chain-check|additive-chain-check|factor-chain-check|vtec-chain-check|export> ...");
         var check = args[0] == "lookup-check";
         var command = CommandLine.Parse(args[1..], new HashSet<string>(StringComparer.Ordinal) { "confirm-profile" });
         command.EnsureOnly(check

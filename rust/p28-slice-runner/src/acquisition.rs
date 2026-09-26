@@ -249,10 +249,24 @@ pub(crate) fn snapshot(cpu: &Cpu, bus: &mut Bus) -> PersistentState {
 }
 
 pub(crate) fn enter(cpu: &mut Cpu, bus: &mut Bus, contract: &SliceContract) {
+    enter_with_observer(cpu, bus, contract, |_| {});
+}
+
+/// Records actual writer invocations, including CPU-owned aliases not stored in Bus RAM.
+pub(crate) fn enter_with_observer(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    contract: &SliceContract,
+    mut observe: impl FnMut([u32; 3]),
+) {
     cpu.pc = contract.entry_pc;
-    write_data_u16(cpu, bus, 2, contract.lrb);
-    write_data_u16(cpu, bus, 4, contract.psw);
-    write_data_u16(cpu, bus, 0x80 + cpu.scb() * 8 + 6, contract.usp);
+    let mut write = |cpu: &mut Cpu, bus: &mut Bus, address: u16, value: u16| {
+        write_data_u16(cpu, bus, address, value);
+        observe([u32::from(address), 16, u32::from(value)]);
+    };
+    write(cpu, bus, 2, contract.lrb);
+    write(cpu, bus, 4, contract.psw);
+    write(cpu, bus, 0x80 + cpu.scb() * 8 + 6, contract.usp);
     bus.clear_program_reads();
 }
 

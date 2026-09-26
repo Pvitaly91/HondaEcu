@@ -1,5 +1,15 @@
 # Roadmap
 
+M2m completes bounded [native DATA0158 fuel-factor production and consumption](M2M_NATIVE_FUEL_FACTOR_CHAIN.md):
+closed upstream snapshots, native lookup0140, disclosed same-machine producer
+entry1F43, actual detour7A99/store0158/return1FB7, then scripted2194 and unchanged
+continuous M2l to03A2/03B4 before2204. The new task cannot supply0158; both native
+data generations are checked separately. Producer storage-width reachability
+and model-only domains are distinct from3228 strict native events,660 A/B
+comparisons and96 unmasked03B4 witnesses. No physical
+units, complete controller, firmware/export, GUI/hardware or strict M2i change.
+Historical standalone M2k/M2l contracts remain unchanged below.
+
 M2l completes [native additive fuel-correction production/application](M2L_ADDITIVE_FUEL_CORRECTION_CHAIN.md):
 same-machine lookup0140, scripted2194 entry, native signed producer and continuous
 scaling/XCHG/VCAL4/near return to the first stores03A2/03B4 before2204.
