@@ -57,10 +57,11 @@ public static class P28FuelCalculationValidator
         if (child is not null) P28FuelMapInspector.AdmitMutation(original, child, scenario.Mutation!);
         var sequences = new List<P28FuelCalculationSequence>();
         JsonElement contract = default;
+        string runnerVersion = "";
         foreach (var image in child is null ? new[] { original } : new[] { original, child })
         {
             var response = await SeededSliceProcess.ExchangeAsync(runner, CreateRequest(image, scenario), options, cancellationToken).ConfigureAwait(false);
-            try { sequences.AddRange(Analyze(image, scenario, response.Response, ReferenceEquals(image, original) ? "A" : "B")); contract = response.Response.GetProperty("entryContracts").Clone(); }
+            try { sequences.AddRange(Analyze(image, scenario, response.Response, ReferenceEquals(image, original) ? "A" : "B")); contract = response.Response.GetProperty("entryContracts").Clone(); runnerVersion = response.Response.GetProperty("runnerVersion").GetString()!; }
             catch (Exception e) when (e is JsonException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException or ArgumentException)
             { throw new SliceProcessException(SliceProcessFailure.Protocol, "Malformed M2k fuel calculation evidence.", e); }
         }
@@ -85,7 +86,7 @@ public static class P28FuelCalculationValidator
         }
         IReadOnlyList<int> changed = child is null ? [] : Array.AsReadOnly(Enumerable.Range(0, original.Size).Where(i => original.Span[i] != child.Span[i]).ToArray());
         return new(1, "fuel-calculation-native-software-test", original.Hash, profile.Id, scenario.Digest,
-            SliceRunnerIdentity.CurrentVersion, scenario.Mutation, changed, sequences.AsReadOnly(), comparisons.AsReadOnly(), contract, original.Span[0x60F8]);
+            runnerVersion, scenario.Mutation, changed, sequences.AsReadOnly(), comparisons.AsReadOnly(), contract, original.Span[0x60F8]);
     }
     internal static JsonElement ExpectedContracts() => JsonSerializer.SerializeToElement(new[] { new {
         id = Operation, formatVersion = 1, prefixEntries = new[] { 0x0A0C, 0x0A62, 0x12FC }, continuousFuelTail = new[] { 0x12FC, 0x1350 },
@@ -257,7 +258,7 @@ public static class P28FuelCalculationValidator
         Require(stage.GetProperty("sspAfter").GetInt32() == 0x7FE && exit.GetProperty("ssp").GetInt32() == 0x7FE && exit.GetProperty("lrb").GetInt32() == 0x20, "M2k stack/bank differs.");
         Require(result.Status != 0 || pc == 0x21F2, "M2k successful exit differs."); return result;
     }
-    internal static void ValidateNumbers(JsonElement stage, int[][] accesses, JsonElement exit, P28FuelCalculationProjection e, int? output)
+    internal static void ValidateNumbers(JsonElement stage, int[][] accesses, JsonElement exit, P28FuelCalculationProjection e, int? output, int preservedHc = 0)
     {
         var events = Matrix(stage.GetProperty("events"), 8, 32); var writes = Matrix(stage.GetProperty("writes"), 3, 32);
         int[] At(int pc) => events.Single(v => v[0] == pc);
@@ -266,7 +267,7 @@ public static class P28FuelCalculationValidator
         Require(At(0x21E9)[6] == e.ShiftedHighWord >> 8 && At(0x21E9)[7] == 0 && At(0x21EC)[1] == (e.Saturated ? 0x21EE : 0x21F1), "M2k saturation equality/branch differs.");
         Require((At(0x21E2)[5] & 0x8000) != 0 == ((e.HighWord & 1) != 0) &&
             (At(0x21E4)[5] & 0x8000) != 0 == ((e.LowWord & 1) != 0) &&
-            (At(0x21E9)[5] & 0x4000) != 0 == !e.Saturated && (At(0x21E9)[5] & 0xA000) == 0,
+            (At(0x21E9)[5] & 0x4000) != 0 == !e.Saturated && (At(0x21E9)[5] & 0x8000) == 0 && (At(0x21E9)[5] & 0x2000) == preservedHc,
             "M2k consumed carry/comparison flags differ.");
         foreach (var pc in new[] { 0x21DB, 0x21E0, 0x21E2, 0x21E4, 0x21E6, 0x21E8, 0x21E9, 0x21EC, 0x21F1 })
             Require((At(pc)[5] & 0x1000) != 0, "M2k word DD mode differs.");

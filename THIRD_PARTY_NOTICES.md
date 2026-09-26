@@ -46,6 +46,13 @@ from opcode-table ancestry.
 
 ### Opcode-table ancestry
 
+[M2l](docs/M2L_ADDITIVE_FUEL_CORRECTION_CHAIN.md) fixes two exact executor forms
+after failing decoded tests and primary-manual visual checks: word ROL A33 rotates
+through CF and preserves non-CF flags (printed3-117); word ADD A,er0/off-page
+updates HC (printed3-13). No generic ISA completeness, disputed ADD/SUBB closure
+or OEM fixture is implied. Native near-call/vector/return uses the existing bounded
+executor; the newly composed subprocess test does not reproduce an OEM routine.
+
 `full_decoder.rs` identifies `66207.op` as its generation source. The related
 [asm662 source](https://github.com/VIRUXE/asm662/tree/94612d10370eb4ddf97d4f349168298e1a3da8a0)
 at `94612d10370eb4ddf97d4f349168298e1a3da8a0` retains an older BSD statement

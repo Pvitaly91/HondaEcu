@@ -13,6 +13,62 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 
+// Shared native prefix body only. No new host initialization; old M2k format and bounds remain unchanged.
+pub(crate) fn execute_prefix(
+    cpu: &mut crate::cpu::Cpu,
+    bus: &mut crate::bus::Bus,
+    prefix: &mut fuel::Checkpoint,
+    accesses: &mut Vec<[u32; 5]>,
+    tail_boundaries: &mut Vec<CpuBoundary>,
+) {
+    // Never call the old top-level fuel task: no per-event selector write.
+    for (name, scripted) in [
+        ("rpmAxes", true),
+        ("loadAxis", true),
+        ("selection", true),
+        ("lookup", false),
+        ("consumer", false),
+    ] {
+        if !scripted {
+            tail_boundaries.push(boundary(cpu, bus));
+        }
+        if name == "lookup" {
+            prefix.selected_origin = Some(read_data_u16(cpu, bus, 0x88));
+            prefix.position = Some(fuel::Position {
+                load_index: crate::exec::read_data_u8(cpu, bus, 0x102),
+                rpm_index: crate::exec::read_data_u8(cpu, bus, 0x103),
+                load_fraction: read_data_u16(cpu, bus, 0x8A),
+                rpm_fraction: read_data_u16(cpu, bus, 0x106),
+            });
+        }
+        if name == "consumer" {
+            prefix.lookup_result = Some(read_data_u16(cpu, bus, 0x104));
+        }
+        // Scripted ABI is applied before observation. Never filter a
+        // native access out of the journal, including USP or aliases.
+        if scripted {
+            enter(cpu, bus, &fuel::contract(name));
+        }
+        bus.begin_native_accesses();
+        let stage = fuel::execute(cpu, bus, name, false);
+        accesses.extend(bus.end_native_accesses());
+        prefix.status = stage.result.status;
+        if matches!(name, "selection" | "lookup" | "consumer") {
+            tail_boundaries.push(boundary(cpu, bus));
+        }
+        match name {
+            "rpmAxes" => prefix.rpm_axes = Some(stage),
+            "loadAxis" => prefix.load_axis = Some(stage),
+            "selection" => prefix.selection = Some(stage),
+            "lookup" => prefix.lookup = Some(stage),
+            _ => prefix.consumer = Some(stage),
+        }
+        if prefix.status != 0 {
+            break;
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Call {
@@ -208,52 +264,13 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                 }
                 write_data_u16(&mut cpu, &mut bus, 0x158, c.factor0158);
                 row.prefix.state_after_inputs = Some(fuel::state(&cpu, &mut bus));
-                // Never call the old top-level fuel task: no per-event selector write.
-                for (name, scripted) in [
-                    ("rpmAxes", true),
-                    ("loadAxis", true),
-                    ("selection", true),
-                    ("lookup", false),
-                    ("consumer", false),
-                ] {
-                    if !scripted {
-                        row.tail_boundaries.push(boundary(&cpu, &mut bus));
-                    }
-                    if name == "lookup" {
-                        row.prefix.selected_origin = Some(read_data_u16(&cpu, &mut bus, 0x88));
-                        row.prefix.position = Some(fuel::Position {
-                            load_index: crate::exec::read_data_u8(&cpu, &mut bus, 0x102),
-                            rpm_index: crate::exec::read_data_u8(&cpu, &mut bus, 0x103),
-                            load_fraction: read_data_u16(&cpu, &mut bus, 0x8A),
-                            rpm_fraction: read_data_u16(&cpu, &mut bus, 0x106),
-                        });
-                    }
-                    if name == "consumer" {
-                        row.prefix.lookup_result = Some(read_data_u16(&cpu, &mut bus, 0x104));
-                    }
-                    // Scripted ABI is applied before observation. Never filter a
-                    // native access out of the journal, including USP or aliases.
-                    if scripted {
-                        enter(&mut cpu, &mut bus, &fuel::contract(name));
-                    }
-                    bus.begin_native_accesses();
-                    let stage = fuel::execute(&mut cpu, &mut bus, name, false);
-                    row.accesses.extend(bus.end_native_accesses());
-                    row.prefix.status = stage.result.status;
-                    if matches!(name, "selection" | "lookup" | "consumer") {
-                        row.tail_boundaries.push(boundary(&cpu, &mut bus));
-                    }
-                    match name {
-                        "rpmAxes" => row.prefix.rpm_axes = Some(stage),
-                        "loadAxis" => row.prefix.load_axis = Some(stage),
-                        "selection" => row.prefix.selection = Some(stage),
-                        "lookup" => row.prefix.lookup = Some(stage),
-                        _ => row.prefix.consumer = Some(stage),
-                    }
-                    if row.prefix.status != 0 {
-                        break;
-                    }
-                }
+                execute_prefix(
+                    &mut cpu,
+                    &mut bus,
+                    &mut row.prefix,
+                    &mut row.accesses,
+                    &mut row.tail_boundaries,
+                );
                 row.prefix.state_after = fuel::state(&cpu, &mut bus);
                 row.status = row.prefix.status;
                 if row.status == 0 {

@@ -447,7 +447,12 @@ impl<'a> Exec<'a> {
                 // M1m: only decoded DD=1 86 imm16 / 09 / A6 imm16 / 28.
                 // Instruction manual 3-13, 3-156; HC is bit-3 carry/borrow.
                 if !byte && args[0] == Arg::Reg(Reg::A) {
-                    if base == "ADD" && matches!(args[1], Arg::ImmN16 | Arg::Er(1)) {
+                    if base == "ADD"
+                        && matches!(
+                            args[1],
+                            Arg::ImmN16 | Arg::Er(0 | 1) | Arg::Mem(Mem::OffPage)
+                        )
+                    {
                         self.cpu.hc = (a & 15) + (b & 15) > 15;
                     }
                     if base == "SUB" && matches!(args[1], Arg::ImmN16 | Arg::Er(0)) {
@@ -621,6 +626,11 @@ impl<'a> Exec<'a> {
                 let msb = 1u32 << (bits - 1);
                 let v32 = v as u32 & (msb * 2 - 1);
                 let (res, carry) = match base {
+                    // Exact word 33/DD1, manual3-117: through incoming CF.
+                    "ROL" if !byte && args[0] == Arg::Reg(Reg::A) => (
+                        ((v32 << 1) | u32::from(self.cpu.cf)) & (msb * 2 - 1),
+                        v32 & msb != 0,
+                    ),
                     "ROL" => (
                         ((v32 << 1) | (v32 >> (bits - 1))) & (msb * 2 - 1),
                         v32 & msb != 0,
@@ -636,7 +646,8 @@ impl<'a> Exec<'a> {
                 // printed 3-122, 3-150 and 3-151).
                 // M1i SLLB A (53/DD0), manual 3-144, also changes CF only.
                 let reviewed_sllb_a = base == "SLL" && byte && args[0] == Arg::Reg(Reg::A);
-                if !matches!(base, "ROR" | "SRL") && !reviewed_sllb_a {
+                let reviewed_rol_a = base == "ROL" && !byte && args[0] == Arg::Reg(Reg::A);
+                if !matches!(base, "ROR" | "SRL") && !reviewed_sllb_a && !reviewed_rol_a {
                     self.set_zf(res as u16, byte);
                 }
                 self.write(&args[0], byte, res as u16);

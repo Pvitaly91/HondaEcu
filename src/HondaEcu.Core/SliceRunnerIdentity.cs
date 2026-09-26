@@ -5,7 +5,8 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.19.0";
+    internal const string CurrentVersion = "0.20.0";
+    internal const string FuelCalculationVersion = "0.19.0";
     internal const string MetadataCorrectionVersion = "0.18.0";
     internal const string LegacyCorrectionVersion = "0.17.0";
     internal const string SharedVersion = "0.16.0";
@@ -39,39 +40,41 @@ internal static class SliceRunnerIdentity
     internal static string[] Validate(JsonElement root, string operation)
     {
         var version = root.GetProperty("runnerVersion").GetString();
-        if (version == MetadataCorrectionVersion && operation != "fuelCalculationChain")
-            version = CurrentVersion;
+        if (version == MetadataCorrectionVersion && operation is not ("fuelCalculationChain" or "fuelAdditiveCorrectionChain"))
+            version = FuelCalculationVersion;
         // M2j changes only the correction capability disclosure/validation.
         // Other operations retain the exact 0.17.0 semantic-fix inventory.
-        if (version == LegacyCorrectionVersion && operation is not ("ignitionCorrectionChain" or "fuelCalculationChain"))
-            version = CurrentVersion;
+        if (version == LegacyCorrectionVersion && operation is not ("ignitionCorrectionChain" or "fuelCalculationChain" or "fuelAdditiveCorrectionChain"))
+            version = FuelCalculationVersion;
         if (root.GetProperty("protocolVersion").GetInt32() != 1 || root.GetProperty("operation").GetString() != operation ||
             root.GetProperty("upstreamCommit").GetString() != P28ByteExecutionValidator.UpstreamCommit ||
-            version is not ("0.1.0" or "0.2.0" or "0.3.0" or "0.4.0" or "0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation is not ("p28Batch" or "synthetic" or "producerBatch" or "checksumBatch" or "acquisitionSequence" or "statefulVtec" or "integratedCaptureVtec" or "limiterSequence" or "adaptiveLimiter" or "idleTarget" or "idleContexts" or "fuelMapLookup" or "fuelCalculationChain" or "ignitionMapLookup" or "ignitionSelectorChain" or "ignitionCorrectionChain" or "vtecFuelChain" or "vtecFuelIgnitionChain" or "vtecThresholdPrefix" or "vtecThresholdControl") ||
-            operation == "fuelCalculationChain" && version != CurrentVersion ||
-            operation == "ignitionCorrectionChain" && version != CurrentVersion ||
-            operation == "vtecFuelChain" && version is not (PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "ignitionSelectorChain" && version is not (SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "vtecFuelIgnitionChain" && version is not (SharedVersion or CurrentVersion) ||
+            version is not ("0.1.0" or "0.2.0" or "0.3.0" or "0.4.0" or "0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation is not ("p28Batch" or "synthetic" or "producerBatch" or "checksumBatch" or "acquisitionSequence" or "statefulVtec" or "integratedCaptureVtec" or "limiterSequence" or "adaptiveLimiter" or "idleTarget" or "idleContexts" or "fuelMapLookup" or "fuelCalculationChain" or "fuelAdditiveCorrectionChain" or "ignitionMapLookup" or "ignitionSelectorChain" or "ignitionCorrectionChain" or "vtecFuelChain" or "vtecFuelIgnitionChain" or "vtecThresholdPrefix" or "vtecThresholdControl") ||
+            operation == "fuelCalculationChain" && version is not (FuelCalculationVersion or CurrentVersion) ||
+            operation == "ignitionCorrectionChain" && version is not (FuelCalculationVersion or CurrentVersion) ||
+            operation == "vtecFuelChain" && version is not (PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "ignitionSelectorChain" && version is not (SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "vtecFuelIgnitionChain" && version is not (SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "fuelAdditiveCorrectionChain" && version != CurrentVersion ||
             operation == "producerBatch" && version == "0.1.0" ||
-            operation == "checksumBatch" && version is not ("0.3.0" or "0.4.0" or "0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "acquisitionSequence" && version is not ("0.4.0" or "0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "statefulVtec" && version is not ("0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "integratedCaptureVtec" && version is not ("0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "limiterSequence" && version is not ("0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "adaptiveLimiter" && version is not ("0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "idleTarget" && version is not ("0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "idleContexts" && version is not ("0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "fuelMapLookup" && version is not ("0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation == "ignitionMapLookup" && version is not ("0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ||
-            operation is "vtecThresholdPrefix" or "vtecThresholdControl" && version is not ("0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion))
+            operation == "checksumBatch" && version is not ("0.3.0" or "0.4.0" or "0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "acquisitionSequence" && version is not ("0.4.0" or "0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "statefulVtec" && version is not ("0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "integratedCaptureVtec" && version is not ("0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "limiterSequence" && version is not ("0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "adaptiveLimiter" && version is not ("0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "idleTarget" && version is not ("0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "idleContexts" && version is not ("0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "fuelMapLookup" && version is not ("0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation == "ignitionMapLookup" && version is not ("0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ||
+            operation is "vtecThresholdPrefix" or "vtecThresholdControl" && version is not ("0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion))
         {
             throw new SliceProcessException(SliceProcessFailure.Protocol,
                 "Runner version, operation or protocol differs from the audited compatibility inventory.");
         }
         var expected = version == "0.1.0" ? LegacyFixes : version == "0.2.0" ? ProducerFixes :
-            version == "0.3.0" ? ChecksumFixes : version == "0.4.0" ? AcquisitionFixes : (version is "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or CurrentVersion) ? [.. CurrentFixes, "adaptive-exact-word-add-sub-half-carry", "idle-exact-arithmetic-half-carry"] : version == "0.8.0" ? [.. CurrentFixes, "adaptive-exact-word-add-sub-half-carry"] : CurrentFixes;
+            version == "0.3.0" ? ChecksumFixes : version == "0.4.0" ? AcquisitionFixes : (version is "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or CurrentVersion) ? [.. CurrentFixes, "adaptive-exact-word-add-sub-half-carry", "idle-exact-arithmetic-half-carry"] : version == "0.8.0" ? [.. CurrentFixes, "adaptive-exact-word-add-sub-half-carry"] : CurrentFixes;
+        if (version == CurrentVersion) expected = [.. expected, "word-rol-accumulator-through-carry-preserves-noncarry-flags", "word-add-accumulator-er0-offpage-half-carry"];
         var fixes = root.GetProperty("localSemanticFixes").EnumerateArray().Select(item => item.GetString()!).ToArray();
         if (!fixes.Order(StringComparer.Ordinal).SequenceEqual(expected.Order(StringComparer.Ordinal)))
         {

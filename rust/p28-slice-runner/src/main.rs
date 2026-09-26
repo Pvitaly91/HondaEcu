@@ -26,7 +26,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                     "vtecThresholdPrefix", "vtecThresholdControl", "limiterSequence",
                     "adaptiveLimiter", "idleTarget", "fuelMapLookup", "ignitionMapLookup",
                     "vtecFuelChain", "ignitionSelectorChain", "ignitionCorrectionChain",
-                    "checksumBatch", "fuelCalculationChain"
+                    "checksumBatch", "fuelCalculationChain", "fuelAdditiveCorrectionChain"
                 ]
             })
         );

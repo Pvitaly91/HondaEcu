@@ -1,5 +1,12 @@
 # HondaEcu
 
+M2l completes the bounded [native additive fuel-correction chain](docs/M2L_ADDITIVE_FUEL_CORRECTION_CHAIN.md)
+with `research p28-fuel additive-chain-check` in runner0.20.0: native correction
+producer, unchanged M2k scaling, actual XCHG/VCAL4/return and software stores03A2/03B4
+on one CPU/RAM. The caller entry remains scripted; physical units, full controller,
+GUI and hardware are outside scope. No new firmware/export; strict M2i stays Blocked.
+The following M2k boundary remains the historical contract of its own command.
+
 M2k completes [read-only native fuel calculation after DATA0140](docs/M2K_FUEL_CALCULATION_CHAIN.md)
 through `research p28-fuel calculation-chain-check` in runner0.19.0.
 One persistent CPU/RAM carries native lookup/store0140 into a disclosed scripted

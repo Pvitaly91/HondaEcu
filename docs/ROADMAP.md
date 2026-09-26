@@ -1,5 +1,13 @@
 # Roadmap
 
+M2l completes [native additive fuel-correction production/application](M2L_ADDITIVE_FUEL_CORRECTION_CHAIN.md):
+same-machine lookup0140, scripted2194 entry, native signed producer and continuous
+scaling/XCHG/VCAL4/near return to the first stores03A2/03B4 before2204.
+Strict local coverage includes both map contexts, native state/lifetime evidence,
+one-cell A/B, source sweeps and separate application limits. No physical units,
+full controller, firmware/export, GUI or hardware claim; strict M2i stays Blocked.
+Historical M2k retains its own stop-before21F2 contract below.
+
 M2k completes the bounded [native fuel calculation after DATA0140](M2K_FUEL_CALCULATION_CHAIN.md):
 same-machine M2a axes/selection/lookup/store0140, explicit scripted21DB entry,
 strict word reader/multiply/narrow/saturate and native er2 result before21F2.

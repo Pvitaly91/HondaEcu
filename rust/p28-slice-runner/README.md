@@ -1,6 +1,6 @@
 # Bounded P28 research runner
 
-Runner **0.4.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
+Runner **0.20.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
 upstream CPU provenance and license are retained in
 [the third-party notices](../../THIRD_PARTY_NOTICES.md). No OEM image or native
 program fixture is distributed here.
@@ -27,6 +27,12 @@ A successful process exit is not an execution match or a hardware result.
 | `checksumBatch` | Existing 512-call checksum state, exact ordered read coverage |
 | `synthetic`, `checksumSynthetic` | Bounded invented-program instruction/process probes |
 | `acquisitionSequence` | Frozen capture observations and optional scheduled G/F/threshold, one persistent CPU/RAM per image and scratch pattern |
+| `fuelCalculationChain` | Historical M2k strict word0140 reader/scaling; stop-before21F2 |
+| `fuelAdditiveCorrectionChain` | M2l strict native correction producer→scaling→XCHG/VCAL4/return→first software stores; one continuous tail2194..2204 |
+
+The acquisition guide below describes its existing operation, not all later
+milestones. The closed M2l sources, lifetime, exact-form evidence and read-only
+CLI are documented in [M2l](../../docs/M2L_ADDITIVE_FUEL_CORRECTION_CHAIN.md).
 
 Old task entry contracts and optional response-field shapes are unchanged.
 Every old operation rejects an acquisition payload. `Bus::new` remains

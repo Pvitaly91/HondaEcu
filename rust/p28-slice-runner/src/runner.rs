@@ -74,6 +74,13 @@ fn supported_operation(mnemonic: &str) -> bool {
             | "MUL"
             | "SRL"
             | "ROR"
+            | "ROL"
+            | "XCHG"
+            | "VCAL"
+            | "CAL"
+            | "RT"
+            | "EXTND"
+            | "SWAP"
             | "ADD"
             | "INC"
             | "CLR"
@@ -402,6 +409,11 @@ fn validate_request(request: &Request) -> Result<(), String> {
     if request.operation != "fuelCalculationChain" && request.fuel_calculation_chain.is_some() {
         return Err("fuel calculation stimulus unavailable to other tasks".into());
     }
+    if request.operation != "fuelAdditiveCorrectionChain"
+        && request.fuel_additive_correction_chain.is_some()
+    {
+        return Err("M2l stimulus is unavailable to other operations".into());
+    }
     if request.operation != "ignitionCorrectionChain" && request.ignition_correction_chain.is_some()
     {
         return Err("M2i correction-chain stimulus is unavailable to other operations".into());
@@ -573,6 +585,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "idleContexts" => crate::idle_contexts::validate_request(request)?,
         "fuelMapLookup" => crate::fuel::validate_request(request)?,
         "fuelCalculationChain" => crate::fuel_calculation::validate_request(request)?,
+        "fuelAdditiveCorrectionChain" => crate::fuel_additive::validate_request(request)?,
         "vtecFuelChain" => crate::vtec_fuel::validate_request(request)?,
         "ignitionMapLookup" => crate::ignition::validate_request(request)?,
         "ignitionSelectorChain" => crate::ignition_selector::validate_request(request)?,
@@ -587,6 +600,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "fuelAdditiveCorrectionChain" {
+        return crate::fuel_additive::run(request, response);
+    }
     if request.operation == "fuelCalculationChain" {
         return crate::fuel_calculation::run(request, response);
     }
