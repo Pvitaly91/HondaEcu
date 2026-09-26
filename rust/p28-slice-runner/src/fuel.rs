@@ -205,7 +205,12 @@ pub(crate) fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     }
 }
 
-fn execute(cpu: &mut Cpu, bus: &mut Bus, stage: &str, enter_stage: bool) -> crate::adaptive::Stage {
+pub(crate) fn execute(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    stage: &str,
+    enter_stage: bool,
+) -> crate::adaptive::Stage {
     let c = contract(stage);
     if enter_stage {
         enter(cpu, bus, &c);
@@ -224,7 +229,7 @@ fn execute(cpu: &mut Cpu, bus: &mut Bus, stage: &str, enter_stage: bool) -> crat
     }
 }
 
-fn seed_state(cpu: &mut Cpu, bus: &mut Bus, initial: &State) {
+pub(crate) fn seed_state(cpu: &mut Cpu, bus: &mut Bus, initial: &State) {
     for (address, value) in [
         (0x1C0, initial.load_fraction),
         (0x1C2, initial.map0_rpm_fraction),

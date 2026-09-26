@@ -23,6 +23,7 @@ pub struct Request {
     pub idle_target: Option<crate::idle::Stimulus>,
     pub idle_contexts: Option<crate::idle_contexts::Stimulus>,
     pub fuel_map_lookup: Option<crate::fuel::Stimulus>,
+    pub fuel_calculation_chain: Option<crate::fuel_calculation::Stimulus>,
     pub vtec_fuel_chain: Option<crate::vtec_fuel::Stimulus>,
     pub ignition_map_lookup: Option<crate::ignition::Stimulus>,
     pub ignition_selector_chain: Option<crate::ignition_selector::Stimulus>,
@@ -89,6 +90,8 @@ pub struct Response {
     pub idle_context_sequences: Option<Vec<crate::idle_contexts::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fuel_map_sequences: Option<Vec<crate::fuel::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fuel_calculation_sequences: Option<Vec<crate::fuel_calculation::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vtec_fuel_sequences: Option<Vec<crate::vtec_fuel::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -183,6 +186,7 @@ impl Response {
             idle_sequences: None,
             idle_context_sequences: None,
             fuel_map_sequences: None,
+            fuel_calculation_sequences: None,
             vtec_fuel_sequences: None,
             ignition_map_sequences: None,
             ignition_selector_sequences: None,

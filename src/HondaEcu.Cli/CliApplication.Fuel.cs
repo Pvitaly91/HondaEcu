@@ -6,6 +6,8 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28FuelResearchAsync(string[] args, CancellationToken cancellationToken)
     {
+        if (args.Length > 0 && args[0] == "calculation-chain-check")
+            return await P28FuelCalculationChainCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "export")
             return await P28FuelMapExportAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "vtec-chain-check")

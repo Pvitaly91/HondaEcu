@@ -1,5 +1,13 @@
 # Roadmap
 
+M2k completes the bounded [native fuel calculation after DATA0140](M2K_FUEL_CALCULATION_CHAIN.md):
+same-machine M2a axes/selection/lookup/store0140, explicit scripted21DB entry,
+strict word reader/multiply/narrow/saturate and native er2 result before21F2.
+The nearest identified reader227A is static-only. Both once-only map contexts,
+cache histories and independent one-cell controls are validated without physical
+units, firmware/export, GUI or hardware claims. It does not resolve47 81 or
+change strict M2i Blocked status; it is not full fuel-controller integration.
+
 Progress through these milestones is evidence-gated. A later milestone does not weaken the ROM handling policy or allow offsets to be copied across revisions.
 
 ## M0 — P28-304 core and validation harness

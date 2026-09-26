@@ -19,6 +19,31 @@ mod capture_bus_tests {
     use crate::exec::{read_data_u16, read_data_u8, write_data_u16, write_data_u8};
 
     #[test]
+    fn opt_in_access_journal_keeps_word_width_pc_order_and_faults() {
+        let mut bus = Bus::new(vec![], 0xA5);
+        bus.write_data_u16(0x140, 0x1234);
+        assert!(bus.end_native_accesses().is_empty());
+        bus.begin_native_accesses();
+        bus.set_native_pc(42);
+        assert_eq!(bus.read_data_u16(0x140), 0x1234);
+        bus.write_data_u16(0x158, 0x5678);
+        bus.set_native_pc(44);
+        bus.write_data_u16(0xFFF, 0xBEEF);
+        assert!(bus.take_fault().is_some());
+        assert_eq!(
+            bus.end_native_accesses(),
+            [
+                [42, 0x140, 16, 0, 0x1234],
+                [42, 0x158, 16, 1, 0x5678],
+                [44, 0xFFF, 8, 1, 0xEF]
+            ]
+        );
+        assert!(bus.end_native_accesses().is_empty());
+        bus.write_data_u16(0xFFF, 0xCAFE);
+        assert!(bus.take_fault().is_some()); // observation never consumes a fault
+    }
+
+    #[test]
     fn adaptive_ie_is_opt_in_word_only_scoped_storage_with_same_value_journal() {
         let mut cpu = Cpu::new();
         let mut bus = Bus::new(vec![], 0);
@@ -208,6 +233,9 @@ pub struct Bus {
     decision_events: Option<Vec<[u32; 8]>>,
     comparison_operands: [u32; 2],
     program_data_ranges: Option<Vec<[u16; 2]>>,
+    // Opt-in M2k data-space observation. Never active during host snapshots.
+    native_accesses: Option<Vec<[u32; 5]>>,
+    native_pc: u16,
 }
 
 impl Bus {
@@ -231,6 +259,8 @@ impl Bus {
             decision_events: None,
             comparison_operands: [65536; 2],
             program_data_ranges: None,
+            native_accesses: None,
+            native_pc: 0,
         }
     }
 
@@ -312,6 +342,30 @@ impl Bus {
     pub(crate) fn begin_write_journal(&mut self) {
         self.data_writes.clear();
         self.journal_writes = true;
+    }
+    pub(crate) fn begin_native_accesses(&mut self) {
+        self.native_accesses = Some(vec![]);
+    }
+    pub(crate) fn end_native_accesses(&mut self) -> Vec<[u32; 5]> {
+        self.native_accesses.take().unwrap_or_default()
+    }
+    pub(crate) fn set_native_pc(&mut self, pc: u16) {
+        self.native_pc = pc;
+    }
+    fn native_access(&mut self, address: u16, width: u32, write: u32, value: u16) {
+        if let Some(rows) = self.native_accesses.as_mut() {
+            if rows.len() < 4096 {
+                rows.push([
+                    self.native_pc as u32,
+                    address as u32,
+                    width,
+                    write,
+                    value as u32,
+                ]);
+            } else {
+                self.record_fault("data", address as u32, "native observation limit");
+            }
+        }
     }
     pub(crate) fn end_write_journal(&mut self) -> Vec<[u32; 3]> {
         self.journal_writes = false;
@@ -429,7 +483,9 @@ impl Bus {
             self.record_fault("data", address as u32, "read");
             return 0;
         }
-        self.ram[address as usize]
+        let value = self.ram[address as usize];
+        self.native_access(address, 8, 0, value as u16);
+        value
     }
     pub fn read_data_u16(&mut self, address: u16) -> u16 {
         if address == 0x1A
@@ -457,7 +513,13 @@ impl Bus {
             self.record_fault("data", 65536, "read");
             return 0;
         };
-        u16::from_le_bytes([self.read_data_u8(address), self.read_data_u8(high)])
+        let before = self.native_accesses.as_ref().map_or(0, Vec::len);
+        let value = u16::from_le_bytes([self.read_data_u8(address), self.read_data_u8(high)]);
+        if let Some(rows) = self.native_accesses.as_mut() {
+            rows.truncate(before);
+        }
+        self.native_access(address, 16, 0, value);
+        value
     }
     pub fn write_data_u8(&mut self, address: u16, value: u8) {
         if !self.check_data_access(address, "write") {
@@ -479,6 +541,7 @@ impl Bus {
             return;
         }
         self.ram[address as usize] = value;
+        self.native_access(address, 8, 1, value as u16);
         if self.journal_writes {
             self.data_writes.push([address as u32, 8, value as u32]);
         }
@@ -507,8 +570,15 @@ impl Bus {
         };
         let bytes = value.to_le_bytes();
         let before = self.data_writes.len();
+        let access_before = self.native_accesses.as_ref().map_or(0, Vec::len);
         self.write_data_u8(address, bytes[0]);
         self.write_data_u8(high, bytes[1]);
+        if self.fault.borrow().is_none() {
+            if let Some(rows) = self.native_accesses.as_mut() {
+                rows.truncate(access_before);
+            }
+            self.native_access(address, 16, 1, value);
+        }
         // A successful architectural word store is one journal event, even
         // when the stored value was already present. Partial stores retain
         // their actual byte events instead of claiming a completed word write.

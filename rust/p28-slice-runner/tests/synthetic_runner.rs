@@ -41,6 +41,7 @@ fn request(rom: Vec<u8>, synthetic: SyntheticContract) -> Request {
         idle_target: None,
         idle_contexts: None,
         fuel_map_lookup: None,
+        fuel_calculation_chain: None,
         vtec_fuel_chain: None,
         ignition_map_lookup: None,
         ignition_selector_chain: None,
@@ -294,6 +295,7 @@ fn synthetic_batch_cannot_launder_threshold_add_through_compact_permission() {
     let result = run_request(Request {
         protocol_version: 1,
         operation: "p28Batch".into(),
+        fuel_calculation_chain: None,
         images: vec![
             Image {
                 id: "baseline".into(),

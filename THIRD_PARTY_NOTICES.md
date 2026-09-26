@@ -37,6 +37,13 @@ Its new IE capability is word-only software storage for a bounded critical
 section, not upstream interrupt/peripheral simulation. Existing unresolved
 object-destination ADD permissions remain unchanged.
 
+[M2k](docs/M2K_FUEL_CALCULATION_CHAIN.md) adds opt-in bounded PC/word-width
+data-access observation to the local bus and reuses execute-in-state fuel bodies.
+It does not change imported decoder/executor arithmetic semantics or copy an
+OEM routine into public fixtures. New subprocess programs are independently
+composed; primary-manual evidence and strict form admission stay separate
+from opcode-table ancestry.
+
 ### Opcode-table ancestry
 
 `full_decoder.rs` identifies `66207.op` as its generation source. The related

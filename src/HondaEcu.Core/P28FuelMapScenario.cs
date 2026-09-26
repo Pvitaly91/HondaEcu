@@ -34,6 +34,13 @@ public sealed class P28FuelMapScenario
     }
 
     private object Artifact() => new { FormatVersion, Purpose, Provenance, InitialState, Calls, Mutation };
+    // Adapter for reusing the established prefix evidence validator. It does not
+    // execute the old task or authorize per-event selector writes in M2k.
+    internal static P28FuelMapScenario FixedSelectorPrefix(P28FuelMapState initial, IReadOnlyList<P28FuelMapCall> calls)
+    {
+        _ = Create(initial with { Selector0127 = (byte)(initial.Selector0127 & 2) }, calls, "M2k fixed-selector prefix validation");
+        return new(initial, calls, "M2k fixed-selector prefix validation", null);
+    }
     public string ToJson() => JsonSerializer.Serialize(Artifact(), JsonDefaults.Create(true));
 
     public static P28FuelMapScenario Parse(string json)

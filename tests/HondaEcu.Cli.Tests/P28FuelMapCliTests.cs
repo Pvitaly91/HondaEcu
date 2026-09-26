@@ -81,7 +81,7 @@ public sealed class P28FuelMapCliTests
         Assert.Equal(CliApplication.OperationError, result.Code); Assert.False(File.Exists(workspace.Output));
     }
 
-    private sealed class Workspace : IDisposable
+    internal sealed class Workspace : IDisposable
     {
         private readonly string _definitions;
         public Workspace()

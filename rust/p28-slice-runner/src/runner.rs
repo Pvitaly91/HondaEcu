@@ -70,6 +70,8 @@ fn supported_operation(mnemonic: &str) -> bool {
             | "SB"
             | "RB"
             | "DIV"
+            // Primary-established word multiply for invented process probes.
+            | "MUL"
             | "SRL"
             | "ROR"
             | "ADD"
@@ -300,6 +302,7 @@ pub(crate) fn execute_in_state_observed(
             let accumulator_before = cpu.a;
             let psw_before = cpu.psw_u16();
             bus.clear_comparison_operands();
+            bus.set_native_pc(pc);
             let execution = step(cpu, bus);
             bus.observe_instruction([
                 pc as u32,
@@ -396,6 +399,9 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "fuelCalculationChain" && request.fuel_calculation_chain.is_some() {
+        return Err("fuel calculation stimulus unavailable to other tasks".into());
+    }
     if request.operation != "ignitionCorrectionChain" && request.ignition_correction_chain.is_some()
     {
         return Err("M2i correction-chain stimulus is unavailable to other operations".into());
@@ -566,6 +572,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "idleTarget" => crate::idle::validate_request(request)?,
         "idleContexts" => crate::idle_contexts::validate_request(request)?,
         "fuelMapLookup" => crate::fuel::validate_request(request)?,
+        "fuelCalculationChain" => crate::fuel_calculation::validate_request(request)?,
         "vtecFuelChain" => crate::vtec_fuel::validate_request(request)?,
         "ignitionMapLookup" => crate::ignition::validate_request(request)?,
         "ignitionSelectorChain" => crate::ignition_selector::validate_request(request)?,
@@ -580,6 +587,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "fuelCalculationChain" {
+        return crate::fuel_calculation::run(request, response);
+    }
     if request.operation == "ignitionCorrectionChain" {
         return crate::ignition_correction::run(request, response);
     }
