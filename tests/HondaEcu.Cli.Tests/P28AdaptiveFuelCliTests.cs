@@ -3,16 +3,23 @@ using HondaEcu.Core;
 
 namespace HondaEcu.Cli.Tests;
 
-public sealed class P28LimiterFuelCliTests
+public sealed class P28AdaptiveFuelCliTests
 {
     private static string[] Arguments(P28FuelMapCliTests.Workspace w)
     {
-        var b = File.ReadAllBytes(w.Baseline); new byte[] { 0x62, 129, 0, 0x67, 90, 0, 0x47, 0x81 }.CopyTo(b, 0x1966); File.WriteAllBytes(w.Baseline, b);
-        var binding = P28ExactBaselineBinding.Parse(File.ReadAllText(w.Binding)); File.WriteAllText(w.Binding, new P28ExactBaselineBinding(binding.FormatVersion, binding.ModelId, binding.ProfileId, binding.ExpectedSize, RomImage.Load(w.Baseline).Hash, binding.ProfileDigest).ToJson());
+        var b = File.ReadAllBytes(w.Baseline);
+        new byte[] { 0x62, 129, 0, 0x67, 90, 0 }.CopyTo(b, 0x1966);
+        new byte[] { 0x03, 0xE1, 0x48 }.CopyTo(b, 0x487B);
+        new byte[] { 0x67, 88, 0, 0xD3, 0x24, 0x47, 0x81 }.CopyTo(b, 0x48E1);
+        b[0x487E] = 0x64; b[0x4880] = 0x99; b[0x4881] = 0x64; b[0x4886] = 0x9F; b[0x4887] = 0x64; b[0x4889] = 0xA5; b[0x488A] = 0x64;
+        File.WriteAllBytes(w.Baseline, b);
+        var binding = P28ExactBaselineBinding.Parse(File.ReadAllText(w.Binding));
+        File.WriteAllText(w.Binding, new P28ExactBaselineBinding(binding.FormatVersion, binding.ModelId, binding.ProfileId, binding.ExpectedSize, RomImage.Load(w.Baseline).Hash, binding.ProfileDigest).ToJson());
         var src = new P28FuelFactorSources(12345, 65535, 255, 65535, 65535, 255, 255, 0, 0, 255, 107, 0, 0, 0, 0, 0, 0, 0, 0);
-        File.WriteAllText(w.Scenario, P28LimiterFuelScenario.Create(new(new(0, 0, 0, 0, 0, 0, 0xA5, 0), 0xF1, 0xAD, 7, 16, 128, 0xA5),
-            [new(0, 89, 0, 0, 0, src), new(1, 129, 255, 255, 255, src with { Source015a = 0 })], "Invented partial CLI fixture; no OEM routine bytes", [0]).ToJson());
-        var args = w.LookupArguments(); args[2] = "limiter-chain-check"; return args;
+        var first = new P28AdaptiveFuelCall(new(0, 89, 0, 0, 0, src), 1100, 0, false, false, true, true, true, false, 0, 0);
+        File.WriteAllText(w.Scenario, P28AdaptiveFuelScenario.Create(new(new(new(0, 0, 0, 0, 0, 0, 0xA5, 0), 0xF1, 0xAD, 7, 16, 128, 0xA5), 100, 110, 0, 0, 0xA55A, 0x5AA5),
+            [first, first with { Fuel = first.Fuel with { Index = 1 } }], "Invented partial CLI fixture; no OEM routine", [0]).ToJson());
+        var args = w.LookupArguments(); args[2] = "adaptive-limiter-chain-check"; return args;
     }
     [Theory]
     [InlineData("--runner")]
@@ -39,8 +46,8 @@ public sealed class P28LimiterFuelCliTests
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var before = w.Snapshot(); Assert.True(File.Exists(w.Runner)); var r = await w.RunAsync(args);
         Assert.Equal(CliApplication.VerificationFailed, r.Code); var report = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.23.0", report["runnerVersion"]!.GetValue<string>());
         foreach (var sequence in report["sequences"]!.AsArray())
-        { var c = sequence!["checkpoints"]!; Assert.Equal("Unresolved", c[0]!["disposition"]!.GetValue<string>()); Assert.Null(c[0]!["request"]); Assert.Null(c[0]!["fuel"]); Assert.Equal("NotRun", c[1]!["disposition"]!.GetValue<string>()); Assert.Null(c[1]!["actual"]!["input"]); Assert.Empty(c[1]!["actual"]!["inputWrites"]!.AsArray()); }
-        Assert.Contains("request=NotRun", r.Output); w.AssertUnchanged(before);
+        { var c = sequence!["checkpoints"]!; Assert.Equal("Unresolved", c[0]!["disposition"]!.GetValue<string>()); Assert.Null(c[0]!["request"]); Assert.Null(c[0]!["continuation"]); Assert.Equal("NotRun", c[1]!["disposition"]!.GetValue<string>()); Assert.Null(c[1]!["actual"]!["input"]); Assert.Empty(c[1]!["actual"]!["snapshotWrites"]!.AsArray()); }
+        Assert.Contains("request=NotRun", r.Output); Assert.Contains("provenance=NotRun", r.Output); w.AssertUnchanged(before);
     }
     [Fact]
     public async Task CancelAliasMalformedAndWrongBindingDoNotWriteReport()

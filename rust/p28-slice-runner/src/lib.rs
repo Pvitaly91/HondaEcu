@@ -12,6 +12,7 @@ pub mod exec;
 #[rustfmt::skip]
 pub mod full_decoder;
 pub mod adaptive;
+pub mod adaptive_fuel;
 pub mod fuel;
 pub mod fuel_additive;
 pub mod fuel_calculation;

@@ -137,7 +137,14 @@ public static class P28LimiterFuelValidator
         _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2n execution/ownership contract differs.");
         foreach (var key in new[] { "compactRows", "thresholdRows", "diagnostics" }) Require(root.GetProperty(key).GetArrayLength() == 0, "Foreign M2n rows.");
         Require(root.GetProperty("syntheticResult").ValueKind == JsonValueKind.Null, "Foreign synthetic result.");
-        var sequences = root.GetProperty("limiterFuelSequences"); Require(sequences.GetArrayLength() == 3, "M2n scratch count differs.");
+        return AnalyzeShared(image, s, root, root.GetProperty("limiterFuelSequences"), id);
+    }
+    // Internal composition seam; no second CPU, no old top-level operation or relaxed public admission.
+    internal static IReadOnlyList<P28LimiterFuelSequence> AnalyzeShared(RomImage image, P28LimiterFuelScenario s, JsonElement root, JsonElement sequences, string id,
+        Func<int, int, byte, P28LimiterDecisionStep>? decisionModel = null, Action<int, int, byte>? finishModel = null,
+        Func<int, int, int>? decisionEntryA = null, Func<int, int, byte>? source011b = null)
+    {
+        Require(sequences.GetArrayLength() == 3, "Joint scratch count differs.");
         var expected = new P28LimiterDecisionStep?[3, s.Calls.Count];
         var models = Enumerable.Range(0, 3).Select(_ => new P28LimiterModel(image.Span, new(s.InitialState.Data0124, s.InitialState.Data012b, 0, 0, s.InitialState.Data01d7, 0, 0))).ToArray();
         var fuelCount = sequences[0].GetProperty("checkpoints").EnumerateArray().Count(r => r.GetProperty("fuel").GetProperty("prefix").GetProperty("status").GetInt32() != 4);
@@ -156,9 +163,9 @@ public static class P28LimiterFuelValidator
             }).ToArray());
             fuels = P28FuelFactorValidator.AnalyzeFuelEvidence(image, numeric, root, view, id, (p, i, mode) =>
             {
-                models[p].AcceptModeledFuelByte(mode); var decision = models[p].StepDecision(s.Calls[i].RawPeriod, false, true); expected[p, i] = decision;
+                models[p].AcceptModeledFuelByte(mode); var decision = decisionModel is null ? models[p].StepDecision(s.Calls[i].RawPeriod, false, true) : decisionModel(p, i, mode); expected[p, i] = decision;
                 return (decision.After.Data0124, decision.After.Data012B);
-            }, (p, _, mode) => models[p].AcceptModeledFuelByte(mode));
+            }, (p, i, mode) => { models[p].AcceptModeledFuelByte(mode); finishModel?.Invoke(p, i, mode); });
         }
         var reports = new List<P28LimiterFuelSequence>();
         for (var p = 0; p < 3; p++)
@@ -196,16 +203,16 @@ public static class P28LimiterFuelValidator
                     ValidateTransition(r.GetProperty("handoffToDecision"), r.GetProperty("decisionEntry"), r.GetProperty("transitionToDecisionWrites"), 0x1966, 0x20, 0x280);
                     if (own is null)
                     {
-                        own = models[p].StepDecision(s.Calls[i].RawPeriod, false, true);
+                        own = decisionModel is null ? models[p].StepDecision(s.Calls[i].RawPeriod, false, true) : decisionModel(p, i, r.GetProperty("stateBefore").GetProperty("data012b").GetByte());
                     }
                     var parsed = P28AcquisitionValidator.ParseStage(decision.GetProperty("result"), 96, 0, [], null)!;
                     var events = P28LimiterValidator.Matrix(decision, "events", 8); P28LimiterValidator.ValidateTrace(parsed, events, false);
                     decisionDisposition = Status(parsed.Status);
                     ValidateDecisionBoundary(r.GetProperty("decisionEntry"), r.GetProperty("decisionExit"), decision, parsed);
-                    var entryA = i == 0 ? pattern * 257 : fuels![p].Checkpoints[i - 1].Corrected!.Value;
+                    var entryA = decisionEntryA is not null ? decisionEntryA(p, i) : i == 0 ? pattern * 257 : fuels![p].Checkpoints[i - 1].Corrected!.Value;
                     Require(r.GetProperty("decisionEntry").GetProperty("accumulator").GetInt32() == entryA, "Host reloaded prior numeric result at decision entry.");
-                    ValidateDecisionOracle(image, own!.Before, s.Calls[i].RawPeriod, entryA, r, parsed);
-                    Require(access.All(a => a[0] is >= 0x1966 and < 0x1A38 && a[1] is not (0x12A or 0x18F or 0x1A4 or 0x1A6)), "Foreign mask/RAM/adaptive decision access.");
+                    ValidateDecisionOracle(image, own!.Before, s.Calls[i].RawPeriod, entryA, r, parsed, own.Context == "Fixed", source011b?.Invoke(p, i));
+                    Require(access.All(a => a[0] is >= 0x1966 and < 0x1A38 && a[1] is not (0x12A or 0x18F) && (decisionModel is not null || a[1] is not (0x1A4 or 0x1A6))), "Foreign mask/RAM/adaptive decision access.");
                     Require(access.Where(a => a[3] == 1).SelectMany(a => new[] { a[1], a[2], a[4] }).SequenceEqual(Matrix(decision.GetProperty("writes"), 3, 96).SelectMany(a => a)), "Decision native writes unjournaled.");
                     if (parsed.Status == 0)
                     {
@@ -236,7 +243,7 @@ public static class P28LimiterFuelValidator
     }
 
     private static string Status(int s) => s switch { 0 => "StrictMatch", 1 => "Unresolved", 2 => "ExecutionError", 3 => "BudgetExceeded", _ => "NotRun" };
-    private static bool NumericControlHistory(JsonElement a, JsonElement b)
+    internal static bool NumericControlHistory(JsonElement a, JsonElement b)
     {
         foreach (var key in new[] { "sourcesBefore", "sourcesAfter", "hysteresisBefore", "hysteresisAfter", "modeBefore", "modeAfter" })
             if (!Equal(a.GetProperty(key), b.GetProperty(key))) return false;
@@ -273,14 +280,14 @@ public static class P28LimiterFuelValidator
         Require(Equal(Matrix(stage.GetProperty("writes"), 3, 96), own.DecisionWrites), "Decision-only native writes differ.");
         var cmp = e.Where(v => v[0] == 0x197D).ToArray(); Require(cmp.Length == 1 && cmp[0][6] == call.RawPeriod && cmp[0][7] == own.Threshold &&
             ((cmp[0][5] & 0x8000) != 0) == own.OverspeedRequest && ((cmp[0][5] & 0x4000) != 0) == (call.RawPeriod == own.Threshold), "Wrong previous-state threshold/comparison/flags.");
-        Require(e.Any(v => v[0] == 0x197C) == ((own.Before.Data0124 & 32) != 0) && !e.Any(v => v[0] is 0x1974 or 0x1977) &&
-            e.Any(v => v[0] == 0x1969 && v[3] == P28LimiterInspector.Word(image.Span, 0x196A)) && row.GetProperty("decisionExit").GetProperty("dp").GetInt32() == P28LimiterInspector.Word(image.Span, 0x1967) &&
+        Require(e.Any(v => v[0] == 0x197C) == ((own.Before.Data0124 & 32) != 0) && e.Any(v => v[0] == 0x1974) == (own.Context != "Fixed") && e.Any(v => v[0] == 0x1977) == (own.Context != "Fixed") &&
+            e.Any(v => v[0] == 0x1969 && v[3] == P28LimiterInspector.Word(image.Span, 0x196A)) && row.GetProperty("decisionExit").GetProperty("dp").GetInt32() == (own.Context == "Fixed" ? P28LimiterInspector.Word(image.Span, 0x1967) : own.Before.RamResume) &&
             e.Any(v => v[0] == 0x1980 && v[1] == (own.OverspeedRequest ? 0x19AC : 0x1982)), "Fixed immediate fetch/context/decision branch differs.");
         Require(e.Any(v => v[0] == 0x1A28) && (own.After.Data0124 & 16) == 0, "Missing native bit4 clearing.");
     }
-    private static void ValidateDecisionOracle(RomImage image, P28LimiterState state, ushort raw, int entryA, JsonElement row, P28AcquisitionStageResult parsed)
+    private static void ValidateDecisionOracle(RomImage image, P28LimiterState state, ushort raw, int entryA, JsonElement row, P28AcquisitionStageResult parsed, bool fixedSource = true, byte? source011b = null)
     {
-        var own = P28LimiterDecisionEvidence.Build(image, state, raw, entryA); var stage = row.GetProperty("decision"); var exit = row.GetProperty("decisionExit");
+        var own = P28LimiterDecisionEvidence.Build(image, state, raw, entryA, fixedSource, source011b); var stage = row.GetProperty("decision"); var exit = row.GetProperty("decisionExit");
         var events = Matrix(stage.GetProperty("events"), 8, 96); Require(events.Length <= own.Events.Count && events.SelectMany(e => e).SequenceEqual(own.Events.Take(events.Length).SelectMany(e => e)), "Independent limiter source/branch/flag journal differs.");
         var ac = events.Length == 0 ? 0 : own.AccessEnds[events.Length - 1]; var wc = events.Length == 0 ? 0 : own.WriteEnds[events.Length - 1];
         Require(Matrix(row.GetProperty("decisionAccesses"), 5, 384).SelectMany(a => a).SequenceEqual(own.Accesses.Take(ac).SelectMany(a => a)) &&
@@ -288,7 +295,7 @@ public static class P28LimiterFuelValidator
         var extents = own.Events.Take(events.Length).SelectMany((e, i) => Enumerable.Range(e[0], own.Lengths[i])).Distinct().Order().ToArray();
         Require(parsed.ExecutedInstructionBytes.SequenceEqual(extents) && (parsed.Status != 0 || events.Length == own.Events.Count), "Missing/skipped immediate fetch or decision instruction extent.");
         var after = row.GetProperty("stateAfterDecision"); var st = events.Length == 0 ? new[] { (int)state.Data0124, state.Data012B, state.Data01D7 } : own.StateEnds[events.Length - 1];
-        Require(exit.GetProperty("dp").GetInt32() == (events.Length == 0 ? row.GetProperty("decisionEntry").GetProperty("dp").GetInt32() : own.Dp), "Partial decision DP contradicts its native threshold load.");
+        Require(exit.GetProperty("dp").GetInt32() == (events.Length == 0 ? row.GetProperty("decisionEntry").GetProperty("dp").GetInt32() : own.DpEnds[events.Length - 1]), "Partial decision DP contradicts its native threshold load.");
         Require(after.GetProperty("data0124").GetInt32() == st[0] && after.GetProperty("data012b").GetInt32() == st[1] && after.GetProperty("data01d7").GetInt32() == st[2], "Partial decision state is not its completed native prefix.");
         foreach (var key in new[] { "x1", "x2", "registers", "lrb", "usp", "ssp" }) Require(Equal(row.GetProperty("decisionEntry").GetProperty(key), exit.GetProperty(key)), "Decision changed unused bank/pointer/stack carriers.");
     }

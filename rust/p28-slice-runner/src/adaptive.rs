@@ -108,7 +108,7 @@ pub fn entry_contracts() -> Vec<serde_json::Value> {
         "stop":"BeforeInstruction","ie":"Word-only software storage; no IRQ delivery","state":"Once-only thresholds/counters; native stores thereafter","ticks":"Explicit native single-element service schedule, not elapsed time","physicalRpmAvailable":false,"assumptions":[]
     })]
 }
-fn producer_ranges() -> Vec<[u16; 2]> {
+pub(crate) fn producer_ranges() -> Vec<[u16; 2]> {
     vec![
         [0, 8],
         [0x1A, 0x1C],
@@ -132,7 +132,7 @@ fn producer_ranges() -> Vec<[u16; 2]> {
         [0x7FE, 0x800],
     ]
 }
-fn contract(tick: bool) -> SliceContract {
+pub(crate) fn contract(tick: bool) -> SliceContract {
     SliceContract {
         entry_pc: if tick { 0x5BD0 } else { 0x487B },
         exit_pcs: vec![if tick { 0x5BD9 } else { 0x48F5 }],
@@ -159,7 +159,7 @@ fn state(cpu: &Cpu, bus: &mut Bus) -> State {
         restore_ie: read_data_u16(cpu, bus, 0xF8),
     }
 }
-fn execute(cpu: &mut Cpu, bus: &mut Bus, c: &SliceContract) -> Stage {
+pub(crate) fn execute(cpu: &mut Cpu, bus: &mut Bus, c: &SliceContract) -> Stage {
     bus.begin_write_journal();
     bus.start_decision_observer();
     let result = execute_in_state_observed(cpu, bus, c, &[], true, Some(admission), true);
@@ -169,6 +169,14 @@ fn execute(cpu: &mut Cpu, bus: &mut Bus, c: &SliceContract) -> Stage {
         events: bus.finish_decision_observer(),
         ssp_after: cpu.ssp,
     }
+}
+/// Execute only the native counter body on the existing caller-owned CPU/RAM.
+pub(crate) fn execute_tick_in_state(cpu: &mut Cpu, bus: &mut Bus) -> Stage {
+    execute(cpu, bus, &contract(true))
+}
+/// Execute only threshold production. No limiter, mask consumer or initialization.
+pub(crate) fn execute_producer_in_state(cpu: &mut Cpu, bus: &mut Bus) -> Stage {
+    execute(cpu, bus, &contract(false))
 }
 pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     let s = r.adaptive_limiter.as_ref().expect("validated");
@@ -229,7 +237,7 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                             vec![[0, 8], [0x88, 0x90], [address, address + 1]],
                             256,
                         );
-                        let stage = execute(&mut cpu, &mut bus, &tc);
+                        let stage = execute_tick_in_state(&mut cpu, &mut bus);
                         row.status = stage.result.status;
                         stopped = row.status != 0;
                         row.ticks.push(Tick { address, stage });
@@ -250,7 +258,7 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                     write_data_u16(&mut cpu, &mut bus, 0xCE, call.raw00ce);
                     bus.set_program_data_ranges(vec![[0x6493, 0x64AB]]);
                     enter(&mut cpu, &mut bus, &pc);
-                    let p = execute(&mut cpu, &mut bus, &pc);
+                    let p = execute_producer_in_state(&mut cpu, &mut bus);
                     row.status = p.result.status;
                     stopped = row.status != 0;
                     row.producer = Some(p);

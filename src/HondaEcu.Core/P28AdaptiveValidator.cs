@@ -43,7 +43,7 @@ public static class P28AdaptiveValidator
         catch (Exception e) when (e is JsonException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException or ArgumentOutOfRangeException)
         { throw new SliceProcessException(SliceProcessFailure.Protocol, "Malformed adaptive response.", e); }
     }
-    private sealed record Stage(P28AcquisitionStageResult Result, int[][] Writes, int[][] Events, int Ssp);
+    internal sealed record Stage(P28AcquisitionStageResult Result, int[][] Writes, int[][] Events, int Ssp);
     internal static P28AdaptiveValidationReport AnalyzeExportImage(P28CombinedLimiterPreview preview, RomImage image,
         P28AdaptiveScenario scenario, SliceProcessResponse response)
     {
@@ -76,7 +76,7 @@ public static class P28AdaptiveValidator
             throw new InvalidDataException("Foreign admitted calibration-suite image.");
         return AnalyzeCore(image, preview.Profile, scenario, response.Response);
     }
-    private static Stage? ParseStage(JsonElement e, bool tick)
+    internal static Stage? ParseStage(JsonElement e, bool tick)
     {
         if (e.ValueKind == JsonValueKind.Null) return null;
         P28LimiterScenario.Shape(e, "result", "writes", "events", "sspAfter");
@@ -105,8 +105,8 @@ public static class P28AdaptiveValidator
     }
     private static P28AdaptiveState State(JsonElement e)
     { P28AdaptiveScenario.StateShape(e); return e.Deserialize<P28AdaptiveState>(P28StatefulScenario.Options)!; }
-    private static readonly int[] ProducerBranches = [0x4882, 0x4894, 0x489D, 0x48A2, 0x48A8, 0x48AF, 0x48B1, 0x48B6, 0x5ABB, 0x5ABE, 0x5AC5, 0x5AD3, 0x5AE2];
-    private static int[][] TableReads(Stage? p)
+    internal static readonly int[] ProducerBranches = [0x4882, 0x4894, 0x489D, 0x48A2, 0x48A8, 0x48AF, 0x48B1, 0x48B6, 0x5ABB, 0x5ABE, 0x5AC5, 0x5AD3, 0x5AE2];
+    internal static int[][] TableReads(Stage? p)
     {
         if (p is null) return [];
         var loads = p.Result.Trace.Select((t, i) => (t, i)).Where(x => x.t.GetProperty("instruction").GetString()!.StartsWith("LC A,", StringComparison.Ordinal)).ToArray();

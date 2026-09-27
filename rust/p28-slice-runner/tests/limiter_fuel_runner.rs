@@ -14,7 +14,7 @@ fn partial_decision_keeps_native_prefix_without_applying_next_event_or_mask_cons
     let response =
         serde_json::to_value(run_request(serde_json::from_value(request()).unwrap()).unwrap())
             .unwrap();
-    assert_eq!(response["runnerVersion"], "0.22.0");
+    assert_eq!(response["runnerVersion"], env!("CARGO_PKG_VERSION"));
     for s in response["limiterFuelSequences"].as_array().unwrap() {
         let r = &s["checkpoints"];
         assert_eq!(r[0]["status"], 1);

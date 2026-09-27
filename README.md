@@ -1,5 +1,13 @@
 # HondaEcu
 
+M2o adds the bounded [native adaptive-threshold to fuel-store gate chain](docs/M2O_ADAPTIVE_LIMITER_FUEL_CHAIN.md)
+with `research p28-fuel adaptive-limiter-chain-check`, runner0.23.0. Native ticks
+and adaptive RAM production now precede the same-state limiter/fuel continuation;
+Written/Held/InitialHistory provenance, masked inputs and native handoffs are checked.
+One-word in-memory A/B only; no BIN/export, physical units, GUI/hardware or strict
+M2i change. The schedule remains scripted and PcInspectionOnly / NotFlashReady.
+Historical standalone task scopes below remain unchanged.
+
 M2n completes the bounded [native fixed-limiter to fuel-store gate chain](docs/M2N_LIMITER_FUEL_GATE_CHAIN.md)
 with `research p28-fuel limiter-chain-check`, runner0.22.0: native0124 writer,
 actual217A/21F5 gate readers and03A2/03B4 stores on one CPU/RAM, without supplied

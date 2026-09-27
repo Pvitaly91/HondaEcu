@@ -1,6 +1,6 @@
 # Bounded P28 research runner
 
-Runner **0.22.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
+Runner **0.23.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
 upstream CPU provenance and license are retained in
 [the third-party notices](../../THIRD_PARTY_NOTICES.md). No OEM image or native
 program fixture is distributed here.
@@ -31,6 +31,7 @@ A successful process exit is not an execution match or a hardware result.
 | `fuelAdditiveCorrectionChain` | M2l strict native correction producer→scaling→XCHG/VCAL4/return→first software stores; one continuous tail2194..2204 |
 | `fuelFactorProductionChain` | M2m strict native0158 producer and actual word handoff to21DD, followed by the shared continuous M2l tail; no ready factor input |
 | `limiterFuelGateChain` | M2n decision-only fixed1966..1A38, same-state M2m bodies, actual217A/21F5 gates and03A2/03B4; no request/factor setter or5585/P2 |
+| `adaptiveLimiterFuelGateChain` | M2o native5BD0 ticks and487B/helpers→RAM01A4/01A6→decision-only1966→same-state M2n fuel tail; one masked snapshot, native writer/hold provenance, no5585/P2 or supplied thresholds/request/factor |
 
 The acquisition guide below describes its existing operation, not all later
 milestones. The closed M2l sources, lifetime, exact-form evidence and read-only

@@ -4,6 +4,9 @@ public sealed record P28AdaptiveTick(int Address, byte Before, byte After, IRead
 public sealed record P28AdaptiveModelStep(P28AdaptiveState Before, P28AdaptiveState AfterProducer, P28AdaptiveState After,
     int Bank, string Path, IReadOnlyList<int[]> TableReads, IReadOnlyList<int[]> Branches, IReadOnlyList<int[]> ProducerWrites,
     IReadOnlyList<P28AdaptiveTick> Ticks, P28LimiterModelStep Limiter);
+public sealed record P28AdaptiveProductionStep(P28AdaptiveState Before, P28AdaptiveState After,
+    int Bank, string Path, IReadOnlyList<int[]> TableReads, IReadOnlyList<int[]> Branches,
+    IReadOnlyList<int[]> ProducerWrites, IReadOnlyList<P28AdaptiveTick> Ticks);
 
 /// <summary>Independent word arithmetic and persistent histories; no runner state is an input.</summary>
 public sealed class P28AdaptiveModel
@@ -18,6 +21,23 @@ public sealed class P28AdaptiveModel
     }
     private ushort W(int address) => P28LimiterInspector.Word(_rom, address);
     public P28AdaptiveModelStep Step(P28AdaptiveCall c)
+    {
+        var production = StepProduction(c);
+        var decision = _limiter.Step(c.Limiter);
+        if (decision.Context != "Fixed") decision = decision with { Context = "AdaptiveRam" };
+        _state = _state with { Limiter = decision.After };
+        return new(production.Before, production.After, _state, production.Bank, production.Path,
+            production.TableReads, production.Branches, production.ProducerWrites, production.Ticks, decision);
+    }
+    internal void AcceptModeledFuelByte(byte value)
+    { _limiter.AcceptModeledFuelByte(value); _state = _state with { Limiter = _limiter.ModeledState }; }
+    internal P28LimiterDecisionStep StepDecision(ushort rawPeriod, bool fixedSource)
+    {
+        var decision = _limiter.StepDecision(rawPeriod, false, fixedSource);
+        _state = _state with { Limiter = decision.After };
+        return decision;
+    }
+    public P28AdaptiveProductionStep StepProduction(P28AdaptiveCall c)
     {
         ArgumentNullException.ThrowIfNull(c); var before = _state; var ticks = new List<P28AdaptiveTick>();
         for (var kind = 0; kind < 2; kind++)
@@ -105,9 +125,6 @@ public sealed class P28AdaptiveModel
         }
         var produced = _state;
         _limiter.AcceptModeledAdaptiveWords(_state.Limiter.RamCut, _state.Limiter.RamResume);
-        var decision = _limiter.Step(c.Limiter);
-        if (decision.Context != "Fixed") decision = decision with { Context = "AdaptiveRam" };
-        _state = _state with { Limiter = decision.After };
-        return new(before, produced, _state, c.Bank1 ? 1 : 0, path, reads.AsReadOnly(), branches.AsReadOnly(), writes.AsReadOnly(), ticks.AsReadOnly(), decision);
+        return new(before, produced, c.Bank1 ? 1 : 0, path, reads.AsReadOnly(), branches.AsReadOnly(), writes.AsReadOnly(), ticks.AsReadOnly());
     }
 }

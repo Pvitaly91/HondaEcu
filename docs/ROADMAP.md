@@ -1,5 +1,13 @@
 # Roadmap
 
+M2o adds [native adaptive RAM to limiter/fuel-store handoff](M2O_ADAPTIVE_LIMITER_FUEL_CHAIN.md):
+native counter calls and487B/helpers on the same CPU/RAM as decision-only1966 and
+the established native0140/0158/217A/21F5/store tail. Native writer generations,
+retained bank history, fixed/RAM controls and four closed one-word A/B choices
+are validated independently. Counts, compatibility and model-only audits stay
+separate in the private final report. No firmware/export, physical controller,
+GUI/hardware or strict M2i expansion; next stage/GUI is not started automatically.
+
 M2n completes [native fixed-limiter to fuel-store gate handoff](M2N_LIMITER_FUEL_GATE_CHAIN.md):
 decision-only extraction, one shared0124/012B history, native bit4 clearing,
 actual217A and21F5, established lookup/factor/additive application on one machine.

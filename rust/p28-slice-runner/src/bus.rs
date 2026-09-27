@@ -74,6 +74,36 @@ mod capture_bus_tests {
     }
 
     #[test]
+    fn adaptive_ie_native_ledger_is_word_only_and_access_changes_preserve_storage() {
+        let mut bus = Bus::new(vec![], 0xA5);
+        bus.set_adaptive_ie(Some(0xBA98));
+        bus.configure_scoped_access(
+            vec![[0x1A, 0x1C], [0x1A4, 0x1A8], [0x1D5, 0x1D6], [0x7FE, 0x800]],
+            32,
+        );
+        bus.write_data_u16(0x1A4, 1234);
+        bus.write_data_u16(0x1A6, 1278);
+        bus.write_data_u8(0x1D5, 7);
+        bus.write_data_u16(0x7FE, 4321);
+        bus.begin_native_accesses();
+        bus.set_native_pc(123);
+        assert_eq!(bus.read_data_u16(0x1A), 0xBA98);
+        bus.write_data_u16(0x1A, 0xBA98);
+        assert_eq!(
+            bus.end_native_accesses(),
+            [[123, 0x1A, 16, 0, 0xBA98], [123, 0x1A, 16, 1, 0xBA98]]
+        );
+        bus.configure_scoped_access(vec![], 32);
+        bus.configure_scoped_access(vec![[0x1A4, 0x1A8], [0x1D5, 0x1D6], [0x7FE, 0x800]], 32);
+        assert_eq!(bus.adaptive_ie(), Some(0xBA98));
+        assert_eq!(bus.read_data_u16(0x1A4), 1234);
+        assert_eq!(bus.read_data_u16(0x1A6), 1278);
+        assert_eq!(bus.read_data_u8(0x1D5), 7);
+        assert_eq!(bus.read_data_u16(0x7FE), 4321);
+        assert!(bus.take_fault().is_none());
+    }
+
+    #[test]
     fn old_bus_has_no_peripheral_observations_and_word_width_is_preserved() {
         let cpu = Cpu::new();
         let mut bus = Bus::new(vec![], 0xAA);
@@ -493,7 +523,9 @@ impl Bus {
             && self.check_data_access(address, "read")
             && self.check_data_access(address + 1, "read")
         {
-            return self.adaptive_ie.unwrap();
+            let value = self.adaptive_ie.unwrap();
+            self.native_access(address, 16, 0, value);
+            return value;
         }
         if address < 0x80 {
             if self.check_data_access(address, "read")
@@ -553,6 +585,7 @@ impl Bus {
             && self.check_data_access(address + 1, "write")
         {
             self.adaptive_ie = Some(value);
+            self.native_access(address, 16, 1, value);
             if self.journal_writes {
                 self.data_writes.push([address as u32, 16, value as u32]);
             }

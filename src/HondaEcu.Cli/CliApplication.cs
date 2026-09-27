@@ -157,6 +157,10 @@ public sealed partial class CliApplication
           research p28-fuel limiter-chain-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding.json> --runner <runner-0.22.0>
               --scenario <m2n-scenario.json> --output <new-private-report.json>
+          research p28-fuel adaptive-limiter-chain-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding.json> --runner <runner-0.23.0>
+              --scenario <m2o-scenario.json> --output <new-private-report.json>
+              Native ticks/adaptive RAM→decision→fuel stores on one CPU/RAM; read-only, no physical units, GUI or BIN.
           research p28-fuel vtec-chain-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <private-json> --runner <v0.14.0-rust-executable>
               --scenario <bounded-m2f-scenario.json> --output <new-private-json>

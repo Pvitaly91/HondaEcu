@@ -12,7 +12,7 @@ use crate::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Initial {
     pub fuel: fuel::State,
@@ -35,7 +35,7 @@ pub struct Call {
     pub sources: fuel_factor::Sources,
 }
 impl Call {
-    fn fuel(&self) -> fuel_factor::Call {
+    pub(crate) fn fuel(&self) -> fuel_factor::Call {
         fuel_factor::Call {
             index: self.index,
             raw_load: self.raw_load,
@@ -60,7 +60,7 @@ pub struct State {
     pub data012b: u8,
     pub data01d7: u8,
 }
-fn state(cpu: &Cpu, bus: &mut Bus) -> State {
+pub(crate) fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     State {
         data0124: read_data_u8(cpu, bus, 0x124),
         data012b: read_data_u8(cpu, bus, 0x12B),
@@ -147,83 +147,16 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     for &pattern in &r.scratch_patterns {
         let (mut cpu, mut bus) = seed_machine(&r.images[0].rom, &limiter::contract(false), pattern);
         cpu.ssp = 0x7FE;
-        // 0121 initialized exactly once: limiter bit7 set, fuel bit6 clear.
-        fuel::seed_state_with_0121(&mut cpu, &mut bus, &s.initial_state.fuel, 128);
-        for (a, v) in [
-            (0x124, s.initial_state.data0124),
-            (0x12B, s.initial_state.data012b),
-            (0x1D7, s.initial_state.data01d7),
-            (0x12C, s.initial_state.producer_mode012c),
-            (0x12F, s.initial_state.producer_selector012f),
-            (0x130, s.initial_state.hysteresis0130),
-            (0x11B, 128),
-            (0x15F, 0),
-        ] {
-            write_data_u8(&mut cpu, &mut bus, a, v);
-        }
-        fuel_factor::set_sources(&mut cpu, &mut bus, &fuel_factor::Sources::zero());
-        bus.observe_limiter_p4(Some(0));
-        let mut ranges = fuel_factor::data_ranges();
-        ranges.extend([[0x2C, 0x2D], [0x11B, 0x11C], [0x1D7, 0x1D8], [0xC4, 0xC6]]);
+        initialize(&mut cpu, &mut bus, &s.initial_state, 128);
+        let ranges = data_ranges();
         let mut stopped = false;
         let mut checkpoints = vec![];
         for c in &s.calls {
             bus.configure_scoped_access(ranges.clone(), 4096);
-            let before = state(&cpu, &mut bus);
-            let f = fuel_factor::checkpoint(&cpu, &mut bus, &c.fuel());
-            let mut row = Checkpoint {
-                index: c.index,
-                status: 4,
-                input: None,
-                input_writes: vec![],
-                state_before: before.clone(),
-                state_after_decision: before.clone(),
-                state_after: before,
-                decision_entry: None,
-                decision_exit: None,
-                transition_to_decision_writes: vec![],
-                handoff_to_decision: None,
-                decision: None,
-                decision_accesses: vec![],
-                fuel: f,
-            };
+            let mut row = checkpoint(&cpu, &mut bus, c);
             if !stopped {
-                row.input = Some(c.clone());
-                fuel_factor::apply_inputs(&mut cpu, &mut bus, &c.fuel(), &mut row.fuel);
-                row.input_writes = row.fuel.input_writes.clone();
-                bus.begin_write_journal();
-                write_data_u16(&mut cpu, &mut bus, 0xC4, c.raw_period);
-                row.input_writes.extend(bus.end_write_journal());
-                row.handoff_to_decision = Some(boundary(&cpu, &mut bus));
-                enter_with_observer(&mut cpu, &mut bus, &limiter::contract(false), |w| {
-                    row.transition_to_decision_writes.push(w)
-                });
-                row.decision_entry = Some(boundary(&cpu, &mut bus));
-                let (result, writes, events, accesses) =
-                    limiter::execute_decision(&mut cpu, &mut bus);
-                row.status = result.status;
-                row.decision = Some(Stage {
-                    result,
-                    writes,
-                    events,
-                    ssp_after: cpu.ssp,
-                });
-                row.decision_accesses = accesses;
-                row.decision_exit = Some(boundary(&cpu, &mut bus));
-                row.state_after_decision = state(&cpu, &mut bus);
-                // The fuel stage consumes the native combined byte; no host state repair.
-                row.fuel.mode_before = row.state_after_decision.data012b;
-                if row.status == 0 {
-                    row.fuel.prefix_transitions = Some(vec![]);
-                    fuel_factor::execute_checkpoint(&mut cpu, &mut bus, &mut row.fuel, true);
-                    row.status = row.fuel.status;
-                } else {
-                    row.fuel.input = None;
-                    row.fuel.prefix.state_after_inputs = None;
-                }
-                fuel_factor::finish_checkpoint(&cpu, &mut bus, &mut row.fuel);
-                bus.configure_scoped_access(ranges.clone(), 4096);
-                row.state_after = state(&cpu, &mut bus);
+                apply_inputs(&mut cpu, &mut bus, c, &mut row);
+                execute_checkpoint(&mut cpu, &mut bus, &mut row);
                 stopped = row.status != 0;
             }
             checkpoints.push(row);
@@ -236,4 +169,89 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     response.entry_contracts = entry_contracts();
     response.limiter_fuel_sequences = Some(sequences);
     Ok(response)
+}
+/// Shared initialization; no snapshots or execution on a second machine.
+pub(crate) fn initialize(cpu: &mut Cpu, bus: &mut Bus, initial: &Initial, data011b: u8) {
+    // 0121 initialized exactly once: limiter bit7 set, fuel bit6 clear.
+    fuel::seed_state_with_0121(cpu, bus, &initial.fuel, 128);
+    for (a, v) in [
+        (0x124, initial.data0124),
+        (0x12B, initial.data012b),
+        (0x1D7, initial.data01d7),
+        (0x12C, initial.producer_mode012c),
+        (0x12F, initial.producer_selector012f),
+        (0x130, initial.hysteresis0130),
+        (0x11B, data011b),
+        (0x15F, 0),
+    ] {
+        write_data_u8(cpu, bus, a, v);
+    }
+    fuel_factor::set_sources(cpu, bus, &fuel_factor::Sources::zero());
+    bus.observe_limiter_p4(Some(0));
+}
+pub(crate) fn data_ranges() -> Vec<[u16; 2]> {
+    let mut ranges = fuel_factor::data_ranges();
+    ranges.extend([[0x2C, 0x2D], [0x11B, 0x11C], [0x1D7, 0x1D8], [0xC4, 0xC6]]);
+    ranges
+}
+pub(crate) fn checkpoint(cpu: &Cpu, bus: &mut Bus, c: &Call) -> Checkpoint {
+    let before = state(&cpu, bus);
+    let f = fuel_factor::checkpoint(&cpu, bus, &c.fuel());
+    let row = Checkpoint {
+        index: c.index,
+        status: 4,
+        input: None,
+        input_writes: vec![],
+        state_before: before.clone(),
+        state_after_decision: before.clone(),
+        state_after: before,
+        decision_entry: None,
+        decision_exit: None,
+        transition_to_decision_writes: vec![],
+        handoff_to_decision: None,
+        decision: None,
+        decision_accesses: vec![],
+        fuel: f,
+    };
+    row
+}
+pub(crate) fn apply_inputs(cpu: &mut Cpu, bus: &mut Bus, c: &Call, row: &mut Checkpoint) {
+    row.input = Some(c.clone());
+    fuel_factor::apply_inputs(cpu, bus, &c.fuel(), &mut row.fuel);
+    row.input_writes = row.fuel.input_writes.clone();
+    bus.begin_write_journal();
+    write_data_u16(cpu, bus, 0xC4, c.raw_period);
+    row.input_writes.extend(bus.end_write_journal());
+}
+/// Decision and fuel continuation; no snapshot/reseed between native stages.
+pub(crate) fn execute_checkpoint(cpu: &mut Cpu, bus: &mut Bus, row: &mut Checkpoint) {
+    row.handoff_to_decision = Some(boundary(&cpu, bus));
+    enter_with_observer(cpu, bus, &limiter::contract(false), |w| {
+        row.transition_to_decision_writes.push(w)
+    });
+    row.decision_entry = Some(boundary(&cpu, bus));
+    let (result, writes, events, accesses) = limiter::execute_decision(cpu, bus);
+    row.status = result.status;
+    row.decision = Some(Stage {
+        result,
+        writes,
+        events,
+        ssp_after: cpu.ssp,
+    });
+    row.decision_accesses = accesses;
+    row.decision_exit = Some(boundary(&cpu, bus));
+    row.state_after_decision = state(&cpu, bus);
+    // The fuel stage consumes the native combined byte; no host state repair.
+    row.fuel.mode_before = row.state_after_decision.data012b;
+    if row.status == 0 {
+        row.fuel.prefix_transitions = Some(vec![]);
+        fuel_factor::execute_checkpoint(cpu, bus, &mut row.fuel, true);
+        row.status = row.fuel.status;
+    } else {
+        row.fuel.input = None;
+        row.fuel.prefix.state_after_inputs = None;
+    }
+    fuel_factor::finish_checkpoint(&cpu, bus, &mut row.fuel);
+    bus.configure_scoped_access(data_ranges(), 4096);
+    row.state_after = state(&cpu, bus);
 }

@@ -2,16 +2,16 @@ namespace HondaEcu.Core;
 
 internal sealed record P28LimiterDecisionOracle(IReadOnlyList<int[]> Events, IReadOnlyList<int[]> Writes, IReadOnlyList<int[]> Accesses,
     IReadOnlyList<int> AccessEnds, IReadOnlyList<int> WriteEnds, IReadOnlyList<int[]> StateEnds, IReadOnlyList<int> Lengths,
-    int Accumulator, int Psw, int Dp);
+    int Accumulator, int Psw, int Dp, IReadOnlyList<int> DpEnds);
 
 /// <summary>Independent fixed-context per-PC oracle from own ROM/raw snapshots/shared history.</summary>
 internal static class P28LimiterDecisionEvidence
 {
-    internal static P28LimiterDecisionOracle Build(RomImage image, P28LimiterState initial, ushort rawPeriod, int initialA)
+    internal static P28LimiterDecisionOracle Build(RomImage image, P28LimiterState initial, ushort rawPeriod, int initialA, bool fixedSource = true, byte? source011b = null)
     {
         var cut = P28LimiterInspector.Word(image.Span, 0x196A); var resume = P28LimiterInspector.Word(image.Span, 0x1967);
         var pc = 0x1966; var a = initialA; var psw = 0x0DC9; var dp = 0; var gate = (int)initial.Data0124; var mode = (int)initial.Data012B; var counter = (int)initial.Data01D7;
-        var events = new List<int[]>(); var writes = new List<int[]>(); var accesses = new List<int[]>(); var accessEnds = new List<int>(); var writeEnds = new List<int>(); var states = new List<int[]>(); var lengths = new List<int>();
+        var events = new List<int[]>(); var writes = new List<int[]>(); var accesses = new List<int[]>(); var accessEnds = new List<int>(); var writeEnds = new List<int>(); var states = new List<int[]>(); var lengths = new List<int>(); var dpEnds = new List<int>();
         bool Flag(int mask) => (psw & mask) != 0;
         void FlagSet(int mask, bool on) => psw = on ? psw | mask : psw & ~mask;
         void Load(int value, bool word) { a = word ? value : (a & 0xFF00) | value; FlagSet(0x1000, word); FlagSet(0x4000, value == 0); }
@@ -33,7 +33,9 @@ internal static class P28LimiterDecisionEvidence
                 case 0x1969: Size(3); Load(cut, true); break;
                 case 0x196C: Size(3); FlagSet(0x8000, false); break; // frozen P4.0=0 SFR observation, not general RAM
                 case 0x196F: Size(2); break;
-                case 0x1971: Size(3); Read(0x11B, 8, 128); next = 0x1979; break;
+                case 0x1971: Size(3); Read(0x11B, 8, source011b ?? (fixedSource ? 128 : 0)); if (fixedSource) next = 0x1979; break;
+                case 0x1974: Size(3); dp = Read(0x1A6, 16, initial.RamResume); Write(0x8C, 16, dp); break;
+                case 0x1977: Size(2); Load(Read(0x1A4, 16, initial.RamCut), true); break;
                 case 0x1979: Size(3); if ((Read(0x124, 8, gate) & 32) == 0) next = 0x197D; break;
                 case 0x197C: Load(Read(0x8C, 16, dp), true); break;
                 case 0x197D: Size(3); lhs = Read(0xC4, 16, rawPeriod); rhs = a; FlagSet(0x8000, lhs < rhs); FlagSet(0x4000, lhs == rhs); break;
@@ -58,8 +60,8 @@ internal static class P28LimiterDecisionEvidence
                 case 0x1A35: Size(3); GateBit(8, Flag(0x8000)); break;
                 default: throw new InvalidOperationException("Unmodelled fixed decision PC.");
             }
-            events.Add([pc, next, beforeA, a, beforePsw, psw, lhs, rhs]); accessEnds.Add(accesses.Count); writeEnds.Add(writes.Count); states.Add([gate, mode, counter]); lengths.Add(length); pc = next;
+            events.Add([pc, next, beforeA, a, beforePsw, psw, lhs, rhs]); accessEnds.Add(accesses.Count); writeEnds.Add(writes.Count); states.Add([gate, mode, counter]); lengths.Add(length); dpEnds.Add(dp); pc = next;
         }
-        return new(events.AsReadOnly(), writes.AsReadOnly(), accesses.AsReadOnly(), accessEnds.AsReadOnly(), writeEnds.AsReadOnly(), states.AsReadOnly(), lengths.AsReadOnly(), a, psw, dp);
+        return new(events.AsReadOnly(), writes.AsReadOnly(), accesses.AsReadOnly(), accessEnds.AsReadOnly(), writeEnds.AsReadOnly(), states.AsReadOnly(), lengths.AsReadOnly(), a, psw, dp, dpEnds.AsReadOnly());
     }
 }
