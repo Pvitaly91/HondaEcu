@@ -23,6 +23,7 @@ pub mod ignition_correction;
 pub mod ignition_selector;
 pub mod instruction_forms;
 pub mod limiter;
+pub mod limiter_fuel;
 pub mod operand;
 pub mod producer;
 pub mod protocol;

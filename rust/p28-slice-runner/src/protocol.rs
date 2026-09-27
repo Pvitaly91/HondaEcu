@@ -26,6 +26,7 @@ pub struct Request {
     pub fuel_calculation_chain: Option<crate::fuel_calculation::Stimulus>,
     pub fuel_additive_correction_chain: Option<crate::fuel_additive::Stimulus>,
     pub fuel_factor_production_chain: Option<crate::fuel_factor::Stimulus>,
+    pub limiter_fuel_gate_chain: Option<crate::limiter_fuel::Stimulus>,
     pub vtec_fuel_chain: Option<crate::vtec_fuel::Stimulus>,
     pub ignition_map_lookup: Option<crate::ignition::Stimulus>,
     pub ignition_selector_chain: Option<crate::ignition_selector::Stimulus>,
@@ -98,6 +99,8 @@ pub struct Response {
     pub fuel_additive_sequences: Option<Vec<crate::fuel_additive::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fuel_factor_sequences: Option<Vec<crate::fuel_factor::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limiter_fuel_sequences: Option<Vec<crate::limiter_fuel::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vtec_fuel_sequences: Option<Vec<crate::vtec_fuel::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -199,6 +202,7 @@ impl Response {
             fuel_calculation_sequences: None,
             fuel_additive_sequences: None,
             fuel_factor_sequences: None,
+            limiter_fuel_sequences: None,
             vtec_fuel_sequences: None,
             ignition_map_sequences: None,
             ignition_selector_sequences: None,

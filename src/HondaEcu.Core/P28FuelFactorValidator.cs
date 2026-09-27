@@ -120,7 +120,13 @@ public static class P28FuelFactorValidator
         _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2m entry/ownership contract differs.");
         foreach (var key in new[] { "compactRows", "thresholdRows", "diagnostics" }) Require(root.GetProperty(key).GetArrayLength() == 0, "Foreign M2m rows.");
         Require(root.GetProperty("syntheticResult").ValueKind == JsonValueKind.Null, "Foreign synthetic result.");
-        var seq = root.GetProperty("fuelFactorSequences"); Require(seq.GetArrayLength() == 3, "M2m scratch count differs.");
+        return AnalyzeFuelEvidence(image, scenario, root, root.GetProperty("fuelFactorSequences"), id);
+    }
+    // Internal composition seam: shared pure numeric/oracle validation, not public admission or another machine.
+    internal static IReadOnlyList<P28FuelFactorSequence> AnalyzeFuelEvidence(RomImage image, P28FuelFactorScenario scenario,
+        JsonElement root, JsonElement seq, string id, Func<int, int, byte, (byte Gate, byte Mode)>? joint = null, Action<int, int, byte>? jointFinish = null)
+    {
+        Require(seq.GetArrayLength() == 3, "Fuel scratch count differs.");
         var count = seq[0].GetProperty("checkpoints").EnumerateArray().Count(r => r.GetProperty("prefix").GetProperty("status").GetInt32() != 4);
         Require(count > 0, "Missing attempted native prefix.");
         var map = (scenario.InitialState.Fuel.Selector0127 & 2) == 0 ? "map_0" : "map_1";
@@ -150,15 +156,15 @@ public static class P28FuelFactorValidator
                 s.GetProperty("producerMode012c").GetByte() == scenario.InitialState.ProducerMode012c && s.GetProperty("producerSelector012f").GetByte() == scenario.InitialState.ProducerSelector012f, "M2m once-only gates/scratch differs.");
             var rows = s.GetProperty("checkpoints"); Require(rows.GetArrayLength() == scenario.Calls.Count, "M2m event count differs.");
             var reports = new List<P28FuelFactorCheckpoint>(); var stopped = false; var mode = scenario.InitialState.Mode012b; var hysteresis = scenario.InitialState.Hysteresis0130;
+            var gate = scenario.InitialState.CallerGate0124;
             var sources = new P28FuelFactorSources(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); var factor = pattern * 257;
             int[] stores = [pattern * 257, pattern * 257]; JsonElement previous = default;
             for (var i = 0; i < rows.GetArrayLength(); i++)
             {
-                var row = rows[i]; P28LimiterScenario.Shape(row, "index", "status", "input", "prefix", "tailBoundaries", "handoff1350", "factorEntry", "factorStage", "factorExit", "transitionToFactorWrites", "transitionToAdditiveWrites",
-                    "boundaries", "stages", "accesses", "inputWrites", "sourcesBefore", "sourcesAfter", "factor0158Before", "factor0158After", "nativeFactor0158", "factorProvenance", "modeBefore", "modeAfter", "hysteresisBefore", "hysteresisAfter",
-                    "storesBefore", "storesAfter", "correction", "component", "corrected", "store03a2", "store03b4");
+                var row = rows[i]; ValidateCheckpointShape(row, joint is not null, joint is not null);
                 var prefix = row.GetProperty("prefix"); var stages = row.GetProperty("stages"); var boundaries = row.GetProperty("boundaries"); var fs = row.GetProperty("factorStage");
                 var status = row.GetProperty("status").GetInt32(); Require(status is >= 0 and <= 4 && row.GetProperty("index").GetInt32() == i, "M2m index/status differs.");
+                if (joint is not null && !stopped) { var shared = joint(p, i, mode); gate = shared.Gate; mode = shared.Mode; }
                 Require(Equal(row.GetProperty("sourcesBefore"), JsonSerializer.SerializeToElement(sources, JsonDefaults.Create())) && row.GetProperty("modeBefore").GetByte() == mode &&
                     row.GetProperty("hysteresisBefore").GetByte() == hysteresis && row.GetProperty("factor0158Before").GetInt32() == factor &&
                     row.GetProperty("storesBefore").EnumerateArray().Select(n => n.GetInt32()).SequenceEqual(stores), "M2m history was reseeded.");
@@ -166,7 +172,7 @@ public static class P28FuelFactorValidator
                 var differences = new List<string>(); P28FuelFactorProjection? expected = null; int? origin = null; int? lookup = null; var disposition = "NotRun"; var provenance = "NotRun";
                 var accesses = Matrix(row.GetProperty("accesses"), 5, 4096); Require(accesses.All(a => a[0] <= 65535 && a[1] < 4096 && a[2] is 8 or 16 && a[3] is 0 or 1 && a[4] < (a[2] == 8 ? 256 : 65536)), "Malformed native M2m access.");
                 ValidateInputWrites(row.GetProperty("inputWrites"), scenario.Calls[i], !stopped);
-                ValidateCombinedAccesses(prefix, fs, stages, accesses);
+                ValidateCombinedAccesses(prefix, fs, stages, accesses, joint is null || !row.TryGetProperty("callerGate", out var cg) ? default : cg);
                 if (stopped)
                 {
                     Require(status == 4 && row.GetProperty("input").ValueKind == JsonValueKind.Null && prefix.GetProperty("status").GetInt32() == 4 && accesses.Length == 0 && Equal(prefix.GetProperty("stateBefore"), prefix.GetProperty("stateAfter")), "M2m terminal suffix executed.");
@@ -179,7 +185,7 @@ public static class P28FuelFactorValidator
                     var ownPrefix = prefixes.Sequences[p].Checkpoints[i]; differences.AddRange(ownPrefix.Differences); disposition = ownPrefix.Disposition; origin = ownPrefix.ActualSelectedOrigin; lookup = ownPrefix.ActualConsumerOutput;
                     if (ownPrefix.Disposition == "StrictMatch")
                     {
-                        Require(fs.ValueKind == JsonValueKind.Object, "Completed prefix has no attempted native factor producer."); ValidateSeams(row);
+                        Require(fs.ValueKind == JsonValueKind.Object, "Completed prefix has no attempted native factor producer."); ValidateSeams(row, joint is not null);
                         var ownLookup = (ushort)ownPrefix.Expected!.Consumer.Output; var entry = row.GetProperty("factorEntry"); var exit = row.GetProperty("factorExit");
                         Require(entry.GetProperty("accumulator").GetInt32() == ownLookup, "Native prefix A not its independently produced lookup.");
                         expected = P28FuelFactorModel.Project(sources, scenario.InitialState.ProducerMode012c, scenario.InitialState.ProducerSelector012f, hysteresis);
@@ -195,32 +201,38 @@ public static class P28FuelFactorValidator
                         if (fr.Status == 0)
                         {
                             Require(oracle.Er1 == expected.NativeFactor0158 && oracle.Hysteresis == expected.HysteresisAfter && factor == expected.NativeFactor0158 && hysteresis == expected.HysteresisAfter && Nullable(row, "nativeFactor0158") == factor, "Independent native factor/hysteresis differs.");
-                            provenance = "Written"; Require(stages.GetArrayLength() is >= 1 and <= 3 && boundaries.GetArrayLength() == stages.GetArrayLength() * 2, "Missing/unbounded additive stages.");
-                            var additiveSources = P28FuelFactorModel.AdditiveSources(sources, (ushort)expected.NativeFactor0158);
-                            var additive = P28FuelAdditiveModel.Project(ownLookup, additiveSources, mode, scenario.InitialState.CallerGate0124);
-                            var b = boundaries[0]; var tailOracle = P28FuelAdditiveEvidence.Build(0, ownLookup, additiveSources, mode, scenario.InitialState.CallerGate0124,
-                                oracle.Accumulator, 0x0DC9, oracle.Er0, oracle.Er1, oracle.Er2, oracle.Er3, stores[1]);
-                            for (var n = 0; n < stages.GetArrayLength(); n++)
+                            provenance = "Written";
+                            var callerFailed = joint is not null && row.TryGetProperty("callerGate", out var callerStage) && callerStage.GetProperty("result").GetProperty("status").GetInt32() != 0;
+                            if (callerFailed) P28LimiterFuelValidator.ValidateIncompleteCaller(row, status);
+                            if (!callerFailed)
                             {
-                                if (n > 0) tailOracle = P28FuelAdditiveEvidence.Build(n, ownLookup, additiveSources, mode, scenario.InitialState.CallerGate0124,
-                                    tailOracle.Accumulator, tailOracle.Psw, tailOracle.Er0, tailOracle.Er1, tailOracle.Er2, tailOracle.Er3, stores[1]);
-                                var sr = ValidateStage(stages[n], boundaries[n * 2], boundaries[n * 2 + 1], n, tailOracle, accesses);
-                                Require(sr.Status != 0 || sr.Error is null, "Successful additive stage has an execution error.");
-                                var accessCount = sr.Steps == 0 ? 0 : tailOracle.AccessEnds[sr.Steps - 1];
-                                foreach (var write in tailOracle.Accesses.Take(accessCount).Where(a => a[3] == 1))
-                                { if (write[1] == 0x12B) mode = (byte)write[4]; if (write[1] == 0x3A2) stores[0] = write[4]; if (write[1] == 0x3B4) stores[1] = write[4]; }
-                                Require(sr.Status == 0 || n == stages.GetArrayLength() - 1, "Suffix executed after incomplete additive stage.");
-                                if (sr.Status == 0)
+                                Require(stages.GetArrayLength() is >= 1 and <= 3 && boundaries.GetArrayLength() == stages.GetArrayLength() * 2, "Missing/unbounded additive stages.");
+                                var additiveSources = P28FuelFactorModel.AdditiveSources(sources, (ushort)expected.NativeFactor0158);
+                                var additive = P28FuelAdditiveModel.Project(ownLookup, additiveSources, mode, gate);
+                                var b = boundaries[0]; var tailOracle = P28FuelAdditiveEvidence.Build(0, ownLookup, additiveSources, mode, gate,
+                                    oracle.Accumulator, 0x0DC9, oracle.Er0, oracle.Er1, oracle.Er2, oracle.Er3, stores[1]);
+                                for (var n = 0; n < stages.GetArrayLength(); n++)
                                 {
-                                    var end = boundaries[n * 2 + 1]; Require(end.GetProperty("accumulator").GetInt32() == tailOracle.Accumulator && end.GetProperty("psw").GetInt32() == tailOracle.Psw &&
-                                        Word(end, 0) == tailOracle.Er0 && Word(end, 1) == tailOracle.Er1 && Word(end, 2) == tailOracle.Er2 && Word(end, 3) == tailOracle.Er3, "Additive native aliases/registers differ.");
-                                    Require(end.GetProperty("x1").GetInt32() == b.GetProperty("x1").GetInt32() && end.GetProperty("x2").GetInt32() == additive.CorrectionWord && end.GetProperty("dp").GetInt32() == (n == 2 ? 0x3B4 : b.GetProperty("dp").GetInt32()), "Additive pointer/correction lifetime differs.");
-                                    if (n == 0) Require(Nullable(row, "correction") == additive.CorrectionWord && tailOracle.Mode == additive.ModeAfter, "Native correction differs.");
-                                    if (n == 1) P28FuelCalculationValidator.ValidateNumbers(stages[n], accesses, end, additive.Scaling, Nullable(row, "component"), tailOracle.Psw & 0x2000);
-                                    if (n == 2) Require(Nullable(row, "corrected") == additive.Corrected && Nullable(row, "store03a2") == additive.Store03a2 && Nullable(row, "store03b4") == additive.Store03b4 && tailOracle.Er2 == additive.Scaling.Output, "Native application/stores differ.");
+                                    if (n > 0) tailOracle = P28FuelAdditiveEvidence.Build(n, ownLookup, additiveSources, mode, gate,
+                                        tailOracle.Accumulator, tailOracle.Psw, tailOracle.Er0, tailOracle.Er1, tailOracle.Er2, tailOracle.Er3, stores[1]);
+                                    var sr = ValidateStage(stages[n], boundaries[n * 2], boundaries[n * 2 + 1], n, tailOracle, accesses);
+                                    Require(sr.Status != 0 || sr.Error is null, "Successful additive stage has an execution error.");
+                                    var accessCount = sr.Steps == 0 ? 0 : tailOracle.AccessEnds[sr.Steps - 1];
+                                    foreach (var write in tailOracle.Accesses.Take(accessCount).Where(a => a[3] == 1))
+                                    { if (write[1] == 0x12B) mode = (byte)write[4]; if (write[1] == 0x3A2) stores[0] = write[4]; if (write[1] == 0x3B4) stores[1] = write[4]; }
+                                    Require(sr.Status == 0 || n == stages.GetArrayLength() - 1, "Suffix executed after incomplete additive stage.");
+                                    if (sr.Status == 0)
+                                    {
+                                        var end = boundaries[n * 2 + 1]; Require(end.GetProperty("accumulator").GetInt32() == tailOracle.Accumulator && end.GetProperty("psw").GetInt32() == tailOracle.Psw &&
+                                            Word(end, 0) == tailOracle.Er0 && Word(end, 1) == tailOracle.Er1 && Word(end, 2) == tailOracle.Er2 && Word(end, 3) == tailOracle.Er3, "Additive native aliases/registers differ.");
+                                        Require(end.GetProperty("x1").GetInt32() == b.GetProperty("x1").GetInt32() && end.GetProperty("x2").GetInt32() == additive.CorrectionWord && end.GetProperty("dp").GetInt32() == (n == 2 ? 0x3B4 : b.GetProperty("dp").GetInt32()), "Additive pointer/correction lifetime differs.");
+                                        if (n == 0) Require(Nullable(row, "correction") == additive.CorrectionWord && tailOracle.Mode == additive.ModeAfter, "Native correction differs.");
+                                        if (n == 1) P28FuelCalculationValidator.ValidateNumbers(stages[n], accesses, end, additive.Scaling, Nullable(row, "component"), tailOracle.Psw & 0x2000);
+                                        if (n == 2) Require(Nullable(row, "corrected") == additive.Corrected && Nullable(row, "store03a2") == additive.Store03a2 && Nullable(row, "store03b4") == additive.Store03b4 && tailOracle.Er2 == additive.Scaling.Output, "Native application/stores differ.");
+                                    }
                                 }
+                                Require(status == stages[stages.GetArrayLength() - 1].GetProperty("result").GetProperty("status").GetInt32() && (status != 0 || stages.GetArrayLength() == 3), "M2m overall additive status differs.");
                             }
-                            Require(status == stages[stages.GetArrayLength() - 1].GetProperty("result").GetProperty("status").GetInt32() && (status != 0 || stages.GetArrayLength() == 3), "M2m overall additive status differs.");
                         }
                         else Require(status == fr.Status, "M2m overall factor status differs.");
                         var factorReader = accesses.Any(a => a[0] == 0x21DD && a[3] == 0);
@@ -242,6 +254,7 @@ public static class P28FuelFactorValidator
                 var final = differences.Count > 0 ? "Mismatch" : status switch { 0 => "StrictMatch", 1 => "Unresolved", 2 => "ExecutionError", 3 => "BudgetExceeded", _ => "NotRun" };
                 reports.Add(new(i, final, disposition, origin, lookup, Nullable(row, "nativeFactor0158"), row.GetProperty("factor0158Before").GetInt32(), factor, provenance,
                     Nullable(row, "correction"), Nullable(row, "component"), Nullable(row, "corrected"), Nullable(row, "store03a2"), Nullable(row, "store03b4"), expected, differences.AsReadOnly(), ReportRow(row, scenario.TraceCallIndexes.Contains(i))));
+                jointFinish?.Invoke(p, i, mode);
                 stopped |= status != 0; previous = prefix.GetProperty("stateAfter");
             }
             result.Add(new(id, pattern, reports.AsReadOnly()));
@@ -249,6 +262,13 @@ public static class P28FuelFactorValidator
         return result.AsReadOnly();
     }
 
+    internal static void ValidateCheckpointShape(JsonElement row, bool joint, bool attempted)
+    {
+        P28LimiterScenario.Shape(row, ["index", "status", "input", "prefix", "tailBoundaries", "handoff1350", "factorEntry", "factorStage", "factorExit", "transitionToFactorWrites", "transitionToAdditiveWrites",
+            "boundaries", "stages", "accesses", "inputWrites", "sourcesBefore", "sourcesAfter", "factor0158Before", "factor0158After", "nativeFactor0158", "factorProvenance", "modeBefore", "modeAfter", "hysteresisBefore", "hysteresisAfter",
+            "storesBefore", "storesAfter", "correction", "component", "corrected", "store03a2", "store03b4", ..(!joint || !attempted && !row.TryGetProperty("prefixTransitions", out _) ? Array.Empty<string>() : new[] { "prefixTransitions" }),
+            ..(!joint || !row.TryGetProperty("callerGate", out _) ? Array.Empty<string>() : new[] { "callerGate", "callerEntry", "callerExit" })]);
+    }
     internal static void ValidateInputWrites(JsonElement writes, P28FuelFactorCall c, bool executed)
     {
         var s = c.Sources;
@@ -265,12 +285,13 @@ public static class P28FuelFactorValidator
         return writes.Length == 1 && writes[0].a.SequenceEqual(new[] { 0x7A99, 0x158, 16, 1, factor }) && reads.Length == (readerExecuted ? 1 : 0) &&
             (!readerExecuted || reads[0].i > writes[0].i && reads[0].a.SequenceEqual(new[] { 0x21DD, 0x158, 16, 0, factor }));
     }
-    internal static void ValidateCombinedAccesses(JsonElement prefix, JsonElement factorStage, JsonElement stages, int[][] accesses)
+    internal static void ValidateCombinedAccesses(JsonElement prefix, JsonElement factorStage, JsonElement stages, int[][] accesses, JsonElement callerGate = default)
     {
         var executed = new List<JsonElement>();
         foreach (var key in new[] { "rpmAxes", "loadAxis", "selection", "lookup", "consumer" })
             if (prefix.GetProperty(key).ValueKind != JsonValueKind.Null) executed.Add(prefix.GetProperty(key));
         if (factorStage.ValueKind != JsonValueKind.Null) executed.Add(factorStage);
+        if (callerGate.ValueKind == JsonValueKind.Object) executed.Add(callerGate);
         executed.AddRange(stages.EnumerateArray());
         var events = executed.SelectMany(s => Matrix(s.GetProperty("events"), 8, 384)).ToArray();
         var rank = 0;
@@ -282,7 +303,7 @@ public static class P28FuelFactorValidator
         var writes = executed.SelectMany(s => Matrix(s.GetProperty("writes"), 3, 384)).ToArray();
         Require(accesses.Where(a => a[3] == 1).SelectMany(a => new[] { a[1], a[2], a[4] }).SequenceEqual(writes.SelectMany(a => a)), "Combined native writes do not belong to the executed stages.");
     }
-    internal static void ValidateSeams(JsonElement row)
+    internal static void ValidateSeams(JsonElement row, bool caller = false)
     {
         var tails = row.GetProperty("tailBoundaries"); var h = row.GetProperty("handoff1350"); var entry = row.GetProperty("factorEntry"); var exit = row.GetProperty("factorExit"); var b = row.GetProperty("boundaries");
         Require(tails.GetArrayLength() == 5 && Equal(tails[0], tails[1]) && Equal(tails[2], tails[3]) && Equal(tails[4], h), "Native12FC..1350 tail reset.");
@@ -293,9 +314,16 @@ public static class P28FuelFactorValidator
         ValidateScripted(h, entry); Require(Equal(row.GetProperty("transitionToFactorWrites"), ExpectedContracts()[0].GetProperty("hostTransitionWrites")), "Hidden factor ABI writes.");
         if (b.GetArrayLength() > 0)
         {
-            Require(exit.GetProperty("pc").GetInt32() == 0x1FB7 && b[0].GetProperty("pc").GetInt32() == 0x2194, "Additive scripted entry differs.");
-            ValidateScripted(exit, b[0]); Require(Equal(row.GetProperty("transitionToAdditiveWrites"), ExpectedContracts()[0].GetProperty("hostTransitionWrites")), "Hidden additive ABI writes.");
+            var entered = caller ? row.GetProperty("callerEntry") : b[0];
+            Require(exit.GetProperty("pc").GetInt32() == 0x1FB7 && entered.GetProperty("pc").GetInt32() == (caller ? 0x217A : 0x2194), "Additive scripted entry differs.");
+            ValidateScripted(exit, entered);
+            if (caller) P28LimiterFuelValidator.ValidateCaller(row); Require(Equal(row.GetProperty("transitionToAdditiveWrites"), ExpectedContracts()[0].GetProperty("hostTransitionWrites")), "Hidden additive ABI writes.");
             for (var n = 2; n < b.GetArrayLength(); n += 2) Require(Equal(b[n - 1], b[n]), "Producer/scaling/application seam reset.");
+        }
+        if (caller && b.GetArrayLength() == 0 && row.TryGetProperty("callerEntry", out var ce))
+        {
+            Require(exit.GetProperty("pc").GetInt32() == 0x1FB7 && ce.GetProperty("pc").GetInt32() == 0x217A, "Incomplete caller seam differs.");
+            ValidateScripted(exit, ce); Require(Equal(row.GetProperty("transitionToAdditiveWrites"), ExpectedContracts()[0].GetProperty("hostTransitionWrites")), "Hidden incomplete caller ABI writes.");
         }
         foreach (var boundary in tails.EnumerateArray().Concat(new[] { entry, exit }).Concat(b.EnumerateArray())) ValidateBoundary(boundary);
     }
@@ -304,7 +332,7 @@ public static class P28FuelFactorValidator
         Require(after.GetProperty("psw").GetInt32() == 0x0DC9 && after.GetProperty("lrb").GetInt32() == 0x20 && after.GetProperty("usp").GetInt32() == 0x280 && after.GetProperty("ssp").GetInt32() == 0x7FE, "Scripted ABI/bank differs.");
         foreach (var key in new[] { "accumulator", "x1", "x2", "dp", "ssp", "registers" }) Require(Equal(before.GetProperty(key), after.GetProperty(key)), "Host injected/reset native carriers.");
     }
-    private static void ValidateBoundary(JsonElement b)
+    internal static void ValidateBoundary(JsonElement b)
     {
         P28LimiterScenario.Shape(b, "pc", "accumulator", "psw", "dd", "lrb", "x1", "x2", "dp", "usp", "ssp", "registers");
         foreach (var key in new[] { "pc", "accumulator", "psw", "lrb", "x1", "x2", "dp", "usp", "ssp" }) Require(b.GetProperty(key).GetInt32() is >= 0 and <= 65535, "Boundary word outside architectural domain.");

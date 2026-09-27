@@ -1,6 +1,6 @@
 //! M2k: isolated strict fuel prefix, explicit same-machine numeric handoff.
 use crate::{
-    acquisition::enter,
+    acquisition::{enter, enter_with_observer},
     adaptive::Stage,
     decoder::Decoded,
     exec::{read_data_u16, write_data_u16, write_data_u8},
@@ -20,6 +20,23 @@ pub(crate) fn execute_prefix(
     prefix: &mut fuel::Checkpoint,
     accesses: &mut Vec<[u32; 5]>,
     tail_boundaries: &mut Vec<CpuBoundary>,
+) {
+    execute_prefix_observed(cpu, bus, prefix, accesses, tail_boundaries, None);
+}
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PrefixTransition {
+    pub before: CpuBoundary,
+    pub after: CpuBoundary,
+    pub writes: Vec<[u32; 3]>,
+}
+pub(crate) fn execute_prefix_observed(
+    cpu: &mut crate::cpu::Cpu,
+    bus: &mut crate::bus::Bus,
+    prefix: &mut fuel::Checkpoint,
+    accesses: &mut Vec<[u32; 5]>,
+    tail_boundaries: &mut Vec<CpuBoundary>,
+    mut transitions: Option<&mut Vec<PrefixTransition>>,
 ) {
     // Never call the old top-level fuel task: no per-event selector write.
     for (name, scripted) in [
@@ -47,7 +64,18 @@ pub(crate) fn execute_prefix(
         // Scripted ABI is applied before observation. Never filter a
         // native access out of the journal, including USP or aliases.
         if scripted {
-            enter(cpu, bus, &fuel::contract(name));
+            if let Some(ref mut list) = transitions {
+                let before = boundary(cpu, bus);
+                let mut writes = vec![];
+                enter_with_observer(cpu, bus, &fuel::contract(name), |w| writes.push(w));
+                list.push(PrefixTransition {
+                    before,
+                    after: boundary(cpu, bus),
+                    writes,
+                });
+            } else {
+                enter(cpu, bus, &fuel::contract(name));
+            }
         }
         bus.begin_native_accesses();
         let stage = fuel::execute(cpu, bus, name, false);

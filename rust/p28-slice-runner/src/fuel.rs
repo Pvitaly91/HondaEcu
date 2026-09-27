@@ -230,6 +230,9 @@ pub(crate) fn execute(
 }
 
 pub(crate) fn seed_state(cpu: &mut Cpu, bus: &mut Bus, initial: &State) {
+    seed_state_with_0121(cpu, bus, initial, 0);
+}
+pub(crate) fn seed_state_with_0121(cpu: &mut Cpu, bus: &mut Bus, initial: &State, data0121: u8) {
     for (address, value) in [
         (0x1C0, initial.load_fraction),
         (0x1C2, initial.map0_rpm_fraction),
@@ -248,7 +251,13 @@ pub(crate) fn seed_state(cpu: &mut Cpu, bus: &mut Bus, initial: &State) {
         write_data_u8(cpu, bus, address, value);
     }
     // Fixed, narrow caller context. Only DATA0127.1 is changed per call.
-    for (address, value) in [(0xB8, 0), (0x227, 0), (0x11C, 0), (0x120, 0), (0x121, 0)] {
+    for (address, value) in [
+        (0xB8, 0),
+        (0x227, 0),
+        (0x11C, 0),
+        (0x120, 0),
+        (0x121, data0121),
+    ] {
         write_data_u8(cpu, bus, address, value);
     }
 }

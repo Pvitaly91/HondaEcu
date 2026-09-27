@@ -51,7 +51,7 @@ impl Sources {
             bytes: [self.source0148, self.source0149, self.counter00f2],
         }
     }
-    fn zero() -> Self {
+    pub(crate) fn zero() -> Self {
         Self {
             source015a: 0,
             source015c: 0,
@@ -103,6 +103,14 @@ pub struct Checkpoint {
     pub index: u32,
     pub status: i32,
     pub input: Option<Call>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caller_gate: Option<Stage>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caller_entry: Option<CpuBoundary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub caller_exit: Option<CpuBoundary>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub prefix_transitions: Option<Vec<fuel_calculation::PrefixTransition>>,
     pub prefix: fuel::Checkpoint,
     pub tail_boundaries: Vec<CpuBoundary>,
     pub handoff1350: Option<CpuBoundary>,
@@ -261,7 +269,7 @@ pub fn admission(d: &Decoded) -> FormAdmission {
         _ => FormAdmission::Unsupported,
     }
 }
-fn set_sources(cpu: &mut Cpu, bus: &mut Bus, s: &Sources) {
+pub(crate) fn set_sources(cpu: &mut Cpu, bus: &mut Bus, s: &Sources) {
     for (a, v) in [
         (0x15A, s.source015a),
         (0x15C, s.source015c),
@@ -348,167 +356,11 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
         let mut checkpoints = vec![];
         for c in &s.calls {
             bus.configure_scoped_access(ranges.clone(), 4096);
-            let before = fuel::state(&cpu, &mut bus);
-            let initial_sources = sources(&cpu, &mut bus);
-            let factor = read_data_u16(&cpu, &mut bus, 0x158);
-            let mode = read_data_u8(&cpu, &mut bus, 0x12B);
-            let hysteresis = read_data_u8(&cpu, &mut bus, 0x130);
-            let old_stores = stores(&cpu, &mut bus);
-            let mut row = Checkpoint {
-                index: c.index,
-                status: 4,
-                input: None,
-                prefix: fuel::Checkpoint {
-                    index: c.index,
-                    status: 4,
-                    state_before: before.clone(),
-                    state_after_inputs: None,
-                    state_after: before,
-                    rpm_axes: None,
-                    load_axis: None,
-                    selection: None,
-                    lookup: None,
-                    consumer: None,
-                    selected_origin: None,
-                    position: None,
-                    lookup_result: None,
-                    consumer_output: None,
-                },
-                tail_boundaries: vec![],
-                handoff1350: None,
-                factor_entry: None,
-                factor_stage: None,
-                factor_exit: None,
-                transition_to_factor_writes: vec![],
-                transition_to_additive_writes: vec![],
-                boundaries: vec![],
-                stages: vec![],
-                accesses: vec![],
-                input_writes: vec![],
-                sources_before: initial_sources.clone(),
-                sources_after: initial_sources,
-                factor0158_before: factor,
-                factor0158_after: factor,
-                native_factor0158: None,
-                factor_provenance: "NotRun",
-                mode_before: mode,
-                mode_after: mode,
-                hysteresis_before: hysteresis,
-                hysteresis_after: hysteresis,
-                stores_before: old_stores,
-                stores_after: old_stores,
-                correction: None,
-                component: None,
-                corrected: None,
-                store03a2: None,
-                store03b4: None,
-            };
+            let mut row = checkpoint(&cpu, &mut bus, c);
             if !stopped {
-                row.input = Some(c.clone());
-                bus.begin_write_journal();
-                for (a, v) in [
-                    (0x238, c.raw_map0_rpm),
-                    (0xC2, c.raw_map1_rpm),
-                    (0xBF, c.raw_load),
-                ] {
-                    write_data_u8(&mut cpu, &mut bus, a, v);
-                }
-                set_sources(&mut cpu, &mut bus, &c.sources);
-                row.input_writes = bus.end_write_journal();
-                row.prefix.state_after_inputs = Some(fuel::state(&cpu, &mut bus));
-                fuel_calculation::execute_prefix(
-                    &mut cpu,
-                    &mut bus,
-                    &mut row.prefix,
-                    &mut row.accesses,
-                    &mut row.tail_boundaries,
-                );
-                row.prefix.state_after = fuel::state(&cpu, &mut bus);
-                row.status = row.prefix.status;
-                if row.status == 0 {
-                    row.prefix.consumer_output = Some(read_data_u16(&cpu, &mut bus, 0x140));
-                    row.handoff1350 = Some(boundary(&cpu, &mut bus));
-                    enter_with_observer(&mut cpu, &mut bus, &contract(), |w| {
-                        row.transition_to_factor_writes.push(w)
-                    });
-                    bus.configure_scoped_access(
-                        vec![
-                            [0, 8],
-                            [0x88, 0x90],
-                            [0x100, 0x108],
-                            [0x12C, 0x12D],
-                            [0x12F, 0x131],
-                            [0x133, 0x134],
-                            [0x158, 0x169],
-                        ],
-                        4096,
-                    );
-                    row.factor_entry = Some(boundary(&cpu, &mut bus));
-                    bus.clear_program_reads();
-                    bus.set_program_data_ranges(vec![]);
-                    bus.begin_native_accesses();
-                    bus.begin_write_journal();
-                    bus.start_decision_observer();
-                    let mut result = execute_in_state_observed(
-                        &mut cpu,
-                        &mut bus,
-                        &contract(),
-                        &[],
-                        true,
-                        Some(admission),
-                        true,
-                    );
-                    let factor_accesses = bus.end_native_accesses();
-                    let generation = factor_accesses
-                        .iter()
-                        .any(|a| a[0] == 0x7A99 && a[1] == 0x158 && a[2] == 16 && a[3] == 1);
-                    row.accesses.extend(factor_accesses);
-                    if result.status == 0 && !generation {
-                        result.status = 2;
-                        result.error = Some(
-                            "closed producer reached exit without native word store7A99".into(),
-                        );
-                    }
-                    row.status = result.status;
-                    let writes = bus.end_write_journal();
-                    if writes
-                        .iter()
-                        .any(|w| w[0] < 0x15A && w[0] + w[1] / 8 > 0x158)
-                    {
-                        row.factor_provenance = "PartialWritten";
-                    }
-                    row.factor_stage = Some(Stage {
-                        result,
-                        writes,
-                        events: bus.finish_decision_observer(),
-                        ssp_after: cpu.ssp,
-                    });
-                    row.factor_exit = Some(boundary(&cpu, &mut bus));
-                    if row.status == 0 {
-                        row.native_factor0158 = Some(read_data_u16(&cpu, &mut bus, 0x158));
-                        row.factor_provenance = "Written";
-                        enter_with_observer(&mut cpu, &mut bus, &fuel_additive::contract(0), |w| {
-                            row.transition_to_additive_writes.push(w)
-                        });
-                        let tail = fuel_additive::execute_tail(&mut cpu, &mut bus);
-                        row.accesses.extend(tail.accesses);
-                        row.status = tail.status;
-                        row.boundaries = tail.boundaries;
-                        row.stages = tail.stages;
-                        row.correction = tail.correction;
-                        row.component = tail.component;
-                        row.corrected = tail.corrected;
-                        row.store03a2 = tail.store03a2;
-                        row.store03b4 = tail.store03b4;
-                    }
-                }
-                // Observation scope only; machine state is not restored or reseeded.
-                bus.configure_scoped_access(ranges.clone(), 4096);
-                row.sources_after = sources(&cpu, &mut bus);
-                row.factor0158_after = read_data_u16(&cpu, &mut bus, 0x158);
-                row.mode_after = read_data_u8(&cpu, &mut bus, 0x12B);
-                row.hysteresis_after = read_data_u8(&cpu, &mut bus, 0x130);
-                row.stores_after = stores(&cpu, &mut bus);
+                apply_inputs(&mut cpu, &mut bus, c, &mut row);
+                execute_checkpoint(&mut cpu, &mut bus, &mut row, false);
+                finish_checkpoint(&cpu, &mut bus, &mut row);
                 stopped = row.status != 0;
             }
             checkpoints.push(row);
@@ -586,4 +438,237 @@ mod tests {
         assert_eq!(cpu.scb(), 2);
         assert_eq!(read_data_u16(&cpu, &mut bus, 0x96), 0x345);
     }
+}
+
+pub(crate) fn data_ranges() -> Vec<[u16; 2]> {
+    let mut ranges = fuel::data_ranges();
+    ranges.extend([
+        [0x124, 0x125],
+        [0x12B, 0x12D],
+        [0x12F, 0x131],
+        [0x133, 0x134],
+        [0x142, 0x14E],
+        [0x158, 0x169],
+        [0xF2, 0xF3],
+        [0x3A2, 0x3A4],
+        [0x3B4, 0x3B6],
+    ]);
+    ranges
+}
+pub(crate) fn checkpoint(cpu: &Cpu, bus: &mut Bus, c: &Call) -> Checkpoint {
+    let before = fuel::state(cpu, bus);
+    let initial_sources = sources(cpu, bus);
+    let factor = read_data_u16(cpu, bus, 0x158);
+    let mode = read_data_u8(cpu, bus, 0x12B);
+    let hysteresis = read_data_u8(cpu, bus, 0x130);
+    let old_stores = stores(cpu, bus);
+    let row = Checkpoint {
+        index: c.index,
+        status: 4,
+        input: None,
+        caller_gate: None,
+        caller_entry: None,
+        caller_exit: None,
+        prefix_transitions: None,
+        prefix: fuel::Checkpoint {
+            index: c.index,
+            status: 4,
+            state_before: before.clone(),
+            state_after_inputs: None,
+            state_after: before,
+            rpm_axes: None,
+            load_axis: None,
+            selection: None,
+            lookup: None,
+            consumer: None,
+            selected_origin: None,
+            position: None,
+            lookup_result: None,
+            consumer_output: None,
+        },
+        tail_boundaries: vec![],
+        handoff1350: None,
+        factor_entry: None,
+        factor_stage: None,
+        factor_exit: None,
+        transition_to_factor_writes: vec![],
+        transition_to_additive_writes: vec![],
+        boundaries: vec![],
+        stages: vec![],
+        accesses: vec![],
+        input_writes: vec![],
+        sources_before: initial_sources.clone(),
+        sources_after: initial_sources,
+        factor0158_before: factor,
+        factor0158_after: factor,
+        native_factor0158: None,
+        factor_provenance: "NotRun",
+        mode_before: mode,
+        mode_after: mode,
+        hysteresis_before: hysteresis,
+        hysteresis_after: hysteresis,
+        stores_before: old_stores,
+        stores_after: old_stores,
+        correction: None,
+        component: None,
+        corrected: None,
+        store03a2: None,
+        store03b4: None,
+    };
+
+    row
+}
+pub(crate) fn apply_inputs(cpu: &mut Cpu, bus: &mut Bus, c: &Call, row: &mut Checkpoint) {
+    row.input = Some(c.clone());
+    bus.begin_write_journal();
+    for (a, v) in [
+        (0x238, c.raw_map0_rpm),
+        (0xC2, c.raw_map1_rpm),
+        (0xBF, c.raw_load),
+    ] {
+        write_data_u8(cpu, bus, a, v);
+    }
+    set_sources(cpu, bus, &c.sources);
+    row.input_writes = bus.end_write_journal();
+    row.prefix.state_after_inputs = Some(fuel::state(cpu, bus));
+}
+pub(crate) fn caller_contract() -> SliceContract {
+    let mut c = fuel_additive::contract(0);
+    c.entry_pc = 0x217A;
+    c.exit_pcs = vec![0x2194];
+    c.code_ranges = vec![[0x217A, 0x217D]];
+    c.instruction_budget = 1;
+    c
+}
+fn additive_entry(gate217a: bool) -> SliceContract {
+    if gate217a {
+        caller_contract()
+    } else {
+        fuel_additive::contract(0)
+    }
+}
+/// Execute on the caller's one persistent machine. Does not initialize or apply sources.
+pub(crate) fn execute_checkpoint(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    row: &mut Checkpoint,
+    gate217a: bool,
+) {
+    fuel_calculation::execute_prefix_observed(
+        cpu,
+        bus,
+        &mut row.prefix,
+        &mut row.accesses,
+        &mut row.tail_boundaries,
+        row.prefix_transitions.as_mut(),
+    );
+    row.prefix.state_after = fuel::state(cpu, bus);
+    row.status = row.prefix.status;
+    if row.status == 0 {
+        row.prefix.consumer_output = Some(read_data_u16(cpu, bus, 0x140));
+        row.handoff1350 = Some(boundary(cpu, bus));
+        enter_with_observer(cpu, bus, &contract(), |w| {
+            row.transition_to_factor_writes.push(w)
+        });
+        bus.configure_scoped_access(
+            vec![
+                [0, 8],
+                [0x88, 0x90],
+                [0x100, 0x108],
+                [0x12C, 0x12D],
+                [0x12F, 0x131],
+                [0x133, 0x134],
+                [0x158, 0x169],
+            ],
+            4096,
+        );
+        row.factor_entry = Some(boundary(cpu, bus));
+        bus.clear_program_reads();
+        bus.set_program_data_ranges(vec![]);
+        bus.begin_native_accesses();
+        bus.begin_write_journal();
+        bus.start_decision_observer();
+        let mut result =
+            execute_in_state_observed(cpu, bus, &contract(), &[], true, Some(admission), true);
+        let factor_accesses = bus.end_native_accesses();
+        let generation = factor_accesses
+            .iter()
+            .any(|a| a[0] == 0x7A99 && a[1] == 0x158 && a[2] == 16 && a[3] == 1);
+        row.accesses.extend(factor_accesses);
+        if result.status == 0 && !generation {
+            result.status = 2;
+            result.error =
+                Some("closed producer reached exit without native word store7A99".into());
+        }
+        row.status = result.status;
+        let writes = bus.end_write_journal();
+        if writes
+            .iter()
+            .any(|w| w[0] < 0x15A && w[0] + w[1] / 8 > 0x158)
+        {
+            row.factor_provenance = "PartialWritten";
+        }
+        row.factor_stage = Some(Stage {
+            result,
+            writes,
+            events: bus.finish_decision_observer(),
+            ssp_after: cpu.ssp,
+        });
+        row.factor_exit = Some(boundary(cpu, bus));
+        if row.status == 0 {
+            row.native_factor0158 = Some(read_data_u16(cpu, bus, 0x158));
+            row.factor_provenance = "Written";
+            enter_with_observer(cpu, bus, &additive_entry(gate217a), |w| {
+                row.transition_to_additive_writes.push(w)
+            });
+            if gate217a {
+                bus.configure_scoped_access(data_ranges(), 4096);
+                row.caller_entry = Some(boundary(cpu, bus));
+                bus.clear_program_reads();
+                bus.set_program_data_ranges(vec![]);
+                bus.begin_native_accesses();
+                bus.begin_write_journal();
+                bus.start_decision_observer();
+                let gate = execute_in_state_observed(
+                    cpu,
+                    bus,
+                    &caller_contract(),
+                    &[],
+                    true,
+                    Some(admission),
+                    true,
+                );
+                row.accesses.extend(bus.end_native_accesses());
+                row.status = gate.status;
+                row.caller_gate = Some(Stage {
+                    result: gate,
+                    writes: bus.end_write_journal(),
+                    events: bus.finish_decision_observer(),
+                    ssp_after: cpu.ssp,
+                });
+                row.caller_exit = Some(boundary(cpu, bus));
+            }
+            if row.status != 0 {
+                return;
+            }
+            let tail = fuel_additive::execute_tail(cpu, bus);
+            row.accesses.extend(tail.accesses);
+            row.status = tail.status;
+            row.boundaries = tail.boundaries;
+            row.stages = tail.stages;
+            row.correction = tail.correction;
+            row.component = tail.component;
+            row.corrected = tail.corrected;
+            row.store03a2 = tail.store03a2;
+            row.store03b4 = tail.store03b4;
+        }
+    }
+}
+pub(crate) fn finish_checkpoint(cpu: &Cpu, bus: &mut Bus, row: &mut Checkpoint) {
+    bus.configure_scoped_access(data_ranges(), 4096);
+    row.sources_after = sources(cpu, bus);
+    row.factor0158_after = read_data_u16(cpu, bus, 0x158);
+    row.mode_after = read_data_u8(cpu, bus, 0x12B);
+    row.hysteresis_after = read_data_u8(cpu, bus, 0x130);
+    row.stores_after = stores(cpu, bus);
 }

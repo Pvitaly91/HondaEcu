@@ -6,6 +6,8 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28FuelResearchAsync(string[] args, CancellationToken cancellationToken)
     {
+        if (args.Length > 0 && args[0] == "limiter-chain-check")
+            return await P28LimiterFuelChainCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "factor-chain-check")
             return await P28FuelFactorChainCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "additive-chain-check")

@@ -281,19 +281,9 @@ pub(crate) fn execute_call(cpu: &mut Cpu, bus: &mut Bus, call: &Call, run: bool)
         );
         bus.observe_limiter_p4(Some(if call.p4_bit0 { 1 } else { 0 }));
         enter(cpu, bus, &decision_contract);
-        bus.begin_write_journal();
-        bus.start_decision_observer();
-        let result = execute_in_state_observed(
-            cpu,
-            bus,
-            &decision_contract,
-            &[],
-            true,
-            Some(admission),
-            true,
-        );
-        row.decision_writes = bus.end_write_journal();
-        row.decision_events = bus.finish_decision_observer();
+        let (result, writes, events, _) = execute_decision(cpu, bus);
+        row.decision_writes = writes;
+        row.decision_events = events;
         row.status = result.status;
         if result.status == 0 {
             row.overspeed_request = Some(read_data_u8(cpu, bus, 0x124) & 32 != 0);
@@ -328,4 +318,30 @@ pub(crate) fn execute_call(cpu: &mut Cpu, bus: &mut Bus, call: &Call, run: bool)
     }
 
     row
+}
+
+/// Decision body only, on existing CPU/RAM; caller provides ABI and input snapshots.
+/// No mask consumer, seeds, expected request or second machine.
+pub(crate) fn execute_decision(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+) -> (
+    crate::protocol::CaseResult,
+    Vec<[u32; 3]>,
+    Vec<[u32; 8]>,
+    Vec<[u32; 5]>,
+) {
+    bus.clear_program_reads();
+    bus.set_program_data_ranges(vec![]);
+    bus.begin_native_accesses();
+    bus.begin_write_journal();
+    bus.start_decision_observer();
+    let result =
+        execute_in_state_observed(cpu, bus, &contract(false), &[], true, Some(admission), true);
+    (
+        result,
+        bus.end_write_journal(),
+        bus.finish_decision_observer(),
+        bus.end_native_accesses(),
+    )
 }

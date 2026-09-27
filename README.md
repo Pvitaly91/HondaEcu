@@ -1,5 +1,13 @@
 # HondaEcu
 
+M2n completes the bounded [native fixed-limiter to fuel-store gate chain](docs/M2N_LIMITER_FUEL_GATE_CHAIN.md)
+with `research p28-fuel limiter-chain-check`, runner0.22.0: native0124 writer,
+actual217A/21F5 gate readers and03A2/03B4 stores on one CPU/RAM, without supplied
+request or factor.1548 strict events and264 independent A/B comparisons are
+separate from old compatibility/model-only counts. Scripted test schedule,
+PcInspectionOnly / NotFlashReady; no physical RPM/fuel-delivery, GUI/hardware,
+new firmware/export or strict M2i change. Historical task scopes remain below.
+
 M2m completes bounded [native DATA0158 fuel-factor production and consumption](docs/M2M_NATIVE_FUEL_FACTOR_CHAIN.md)
 with `research p28-fuel factor-chain-check` in runner0.21.0. The new closed
 scenario has no supplied factor: one persistent CPU/RAM carries native lookup0140

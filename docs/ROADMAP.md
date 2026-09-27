@@ -1,5 +1,13 @@
 # Roadmap
 
+M2n completes [native fixed-limiter to fuel-store gate handoff](M2N_LIMITER_FUEL_GATE_CHAIN.md):
+decision-only extraction, one shared0124/012B history, native bit4 clearing,
+actual217A and21F5, established lookup/factor/additive application on one machine.
+1548 strict events,264 A/B comparisons,84 threshold gate witnesses and24
+fuel-cell numerical witnesses. Old M1l/M2m controls and model-only domains are
+separate. No adaptive/ticks/RAM/mask5585/P2, physical controller, firmware/export,
+GUI/hardware or strict M2i expansion. Next stage/GUI is not started automatically.
+
 M2m completes bounded [native DATA0158 fuel-factor production and consumption](M2M_NATIVE_FUEL_FACTOR_CHAIN.md):
 closed upstream snapshots, native lookup0140, disclosed same-machine producer
 entry1F43, actual detour7A99/store0158/return1FB7, then scripted2194 and unchanged
