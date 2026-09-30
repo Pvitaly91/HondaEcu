@@ -217,6 +217,9 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
         .fuel_post_store_chain
         .as_ref()
         .ok_or("M2p stimulus required")?;
+    validate_stimulus(r, s)
+}
+pub(crate) fn validate_stimulus(r: &Request, s: &Stimulus) -> Result<(), String> {
     // Preserve all historical M2o admission without accepting its top-level stimulus.
     let old = serde_json::from_value::<adaptive_fuel::Stimulus>(serde_json::json!({
         "formatVersion":s.format_version, "initialState": {
@@ -324,64 +327,71 @@ pub(crate) fn execute_suffix(cpu: &mut Cpu, bus: &mut Bus) -> Suffix {
         accesses,
     }
 }
+pub(crate) fn initialize(rom: &[u8], pattern: u8, initial: &Initial) -> (Cpu, Bus) {
+    let (mut cpu, mut bus) = adaptive_fuel::initialize(rom, pattern, &initial.adaptive);
+    write_data_u16(&mut cpu, &mut bus, 0x3B4, initial.previous03b4);
+    write_data_u16(&mut cpu, &mut bus, 0x150, 0);
+    (cpu, bus)
+}
+pub(crate) fn checkpoint(cpu: &Cpu, bus: &mut Bus, c: &Call) -> Checkpoint {
+    let prefix = adaptive_fuel::checkpoint(cpu, bus, &c.adaptive);
+    bus.configure_scoped_access(vec![[0x125, 0x126], [0x12E, 0x12F], [0x150, 0x152]], 4096);
+    let source_bytes_before = [0x125, 0x12E].map(|a| read_data_u8(cpu, bus, a));
+    let word0150_before = read_data_u16(cpu, bus, 0x150);
+    Checkpoint {
+        index: c.adaptive.fuel.index,
+        status: 4,
+        prefix,
+        source_bytes_before,
+        source_bytes_after: source_bytes_before,
+        snapshot_writes: vec![],
+        word0150_before,
+        word0150_after: word0150_before,
+        suffix: None,
+        post_store_word0150: None,
+    }
+}
+/// Reused execution on one initialized machine; stops before223B as always.
+pub(crate) fn execute_checkpoint(cpu: &mut Cpu, bus: &mut Bus, c: &Call, row: &mut Checkpoint) {
+    bus.begin_write_journal();
+    for (i, (a, on)) in [(0x125, c.disable125), (0x12E, c.disable12e)]
+        .into_iter()
+        .enumerate()
+    {
+        write_data_u8(
+            cpu,
+            bus,
+            a,
+            (row.source_bytes_before[i] & !16) | if on { 16 } else { 0 },
+        );
+    }
+    row.snapshot_writes = bus.end_write_journal();
+    adaptive_fuel::execute_checkpoint(cpu, bus, &c.adaptive, &mut row.prefix);
+    row.status = row.prefix.status;
+    if row.status == 0 {
+        let suffix = execute_suffix(cpu, bus);
+        row.status = suffix.stage.result.status;
+        if row.status == 0 {
+            row.post_store_word0150 = Some(read_data_u16(cpu, bus, 0x150));
+        }
+        row.suffix = Some(suffix);
+    }
+    bus.configure_scoped_access(vec![[0x125, 0x126], [0x12E, 0x12F], [0x150, 0x152]], 4096);
+    row.source_bytes_after = [0x125, 0x12E].map(|a| read_data_u8(cpu, bus, a));
+    row.word0150_after = read_data_u16(cpu, bus, 0x150);
+}
 pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     let s = r.fuel_post_store_chain.as_ref().expect("validated");
     let mut sequences = vec![];
     for &pattern in &r.scratch_patterns {
-        let (mut cpu, mut bus) =
-            adaptive_fuel::initialize(&r.images[0].rom, pattern, &s.initial_state.adaptive);
-        write_data_u16(&mut cpu, &mut bus, 0x3B4, s.initial_state.previous03b4);
-        write_data_u16(&mut cpu, &mut bus, 0x150, 0);
+        let (mut cpu, mut bus) = initialize(&r.images[0].rom, pattern, &s.initial_state);
         let mut stopped = false;
         let mut checkpoints = vec![];
         for c in &s.calls {
-            let prefix = adaptive_fuel::checkpoint(&cpu, &mut bus, &c.adaptive);
-            bus.configure_scoped_access(vec![[0x125, 0x126], [0x12E, 0x12F], [0x150, 0x152]], 4096);
-            let source_bytes_before = [0x125, 0x12E].map(|a| read_data_u8(&cpu, &mut bus, a));
-            let word0150_before = read_data_u16(&cpu, &mut bus, 0x150);
-            let mut row = Checkpoint {
-                index: c.adaptive.fuel.index,
-                status: 4,
-                prefix,
-                source_bytes_before,
-                source_bytes_after: source_bytes_before,
-                snapshot_writes: vec![],
-                word0150_before,
-                word0150_after: word0150_before,
-                suffix: None,
-                post_store_word0150: None,
-            };
+            let mut row = checkpoint(&cpu, &mut bus, c);
             if !stopped {
-                bus.begin_write_journal();
-                for (i, (a, on)) in [(0x125, c.disable125), (0x12E, c.disable12e)]
-                    .into_iter()
-                    .enumerate()
-                {
-                    write_data_u8(
-                        &mut cpu,
-                        &mut bus,
-                        a,
-                        (source_bytes_before[i] & !16) | if on { 16 } else { 0 },
-                    );
-                }
-                row.snapshot_writes = bus.end_write_journal();
-                adaptive_fuel::execute_checkpoint(&mut cpu, &mut bus, &c.adaptive, &mut row.prefix);
-                row.status = row.prefix.status;
-                if row.status == 0 {
-                    let suffix = execute_suffix(&mut cpu, &mut bus);
-                    row.status = suffix.stage.result.status;
-                    if row.status == 0 {
-                        row.post_store_word0150 = Some(read_data_u16(&cpu, &mut bus, 0x150));
-                    }
-                    row.suffix = Some(suffix);
-                }
+                execute_checkpoint(&mut cpu, &mut bus, c, &mut row);
                 stopped = row.status != 0;
-                bus.configure_scoped_access(
-                    vec![[0x125, 0x126], [0x12E, 0x12F], [0x150, 0x152]],
-                    4096,
-                );
-                row.source_bytes_after = [0x125, 0x12E].map(|a| read_data_u8(&cpu, &mut bus, a));
-                row.word0150_after = read_data_u16(&cpu, &mut bus, 0x150);
             }
             checkpoints.push(row);
         }

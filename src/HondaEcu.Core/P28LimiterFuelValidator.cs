@@ -142,7 +142,8 @@ public static class P28LimiterFuelValidator
     // Internal composition seam; no second CPU, no old top-level operation or relaxed public admission.
     internal static IReadOnlyList<P28LimiterFuelSequence> AnalyzeShared(RomImage image, P28LimiterFuelScenario s, JsonElement root, JsonElement sequences, string id,
         Func<int, int, byte, P28LimiterDecisionStep>? decisionModel = null, Action<int, int, byte>? finishModel = null,
-        Func<int, int, int>? decisionEntryA = null, Func<int, int, byte>? source011b = null, ushort? initialPrevious03b4 = null)
+        Func<int, int, int>? decisionEntryA = null, Func<int, int, byte>? source011b = null, ushort? initialPrevious03b4 = null,
+        Func<int, int, byte>? producerMode012c = null)
     {
         Require(sequences.GetArrayLength() == 3, "Joint scratch count differs.");
         var expected = new P28LimiterDecisionStep?[3, s.Calls.Count];
@@ -165,7 +166,7 @@ public static class P28LimiterFuelValidator
             {
                 models[p].AcceptModeledFuelByte(mode); var decision = decisionModel is null ? models[p].StepDecision(s.Calls[i].RawPeriod, false, true) : decisionModel(p, i, mode); expected[p, i] = decision;
                 return (decision.After.Data0124, decision.After.Data012B);
-            }, (p, i, mode) => { models[p].AcceptModeledFuelByte(mode); finishModel?.Invoke(p, i, mode); }, initialPrevious03b4);
+            }, (p, i, mode) => { models[p].AcceptModeledFuelByte(mode); finishModel?.Invoke(p, i, mode); }, initialPrevious03b4, producerMode012c);
         }
         var reports = new List<P28LimiterFuelSequence>();
         for (var p = 0; p < 3; p++)

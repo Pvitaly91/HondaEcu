@@ -1,5 +1,13 @@
 # Roadmap
 
+M2q adds [native DATA0150 consumer and software selection](M2Q_POST_STORE_CONSUMER_CHAIN.md):
+continuous223B..2259, actual223D word reader/comparison, native012C.5 ownership and
+conditional CAL5991/RT result read into X1 before the IO/IRQ boundary. X1/A are
+neutral software results, not physical commands. Old M2p223B and M2o2204 contracts
+remain unchanged;60F8/per-channel continuation is static-only here. Native,
+model-only, compatibility and synthetic counts stay separate. No firmware/export,
+GUI/hardware or strict M2i change; next stage is not automatic.
+
 M2p adds [native post-store fuel continuation](M2P_POST_STORE_FUEL_CHAIN.md):
 same-machine2204..223B, native0150 result and static next reader223D. Previous03B4
 is consumed conditionally before er0 clobber; independent native histories and

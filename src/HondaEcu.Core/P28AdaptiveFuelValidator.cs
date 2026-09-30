@@ -156,7 +156,8 @@ public static class P28AdaptiveFuelValidator
     }
     // Composition only: outer task validates its own identity/schema before using this prefix oracle.
     internal static IReadOnlyList<P28AdaptiveFuelSequence> AnalyzeEvidence(RomImage image, P28AdaptiveFuelScenario scenario,
-        JsonElement root, string id, ushort? initialPrevious03b4 = null, Func<int, int, bool>? terminalAfter = null)
+        JsonElement root, string id, ushort? initialPrevious03b4 = null, Func<int, int, bool>? terminalAfter = null,
+        Func<int, int, byte>? producerMode012c = null)
     {
         var sequences = root.GetProperty("adaptiveFuelSequences"); Require(sequences.GetArrayLength() == 3, "M2o scratch count differs.");
         var models = Enumerable.Range(0, 3).Select(_ => new P28AdaptiveModel(image.Span, scenario.ModelInitial)).ToArray();
@@ -179,7 +180,7 @@ public static class P28AdaptiveFuelValidator
                 },
                 (p, _, mode) => models[p].AcceptModeledFuelByte(mode),
                 (p, i) => ProductionAccumulator(production[p, i]!),
-                (_, i) => scenario.Calls[i].FixedSource ? (byte)128 : (byte)0, initialPrevious03b4);
+                (_, i) => scenario.Calls[i].FixedSource ? (byte)128 : (byte)0, initialPrevious03b4, producerMode012c);
         }
         var reports = new List<P28AdaptiveFuelSequence>();
         for (var p = 0; p < 3; p++)

@@ -1,5 +1,13 @@
 # HondaEcu
 
+M2q adds [native DATA0150 consumer/selection](docs/M2Q_POST_STORE_CONSUMER_CHAIN.md)
+with `research p28-fuel post-store-consumer-check`, runner0.25.0. The same CPU/RAM
+continues at223B through word comparison, native012C.5 and conditional caller/helper/
+return to X1/A results before2259 IE. Old M2p still stops before223B; the later60F8
+and per-channel path remain static-only. Independent generations, operands/flags,
+stack and one-field A/B are checked. PcInspectionOnly / NotFlashReady; physical
+role unknown, no firmware/export, GUI/hardware or strict M2i expansion.
+
 M2p adds [native post-store continuation](docs/M2P_POST_STORE_FUEL_CHAIN.md) with
 `research p28-fuel post-store-chain-check`, runner0.24.0. The same CPU/RAM continues
 through2204 to the completed native0150 store before223B. Independent previous/current

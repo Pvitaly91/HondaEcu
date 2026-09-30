@@ -165,6 +165,10 @@ public sealed partial class CliApplication
               --baseline-binding <binding.json> --runner <runner-0.24.0>
               --scenario <m2p-scenario.json> --output <new-private-report.json>
               Same-machine native2204..223B and0150 result; read-only, no physical units, GUI or BIN.
+          research p28-fuel post-store-consumer-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding.json> --runner <runner-0.25.0>
+              --scenario <m2q-scenario.json> --output <new-private-report.json>
+              Same-machine0150 consumer/selection and native helper return before2259 IE; read-only, no GUI or BIN.
           research p28-fuel vtec-chain-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <private-json> --runner <v0.14.0-rust-executable>
               --scenario <bounded-m2f-scenario.json> --output <new-private-json>

@@ -115,6 +115,12 @@ public static class P28PostStoreValidator
         _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2p contract differs.");
         foreach (var k in new[] { "compactRows", "thresholdRows", "diagnostics" }) Require(root.GetProperty(k).GetArrayLength() == 0, "Foreign rows.");
         Require(root.GetProperty("syntheticResult").ValueKind == JsonValueKind.Null, "Foreign synthetic result.");
+        return AnalyzeEvidence(image, s, root, id);
+    }
+    // Composition retains historical schema/boundary; a new outer operation owns its identity and terminal suffix.
+    internal static IReadOnlyList<P28PostStoreSequence> AnalyzeEvidence(RomImage image, P28PostStoreScenario s, JsonElement root, string id,
+        Func<int, int, byte>? producerMode012c = null, Func<int, int, bool>? terminalAfter = null)
+    {
         var seq = root.GetProperty("postStoreSequences"); Require(seq.GetArrayLength() == 3, "Scratch count differs.");
         var prefixView = JsonSerializer.SerializeToElement(new
         {
@@ -128,7 +134,7 @@ public static class P28PostStoreValidator
             }).ToArray()
         });
         var prefixes = P28AdaptiveFuelValidator.AnalyzeEvidence(image, s.PrefixScenario, prefixView, id, s.InitialState.Previous03b4,
-            (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0);
+            (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0 || terminalAfter?.Invoke(p, i) == true, producerMode012c);
         var reports = new List<P28PostStoreSequence>();
         for (var p = 0; p < 3; p++)
         {
@@ -154,7 +160,7 @@ public static class P28PostStoreValidator
                     if (prefix.Disposition == "StrictMatch")
                     {
                         Require(suffix.ValueKind == JsonValueKind.Object, "Completed prefix lacks native continuation.");
-                        var own = model.Step(c.Adaptive, previous);
+                        var own = model.Step(c.Adaptive, previous, producerMode012c?.Invoke(p, i));
                         expected = P28PostStoreModel.Project(previous, (ushort)own.Numeric.Corrected, c.Disable125, c.Disable12e, c.Adaptive.Fuel.Sources.Source0133, c.Adaptive.Fuel.Sources.Source014c);
                         var end = row.GetProperty("prefix").GetProperty("joint").GetProperty("fuel").GetProperty("boundaries");
                         var entry = end[end.GetArrayLength() - 1];
@@ -176,6 +182,7 @@ public static class P28PostStoreValidator
                 list.Add(new(i, disposition, prefix.Disposition, provenance, oldGeneration, expected, status == 0 ? retained : null, prefix,
                     ReportRow(row, s.TraceCallIndexes.Contains(i))));
                 stopped |= status != 0;
+                stopped |= terminalAfter?.Invoke(p, i) == true;
             }
             reports.Add(new(id, pattern, list.AsReadOnly()));
         }

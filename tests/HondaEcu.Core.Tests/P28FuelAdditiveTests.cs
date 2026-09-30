@@ -145,7 +145,7 @@ public sealed class P28FuelAdditiveTests
             allowAssumptions = Array.Empty<string>(),
             synthetic = new { entryPc = 0x40, exitPcs = new[] { 0x40 + main.Length }, allowedCodeRanges = new[] { new[] { 0x40, 0x40 + main.Length }, new[] { 0x80, 0x82 } }, psw = 0x0101, lrb = 0x20, usp = 0x280, instructionBudget = 32, dataSeeds = Array.Empty<int[]>(), outputAddresses = new[] { 0x360, 0x361, 0x362, 0x363, 0x8A, 0x8B, 0x104, 0x105, 0x106, 0x107, 0x7FE, 0x7FF } }
         });
-        var r = response.Response.GetProperty("syntheticResult"); Assert.Equal("0.24.0", response.Response.GetProperty("runnerVersion").GetString()); Assert.Equal(0, r.GetProperty("status").GetInt32());
+        var r = response.Response.GetProperty("syntheticResult"); Assert.Equal("0.25.0", response.Response.GetProperty("runnerVersion").GetString()); Assert.Equal(0, r.GetProperty("status").GetInt32());
         Assert.Equal(new[] { 127, 0, 120, 0, 7, 0, 120, 0, 120, 0, 0x55, 0 }, r.GetProperty("outputs").EnumerateArray().Select(v => v.GetInt32()));
         var trace = r.GetProperty("trace").EnumerateArray().ToArray(); Assert.Contains(trace, e => e.GetProperty("pc").GetInt32() == 0x54 && e.GetProperty("nextPc").GetInt32() == 0x80);
         Assert.Contains(trace, e => e.GetProperty("pc").GetInt32() == 0x81 && e.GetProperty("nextPc").GetInt32() == 0x55);

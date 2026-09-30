@@ -31,13 +31,13 @@ internal sealed class P28PostStorePrefixModel
             f.Map1RpmFraction, f.Selector0127, f.ConsumerFactor013f, 0));
         _mode = _initial.Joint.Data012b; _hysteresis = _initial.Joint.Hysteresis0130;
     }
-    internal (P28FuelAdditiveProjection Numeric, P28FuelAdditiveOracle Exit) Step(P28AdaptiveFuelCall c, ushort previous)
+    internal (P28FuelAdditiveProjection Numeric, P28FuelAdditiveOracle Exit) Step(P28AdaptiveFuelCall c, ushort previous, byte? producerMode012c = null)
     {
         _adaptive.AcceptModeledFuelByte(_mode); _ = _adaptive.StepProduction(c.Adaptive);
         var d = _adaptive.StepDecision(c.Fuel.RawPeriod, c.FixedSource); _mode = d.After.Data012B;
         var f = _initial.Joint.Fuel;
         var lookup = _map.StepFromNativeSelector(new(c.Fuel.Index, c.Fuel.RawLoad, c.Fuel.RawMap0Rpm, c.Fuel.RawMap1Rpm), f.Selector0127).Consumer.Output;
-        var factor = P28FuelFactorModel.Project(c.Fuel.Sources, _initial.Joint.ProducerMode012c, _initial.Joint.ProducerSelector012f, _hysteresis);
+        var factor = P28FuelFactorModel.Project(c.Fuel.Sources, producerMode012c ?? _initial.Joint.ProducerMode012c, _initial.Joint.ProducerSelector012f, _hysteresis);
         _hysteresis = factor.HysteresisAfter;
         var sources = P28FuelFactorModel.AdditiveSources(c.Fuel.Sources, (ushort)factor.NativeFactor0158);
         var numeric = P28FuelAdditiveModel.Project((ushort)lookup, sources, _mode, d.After.Data0124);

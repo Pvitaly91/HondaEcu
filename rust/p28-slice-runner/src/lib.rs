@@ -27,6 +27,7 @@ pub mod limiter;
 pub mod limiter_fuel;
 pub mod operand;
 pub mod post_store;
+pub mod post_store_consumer;
 pub mod producer;
 pub mod protocol;
 pub mod runner;

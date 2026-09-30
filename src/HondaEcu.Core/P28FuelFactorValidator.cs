@@ -125,7 +125,7 @@ public static class P28FuelFactorValidator
     // Internal composition seam: shared pure numeric/oracle validation, not public admission or another machine.
     internal static IReadOnlyList<P28FuelFactorSequence> AnalyzeFuelEvidence(RomImage image, P28FuelFactorScenario scenario,
         JsonElement root, JsonElement seq, string id, Func<int, int, byte, (byte Gate, byte Mode)>? joint = null, Action<int, int, byte>? jointFinish = null,
-        ushort? initialPrevious03b4 = null)
+        ushort? initialPrevious03b4 = null, Func<int, int, byte>? producerMode012c = null)
     {
         Require(seq.GetArrayLength() == 3, "Fuel scratch count differs.");
         var count = seq[0].GetProperty("checkpoints").EnumerateArray().Count(r => r.GetProperty("prefix").GetProperty("status").GetInt32() != 4);
@@ -189,8 +189,9 @@ public static class P28FuelFactorValidator
                         Require(fs.ValueKind == JsonValueKind.Object, "Completed prefix has no attempted native factor producer."); ValidateSeams(row, joint is not null);
                         var ownLookup = (ushort)ownPrefix.Expected!.Consumer.Output; var entry = row.GetProperty("factorEntry"); var exit = row.GetProperty("factorExit");
                         Require(entry.GetProperty("accumulator").GetInt32() == ownLookup, "Native prefix A not its independently produced lookup.");
-                        expected = P28FuelFactorModel.Project(sources, scenario.InitialState.ProducerMode012c, scenario.InitialState.ProducerSelector012f, hysteresis);
-                        var oracle = P28FuelFactorEvidence.Build(sources, scenario.InitialState.ProducerMode012c, scenario.InitialState.ProducerSelector012f, hysteresis,
+                        var producerMode = producerMode012c?.Invoke(p, i) ?? scenario.InitialState.ProducerMode012c;
+                        expected = P28FuelFactorModel.Project(sources, producerMode, scenario.InitialState.ProducerSelector012f, hysteresis);
+                        var oracle = P28FuelFactorEvidence.Build(sources, producerMode, scenario.InitialState.ProducerSelector012f, hysteresis,
                             ownLookup, 0x0DC9, Word(entry, 0), Word(entry, 1), Word(entry, 2), Word(entry, 3));
                         var fr = ValidateFactorStage(fs, entry, exit, oracle, accesses);
                         foreach (var write in Matrix(fs.GetProperty("writes"), 3, 128))
