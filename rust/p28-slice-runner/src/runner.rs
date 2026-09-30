@@ -406,6 +406,9 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "fuelPostStoreChain" && request.fuel_post_store_chain.is_some() {
+        return Err("M2p stimulus is unavailable to other operations".into());
+    }
     if request.operation != "adaptiveLimiterFuelGateChain"
         && request.adaptive_limiter_fuel_gate_chain.is_some()
     {
@@ -602,6 +605,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "fuelFactorProductionChain" => crate::fuel_factor::validate_request(request)?,
         "limiterFuelGateChain" => crate::limiter_fuel::validate_request(request)?,
         "adaptiveLimiterFuelGateChain" => crate::adaptive_fuel::validate_request(request)?,
+        "fuelPostStoreChain" => crate::post_store::validate_request(request)?,
         "vtecFuelChain" => crate::vtec_fuel::validate_request(request)?,
         "ignitionMapLookup" => crate::ignition::validate_request(request)?,
         "ignitionSelectorChain" => crate::ignition_selector::validate_request(request)?,
@@ -616,6 +620,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "fuelPostStoreChain" {
+        return crate::post_store::run(request, response);
+    }
     if request.operation == "adaptiveLimiterFuelGateChain" {
         return crate::adaptive_fuel::run(request, response);
     }

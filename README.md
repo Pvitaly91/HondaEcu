@@ -1,5 +1,12 @@
 # HondaEcu
 
+M2p adds [native post-store continuation](docs/M2P_POST_STORE_FUEL_CHAIN.md) with
+`research p28-fuel post-store-chain-check`, runner0.24.0. The same CPU/RAM continues
+through2204 to the completed native0150 store before223B. Independent previous/current
+generations, operands/flags and one-field in-memory A/B are checked. Old M2o still
+stops before2204. Software-only, raw units unknown; no firmware/export, GUI/hardware
+or strict M2i expansion. PcInspectionOnly / NotFlashReady.
+
 M2o adds the bounded [native adaptive-threshold to fuel-store gate chain](docs/M2O_ADAPTIVE_LIMITER_FUEL_CHAIN.md)
 with `research p28-fuel adaptive-limiter-chain-check`, runner0.23.0. Native ticks
 and adaptive RAM production now precede the same-state limiter/fuel continuation;

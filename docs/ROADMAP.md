@@ -1,5 +1,12 @@
 # Roadmap
 
+M2p adds [native post-store fuel continuation](M2P_POST_STORE_FUEL_CHAIN.md):
+same-machine2204..223B, native0150 result and static next reader223D. Previous03B4
+is consumed conditionally before er0 clobber; independent native histories and
+cell/adaptive A/B masking are checked. Existing earlier entries remain scripted.
+Old M2o stop/schema, strict M2i Blocked and PC-only readiness remain unchanged.
+No firmware/export, physical units, GUI/hardware; next stage is not automatic.
+
 M2o adds [native adaptive RAM to limiter/fuel-store handoff](M2O_ADAPTIVE_LIMITER_FUEL_CHAIN.md):
 native counter calls and487B/helpers on the same CPU/RAM as decision-only1966 and
 the established native0140/0158/217A/21F5/store tail. Native writer generations,

@@ -137,6 +137,9 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
         .adaptive_limiter_fuel_gate_chain
         .as_ref()
         .ok_or("M2o stimulus required")?;
+    validate_stimulus(r, s)
+}
+pub(crate) fn validate_stimulus(r: &Request, s: &Stimulus) -> Result<(), String> {
     let f = &s.initial_state.joint.fuel;
     if s.format_version != 1
         || s.calls.is_empty()
@@ -189,6 +192,90 @@ fn ranges() -> Vec<[u16; 2]> {
     r.extend(adaptive::producer_ranges());
     r
 }
+pub(crate) fn initialize(rom: &[u8], pattern: u8, initial: &Initial) -> (Cpu, Bus) {
+    let (mut cpu, mut bus) = seed_machine(rom, &limiter::contract(false), pattern);
+    cpu.ssp = 0x7FE;
+    limiter_fuel::initialize(&mut cpu, &mut bus, &initial.joint, 0);
+    for (a, v) in [
+        (0x1A4, initial.ram_cut),
+        (0x1A6, initial.ram_resume),
+        (0xF8, initial.restore_ie),
+    ] {
+        write_data_u16(&mut cpu, &mut bus, a, v);
+    }
+    for (a, v) in [(0x1D5, initial.timer), (0x1CE, initial.counter)] {
+        write_data_u8(&mut cpu, &mut bus, a, v);
+    }
+    bus.set_adaptive_ie(Some(initial.ie));
+    (cpu, bus)
+}
+pub(crate) fn checkpoint(cpu: &Cpu, bus: &mut Bus, c: &Call) -> Checkpoint {
+    bus.configure_scoped_access(ranges(), 4096);
+    let before = state(cpu, bus);
+    let row = Checkpoint {
+        index: c.fuel.index,
+        status: 4,
+        input: None,
+        snapshot_writes: vec![],
+        state_before: before.clone(),
+        state_after_producer: None,
+        state_after: before,
+        ticks: vec![],
+        producer: None,
+        joint: limiter_fuel::checkpoint(cpu, bus, &c.fuel),
+    };
+    row
+}
+pub(crate) fn execute_checkpoint(cpu: &mut Cpu, bus: &mut Bus, c: &Call, row: &mut Checkpoint) {
+    bus.configure_scoped_access(ranges(), 4096);
+    let mut stopped = false;
+    row.input = Some(c.clone());
+    limiter_fuel::apply_inputs(cpu, bus, &c.fuel, &mut row.joint);
+    bus.begin_write_journal();
+    for (a, mask, on) in [
+        (0x21F, 2, c.bank1),
+        (0x217, 32, c.reset217),
+        (0x214, 1, c.reset214),
+        (0x212, 32, c.mode212),
+        (0x223, 4, c.enable223),
+        (0x11B, 128, c.fixed_source),
+    ] {
+        let v = read_data_u8(cpu, bus, a);
+        write_data_u8(cpu, bus, a, (v & !mask) | if on { mask } else { 0 });
+    }
+    write_data_u16(cpu, bus, 0xCE, c.raw00ce);
+    write_data_u8(cpu, bus, 0xD9, c.raw_d9);
+    row.snapshot_writes = bus.end_write_journal();
+    for (a, n) in [(0x1D5, c.timer_ticks), (0x1CE, c.counter_ticks)] {
+        for _ in 0..n {
+            if stopped {
+                break;
+            }
+            let f = fragment(cpu, bus, Some(a));
+            row.status = f.stage.result.status;
+            stopped = row.status != 0;
+            row.ticks.push(f);
+        }
+    }
+    if !stopped {
+        let f = fragment(cpu, bus, None);
+        row.status = f.stage.result.status;
+        stopped = row.status != 0;
+        row.producer = Some(f);
+        row.state_after_producer = Some(state(cpu, bus));
+    }
+    if !stopped {
+        limiter_fuel::execute_checkpoint(cpu, bus, &mut row.joint);
+        row.status = row.joint.status;
+    } else {
+        row.joint.input = None;
+        row.joint.fuel.input = None;
+        row.joint.fuel.prefix.state_after_inputs = None;
+        fuel_factor::finish_checkpoint(cpu, bus, &mut row.joint.fuel);
+    }
+    bus.configure_scoped_access(ranges(), 4096);
+    row.state_after = state(cpu, bus);
+}
 pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     let s = r
         .adaptive_limiter_fuel_gate_chain
@@ -196,93 +283,14 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
         .expect("validated");
     let mut sequences = vec![];
     for &pattern in &r.scratch_patterns {
-        let (mut cpu, mut bus) = seed_machine(&r.images[0].rom, &limiter::contract(false), pattern);
-        cpu.ssp = 0x7FE;
-        limiter_fuel::initialize(&mut cpu, &mut bus, &s.initial_state.joint, 0);
-        for (a, v) in [
-            (0x1A4, s.initial_state.ram_cut),
-            (0x1A6, s.initial_state.ram_resume),
-            (0xF8, s.initial_state.restore_ie),
-        ] {
-            write_data_u16(&mut cpu, &mut bus, a, v);
-        }
-        for (a, v) in [
-            (0x1D5, s.initial_state.timer),
-            (0x1CE, s.initial_state.counter),
-        ] {
-            write_data_u8(&mut cpu, &mut bus, a, v);
-        }
-        bus.set_adaptive_ie(Some(s.initial_state.ie));
+        let (mut cpu, mut bus) = initialize(&r.images[0].rom, pattern, &s.initial_state);
         let mut stopped = false;
         let mut checkpoints = vec![];
         for c in &s.calls {
-            bus.configure_scoped_access(ranges(), 4096);
-            let before = state(&cpu, &mut bus);
-            let mut row = Checkpoint {
-                index: c.fuel.index,
-                status: 4,
-                input: None,
-                snapshot_writes: vec![],
-                state_before: before.clone(),
-                state_after_producer: None,
-                state_after: before,
-                ticks: vec![],
-                producer: None,
-                joint: limiter_fuel::checkpoint(&cpu, &mut bus, &c.fuel),
-            };
+            let mut row = checkpoint(&cpu, &mut bus, c);
             if !stopped {
-                row.input = Some(c.clone());
-                limiter_fuel::apply_inputs(&mut cpu, &mut bus, &c.fuel, &mut row.joint);
-                bus.begin_write_journal();
-                for (a, mask, on) in [
-                    (0x21F, 2, c.bank1),
-                    (0x217, 32, c.reset217),
-                    (0x214, 1, c.reset214),
-                    (0x212, 32, c.mode212),
-                    (0x223, 4, c.enable223),
-                    (0x11B, 128, c.fixed_source),
-                ] {
-                    let v = read_data_u8(&cpu, &mut bus, a);
-                    write_data_u8(
-                        &mut cpu,
-                        &mut bus,
-                        a,
-                        (v & !mask) | if on { mask } else { 0 },
-                    );
-                }
-                write_data_u16(&mut cpu, &mut bus, 0xCE, c.raw00ce);
-                write_data_u8(&mut cpu, &mut bus, 0xD9, c.raw_d9);
-                row.snapshot_writes = bus.end_write_journal();
-                for (a, n) in [(0x1D5, c.timer_ticks), (0x1CE, c.counter_ticks)] {
-                    for _ in 0..n {
-                        if stopped {
-                            break;
-                        }
-                        let f = fragment(&mut cpu, &mut bus, Some(a));
-                        row.status = f.stage.result.status;
-                        stopped = row.status != 0;
-                        row.ticks.push(f);
-                    }
-                }
-                if !stopped {
-                    let f = fragment(&mut cpu, &mut bus, None);
-                    row.status = f.stage.result.status;
-                    stopped = row.status != 0;
-                    row.producer = Some(f);
-                    row.state_after_producer = Some(state(&cpu, &mut bus));
-                }
-                if !stopped {
-                    limiter_fuel::execute_checkpoint(&mut cpu, &mut bus, &mut row.joint);
-                    row.status = row.joint.status;
-                    stopped = row.status != 0;
-                } else {
-                    row.joint.input = None;
-                    row.joint.fuel.input = None;
-                    row.joint.fuel.prefix.state_after_inputs = None;
-                    fuel_factor::finish_checkpoint(&cpu, &mut bus, &mut row.joint.fuel);
-                }
-                bus.configure_scoped_access(ranges(), 4096);
-                row.state_after = state(&cpu, &mut bus);
+                execute_checkpoint(&mut cpu, &mut bus, c, &mut row);
+                stopped = row.status != 0;
             }
             checkpoints.push(row);
         }

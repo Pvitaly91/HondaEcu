@@ -26,6 +26,7 @@ pub mod instruction_forms;
 pub mod limiter;
 pub mod limiter_fuel;
 pub mod operand;
+pub mod post_store;
 pub mod producer;
 pub mod protocol;
 pub mod runner;

@@ -124,7 +124,8 @@ public static class P28FuelFactorValidator
     }
     // Internal composition seam: shared pure numeric/oracle validation, not public admission or another machine.
     internal static IReadOnlyList<P28FuelFactorSequence> AnalyzeFuelEvidence(RomImage image, P28FuelFactorScenario scenario,
-        JsonElement root, JsonElement seq, string id, Func<int, int, byte, (byte Gate, byte Mode)>? joint = null, Action<int, int, byte>? jointFinish = null)
+        JsonElement root, JsonElement seq, string id, Func<int, int, byte, (byte Gate, byte Mode)>? joint = null, Action<int, int, byte>? jointFinish = null,
+        ushort? initialPrevious03b4 = null)
     {
         Require(seq.GetArrayLength() == 3, "Fuel scratch count differs.");
         var count = seq[0].GetProperty("checkpoints").EnumerateArray().Count(r => r.GetProperty("prefix").GetProperty("status").GetInt32() != 4);
@@ -158,7 +159,7 @@ public static class P28FuelFactorValidator
             var reports = new List<P28FuelFactorCheckpoint>(); var stopped = false; var mode = scenario.InitialState.Mode012b; var hysteresis = scenario.InitialState.Hysteresis0130;
             var gate = scenario.InitialState.CallerGate0124;
             var sources = new P28FuelFactorSources(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); var factor = pattern * 257;
-            int[] stores = [pattern * 257, pattern * 257]; JsonElement previous = default;
+            int[] stores = [pattern * 257, initialPrevious03b4 ?? pattern * 257]; JsonElement previous = default;
             for (var i = 0; i < rows.GetArrayLength(); i++)
             {
                 var row = rows[i]; ValidateCheckpointShape(row, joint is not null, joint is not null);

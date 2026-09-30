@@ -152,6 +152,12 @@ public static class P28AdaptiveFuelValidator
         _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2o native/scripted contracts differ.");
         foreach (var k in new[] { "compactRows", "thresholdRows", "diagnostics" }) Require(root.GetProperty(k).GetArrayLength() == 0, "Foreign rows.");
         Require(root.GetProperty("syntheticResult").ValueKind == JsonValueKind.Null, "Foreign synthetic result.");
+        return AnalyzeEvidence(image, scenario, root, id);
+    }
+    // Composition only: outer task validates its own identity/schema before using this prefix oracle.
+    internal static IReadOnlyList<P28AdaptiveFuelSequence> AnalyzeEvidence(RomImage image, P28AdaptiveFuelScenario scenario,
+        JsonElement root, string id, ushort? initialPrevious03b4 = null, Func<int, int, bool>? terminalAfter = null)
+    {
         var sequences = root.GetProperty("adaptiveFuelSequences"); Require(sequences.GetArrayLength() == 3, "M2o scratch count differs.");
         var models = Enumerable.Range(0, 3).Select(_ => new P28AdaptiveModel(image.Span, scenario.ModelInitial)).ToArray();
         var production = new P28AdaptiveProductionStep?[3, scenario.Calls.Count];
@@ -173,7 +179,7 @@ public static class P28AdaptiveFuelValidator
                 },
                 (p, _, mode) => models[p].AcceptModeledFuelByte(mode),
                 (p, i) => ProductionAccumulator(production[p, i]!),
-                (_, i) => scenario.Calls[i].FixedSource ? (byte)128 : (byte)0);
+                (_, i) => scenario.Calls[i].FixedSource ? (byte)128 : (byte)0, initialPrevious03b4);
         }
         var reports = new List<P28AdaptiveFuelSequence>();
         for (var p = 0; p < 3; p++)
@@ -257,6 +263,7 @@ public static class P28AdaptiveFuelValidator
                     (ushort)Word(before, "ramCut"), (ushort)Word(before, "ramResume"), (ushort)Word(after, "ramCut"), (ushort)Word(after, "ramResume"), ticks.GetArrayLength(),
                     source, continuation?.SelectedThreshold, continuation?.Request, continuation?.GateTaken, continuation, row.Clone())); prior = after.Clone();
                 priorJoint = joint.GetProperty("stateAfter").Clone();
+                stopped |= terminalAfter?.Invoke(p, i) == true;
             }
             reports.Add(new(id, pattern, list.AsReadOnly()));
         }
