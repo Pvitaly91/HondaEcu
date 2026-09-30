@@ -26,6 +26,7 @@ pub mod instruction_forms;
 pub mod limiter;
 pub mod limiter_fuel;
 pub mod operand;
+pub mod post_selection_critical;
 pub mod post_store;
 pub mod post_store_consumer;
 pub mod producer;

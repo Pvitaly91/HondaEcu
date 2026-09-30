@@ -157,7 +157,7 @@ public static class P28AdaptiveFuelValidator
     // Composition only: outer task validates its own identity/schema before using this prefix oracle.
     internal static IReadOnlyList<P28AdaptiveFuelSequence> AnalyzeEvidence(RomImage image, P28AdaptiveFuelScenario scenario,
         JsonElement root, string id, ushort? initialPrevious03b4 = null, Func<int, int, bool>? terminalAfter = null,
-        Func<int, int, byte>? producerMode012c = null)
+        Func<int, int, byte>? producerMode012c = null, Func<int, int, ushort>? ieBefore = null)
     {
         var sequences = root.GetProperty("adaptiveFuelSequences"); Require(sequences.GetArrayLength() == 3, "M2o scratch count differs.");
         var models = Enumerable.Range(0, 3).Select(_ => new P28AdaptiveModel(image.Span, scenario.ModelInitial)).ToArray();
@@ -175,6 +175,7 @@ public static class P28AdaptiveFuelValidator
             continuations = P28LimiterFuelValidator.AnalyzeShared(image, scenario.JointScenario(count), root, view, id,
                 (p, i, mode) =>
                 {
+                    if (ieBefore is not null) models[p].AcceptModeledIe(ieBefore(p, i));
                     models[p].AcceptModeledFuelByte(mode); production[p, i] = models[p].StepProduction(scenario.Calls[i].Adaptive);
                     return models[p].StepDecision(scenario.Calls[i].Fuel.RawPeriod, scenario.Calls[i].FixedSource);
                 },
@@ -195,7 +196,15 @@ public static class P28AdaptiveFuelValidator
                 var row = rows[i]; P28LimiterScenario.Shape(row, "index", "status", "input", "snapshotWrites", "stateBefore", "stateAfterProducer", "stateAfter", "ticks", "producer", "joint");
                 Require(row.GetProperty("index").GetInt32() == i, "M2o event order differs."); var status = row.GetProperty("status").GetInt32(); Require(status is >= 0 and <= 4, "Invalid M2o status.");
                 var before = row.GetProperty("stateBefore"); var after = row.GetProperty("stateAfter"); StateShape(before); StateShape(after);
-                if (i > 0) Require(Equal(before, prior), "Threshold/timer/IE/source history was reseeded.");
+                if (i > 0)
+                {
+                    if (ieBefore is null) Require(Equal(before, prior), "Threshold/timer/IE/source history was reseeded.");
+                    else
+                    {
+                        var retained = JsonNode.Parse(prior.GetRawText())!; retained["ie"] = ieBefore(p, i);
+                        Require(Equal(before, JsonSerializer.SerializeToElement(retained)), "Outer native IE/threshold/timer/source history differs.");
+                    }
+                }
                 else Require(Word(before, "ramCut") == scenario.InitialState.RamCut && Word(before, "ramResume") == scenario.InitialState.RamResume &&
                     Word(before, "ie") == scenario.InitialState.Ie && Word(before, "restoreIe") == scenario.InitialState.RestoreIe &&
                     Word(before, "timer") == scenario.InitialState.Timer && Word(before, "counter") == scenario.InitialState.Counter &&
@@ -216,6 +225,7 @@ public static class P28AdaptiveFuelValidator
                 {
                     Require(status != 4 && Equal(row.GetProperty("input"), JsonSerializer.SerializeToElement(scenario.Calls[i], JsonDefaults.Create())), "Missing/different M2o raw snapshot.");
                     ValidateSnapshot(row, scenario.Calls[i]);
+                    if (production[p, i] is null && ieBefore is not null) models[p].AcceptModeledIe(ieBefore(p, i));
                     var expected = production[p, i] ?? models[p].StepProduction(scenario.Calls[i].Adaptive);
                     var parsedTicks = new List<P28AdaptiveValidator.Stage>(); JsonElement boundary = default; var tickFailed = false;
                     Require(ticks.GetArrayLength() <= expected.Ticks.Count, "Extra tick invocations.");

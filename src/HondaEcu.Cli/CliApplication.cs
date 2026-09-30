@@ -169,6 +169,10 @@ public sealed partial class CliApplication
               --baseline-binding <binding.json> --runner <runner-0.25.0>
               --scenario <m2q-scenario.json> --output <new-private-report.json>
               Same-machine0150 consumer/selection and native helper return before2259 IE; read-only, no GUI or BIN.
+          research p28-fuel post-selection-critical-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding.json> --runner <runner-0.26.0>
+              --scenario <m2r-scenario.json> --output <new-private-report.json>
+              Same-machine2259..22B1 synchronous software IE/PSWH and original-config bypass; IRQ NotInjected, no GUI or BIN.
           research p28-fuel vtec-chain-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <private-json> --runner <v0.14.0-rust-executable>
               --scenario <bounded-m2f-scenario.json> --output <new-private-json>

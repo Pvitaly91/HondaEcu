@@ -1,5 +1,13 @@
 # HondaEcu
 
+M2r adds [post-selection synchronous software state and original-config bypass](docs/M2R_POST_SELECTION_CRITICAL_CHAIN.md)
+with `research p28-fuel post-selection-critical-check`, runner0.26.0. The same
+CPU/RAM continues from the unchanged M2q boundary2259 through IE/PSWH edits,
+X1/A transfers to019x, native restoration from00F8 and original60F8 zero-path
+validation to common software word stores before22B1. IRQ NotInjected; no real
+interrupt arbitration, elapsed time, physical injector role, firmware/export,
+GUI/hardware or strict M2i expansion. PcInspectionOnly / NotFlashReady.
+
 M2q adds [native DATA0150 consumer/selection](docs/M2Q_POST_STORE_CONSUMER_CHAIN.md)
 with `research p28-fuel post-store-consumer-check`, runner0.25.0. The same CPU/RAM
 continues at223B through word comparison, native012C.5 and conditional caller/helper/

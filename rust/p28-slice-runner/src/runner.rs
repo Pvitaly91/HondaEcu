@@ -95,6 +95,35 @@ fn supported_operation(mnemonic: &str) -> bool {
     )
 }
 
+/// Tiny invented-process supplement: ordinary RAM00F0 is a diagnostic mask word,
+/// not the opt-in IE001A storage. Historical generic admission remains unchanged.
+fn synthetic_form_admission(
+    d: &crate::decoder::Decoded,
+) -> crate::instruction_forms::FormAdmission {
+    use crate::instruction_forms::FormAdmission;
+    if supported_operation(d.mnemonic) {
+        return FormAdmission::Allowed;
+    }
+    let Some(p) = crate::full_decoder::FULL_OPCODES.get(d.index) else {
+        return FormAdmission::Unsupported;
+    };
+    if p.mnemonic != d.mnemonic || p.bytes_pat.len() != d.len {
+        return FormAdmission::Unsupported;
+    }
+    match (p.mnemonic, p.dd_mode, p.bytes_pat) {
+        ("AND N8, #N16", 'U', ["B5", "N8", "D0", "NL", "NH"])
+            if d.fields.n8 == 0xF0 && d.fields.n16 == 0x02A0 =>
+        {
+            FormAdmission::Allowed
+        }
+        ("ANDB PSWH, #N8", 'U', ["A2", "D0", "N8"]) if d.fields.n8 == 0xFE => {
+            FormAdmission::Allowed
+        }
+        ("ORB PSWH, #N8", 'U', ["A2", "E0", "N8"]) if d.fields.n8 == 1 => FormAdmission::Allowed,
+        _ => FormAdmission::Unsupported,
+    }
+}
+
 /// Run unchanged program bytes from a new deterministic state. No model result
 /// or expected output is supplied to the executor.
 pub fn execute_case(
@@ -406,6 +435,11 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "fuelPostSelectionCriticalChain"
+        && request.fuel_post_selection_critical_chain.is_some()
+    {
+        return Err("M2r stimulus is unavailable to other operations".into());
+    }
     if request.operation != "fuelPostStoreConsumerChain"
         && request.fuel_post_store_consumer_chain.is_some()
     {
@@ -612,6 +646,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "adaptiveLimiterFuelGateChain" => crate::adaptive_fuel::validate_request(request)?,
         "fuelPostStoreChain" => crate::post_store::validate_request(request)?,
         "fuelPostStoreConsumerChain" => crate::post_store_consumer::validate_request(request)?,
+        "fuelPostSelectionCriticalChain" => {
+            crate::post_selection_critical::validate_request(request)?
+        }
         "vtecFuelChain" => crate::vtec_fuel::validate_request(request)?,
         "ignitionMapLookup" => crate::ignition::validate_request(request)?,
         "ignitionSelectorChain" => crate::ignition_selector::validate_request(request)?,
@@ -626,6 +663,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "fuelPostSelectionCriticalChain" {
+        return crate::post_selection_critical::run(request, response);
+    }
     if request.operation == "fuelPostStoreConsumerChain" {
         return crate::post_store_consumer::run(request, response);
     }
@@ -712,7 +752,7 @@ pub fn run_request(request: Request) -> Result<Response, String> {
             .iter()
             .map(String::as_str)
             .collect();
-        response.synthetic_result = Some(execute_in_state_with_policy(
+        let mut result = execute_in_state_with_policy(
             &mut cpu,
             &mut bus,
             &contract,
@@ -721,9 +761,22 @@ pub fn run_request(request: Request) -> Result<Response, String> {
             if request.operation == "checksumSynthetic" {
                 Some(crate::instruction_forms::checksum_form_admission)
             } else {
-                None
+                Some(synthetic_form_admission)
             },
-        ));
+        );
+        // Generic synthetic historically calls unsupported forms execution errors,
+        // not strict unresolved boundaries. Preserve that status; assumption gates
+        // (including47/45 81) retain their original unresolved status.
+        if request.operation == "synthetic"
+            && result.status == 1
+            && result
+                .error
+                .as_ref()
+                .is_some_and(|e| e.starts_with("unimplemented in reviewed slice subset:"))
+        {
+            result.status = 2;
+        }
+        response.synthetic_result = Some(result);
         return Ok(response);
     }
     response.entry_contracts = vec![

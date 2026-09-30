@@ -123,12 +123,19 @@ public static class P28PostStoreConsumerValidator
         _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2q contract differs.");
         foreach (var key in new[] { "compactRows", "thresholdRows", "diagnostics" }) Require(root.GetProperty(key).GetArrayLength() == 0, "Foreign rows.");
         Require(root.GetProperty("syntheticResult").ValueKind == JsonValueKind.Null, "Foreign synthetic result.");
+        return AnalyzeEvidence(image, scenario, root, id);
+    }
+    // A new outer task owns its identity and may retain a native suffix after2259.
+    internal static IReadOnlyList<P28PostStoreConsumerSequence> AnalyzeEvidence(RomImage image, P28PostStoreConsumerScenario scenario,
+        JsonElement root, string id, Func<int, int, bool>? terminalAfter = null, Func<int, int, ushort>? ieBefore = null,
+        Action<int, int, JsonElement>? continuationBefore = null)
+    {
         var seq = root.GetProperty("consumerSequences"); Require(seq.GetArrayLength() == 3, "M2q scratch count differs.");
         var own = new P28PostStoreConsumerOwn[3, scenario.Calls.Count];
         for (var p = 0; p < 3; p++)
         {
             var model = new P28PostStoreConsumerHistory(image, scenario);
-            for (var i = 0; i < scenario.Calls.Count; i++) own[p, i] = model.Step(scenario.Calls[i]);
+            for (var i = 0; i < scenario.Calls.Count; i++) own[p, i] = model.Step(scenario.Calls[i], ieBefore?.Invoke(p, i));
         }
         var prefixView = JsonSerializer.SerializeToElement(new
         {
@@ -142,7 +149,8 @@ public static class P28PostStoreConsumerValidator
             }).ToArray()
         });
         var prefixes = P28PostStoreValidator.AnalyzeEvidence(image, scenario.PrefixScenario, prefixView, id,
-            (p, i) => (byte)own[p, i].Consumer.ModeBefore, (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0);
+            (p, i) => (byte)own[p, i].Consumer.ModeBefore,
+            (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0 || terminalAfter?.Invoke(p, i) == true, ieBefore);
         var reports = new List<P28PostStoreConsumerSequence>();
         for (var p = 0; p < 3; p++)
         {
@@ -167,7 +175,8 @@ public static class P28PostStoreConsumerValidator
                     var ticks = adaptive.GetProperty("ticks"); var producer = adaptive.GetProperty("producer");
                     var firstFragment = ticks.GetArrayLength() > 0 ? ticks[0] : producer;
                     Require(firstFragment.ValueKind == JsonValueKind.Object, "Missing first native fragment boundary.");
-                    RequireEventContinuation(previousExit, firstFragment.GetProperty("before"));
+                    if (continuationBefore is null) RequireEventContinuation(previousExit, firstFragment.GetProperty("before"));
+                    else continuationBefore(p, i, firstFragment.GetProperty("before"));
                     // Prefix evidence independently proves all partial native writes; only2239 may change0150.
                     word0150 = row.GetProperty("prefix").GetProperty("word0150After").GetInt32();
                     var suffix = row.GetProperty("prefix").GetProperty("suffix");
@@ -198,6 +207,7 @@ public static class P28PostStoreConsumerValidator
                     generation.HasValue ? "RetainedNativeGeneration" : "InitialDiagnosticStorage", projection, status == 0 ? row.GetProperty("selectedScaledWordX1").GetInt32() : null,
                     status == 0 ? row.GetProperty("retainedOrZeroA").GetInt32() : null, prefix, ReportRow(row, scenario.TraceCallIndexes.Contains(i))));
                 stopped |= status != 0;
+                stopped |= terminalAfter?.Invoke(p, i) == true;
             }
             reports.Add(new(id, pattern, checkpoints.AsReadOnly()));
         }

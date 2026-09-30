@@ -47,4 +47,6 @@ internal sealed class P28PostStorePrefixModel
         _mode = numeric.ModeAfter; _adaptive.AcceptModeledFuelByte(_mode);
         return (numeric, o);
     }
+    internal ushort ModeledIe => _adaptive.ModeledIe;
+    internal void AcceptModeledIe(ushort value) => _adaptive.AcceptModeledIe(value);
 }

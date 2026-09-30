@@ -166,12 +166,47 @@ pub(crate) fn execute_suffix(cpu: &mut Cpu, bus: &mut Bus) -> Suffix {
         accesses,
     }
 }
-fn observations(cpu: &Cpu, bus: &mut Bus) -> (u8, u16) {
+pub(crate) fn observations(cpu: &Cpu, bus: &mut Bus) -> (u8, u16) {
     bus.configure_scoped_access(vec![[0x12C, 0x12D], [0x150, 0x152]], 4096);
     (
         read_data_u8(cpu, bus, 0x12C),
         read_data_u16(cpu, bus, 0x150),
     )
+}
+pub(crate) fn checkpoint(cpu: &Cpu, bus: &mut Bus, c: &post_store::Call) -> Checkpoint {
+    let (mode012c_before, word0150_before) = observations(cpu, bus);
+    Checkpoint {
+        index: c.adaptive.fuel.index,
+        status: 4,
+        prefix: post_store::checkpoint(cpu, bus, c),
+        mode012c_before,
+        mode012c_after: mode012c_before,
+        word0150_before,
+        word0150_after: word0150_before,
+        consumer: None,
+        selected_scaled_word_x1: None,
+        retained_or_zero_a: None,
+    }
+}
+/// Reusable historical body; its native stop and serialized observations remain unchanged.
+pub(crate) fn execute_checkpoint(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    c: &post_store::Call,
+    row: &mut Checkpoint,
+) {
+    post_store::execute_checkpoint(cpu, bus, c, &mut row.prefix);
+    row.status = row.prefix.status;
+    if row.status == 0 {
+        let suffix = execute_suffix(cpu, bus);
+        row.status = suffix.stage.result.status;
+        if row.status == 0 {
+            row.selected_scaled_word_x1 = Some(suffix.exit.x1);
+            row.retained_or_zero_a = Some(cpu.a);
+        }
+        row.consumer = Some(suffix);
+    }
+    (row.mode012c_after, row.word0150_after) = observations(cpu, bus);
 }
 pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     let s = r
@@ -185,34 +220,10 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
         let mut stopped = false;
         let mut checkpoints = vec![];
         for c in &s.calls {
-            let (mode012c_before, word0150_before) = observations(&cpu, &mut bus);
-            let prefix = post_store::checkpoint(&cpu, &mut bus, c);
-            let mut row = Checkpoint {
-                index: c.adaptive.fuel.index,
-                status: 4,
-                prefix,
-                mode012c_before,
-                mode012c_after: mode012c_before,
-                word0150_before,
-                word0150_after: word0150_before,
-                consumer: None,
-                selected_scaled_word_x1: None,
-                retained_or_zero_a: None,
-            };
+            let mut row = checkpoint(&cpu, &mut bus, c);
             if !stopped {
-                post_store::execute_checkpoint(&mut cpu, &mut bus, c, &mut row.prefix);
-                row.status = row.prefix.status;
-                if row.status == 0 {
-                    let suffix = execute_suffix(&mut cpu, &mut bus);
-                    row.status = suffix.stage.result.status;
-                    if row.status == 0 {
-                        row.selected_scaled_word_x1 = Some(suffix.exit.x1);
-                        row.retained_or_zero_a = Some(cpu.a);
-                    }
-                    row.consumer = Some(suffix);
-                }
+                execute_checkpoint(&mut cpu, &mut bus, c, &mut row);
                 stopped = row.status != 0;
-                (row.mode012c_after, row.word0150_after) = observations(&cpu, &mut bus);
             }
             checkpoints.push(row);
         }

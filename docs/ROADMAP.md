@@ -1,5 +1,14 @@
 # Roadmap
 
+M2r adds [post-selection synchronous software state and original-config bypass](M2R_POST_SELECTION_CRITICAL_CHAIN.md):
+continuous2259..22B1 on the same CPU/RAM, one shared word IE, exact PSWH MIE-bit
+edits, native019x transfers and restore-source00F8. The original zero configuration
+must be read and its branch proved dynamically;227A remains excluded in that
+scope. The common result comes from current03B4, not the clobbered M2q numeric
+carriers. IRQ NotInjected and elapsed time None; previous stops, ownership and
+publication contracts remain unchanged. Native/model-only/compatibility/synthetic
+counts stay separate. No next stage, GUI or hardware is started automatically.
+
 M2q adds [native DATA0150 consumer and software selection](M2Q_POST_STORE_CONSUMER_CHAIN.md):
 continuous223B..2259, actual223D word reader/comparison, native012C.5 ownership and
 conditional CAL5991/RT result read into X1 before the IO/IRQ boundary. X1/A are

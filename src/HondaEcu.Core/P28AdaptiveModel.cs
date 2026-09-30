@@ -31,6 +31,9 @@ public sealed class P28AdaptiveModel
     }
     internal void AcceptModeledFuelByte(byte value)
     { _limiter.AcceptModeledFuelByte(value); _state = _state with { Limiter = _limiter.ModeledState }; }
+    internal ushort ModeledIe => _state.Ie;
+    // Composition only: a later native suffix may synchronously change this same software word.
+    internal void AcceptModeledIe(ushort value) => _state = _state with { Ie = value };
     internal P28LimiterDecisionStep StepDecision(ushort rawPeriod, bool fixedSource)
     {
         var decision = _limiter.StepDecision(rawPeriod, false, fixedSource);
