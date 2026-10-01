@@ -143,7 +143,7 @@ public static class P28LimiterFuelValidator
     internal static IReadOnlyList<P28LimiterFuelSequence> AnalyzeShared(RomImage image, P28LimiterFuelScenario s, JsonElement root, JsonElement sequences, string id,
         Func<int, int, byte, P28LimiterDecisionStep>? decisionModel = null, Action<int, int, byte>? finishModel = null,
         Func<int, int, int>? decisionEntryA = null, Func<int, int, byte>? source011b = null, ushort? initialPrevious03b4 = null,
-        Func<int, int, byte>? producerMode012c = null)
+        Func<int, int, byte>? producerMode012c = null, Func<int, int, byte>? mode012bBefore = null)
     {
         Require(sequences.GetArrayLength() == 3, "Joint scratch count differs.");
         var expected = new P28LimiterDecisionStep?[3, s.Calls.Count];
@@ -166,7 +166,7 @@ public static class P28LimiterFuelValidator
             {
                 models[p].AcceptModeledFuelByte(mode); var decision = decisionModel is null ? models[p].StepDecision(s.Calls[i].RawPeriod, false, true) : decisionModel(p, i, mode); expected[p, i] = decision;
                 return (decision.After.Data0124, decision.After.Data012B);
-            }, (p, i, mode) => { models[p].AcceptModeledFuelByte(mode); finishModel?.Invoke(p, i, mode); }, initialPrevious03b4, producerMode012c);
+            }, (p, i, mode) => { models[p].AcceptModeledFuelByte(mode); finishModel?.Invoke(p, i, mode); }, initialPrevious03b4, producerMode012c, mode012bBefore);
         }
         var reports = new List<P28LimiterFuelSequence>();
         for (var p = 0; p < 3; p++)
@@ -179,6 +179,7 @@ public static class P28LimiterFuelValidator
             {
                 var r = rows[i]; P28LimiterScenario.Shape(r, "index", "status", "input", "inputWrites", "stateBefore", "stateAfterDecision", "stateAfter", "decisionEntry", "decisionExit", "transitionToDecisionWrites", "handoffToDecision", "decision", "decisionAccesses", "fuel");
                 foreach (var key in new[] { "stateBefore", "stateAfterDecision", "stateAfter" }) P28LimiterScenario.Shape(r.GetProperty(key), "data0124", "data012b", "data01d7");
+                if (mode012bBefore is not null) { var retained = JsonNode.Parse(previous.GetRawText())!; retained["data012b"] = mode012bBefore(p, i); previous = JsonSerializer.SerializeToElement(retained); }
                 Require(r.GetProperty("index").GetInt32() == i && Equal(r.GetProperty("stateBefore"), previous), "M2n initial/shared history differs.");
                 var status = r.GetProperty("status").GetInt32(); Require(status is >= 0 and <= 4, "M2n status differs."); var f = r.GetProperty("fuel");
                 P28FuelFactorValidator.ValidateCheckpointShape(f, true, f.GetProperty("prefix").GetProperty("status").GetInt32() != 4);

@@ -194,7 +194,7 @@ public sealed class P28FuelFactorTests
             allowAssumptions = Array.Empty<string>(),
             synthetic = new { entryPc = 0, exitPcs = new[] { program.Length }, allowedCodeRanges = new[] { new[] { 0, program.Length } }, psw = 0x0101, lrb = 0x20, usp = 0x280, instructionBudget = 32, dataSeeds = Array.Empty<int[]>(), outputAddresses = new[] { 0x158, 0x159, 0x360, 0x361 } }
         });
-        Assert.Equal("0.26.0", response.Response.GetProperty("runnerVersion").GetString()); var result = response.Response.GetProperty("syntheticResult"); Assert.Equal(0, result.GetProperty("status").GetInt32());
+        Assert.Equal("0.27.0", response.Response.GetProperty("runnerVersion").GetString()); var result = response.Response.GetProperty("syntheticResult"); Assert.Equal(0, result.GetProperty("status").GetInt32());
         Assert.Equal(new[] { 12, 0, 224, 1 }, result.GetProperty("outputs").EnumerateArray().Select(v => v.GetInt32()));
         var traces = result.GetProperty("trace").EnumerateArray().ToArray(); Assert.Contains(traces, t => t.GetProperty("pc").GetInt32() == 9 && t.GetProperty("accumulator").GetInt32() == 12);
         Assert.Contains(traces, t => t.GetProperty("pc").GetInt32() == 17 && t.GetProperty("accumulator").GetInt32() == 480);

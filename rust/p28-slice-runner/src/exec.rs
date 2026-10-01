@@ -431,7 +431,8 @@ impl<'a> Exec<'a> {
                 if base == "ADD"
                     && !byte
                     && ((args[0] == Arg::Reg(Reg::A) && args[1] == Arg::Er(3))
-                        || (args[0] == Arg::Reg(Reg::X1) && args[1] == Arg::ImmN16))
+                        || (matches!(args[0], Arg::Reg(Reg::X1 | Reg::Dp))
+                            && args[1] == Arg::ImmN16))
                 {
                     self.cpu.hc = (a & 15) + (b & 15) > 15;
                 }

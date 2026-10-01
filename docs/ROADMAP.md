@@ -1,5 +1,14 @@
 # Roadmap
 
+M2s adds [bounded22B1 software continuation and a separate quartet-consumer audit](M2S_COMMON_RESULT_CONSUMER_CHAIN.md).
+The continuous path has0 quartet-reader invocations; counter/disable paths stop
+before236C after a local byte013B output. Calculation paths refuse zero division
+before2333 or ambiguous JGT before233A. Actual readers are outside the established
+continuous caller scope; no ScriptedConsumerEntry or IRQ delivery is invented.
+Overall Partial/QuartetConsumerNotRun, not full pre-peripheral closure. Historical
+boundaries, strict M2i Blocked, PC-only readiness and private-material preservation
+remain unchanged. No next stage, GUI or hardware starts automatically.
+
 M2r adds [post-selection synchronous software state and original-config bypass](M2R_POST_SELECTION_CRITICAL_CHAIN.md):
 continuous2259..22B1 on the same CPU/RAM, one shared word IE, exact PSWH MIE-bit
 edits, native019x transfers and restore-source00F8. The original zero configuration

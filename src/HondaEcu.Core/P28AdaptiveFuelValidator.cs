@@ -157,7 +157,8 @@ public static class P28AdaptiveFuelValidator
     // Composition only: outer task validates its own identity/schema before using this prefix oracle.
     internal static IReadOnlyList<P28AdaptiveFuelSequence> AnalyzeEvidence(RomImage image, P28AdaptiveFuelScenario scenario,
         JsonElement root, string id, ushort? initialPrevious03b4 = null, Func<int, int, bool>? terminalAfter = null,
-        Func<int, int, byte>? producerMode012c = null, Func<int, int, ushort>? ieBefore = null)
+        Func<int, int, byte>? producerMode012c = null, Func<int, int, ushort>? ieBefore = null,
+        Func<int, int, byte>? mode012bBefore = null, byte source011bLow7 = 0)
     {
         var sequences = root.GetProperty("adaptiveFuelSequences"); Require(sequences.GetArrayLength() == 3, "M2o scratch count differs.");
         var models = Enumerable.Range(0, 3).Select(_ => new P28AdaptiveModel(image.Span, scenario.ModelInitial)).ToArray();
@@ -181,7 +182,7 @@ public static class P28AdaptiveFuelValidator
                 },
                 (p, _, mode) => models[p].AcceptModeledFuelByte(mode),
                 (p, i) => ProductionAccumulator(production[p, i]!),
-                (_, i) => scenario.Calls[i].FixedSource ? (byte)128 : (byte)0, initialPrevious03b4, producerMode012c);
+                (_, i) => (byte)(source011bLow7 | (scenario.Calls[i].FixedSource ? 128 : 0)), initialPrevious03b4, producerMode012c, mode012bBefore);
         }
         var reports = new List<P28AdaptiveFuelSequence>();
         for (var p = 0; p < 3; p++)
@@ -208,10 +209,11 @@ public static class P28AdaptiveFuelValidator
                 else Require(Word(before, "ramCut") == scenario.InitialState.RamCut && Word(before, "ramResume") == scenario.InitialState.RamResume &&
                     Word(before, "ie") == scenario.InitialState.Ie && Word(before, "restoreIe") == scenario.InitialState.RestoreIe &&
                     Word(before, "timer") == scenario.InitialState.Timer && Word(before, "counter") == scenario.InitialState.Counter &&
-                    before.GetProperty("sources").EnumerateArray().Select(x => x.GetInt32()).SequenceEqual(new[] { pattern, pattern, pattern, pattern, pattern, 0 }), "Authoritative initial history differs.");
+                    before.GetProperty("sources").EnumerateArray().Select(x => x.GetInt32()).SequenceEqual(new[] { pattern, pattern, pattern, pattern, pattern, (int)source011bLow7 }), "Authoritative initial history differs.");
                 var producer = row.GetProperty("producer"); var ticks = row.GetProperty("ticks"); var joint = row.GetProperty("joint");
                 foreach (var key in new[] { "stateBefore", "stateAfterDecision", "stateAfter" })
                     P28LimiterScenario.Shape(joint.GetProperty(key), "data0124", "data012b", "data01d7");
+                if (mode012bBefore is not null) { var retainedJoint = JsonNode.Parse(priorJoint.GetRawText())!; retainedJoint["data012b"] = mode012bBefore(p, i); priorJoint = JsonSerializer.SerializeToElement(retainedJoint); }
                 Require(Equal(joint.GetProperty("stateBefore"), priorJoint), "Shared decision/fuel history was reseeded before producer or terminal suffix.");
                 P28LimiterFuelCheckpoint? continuation = i < count ? continuations![p].Checkpoints[i] : null;
                 var provenance = "NotRun"; int? bank = null; string? path = null; int[][] reads = [];

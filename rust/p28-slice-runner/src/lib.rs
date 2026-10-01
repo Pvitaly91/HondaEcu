@@ -5,6 +5,7 @@ pub mod bus;
 pub mod chain;
 pub mod chain_forms;
 pub mod checksum;
+pub mod common_result_consumer;
 pub mod cpu;
 pub mod decoder;
 pub mod exec;

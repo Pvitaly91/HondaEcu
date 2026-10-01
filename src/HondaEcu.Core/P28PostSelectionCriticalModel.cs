@@ -31,9 +31,10 @@ internal sealed class P28PostSelectionCriticalHistory
             scenario.InitialState.Previous03b4, Enumerable.Repeat(scratchPattern * 257, 4).ToArray(),
             initial.Joint.ProducerMode012c, 0);
     }
-    internal P28PostSelectionCriticalOwn Step(P28PostStoreCall call)
+    internal P28PostSelectionCriticalState ModeledState => _state;
+    internal P28PostSelectionCriticalOwn Step(P28PostStoreCall call, byte? mode012bBefore = null)
     {
-        var before = _state; var prefix = _prefix.Step(call, before.Ie); var sources = call.Adaptive.Fuel.Sources;
+        var before = _state; var prefix = _prefix.Step(call, before.Ie, mode012bBefore); var sources = call.Adaptive.Fuel.Sources;
         // X1's entry canary is irrelevant after mandatory native2254; arithmetic is own model only.
         var consumer = P28PostStoreConsumerEvidence.Build(prefix.PostStoreExit, (ushort)prefix.PostStore.Result,
             sources.Source014c, sources.Source0144, (byte)prefix.Consumer.ModeBefore, 0);

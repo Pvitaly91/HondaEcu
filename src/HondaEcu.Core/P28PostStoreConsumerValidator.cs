@@ -128,14 +128,14 @@ public static class P28PostStoreConsumerValidator
     // A new outer task owns its identity and may retain a native suffix after2259.
     internal static IReadOnlyList<P28PostStoreConsumerSequence> AnalyzeEvidence(RomImage image, P28PostStoreConsumerScenario scenario,
         JsonElement root, string id, Func<int, int, bool>? terminalAfter = null, Func<int, int, ushort>? ieBefore = null,
-        Action<int, int, JsonElement>? continuationBefore = null)
+        Action<int, int, JsonElement>? continuationBefore = null, Func<int, int, byte>? mode012bBefore = null, byte source011bLow7 = 0)
     {
         var seq = root.GetProperty("consumerSequences"); Require(seq.GetArrayLength() == 3, "M2q scratch count differs.");
         var own = new P28PostStoreConsumerOwn[3, scenario.Calls.Count];
         for (var p = 0; p < 3; p++)
         {
             var model = new P28PostStoreConsumerHistory(image, scenario);
-            for (var i = 0; i < scenario.Calls.Count; i++) own[p, i] = model.Step(scenario.Calls[i], ieBefore?.Invoke(p, i));
+            for (var i = 0; i < scenario.Calls.Count; i++) own[p, i] = model.Step(scenario.Calls[i], ieBefore?.Invoke(p, i), mode012bBefore?.Invoke(p, i));
         }
         var prefixView = JsonSerializer.SerializeToElement(new
         {
@@ -150,7 +150,7 @@ public static class P28PostStoreConsumerValidator
         });
         var prefixes = P28PostStoreValidator.AnalyzeEvidence(image, scenario.PrefixScenario, prefixView, id,
             (p, i) => (byte)own[p, i].Consumer.ModeBefore,
-            (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0 || terminalAfter?.Invoke(p, i) == true, ieBefore);
+            (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0 || terminalAfter?.Invoke(p, i) == true, ieBefore, mode012bBefore, source011bLow7);
         var reports = new List<P28PostStoreConsumerSequence>();
         for (var p = 0; p < 3; p++)
         {

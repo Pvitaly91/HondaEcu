@@ -295,3 +295,191 @@ fn exact_generic_supplement_rejects_wrong_mask_address_width_status_bit_and_disp
         assert_eq!(r["syntheticResult"]["usedAssumptions"], json!([]));
     }
 }
+
+fn common_request(partial: bool) -> Value {
+    let mut r = request(false);
+    let mut s = r
+        .as_object_mut()
+        .unwrap()
+        .remove("fuelPostSelectionCriticalChain")
+        .unwrap();
+    let prefix = s["initialState"].take();
+    s["initialState"] = json!({"prefix":prefix,"softwareSources":{
+        "word011aMask1034":0x1034,"bit011f5":true,"bit0120_0":true,
+        "byte00be":73,"bit00b7_0":true,"word0136":17,"history013b":19,"history013d":23
+    }});
+    r["operation"] = json!("fuelCommonResultConsumerChain");
+    r["fuelCommonResultConsumerChain"] = s;
+    let rom = r["images"][0]["rom"].as_array_mut().unwrap();
+    let mut put = |pc: usize, bytes: &[u8]| {
+        for (i, b) in bytes.iter().enumerate() {
+            rom[pc + i] = json!(*b);
+        }
+    };
+    // Invented native byte history copy, mode RMW and spaced jumps, not OEM source math.
+    put(
+        0x22B1,
+        &[0xF4, 0x3D, 0xD4, 0x3B, 0xC4, 0x2B, 0x3A, 0xCB, 0x6B],
+    );
+    put(0x2325, if partial { &[0xC8, 0] } else { &[0xCB, 0x43] });
+    put(0x236A, &[0xD4, 0x3B]);
+    r
+}
+
+#[test]
+fn real_common_process_native_prefix_stop_matches_continuation_entry_without_reseed() {
+    let r = process(&common_request(false));
+    assert!(r.get("criticalSequences").is_none());
+    assert_eq!(r["entryContracts"][0]["dynamicQuartetReaders"], json!([]));
+    assert_eq!(
+        r["entryContracts"][0]["overallConsumerChain"],
+        "Partial;StaticConsumersNotRun"
+    );
+    for seq in r["commonResultSequences"].as_array().unwrap() {
+        let rows = seq["checkpoints"].as_array().unwrap();
+        for (i, row) in rows.iter().enumerate() {
+            assert_eq!(row["status"], 0, "{row}");
+            assert_eq!(row["prefix"]["critical"]["exit"]["pc"], 0x22B1);
+            assert_eq!(
+                row["commonConsumer"]["entry"],
+                row["prefix"]["critical"]["exit"]
+            );
+            assert_eq!(row["commonConsumer"]["exit"]["pc"], 0x236C);
+            assert_eq!(row["softwareResult13b"], 23);
+            assert_eq!(
+                row["stateAtEntry"]["byte013b"],
+                if i == 0 { json!(19) } else { json!(23) }
+            );
+            assert_eq!(row["stateAfter"]["byte013d"], 23);
+            assert_eq!(row["stateAfter"]["word0136"], 17);
+            assert_eq!(row["stateAfter"]["byte00be"], 73);
+            assert_eq!(
+                row["stateAfter"]["word011a"].as_u64().unwrap() & 0x1034,
+                0x1034
+            );
+            assert_eq!(
+                row["stateAfter"]["prefix"]["commonWords03b6"],
+                json!([2100, 2100, 2100, 2100])
+            );
+            let accesses = row["commonConsumer"]["accesses"].as_array().unwrap();
+            assert!(accesses.contains(&json!([0x22B1, 0x13D, 8, 0, 23])));
+            assert!(accesses.contains(&json!([0x236A, 0x13B, 8, 1, 23])));
+            assert!(accesses
+                .iter()
+                .all(|a| !(0x3B6..0x3BE).contains(&a[1].as_u64().unwrap())));
+            if i > 0 {
+                assert_eq!(row["stateBefore"], rows[i - 1]["stateAfter"]);
+                assert_eq!(
+                    row["prefix"]["prefix"]["prefix"]["prefix"]["producer"]["before"],
+                    rows[i - 1]["commonConsumer"]["exit"]
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn real_common_process_partial_keeps_native_output_history_but_later_event_is_not_run() {
+    let r = process(&common_request(true));
+    for seq in r["commonResultSequences"].as_array().unwrap() {
+        let a = &seq["checkpoints"][0];
+        let b = &seq["checkpoints"][1];
+        assert_eq!(a["prefix"]["status"], 0);
+        assert_eq!(a["status"], 1);
+        assert_eq!(a["commonConsumer"]["stage"]["result"]["stopPc"], 0x2325);
+        assert!(a["softwareResult13b"].is_null());
+        assert_eq!(a["stateAfter"]["byte013b"], 23);
+        assert!(a["commonConsumer"]["accesses"]
+            .as_array()
+            .unwrap()
+            .contains(&json!([0x22B3, 0x13B, 8, 1, 23])));
+        assert_eq!(b["status"], 4);
+        assert_eq!(b["prefix"]["status"], 4);
+        assert!(b["commonConsumer"].is_null());
+        assert!(b["stateAtEntry"].is_null());
+        assert_eq!(b["stateBefore"], a["stateAfter"]);
+        assert_eq!(b["stateAfter"], b["stateBefore"]);
+        assert_eq!(b["prefix"]["prefix"]["prefix"]["snapshotWrites"], json!([]));
+        assert_eq!(
+            b["prefix"]["prefix"]["prefix"]["prefix"]["ticks"],
+            json!([])
+        );
+    }
+}
+
+#[test]
+fn common_schema_rejects_ready_results_per_event_sources_branch_flags_and_foreign_stimuli() {
+    for n in 0..13 {
+        let mut r = common_request(false);
+        let key = "fuelCommonResultConsumerChain";
+        match n {
+            0 => r[key]["calls"][0]["softwareResult13b"] = json!(7),
+            1 => {
+                r[key]["calls"][0]["softwareSources"] =
+                    r[key]["initialState"]["softwareSources"].clone()
+            }
+            2 => r[key]["calls"][0]["branchChoice"] = json!(true),
+            3 => r[key]["calls"][0]["a"] = json!(7),
+            4 => r[key]["calls"][0]["cf"] = json!(true),
+            5 => r[key]["calls"][0]["pc"] = json!(0x22B1),
+            6 => r[key]["initialState"]["commonWords03b6"] = json!([7, 7, 7, 7]),
+            7 => r[key]["initialState"]["softwareSources"]["word011aMask1034"] = json!(0x8000),
+            8 => r["fuelPostSelectionCriticalChain"] = json!({}),
+            9 => r["operation"] = json!("fuelPostSelectionCriticalChain"),
+            10 => r[key]["calls"] = json!([]),
+            11 => r[key]["initialState"]["softwareSources"]["irqDelivery"] = json!(true),
+            _ => r["allowAssumptions"] = json!(["oki.add-er3-a"]),
+        }
+        if let Ok(parsed) = serde_json::from_value(r) {
+            assert!(run_request(parsed).is_err(), "case{n}");
+        }
+    }
+}
+
+#[test]
+fn real_process_four_native_slots_are_loop_read_and_accumulated_before_fake_peripheral() {
+    for words in [[7u16; 4], [3, 11, 29, 47]] {
+        let mut rom = vec![0; 54];
+        let mut pc = 0usize;
+        let mut put = |bytes: &[u8]| {
+            emit(&mut rom, pc, bytes);
+            pc += bytes.len();
+        };
+        put(&[0x60, 0, 0]);
+        for (i, word) in words.iter().enumerate() {
+            put(&[
+                0x67,
+                *word as u8,
+                (*word >> 8) as u8,
+                0xD0,
+                (i * 2) as u8,
+                3,
+            ]);
+        }
+        put(&[0x44, 0x98, 0, 0]);
+        // Native X1 progression and native back-edge, not four unrolled host reads.
+        put(&[
+            0xE0, 0, 3, 0x08, 0x88, 0x90, 0x80, 2, 0, 0x90, 0xC0, 8, 0, 0xCA, 0xF1,
+        ]);
+        put(&[0x60, 0, 0, 0xD0, 0x40, 3]);
+        put(&[0xF5, 0x24]); // fake peripheral-like access must not execute.
+        assert_eq!(pc, 54);
+        let r = process(&generic_request(rom, 52, json!([]), json!([0x340, 0x341])));
+        let result = &r["syntheticResult"];
+        assert_eq!(result["status"], 0, "{result}");
+        assert_eq!(result["stopPc"], 52);
+        let sum = words.iter().copied().sum::<u16>();
+        assert_eq!(result["outputs"], json!([sum as u8, (sum >> 8) as u8]));
+        let trace = result["trace"].as_array().unwrap();
+        assert_eq!(trace.iter().filter(|e| e["pc"] == 31).count(), 4);
+        assert_eq!(
+            trace
+                .iter()
+                .filter(|e| e["pc"] == 44 && e["nextPc"] == 31)
+                .count(),
+            3
+        );
+        assert!(!trace.iter().any(|e| e["pc"] == 52));
+        assert_eq!(result["usedAssumptions"], json!([]));
+    }
+}

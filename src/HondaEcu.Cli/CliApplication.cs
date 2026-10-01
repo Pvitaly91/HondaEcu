@@ -173,6 +173,10 @@ public sealed partial class CliApplication
               --baseline-binding <binding.json> --runner <runner-0.26.0>
               --scenario <m2r-scenario.json> --output <new-private-report.json>
               Same-machine2259..22B1 synchronous software IE/PSWH and original-config bypass; IRQ NotInjected, no GUI or BIN.
+          research p28-fuel common-result-consumer-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding.json> --runner <runner-0.27.0>
+              --scenario <m2s-scenario.json> --output <new-private-report.json>
+              Part A same-machine22B1 software continuation; Part B quartet consumers static/NotRun; no scheduler seam, GUI or BIN.
           research p28-fuel vtec-chain-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <private-json> --runner <v0.14.0-rust-executable>
               --scenario <bounded-m2f-scenario.json> --output <new-private-json>

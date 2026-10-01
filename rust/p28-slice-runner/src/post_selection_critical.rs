@@ -170,7 +170,7 @@ fn ranges() -> Vec<[u16; 2]> {
         [0x7FE, 0x800],
     ]
 }
-fn state(cpu: &Cpu, bus: &mut Bus) -> State {
+pub(crate) fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     bus.configure_scoped_access(ranges(), 4096);
     State {
         ie: bus.adaptive_ie().expect("once-only shared IE"),
@@ -207,6 +207,41 @@ pub(crate) fn execute_suffix(cpu: &mut Cpu, bus: &mut Bus) -> Suffix {
         accesses,
     }
 }
+pub(crate) fn checkpoint(cpu: &Cpu, bus: &mut Bus, c: &post_store::Call) -> Checkpoint {
+    let before = state(cpu, bus);
+    Checkpoint {
+        index: c.adaptive.fuel.index,
+        status: 4,
+        prefix: post_store_consumer::checkpoint(cpu, bus, c),
+        state_before: before.clone(),
+        state_at_entry: None,
+        state_after: before,
+        critical: None,
+        words019x: None,
+        common_words03b6: None,
+    }
+}
+/// Shared M2r body; still stops before22B1, without any continuation reset.
+pub(crate) fn execute_checkpoint(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    c: &post_store::Call,
+    row: &mut Checkpoint,
+) {
+    post_store_consumer::execute_checkpoint(cpu, bus, c, &mut row.prefix);
+    row.status = row.prefix.status;
+    if row.status == 0 {
+        row.state_at_entry = Some(state(cpu, bus));
+        let suffix = execute_suffix(cpu, bus);
+        row.status = suffix.stage.result.status;
+        row.critical = Some(suffix);
+    }
+    row.state_after = state(cpu, bus);
+    if row.status == 0 {
+        row.words019x = Some(row.state_after.words019x);
+        row.common_words03b6 = Some(row.state_after.common_words03b6);
+    }
+}
 pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     let s = r
         .fuel_post_selection_critical_chain
@@ -219,32 +254,9 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
         let mut stopped = false;
         let mut checkpoints = vec![];
         for c in &s.calls {
-            let before = state(&cpu, &mut bus);
-            let mut row = Checkpoint {
-                index: c.adaptive.fuel.index,
-                status: 4,
-                prefix: post_store_consumer::checkpoint(&cpu, &mut bus, c),
-                state_before: before.clone(),
-                state_at_entry: None,
-                state_after: before,
-                critical: None,
-                words019x: None,
-                common_words03b6: None,
-            };
+            let mut row = checkpoint(&cpu, &mut bus, c);
             if !stopped {
-                post_store_consumer::execute_checkpoint(&mut cpu, &mut bus, c, &mut row.prefix);
-                row.status = row.prefix.status;
-                if row.status == 0 {
-                    row.state_at_entry = Some(state(&cpu, &mut bus));
-                    let suffix = execute_suffix(&mut cpu, &mut bus);
-                    row.status = suffix.stage.result.status;
-                    row.critical = Some(suffix);
-                }
-                row.state_after = state(&cpu, &mut bus);
-                if row.status == 0 {
-                    row.words019x = Some(row.state_after.words019x);
-                    row.common_words03b6 = Some(row.state_after.common_words03b6);
-                }
+                execute_checkpoint(&mut cpu, &mut bus, c, &mut row);
                 stopped = row.status != 0;
             }
             checkpoints.push(row);

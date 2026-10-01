@@ -435,6 +435,11 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != "fuelCommonResultConsumerChain"
+        && request.fuel_common_result_consumer_chain.is_some()
+    {
+        return Err("M2s stimulus is unavailable to other operations".into());
+    }
     if request.operation != "fuelPostSelectionCriticalChain"
         && request.fuel_post_selection_critical_chain.is_some()
     {
@@ -649,6 +654,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "fuelPostSelectionCriticalChain" => {
             crate::post_selection_critical::validate_request(request)?
         }
+        "fuelCommonResultConsumerChain" => {
+            crate::common_result_consumer::validate_request(request)?
+        }
         "vtecFuelChain" => crate::vtec_fuel::validate_request(request)?,
         "ignitionMapLookup" => crate::ignition::validate_request(request)?,
         "ignitionSelectorChain" => crate::ignition_selector::validate_request(request)?,
@@ -663,6 +671,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == "fuelCommonResultConsumerChain" {
+        return crate::common_result_consumer::run(request, response);
+    }
     if request.operation == "fuelPostSelectionCriticalChain" {
         return crate::post_selection_critical::run(request, response);
     }

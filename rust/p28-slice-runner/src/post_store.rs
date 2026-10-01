@@ -220,16 +220,32 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
     validate_stimulus(r, s)
 }
 pub(crate) fn validate_stimulus(r: &Request, s: &Stimulus) -> Result<(), String> {
+    validate_parts(
+        r,
+        s.format_version,
+        &s.initial_state,
+        &s.calls,
+        &s.trace_call_indexes,
+    )
+}
+pub(crate) fn validate_parts(
+    r: &Request,
+    format_version: u32,
+    initial: &Initial,
+    calls: &[Call],
+    traces: &[u32],
+) -> Result<(), String> {
     // Preserve all historical M2o admission without accepting its top-level stimulus.
     let old = serde_json::from_value::<adaptive_fuel::Stimulus>(serde_json::json!({
-        "formatVersion":s.format_version, "initialState": {
-            "joint": serde_json::to_value(&s.initial_state.adaptive.joint).map_err(|e|e.to_string())?,
-            "ramCut":s.initial_state.adaptive.ram_cut, "ramResume":s.initial_state.adaptive.ram_resume,
-            "timer":s.initial_state.adaptive.timer, "counter":s.initial_state.adaptive.counter,
-            "ie":s.initial_state.adaptive.ie, "restoreIe":s.initial_state.adaptive.restore_ie
-        }, "calls":s.calls.iter().map(|c| &c.adaptive).collect::<Vec<_>>(),
-        "traceCallIndexes":s.trace_call_indexes
-    })).map_err(|e|e.to_string())?;
+        "formatVersion":format_version, "initialState": {
+            "joint": serde_json::to_value(&initial.adaptive.joint).map_err(|e|e.to_string())?,
+            "ramCut":initial.adaptive.ram_cut, "ramResume":initial.adaptive.ram_resume,
+            "timer":initial.adaptive.timer, "counter":initial.adaptive.counter,
+            "ie":initial.adaptive.ie, "restoreIe":initial.adaptive.restore_ie
+        }, "calls":calls.iter().map(|c| &c.adaptive).collect::<Vec<_>>(),
+        "traceCallIndexes":traces
+    }))
+    .map_err(|e| e.to_string())?;
     adaptive_fuel::validate_stimulus(r, &old)
 }
 pub fn contract() -> SliceContract {

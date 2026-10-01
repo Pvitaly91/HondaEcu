@@ -1,5 +1,13 @@
 # HondaEcu
 
+M2s adds a [common-result consumer audit and bounded software continuation](docs/M2S_COMMON_RESULT_CONSUMER_CHAIN.md)
+with `research p28-fuel common-result-consumer-check`, runner0.27.0. Same-machine
+continuation from22B1 reaches a local013B software boundary or a strict unresolved
+instruction; it contains no quartet reader. Separate readers require an
+unestablished IRQ/scheduler seam or prior replacing writers. Overall Partial,
+not a full consumer chain; no invented jump, peripheral execution, firmware/export,
+GUI/hardware or physical-role claim. PcInspectionOnly / NotFlashReady.
+
 M2r adds [post-selection synchronous software state and original-config bypass](docs/M2R_POST_SELECTION_CRITICAL_CHAIN.md)
 with `research p28-fuel post-selection-critical-check`, runner0.26.0. The same
 CPU/RAM continues from the unchanged M2q boundary2259 through IE/PSWH edits,

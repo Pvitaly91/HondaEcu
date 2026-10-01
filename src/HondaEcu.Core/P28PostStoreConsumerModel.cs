@@ -31,9 +31,10 @@ internal sealed class P28PostStoreConsumerHistory
         _previous = scenario.InitialState.Previous03b4;
         _mode = scenario.InitialState.Adaptive.Joint.ProducerMode012c;
     }
-    internal P28PostStoreConsumerOwn Step(P28PostStoreCall call, ushort? ieBefore = null)
+    internal P28PostStoreConsumerOwn Step(P28PostStoreCall call, ushort? ieBefore = null, byte? mode012bBefore = null)
     {
         if (ieBefore.HasValue) _prefix.AcceptModeledIe(ieBefore.Value);
+        if (mode012bBefore.HasValue) _prefix.AcceptModeledFuelByte(mode012bBefore.Value);
         var prefix = _prefix.Step(call.Adaptive, _previous, _mode);
         var sources = call.Adaptive.Fuel.Sources;
         var projection = P28PostStoreModel.Project(_previous, (ushort)prefix.Numeric.Corrected, call.Disable125,
@@ -42,8 +43,8 @@ internal sealed class P28PostStoreConsumerHistory
             call.Disable12e ? (byte)16 : (byte)0, sources.Source0133, sources.Source014c);
         var consumer = P28PostStoreConsumerModel.Project((ushort)projection.Result, sources.Source014c, sources.Source0144, _mode);
         _previous = (ushort)prefix.Numeric.Store03b4; _mode = (byte)consumer.ModeAfter;
-        return new(projection, postStore, consumer, _prefix.ModeledIe);
+        return new(projection, postStore, consumer, _prefix.ModeledIe, prefix.Numeric.ModeAfter);
     }
 }
 internal sealed record P28PostStoreConsumerOwn(P28PostStoreProjection PostStore, P28FuelAdditiveOracle PostStoreExit,
-    P28PostStoreConsumerProjection Consumer, ushort PrefixIe);
+    P28PostStoreConsumerProjection Consumer, ushort PrefixIe, byte PrefixMode012b);

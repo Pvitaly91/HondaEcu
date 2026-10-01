@@ -121,6 +121,13 @@ public static class P28PostSelectionCriticalValidator
         _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2r contract differs.");
         foreach (var key in new[] { "compactRows", "thresholdRows", "diagnostics" }) Require(root.GetProperty(key).GetArrayLength() == 0, "Foreign rows.");
         Require(root.GetProperty("syntheticResult").ValueKind == JsonValueKind.Null, "Foreign synthetic result.");
+        return AnalyzeEvidence(image, scenario, root, id);
+    }
+    // Later native suffixes own identity, terminal state and the literal next-event CPU boundary.
+    internal static IReadOnlyList<P28PostSelectionCriticalSequence> AnalyzeEvidence(RomImage image, P28PostSelectionCriticalScenario scenario,
+        JsonElement root, string id, Func<int, int, bool>? terminalAfter = null, Func<int, int, byte>? mode012bBefore = null,
+        byte source011bLow7 = 0, Action<int, int, JsonElement>? continuationBefore = null)
+    {
         var seq = root.GetProperty("criticalSequences"); Require(seq.GetArrayLength() == 3, "M2r scratch count differs.");
         var own = new P28PostSelectionCriticalOwn?[3, scenario.Calls.Count]; var ieBefore = new ushort[3, scenario.Calls.Count];
         for (var p = 0; p < 3; p++)
@@ -132,7 +139,7 @@ public static class P28PostSelectionCriticalValidator
             {
                 ieBefore[p, i] = currentIe;
                 if (stopped) continue;
-                var expected = model.Step(scenario.Calls[i]); own[p, i] = expected;
+                var expected = model.Step(scenario.Calls[i], mode012bBefore?.Invoke(p, i)); own[p, i] = expected;
                 var critical = rows[i].GetProperty("critical");
                 if (critical.ValueKind == JsonValueKind.Object)
                 {
@@ -141,7 +148,7 @@ public static class P28PostSelectionCriticalValidator
                     currentIe = (ushort)(steps == 0 ? expected.Entry.Ie : expected.Oracle.IeEnds[steps - 1]);
                 }
                 else currentIe = PrefixIeAfterPartial(image, rows[i].GetProperty("prefix"), currentIe, scenario.InitialState.Adaptive.RestoreIe);
-                stopped = rows[i].GetProperty("status").GetInt32() != 0;
+                stopped = rows[i].GetProperty("status").GetInt32() != 0 || terminalAfter?.Invoke(p, i) == true;
             }
         }
         var prefixView = JsonSerializer.SerializeToElement(new
@@ -156,12 +163,13 @@ public static class P28PostSelectionCriticalValidator
             }).ToArray()
         });
         var prefixes = P28PostStoreConsumerValidator.AnalyzeEvidence(image, scenario.PrefixScenario, prefixView, id,
-            (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0, (p, i) => ieBefore[p, i],
+            (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0 || terminalAfter?.Invoke(p, i) == true, (p, i) => ieBefore[p, i],
             (p, i, before) =>
             {
                 P28FuelFactorValidator.ValidateBoundary(before);
-                if (i > 0) RequireEventContinuation(seq[p].GetProperty("checkpoints")[i - 1].GetProperty("critical").GetProperty("exit"), before);
-            });
+                if (continuationBefore is not null) continuationBefore(p, i, before);
+                else if (i > 0) RequireEventContinuation(seq[p].GetProperty("checkpoints")[i - 1].GetProperty("critical").GetProperty("exit"), before);
+            }, mode012bBefore, source011bLow7);
         var reports = new List<P28PostSelectionCriticalSequence>();
         for (var p = 0; p < 3; p++)
         {
@@ -231,7 +239,7 @@ public static class P28PostSelectionCriticalValidator
                     generations[n], orders[n], words[n])).ToArray();
                 checkpoints.Add(new(i, disposition, prefix.Disposition, projection, status == 0 ? words[0] : null, status == 0 ? words[1] : null,
                     status == 0 ? words[2] : null, status == 0 ? words[3] : null, history, prefix, ReportRow(row, scenario.TraceCallIndexes.Contains(i))));
-                prior = after.Clone(); stopped |= status != 0;
+                prior = after.Clone(); stopped |= status != 0 || terminalAfter?.Invoke(p, i) == true;
             }
             reports.Add(new(id, pattern, checkpoints.AsReadOnly()));
         }

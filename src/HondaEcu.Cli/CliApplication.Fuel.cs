@@ -6,6 +6,8 @@ public sealed partial class CliApplication
 {
     private async Task<int> P28FuelResearchAsync(string[] args, CancellationToken cancellationToken)
     {
+        if (args.Length > 0 && args[0] == "common-result-consumer-check")
+            return await P28CommonResultConsumerCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "post-selection-critical-check")
             return await P28PostSelectionCriticalCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "post-store-consumer-check")
@@ -27,7 +29,7 @@ public sealed partial class CliApplication
         if (args.Length > 0 && args[0] == "vtec-chain-check")
             return await P28FuelVtecChainCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length == 0 || args[0] is not ("maps-inspect" or "lookup-check"))
-            throw new CliUsageException("Usage: hondaecu research p28-fuel <maps-inspect|lookup-check|calculation-chain-check|additive-chain-check|factor-chain-check|limiter-chain-check|adaptive-limiter-chain-check|post-store-chain-check|post-store-consumer-check|post-selection-critical-check|vtec-chain-check|export> ...");
+            throw new CliUsageException("Usage: hondaecu research p28-fuel <maps-inspect|lookup-check|calculation-chain-check|additive-chain-check|factor-chain-check|limiter-chain-check|adaptive-limiter-chain-check|post-store-chain-check|post-store-consumer-check|post-selection-critical-check|common-result-consumer-check|vtec-chain-check|export> ...");
         var check = args[0] == "lookup-check";
         var command = CommandLine.Parse(args[1..], new HashSet<string>(StringComparer.Ordinal) { "confirm-profile" });
         command.EnsureOnly(check

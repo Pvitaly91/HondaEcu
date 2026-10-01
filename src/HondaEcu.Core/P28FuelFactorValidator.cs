@@ -125,7 +125,7 @@ public static class P28FuelFactorValidator
     // Internal composition seam: shared pure numeric/oracle validation, not public admission or another machine.
     internal static IReadOnlyList<P28FuelFactorSequence> AnalyzeFuelEvidence(RomImage image, P28FuelFactorScenario scenario,
         JsonElement root, JsonElement seq, string id, Func<int, int, byte, (byte Gate, byte Mode)>? joint = null, Action<int, int, byte>? jointFinish = null,
-        ushort? initialPrevious03b4 = null, Func<int, int, byte>? producerMode012c = null)
+        ushort? initialPrevious03b4 = null, Func<int, int, byte>? producerMode012c = null, Func<int, int, byte>? mode012bBefore = null)
     {
         Require(seq.GetArrayLength() == 3, "Fuel scratch count differs.");
         var count = seq[0].GetProperty("checkpoints").EnumerateArray().Count(r => r.GetProperty("prefix").GetProperty("status").GetInt32() != 4);
@@ -165,6 +165,7 @@ public static class P28FuelFactorValidator
                 var row = rows[i]; ValidateCheckpointShape(row, joint is not null, joint is not null);
                 var prefix = row.GetProperty("prefix"); var stages = row.GetProperty("stages"); var boundaries = row.GetProperty("boundaries"); var fs = row.GetProperty("factorStage");
                 var status = row.GetProperty("status").GetInt32(); Require(status is >= 0 and <= 4 && row.GetProperty("index").GetInt32() == i, "M2m index/status differs.");
+                if (mode012bBefore is not null) mode = mode012bBefore(p, i);
                 if (joint is not null && !stopped) { var shared = joint(p, i, mode); gate = shared.Gate; mode = shared.Mode; }
                 Require(Equal(row.GetProperty("sourcesBefore"), JsonSerializer.SerializeToElement(sources, JsonDefaults.Create())) && row.GetProperty("modeBefore").GetByte() == mode &&
                     row.GetProperty("hysteresisBefore").GetByte() == hysteresis && row.GetProperty("factor0158Before").GetInt32() == factor &&

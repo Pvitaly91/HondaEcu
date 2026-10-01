@@ -120,7 +120,7 @@ public static class P28PostStoreValidator
     // Composition retains historical schema/boundary; a new outer operation owns its identity and terminal suffix.
     internal static IReadOnlyList<P28PostStoreSequence> AnalyzeEvidence(RomImage image, P28PostStoreScenario s, JsonElement root, string id,
         Func<int, int, byte>? producerMode012c = null, Func<int, int, bool>? terminalAfter = null,
-        Func<int, int, ushort>? ieBefore = null)
+        Func<int, int, ushort>? ieBefore = null, Func<int, int, byte>? mode012bBefore = null, byte source011bLow7 = 0)
     {
         var seq = root.GetProperty("postStoreSequences"); Require(seq.GetArrayLength() == 3, "Scratch count differs.");
         var prefixView = JsonSerializer.SerializeToElement(new
@@ -135,7 +135,7 @@ public static class P28PostStoreValidator
             }).ToArray()
         });
         var prefixes = P28AdaptiveFuelValidator.AnalyzeEvidence(image, s.PrefixScenario, prefixView, id, s.InitialState.Previous03b4,
-            (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0 || terminalAfter?.Invoke(p, i) == true, producerMode012c, ieBefore);
+            (p, i) => seq[p].GetProperty("checkpoints")[i].GetProperty("status").GetInt32() != 0 || terminalAfter?.Invoke(p, i) == true, producerMode012c, ieBefore, mode012bBefore, source011bLow7);
         var reports = new List<P28PostStoreSequence>();
         for (var p = 0; p < 3; p++)
         {
@@ -161,6 +161,7 @@ public static class P28PostStoreValidator
                     if (prefix.Disposition == "StrictMatch")
                     {
                         Require(suffix.ValueKind == JsonValueKind.Object, "Completed prefix lacks native continuation.");
+                        if (mode012bBefore is not null) model.AcceptModeledFuelByte(mode012bBefore(p, i));
                         var own = model.Step(c.Adaptive, previous, producerMode012c?.Invoke(p, i));
                         expected = P28PostStoreModel.Project(previous, (ushort)own.Numeric.Corrected, c.Disable125, c.Disable12e, c.Adaptive.Fuel.Sources.Source0133, c.Adaptive.Fuel.Sources.Source014c);
                         var end = row.GetProperty("prefix").GetProperty("joint").GetProperty("fuel").GetProperty("boundaries");
