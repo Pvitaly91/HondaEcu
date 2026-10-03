@@ -465,6 +465,10 @@ impl<'a> Exec<'a> {
                 if base == "ADC" && byte && args[0] == Arg::R(0) && args[1] == Arg::ImmN8 {
                     self.cpu.hc = (a & 15) + (b & 15) + carry_in > 15;
                 }
+                // M2v exact20 B0 immediate, primary3-135/user33. No other SBC/SUBB admission.
+                if base == "SBC" && byte && args[0] == Arg::R(0) && args[1] == Arg::ImmN8 {
+                    self.cpu.hc = (a & 15) < (b & 15) + carry_in;
+                }
                 // M1f exact byte forms, manual printed 3-16/3-17:
                 // ADDB A,N8 (C5 N8 82), ADDB r0,A (20 81). No carry-in.
                 if base == "ADD"
@@ -536,6 +540,10 @@ impl<'a> Exec<'a> {
                 }
                 // M1j DECB N16[X1], manual 3-56: CF/DD preserved.
                 if base == "DEC" && byte && args[0] == Arg::Mem(Mem::IdxReg(Reg::X1)) {
+                    self.cpu.hc = v & 15 == 0;
+                }
+                // M2v exact80, primary3-55: subtract1; CF/DD preserved.
+                if base == "DEC" && !byte && args[0] == Arg::Reg(Reg::X1) {
                     self.cpu.hc = v & 15 == 0;
                 }
                 self.write(&args[0], byte, res);
@@ -936,6 +944,63 @@ pub fn step(cpu: &mut Cpu, bus: &mut Bus) -> Result<Decoded, ExecError> {
 #[cfg(test)]
 mod acquisition_cpu_tests {
     use super::*;
+
+    #[test]
+    fn m2v_decoded_sbcb_r0_immediate_half_borrow() {
+        // Invented operands; isolated decoded form, not an OEM program.
+        for immediate in [0u8, 1, 15, 16, 127, 255] {
+            let mut bus = Bus::new(vec![0x20, 0xB0, immediate], 0xA5);
+            let mut cpu = Cpu::new();
+            for value in 0u16..=255 {
+                for carry in [false, true] {
+                    for dd in [false, true] {
+                        cpu.pc = 0;
+                        cpu.lrb = 0x30;
+                        cpu.set_psw_u16(0x2332);
+                        cpu.dd = dd;
+                        cpu.cf = carry;
+                        cpu.hc = !((value & 15) < u16::from(immediate & 15) + u16::from(carry));
+                        let kept = cpu.psw_u16() & !0xE000;
+                        write_data_u8(&mut cpu, &mut bus, 0x180, value as u8);
+                        assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "SBCB r0, #N8");
+                        let result = (value as u8)
+                            .wrapping_sub(immediate)
+                            .wrapping_sub(u8::from(carry));
+                        assert_eq!(read_data_u8(&cpu, &mut bus, 0x180), result);
+                        assert_eq!(read_data_u8(&cpu, &mut bus, 0x181), 0xA5);
+                        assert_eq!(cpu.zf, result == 0);
+                        assert_eq!(cpu.cf, value < u16::from(immediate) + u16::from(carry));
+                        assert_eq!(
+                            cpu.hc,
+                            (value & 15) < u16::from(immediate & 15) + u16::from(carry)
+                        );
+                        assert_eq!(cpu.psw_u16() & !0xE000, kept);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn m2v_decoded_dec_x1_half_borrow() {
+        let mut bus = Bus::new(vec![0x80], 0xA5);
+        let mut cpu = Cpu::new();
+        for value in 0u16..=65535 {
+            for dd in [false, true] {
+                cpu.pc = 0;
+                cpu.set_psw_u16(0x8332);
+                cpu.dd = dd;
+                cpu.hc = value & 15 != 0;
+                let kept = cpu.psw_u16() & !0x6000;
+                write_data_u16(&mut cpu, &mut bus, 0x90, value);
+                assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "DEC X1");
+                assert_eq!(read_data_u16(&cpu, &mut bus, 0x90), value.wrapping_sub(1));
+                assert_eq!(cpu.zf, value == 1);
+                assert_eq!(cpu.hc, value & 15 == 0);
+                assert_eq!(cpu.psw_u16() & !0x6000, kept);
+            }
+        }
+    }
 
     #[test]
     fn decoded_sub_direct_word_updates_half_borrow_and_preserves_non_arithmetic_flags() {

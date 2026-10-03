@@ -64,7 +64,7 @@ public sealed class P28PostSelectionCriticalCliTests
     {
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var before = w.Snapshot(); Assert.True(File.Exists(w.Runner));
         var r = await w.RunAsync(args); Assert.True(r.Code == CliApplication.VerificationFailed, r.Error + r.Output);
-        var report = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.28.0", report["runnerVersion"]!.GetValue<string>());
+        var report = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.29.0", report["runnerVersion"]!.GetValue<string>());
         Assert.Equal("post-selection-critical-native-software-test", report["purpose"]!.GetValue<string>());
         foreach (var sequence in report["sequences"]!.AsArray())
         {

@@ -7,6 +7,9 @@ pub mod chain_forms;
 pub mod checksum;
 pub mod common_result_consumer;
 pub mod cpu;
+pub mod data0136_technical;
+#[cfg(test)]
+mod data0136_technical_tests;
 pub mod decoder;
 pub mod division_decision;
 #[cfg(test)]

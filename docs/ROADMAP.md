@@ -389,6 +389,16 @@ interactive GUI acceptance; GUI r3, D1 and D2 interactive checks remain
 paused/NotRun. Physical units, hardware/full boot and flash readiness are not
 promoted.
 
+## M2v — Native DATA0136 technical producer
+
+[M2v](M2V_DATA0136_NATIVE_TECHNICAL_SLICE.md) validates bounded technical entry56BE
+through natural stop-before5719, independently checked native writer5707/mode0
+and56F3/mode1, frozen SFRs and explicit raw word00F0 source in mode1. Generation
+and same-value writes are journaled;570E is mode0-only within this extent. No gate
+reseed to manufacture post-writer Held. Historical M1i remains mode0-only; M2u
+ProducerNotRun, M2s Partial, M2t Blocked/Partial and JGT unresolved remain unchanged.
+ProducerTo2330SchedulerSeam NotEstablished; no IRQ, full tail/boot, GUI or hardware.
+
 ## M4 — Additional OBD1 profiles
 
 - additional P28/P30/P72-family profiles

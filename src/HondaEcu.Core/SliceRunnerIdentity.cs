@@ -5,9 +5,9 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.28.0";
+    internal const string CurrentVersion = "0.29.0";
     internal const string CommonResultConsumerVersion = "0.27.0";
-    internal const string DivisionDecisionVersion = CurrentVersion;
+    internal const string DivisionDecisionVersion = "0.28.0";
     internal const string PostSelectionCriticalVersion = "0.26.0";
     internal const string PostStoreConsumerVersion = "0.25.0";
     internal const string PostStoreVersion = "0.24.0";
@@ -49,6 +49,14 @@ internal static class SliceRunnerIdentity
     internal static string[] Validate(JsonElement root, string operation)
     {
         var version = root.GetProperty("runnerVersion").GetString();
+        var actualOperation = operation;
+        var nativeProducerVersion = version == CurrentVersion;
+        if (operation == P28Data0136TechnicalProducerValidator.Operation && !nativeProducerVersion)
+            throw new SliceProcessException(SliceProcessFailure.Protocol, "M2v requires runner0.29.0; historical runners cannot execute this operation.");
+        // Real identity is checked below. Internal inventory selection only reuses
+        // the base capability list; no response/execution/report is relabelled.
+        if (nativeProducerVersion) version = DivisionDecisionVersion;
+        if (operation == P28Data0136TechnicalProducerValidator.Operation) operation = "acquisitionSequence";
         // M2t has the same semantic-fix inventory, not a new JGT semantic fix.
         if (operation == P28DivisionDecisionValidator.Operation && version != DivisionDecisionVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2t requires runner0.28.0; historical runner0.27.0 cannot execute this operation.");
@@ -59,7 +67,7 @@ internal static class SliceRunnerIdentity
         // Other operations retain the exact 0.17.0 semantic-fix inventory.
         if (version == LegacyCorrectionVersion && operation is not ("ignitionCorrectionChain" or "fuelCalculationChain" or "fuelAdditiveCorrectionChain" or "fuelFactorProductionChain"))
             version = FuelCalculationVersion;
-        if (root.GetProperty("protocolVersion").GetInt32() != 1 || root.GetProperty("operation").GetString() != operation ||
+        if (root.GetProperty("protocolVersion").GetInt32() != 1 || root.GetProperty("operation").GetString() != actualOperation ||
             root.GetProperty("upstreamCommit").GetString() != P28ByteExecutionValidator.UpstreamCommit ||
             version is not ("0.1.0" or "0.2.0" or "0.3.0" or "0.4.0" or "0.5.0" or "0.6.0" or "0.7.0" or "0.8.0" or "0.9.0" or "0.10.0" or "0.11.0" or "0.12.0" or "0.13.0" or PreviousVersion or SelectorVersion or SharedVersion or FuelCalculationVersion or FuelAdditiveVersion or FuelFactorVersion or LimiterFuelVersion or AdaptiveFuelVersion or PostStoreVersion or PostStoreConsumerVersion or PostSelectionCriticalVersion or CommonResultConsumerVersion) ||
             operation is not ("p28Batch" or "synthetic" or "producerBatch" or "checksumBatch" or "acquisitionSequence" or "statefulVtec" or "integratedCaptureVtec" or "limiterSequence" or "adaptiveLimiter" or "idleTarget" or "idleContexts" or "fuelMapLookup" or "fuelCalculationChain" or "fuelAdditiveCorrectionChain" or "fuelFactorProductionChain" or "limiterFuelGateChain" or "adaptiveLimiterFuelGateChain" or "fuelPostStoreChain" or "fuelPostStoreConsumerChain" or "fuelPostSelectionCriticalChain" or "fuelCommonResultConsumerChain" or "fuelDivisionDecisionChain" or "ignitionMapLookup" or "ignitionSelectorChain" or "ignitionCorrectionChain" or "vtecFuelChain" or "vtecFuelIgnitionChain" or "vtecThresholdPrefix" or "vtecThresholdControl") ||
@@ -97,6 +105,7 @@ internal static class SliceRunnerIdentity
         if (version is FuelAdditiveVersion or FuelFactorVersion or LimiterFuelVersion or AdaptiveFuelVersion or PostStoreVersion or PostStoreConsumerVersion or PostSelectionCriticalVersion or CommonResultConsumerVersion) expected = [.. expected, "word-rol-accumulator-through-carry-preserves-noncarry-flags", "word-add-accumulator-er0-offpage-half-carry"];
         if (version is FuelFactorVersion or LimiterFuelVersion or AdaptiveFuelVersion or PostStoreVersion or PostStoreConsumerVersion or PostSelectionCriticalVersion or CommonResultConsumerVersion) expected = [.. expected, "word-rol-er0-through-carry-preserves-noncarry-flags", "word-sll-accumulator-preserves-noncarry-flags"];
         if (version == CommonResultConsumerVersion) expected = [.. expected, "word-add-dp-immediate-half-carry"];
+        if (nativeProducerVersion) expected = [.. expected, "byte-sbc-r0-immediate-half-borrow", "word-decrement-x1-half-borrow"];
         var fixes = root.GetProperty("localSemanticFixes").EnumerateArray().Select(item => item.GetString()!).ToArray();
         if (!fixes.Order(StringComparer.Ordinal).SequenceEqual(expected.Order(StringComparer.Ordinal)))
         {

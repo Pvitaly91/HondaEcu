@@ -459,6 +459,12 @@ The full policy is in [ROM_HANDLING_POLICY.md](docs/ROM_HANDLING_POLICY.md).
 
 ## Roadmap
 
+[M2v](docs/M2V_DATA0136_NATIVE_TECHNICAL_SLICE.md) adds a bounded native DATA0136
+technical producer for both modes, runner0.29.0 and read-only
+`research p28-fuel data0136-producer-check`. This is seeded56BE/frozen-source
+software evidence, not caller/IRQ/scheduler recovery or producer->2330 integration.
+Historical M1i mode1 refusal, M2u ProducerNotRun and M2t/JGT blockers remain.
+
 - **M0:** core, CLI, profiles, diff/patch reports, and editor oracle harness.
 - **M0.1:** behavioral rounding equivalence, repeat/quantization handling, train/holdout separation, candidate ambiguity, diff-accounting hardening, provenance binding, no-op stability checks, and private-data preflight.
 - **M1:** cross-editor verification of P28-304 rev limiter and VTEC crossover, plus a verified checksum or an explicit blocked finding.
