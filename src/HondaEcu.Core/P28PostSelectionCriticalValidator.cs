@@ -126,7 +126,7 @@ public static class P28PostSelectionCriticalValidator
     // Later native suffixes own identity, terminal state and the literal next-event CPU boundary.
     internal static IReadOnlyList<P28PostSelectionCriticalSequence> AnalyzeEvidence(RomImage image, P28PostSelectionCriticalScenario scenario,
         JsonElement root, string id, Func<int, int, bool>? terminalAfter = null, Func<int, int, byte>? mode012bBefore = null,
-        byte source011bLow7 = 0, Action<int, int, JsonElement>? continuationBefore = null)
+        byte source011bLow7 = 0, Action<int, int, JsonElement>? continuationBefore = null, bool incomingScbSwitch = false)
     {
         var seq = root.GetProperty("criticalSequences"); Require(seq.GetArrayLength() == 3, "M2r scratch count differs.");
         var own = new P28PostSelectionCriticalOwn?[3, scenario.Calls.Count]; var ieBefore = new ushort[3, scenario.Calls.Count];
@@ -169,7 +169,7 @@ public static class P28PostSelectionCriticalValidator
                 P28FuelFactorValidator.ValidateBoundary(before);
                 if (continuationBefore is not null) continuationBefore(p, i, before);
                 else if (i > 0) RequireEventContinuation(seq[p].GetProperty("checkpoints")[i - 1].GetProperty("critical").GetProperty("exit"), before);
-            }, mode012bBefore, source011bLow7);
+            }, mode012bBefore, source011bLow7, incomingScbSwitch);
         var reports = new List<P28PostSelectionCriticalSequence>();
         for (var p = 0; p < 3; p++)
         {

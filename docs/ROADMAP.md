@@ -399,6 +399,19 @@ reseed to manufacture post-writer Held. Historical M1i remains mode0-only; M2u
 ProducerNotRun, M2s Partial, M2t Blocked/Partial and JGT unresolved remain unchanged.
 ProducerTo2330SchedulerSeam NotEstablished; no IRQ, full tail/boot, GUI or hardware.
 
+## M2w — Scheduled native DATA0136 producer-to-DIV handoff
+
+[M2w](M2W_DATA0136_SCHEDULED_HANDOFF.md) composes M2v native technical entry56BE
+and the historical fuel/calculation machinery on one Cpu/Bus, with an explicit
+harness ABI schedule rather than recovered5719->fuel caller code. Native generation
+IDs persist through2330 word read, er2 transfer and positive DIV/CMP. Zero reaches
+stop-before2333 without DIV; positive stops before unresolved JGT233A.39 strict
+handoffs,6 no-fresh events and6 same-value new generations are distinct from old
+compatibility and synthetic/model-only coverage. One011F owner; no ready0136 or RAM
+reseed. RecoveredEcuScheduler NotEstablished; seam HarnessScheduled /NotRecovered.
+Historical contracts, M2s Partial, M2t Blocked/Partial, strict M2i Blocked and GUI/
+hardware/physical limits stay unchanged. Quartet consumer NotRun; firmware BIN0.
+
 ## M4 — Additional OBD1 profiles
 
 - additional P28/P30/P72-family profiles

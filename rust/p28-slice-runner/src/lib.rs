@@ -7,6 +7,9 @@ pub mod chain_forms;
 pub mod checksum;
 pub mod common_result_consumer;
 pub mod cpu;
+pub mod data0136_handoff;
+#[cfg(test)]
+mod data0136_handoff_tests;
 pub mod data0136_technical;
 #[cfg(test)]
 mod data0136_technical_tests;

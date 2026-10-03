@@ -34,4 +34,7 @@ internal sealed class P28CommonResultConsumerHistory
         _state = entry with { Mode012b = (byte)oracle.ModeEnds[^1], Byte013b = (byte)oracle.HistoryEnds[^1][0], Byte013d = (byte)oracle.HistoryEnds[^1][1] };
         return new(prefix, before, entry, _state, oracle);
     }
+    internal P28CommonResultConsumerState ModeledState => _state;
+    internal void AcceptModeledProducerGeneration(ushort word, byte authoritative011f) =>
+        _state = _state with { Word0136 = word, Byte011f = authoritative011f };
 }

@@ -81,7 +81,15 @@ pub struct Fragment {
 }
 fn fragment(cpu: &mut Cpu, bus: &mut Bus, tick: Option<u16>) -> Fragment {
     let c = adaptive::contract(tick.is_some());
+    // Observation of an incoming composition ABI; actual execution still uses historical ranges.
+    let mut observation_ranges = ranges();
+    observation_ranges.extend([
+        [cpu.bank_base(), cpu.bank_base() + 8],
+        [0x80 + cpu.scb() * 8, 0x88 + cpu.scb() * 8],
+    ]);
+    bus.configure_scoped_access(observation_ranges, 4096);
     let before = boundary(cpu, bus);
+    bus.configure_scoped_access(ranges(), 4096);
     let mut writes = vec![];
     enter_with_observer(cpu, bus, &c, |w| writes.push(w));
     if let Some(address) = tick {

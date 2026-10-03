@@ -261,7 +261,7 @@ public static class P28CommonResultConsumerValidator
         Require(stage.GetProperty("sspAfter").GetInt32() == ssp && exit.GetProperty("ssp").GetInt32() == ssp && exit.GetProperty("dp").GetInt32() == dp, "Native DP scale/call/return lifetime differs.");
         return result;
     }
-    private static byte PrefixModeAfterPartial(JsonElement r, byte before, P28PostStoreCall call)
+    internal static byte PrefixModeAfterPartial(JsonElement r, byte before, P28PostStoreCall call)
     {
         var joint = r.GetProperty("prefix").GetProperty("prefix").GetProperty("prefix").GetProperty("joint"); var mode = before;
         // Select only a independently validated native journal prefix. Observed numeric values are never operands.
@@ -277,7 +277,7 @@ public static class P28CommonResultConsumerValidator
     }
     private static void RequireState(JsonElement actual, P28CommonResultConsumerState expected)
     { StateShape(actual); Require(Equal(actual, JsonSerializer.SerializeToElement(expected, JsonDefaults.Create())), "Independent shared software state differs."); }
-    private static void RequireStateSources(JsonElement actual, P28CommonResultConsumerState expected)
+    internal static void RequireStateSources(JsonElement actual, P28CommonResultConsumerState expected)
     {
         StateShape(actual); var own = JsonSerializer.SerializeToElement(expected, JsonDefaults.Create());
         foreach (var key in new[] { "mode012b", "word011a", "byte011f", "byte0120", "byte00be", "byte00b7", "word0136", "byte013b", "byte013d" }) Require(Equal(actual.GetProperty(key), own.GetProperty(key)), "Native/source history reseed or masked-neighbor overwrite.");

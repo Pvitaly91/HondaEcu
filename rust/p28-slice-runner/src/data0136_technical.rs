@@ -139,7 +139,7 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
     }
     Ok(())
 }
-fn contract() -> SliceContract {
+pub(crate) fn contract() -> SliceContract {
     SliceContract {
         entry_pc: 0x56BE,
         exit_pcs: vec![0x5719],
@@ -170,7 +170,7 @@ pub fn ram_addresses() -> Vec<u16> {
     .flat_map(|(a, b)| a..b)
     .collect()
 }
-fn ram(cpu: &Cpu, bus: &mut Bus) -> Vec<u8> {
+pub(crate) fn ram(cpu: &Cpu, bus: &mut Bus) -> Vec<u8> {
     ram_addresses()
         .into_iter()
         .map(|a| read_data_u8(cpu, bus, a))
@@ -181,42 +181,9 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     response.entry_contracts = entry_contracts();
     let mut sequences = vec![];
     for &pattern in &r.scratch_patterns {
-        let c = contract();
-        let (mut cpu, mut bus) = seed_machine(&r.images[0].rom, &c, pattern);
+        let (mut cpu, mut bus) = seed_machine(&r.images[0].rom, &contract(), pattern);
         cpu.ssp = 0x7FE; // Explicit unused technical SSP, NOT a recovered caller frame.
-        bus.configure_scoped_access(
-            vec![
-                [0, 8],
-                [0x19, 0x1A],
-                [0x3A, 0x3C],
-                [0x42, 0x43],
-                [0x90, 0x98],
-                [0xA2, 0xA3],
-                [0xAE, 0xAF],
-                [0xB6, 0xB7],
-                [0xEE, 0xF2],
-                [0x108, 0x110],
-                [0x11F, 0x120],
-                [0x128, 0x129],
-                [0x136, 0x138],
-                [0x360, 0x36C],
-            ],
-            128,
-        );
-        let init = &s.initial_state;
-        write_data_u16(&mut cpu, &mut bus, 0xEE, init.previous00ee);
-        write_data_u16(&mut cpu, &mut bus, 0x136, init.history0136);
-        for (i, v) in init.samples.iter().enumerate() {
-            write_data_u16(&mut cpu, &mut bus, 0x360 + i as u16 * 2, *v);
-        }
-        for (a, v) in [
-            (0xAE, init.counter00ae),
-            (0xB6, init.data00b6),
-            (0x11F, init.data011f),
-            (0x128, init.data0128),
-        ] {
-            write_data_u8(&mut cpu, &mut bus, a, v);
-        }
+        initialize_data(&mut cpu, &mut bus, &s.initial_state);
         let mut terminal = false;
         let mut completed = 0;
         let mut checkpoints = vec![];
@@ -238,56 +205,13 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                 });
                 continue;
             }
-            crate::acquisition::enter(&mut cpu, &mut bus, &c);
-            let mut applications = vec![[0xA2, 8, u32::from(o.slot)]];
-            write_data_u8(&mut cpu, &mut bus, 0xA2, o.slot);
-            if let Some(source) = o.source00f0 {
-                applications.push([0xF0, 16, u32::from(source)]);
-                write_data_u16(&mut cpu, &mut bus, 0xF0, source);
-            }
-            let entry = crate::vtec_fuel::boundary(&cpu, &mut bus);
-            bus.observe_capture(Some(CaptureObservation {
-                tmr2: o.tmr2,
-                irqh: o.irqh,
-                tcon2: o.tcon2,
-            }));
-            bus.begin_write_journal();
-            bus.begin_native_accesses();
-            bus.start_decision_observer();
-            let result = execute_in_state_observed(
-                &mut cpu,
-                &mut bus,
-                &c,
-                &[],
-                true,
-                Some(form_admission),
-                true,
-            );
-            let events = bus.finish_decision_observer();
-            let accesses = bus.end_native_accesses();
-            let writes = bus.end_write_journal();
-            let peripheral_accesses = bus.peripheral_accesses();
-            bus.observe_capture(None);
-            let exit = crate::vtec_fuel::boundary(&cpu, &mut bus);
-            let after = ram(&cpu, &mut bus);
-            if result.status == 0 {
+            let row = execute_in_state(&mut cpu, &mut bus, o);
+            if row.result.as_ref().expect("executed").status == 0 {
                 completed += 1;
             } else {
                 terminal = true;
             }
-            checkpoints.push(Checkpoint {
-                index: o.index,
-                result: Some(result),
-                source_applications: applications,
-                entry: Some(entry),
-                exit: Some(exit),
-                ram_before: before,
-                ram_after: after,
-                events,
-                accesses,
-                writes,
-                peripheral_accesses,
-            });
+            checkpoints.push(row);
         }
         sequences.push(Sequence {
             image_index: 0,
@@ -298,4 +222,85 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     }
     response.data0136_sequences = Some(sequences);
     Ok(response)
+}
+pub(crate) fn configure(bus: &mut Bus) {
+    bus.configure_scoped_access(
+        vec![
+            [0, 8],
+            [0x19, 0x1A],
+            [0x3A, 0x3C],
+            [0x42, 0x43],
+            [0x90, 0x98],
+            [0xA2, 0xA3],
+            [0xAE, 0xAF],
+            [0xB6, 0xB7],
+            [0xEE, 0xF2],
+            [0x108, 0x110],
+            [0x11F, 0x120],
+            [0x128, 0x129],
+            [0x136, 0x138],
+            [0x360, 0x36C],
+        ],
+        128,
+    );
+}
+/// Once-only RAM initialization; never called by execute_in_state.
+pub(crate) fn initialize_data(cpu: &mut Cpu, bus: &mut Bus, init: &InitialState) {
+    configure(bus);
+    write_data_u16(cpu, bus, 0xEE, init.previous00ee);
+    write_data_u16(cpu, bus, 0x136, init.history0136);
+    for (i, v) in init.samples.iter().enumerate() {
+        write_data_u16(cpu, bus, 0x360 + i as u16 * 2, *v);
+    }
+    for (a, v) in [
+        (0xAE, init.counter00ae),
+        (0xB6, init.data00b6),
+        (0x11F, init.data011f),
+        (0x128, init.data0128),
+    ] {
+        write_data_u8(cpu, bus, a, v);
+    }
+}
+/// Applies ONLY the historical technical ABI and disclosed observation sources.
+pub(crate) fn execute_in_state(cpu: &mut Cpu, bus: &mut Bus, o: &Observation) -> Checkpoint {
+    configure(bus);
+    let before = ram(cpu, bus);
+    crate::acquisition::enter(cpu, bus, &contract());
+    let mut applications = vec![[0xA2, 8, u32::from(o.slot)]];
+    write_data_u8(cpu, bus, 0xA2, o.slot);
+    if let Some(source) = o.source00f0 {
+        applications.push([0xF0, 16, u32::from(source)]);
+        write_data_u16(cpu, bus, 0xF0, source);
+    }
+    let entry = crate::vtec_fuel::boundary(cpu, bus);
+    bus.observe_capture(Some(CaptureObservation {
+        tmr2: o.tmr2,
+        irqh: o.irqh,
+        tcon2: o.tcon2,
+    }));
+    bus.begin_write_journal();
+    bus.begin_native_accesses();
+    bus.start_decision_observer();
+    let result =
+        execute_in_state_observed(cpu, bus, &contract(), &[], true, Some(form_admission), true);
+    let events = bus.finish_decision_observer();
+    let accesses = bus.end_native_accesses();
+    let writes = bus.end_write_journal();
+    let peripheral_accesses = bus.peripheral_accesses();
+    bus.observe_capture(None);
+    let exit = crate::vtec_fuel::boundary(cpu, bus);
+    let after = ram(cpu, bus);
+    Checkpoint {
+        index: o.index,
+        result: Some(result),
+        source_applications: applications,
+        entry: Some(entry),
+        exit: Some(exit),
+        ram_before: before,
+        ram_after: after,
+        events,
+        accesses,
+        writes,
+        peripheral_accesses,
+    }
 }

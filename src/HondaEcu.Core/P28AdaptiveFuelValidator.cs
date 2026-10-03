@@ -158,7 +158,7 @@ public static class P28AdaptiveFuelValidator
     internal static IReadOnlyList<P28AdaptiveFuelSequence> AnalyzeEvidence(RomImage image, P28AdaptiveFuelScenario scenario,
         JsonElement root, string id, ushort? initialPrevious03b4 = null, Func<int, int, bool>? terminalAfter = null,
         Func<int, int, byte>? producerMode012c = null, Func<int, int, ushort>? ieBefore = null,
-        Func<int, int, byte>? mode012bBefore = null, byte source011bLow7 = 0)
+        Func<int, int, byte>? mode012bBefore = null, byte source011bLow7 = 0, bool incomingScbSwitch = false)
     {
         var sequences = root.GetProperty("adaptiveFuelSequences"); Require(sequences.GetArrayLength() == 3, "M2o scratch count differs.");
         var models = Enumerable.Range(0, 3).Select(_ => new P28AdaptiveModel(image.Span, scenario.ModelInitial)).ToArray();
@@ -234,7 +234,7 @@ public static class P28AdaptiveFuelValidator
                     for (var t = 0; t < ticks.GetArrayLength(); t++)
                     {
                         Require(!tickFailed, "Tick after native failure."); var f = ticks[t]; var own = expected.Ticks[t];
-                        var parsed = ValidateFragment(f, own.Address, boundary);
+                        var parsed = ValidateFragment(f, own.Address, boundary, incomingScbSwitch);
                         Require(Equal(parsed.Writes, own.Writes.Take(parsed.Writes.Length)) && parsed.Writes.Length <= own.Writes.Count,
                             "Native tick stores differ from independent decrement/zero model.");
                         Require(parsed.Events.Length == 0 || parsed.Events[0][3] % 256 == own.Before, "Wrong native tick target value.");
@@ -245,7 +245,7 @@ public static class P28AdaptiveFuelValidator
                     else
                     {
                         Require(parsedTicks.Count == expected.Ticks.Count && producer.ValueKind == JsonValueKind.Object, "Missing native producer/ticks; final numbers cannot replace evidence.");
-                        var stage = ValidateFragment(producer, null, boundary); reads = P28AdaptiveValidator.TableReads(stage);
+                        var stage = ValidateFragment(producer, null, boundary, incomingScbSwitch); reads = P28AdaptiveValidator.TableReads(stage);
                         Require(stage.Result.Status != 0 || Equal(stage.Writes, expected.ProducerWrites) && Equal(reads, expected.TableReads) &&
                             Equal(stage.Events.Where(e => P28AdaptiveValidator.ProducerBranches.Contains(e[0])).Select(e => new[] { e[0], e[1] }).ToArray(), expected.Branches), "Adaptive arithmetic/bank/branch/store provenance differs.");
                         if (stage.Result.Status == 0)
@@ -300,7 +300,7 @@ public static class P28AdaptiveFuelValidator
         Require(Equal(row.GetProperty("snapshotWrites"), JsonSerializer.SerializeToElement(expected)), "Snapshot overwrote neighboring bits or ready thresholds.");
         Require(row.GetProperty("stateAfter").GetProperty("sources").EnumerateArray().Select(x => x.GetInt32()).SequenceEqual(expected.Take(6).Select(x => x[2])), "Source mask preservation differs.");
     }
-    private static P28AdaptiveValidator.Stage ValidateFragment(JsonElement f, int? target, JsonElement prior)
+    private static P28AdaptiveValidator.Stage ValidateFragment(JsonElement f, int? target, JsonElement prior, bool incomingScbSwitch)
     {
         P28LimiterScenario.Shape(f, "before", "entry", "exit", "transitionWrites", "stage", "accesses", "tickTarget");
         Require(target.HasValue ? f.GetProperty("tickTarget").GetInt32() == target : f.GetProperty("tickTarget").ValueKind == JsonValueKind.Null, "Unowned tick target.");
@@ -309,11 +309,13 @@ public static class P28AdaptiveFuelValidator
         if (prior.ValueKind != JsonValueKind.Undefined) Require(Equal(before, prior), "Native fragment continuity reset.");
         var writes = new List<int[]> { new[] { 2, 16, 0x41 }, new[] { 4, 16, target.HasValue ? 1 : 0x1101 }, new[] { 0x8E, 16, 0x180 } };
         if (target.HasValue) writes.Add([0x88, 16, target.Value]);
+        var sameScb = (Word(entry, "psw") & 7) == (Word(before, "psw") & 7);
+        Require(sameScb || incomingScbSwitch, "Undisclosed incoming pointer-bank selection.");
         Require(Equal(f.GetProperty("transitionWrites"), JsonSerializer.SerializeToElement(writes)) && Word(entry, "pc") == (target.HasValue ? 0x5BD0 : 0x487B) &&
             Word(entry, "psw") == (target.HasValue ? 0x0CC9 : 0x1DC9) &&
             Word(entry, "lrb") == 0x41 && Word(entry, "usp") == 0x180 && Word(entry, "ssp") == 0x7FE &&
-            Word(entry, "accumulator") == Word(before, "accumulator") && Word(entry, "x2") == Word(before, "x2") && Word(entry, "dp") == Word(before, "dp") &&
-            Word(entry, "x1") == (target ?? Word(before, "x1")), "ABI copied/reseeded native carrier/stack/bank.");
+            Word(entry, "accumulator") == Word(before, "accumulator") && (!sameScb || Word(entry, "x2") == Word(before, "x2") && Word(entry, "dp") == Word(before, "dp")) &&
+            (target.HasValue ? Word(entry, "x1") == target.Value : !sameScb || Word(entry, "x1") == Word(before, "x1")), "ABI copied/reseeded native carrier/stack/bank.");
         if (Word(before, "lrb") == 0x41) Require(Equal(before.GetProperty("registers"), entry.GetProperty("registers")), "Register-bank contents copied/reset.");
         var stage = P28AdaptiveValidator.ParseStage(f.GetProperty("stage"), target.HasValue)!;
         Require(Word(exit, "pc") == stage.Result.StopPc && Word(exit, "ssp") == stage.Ssp, "Native exit disagrees with stage.");

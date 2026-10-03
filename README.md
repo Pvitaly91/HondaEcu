@@ -1,5 +1,14 @@
 # HondaEcu
 
+M2w validates a [scheduled native DATA0136-to-DIV handoff](docs/M2W_DATA0136_SCHEDULED_HANDOFF.md)
+with `research p28-fuel data0136-handoff-check`, runner0.30.0. One Cpu/Bus per
+scratch sequence retains native56F3/5707 generation through the explicitly
+harness-scheduled fuel path into actual2330/er2 and positive DIV/CMP.39 original-only
+handoffs (24 positive,15 zero),6 no-fresh events and6 same-value new generations
+are checked independently. Positive stops before unresolved JGT233A; zero before
+DIV2333. No ready0136, recovered ECU scheduler, physical units, GUI/hardware or BIN.
+Historical M2v seam NotEstablished, M2u ProducerNotRun and M2s/M2t blockers remain.
+
 M2u establishes [static DATA0136 producer provenance](docs/M2U_DATA0136_PRODUCER_CHAIN.md).
 The caller/ownership audit identifies runtime, reset/test and unresolved alias
 candidates, but IRQ/scheduler and mandatory timer dependencies prevent a native

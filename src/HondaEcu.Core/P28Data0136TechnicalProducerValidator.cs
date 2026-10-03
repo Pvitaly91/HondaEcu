@@ -68,7 +68,9 @@ public static class P28Data0136TechnicalProducerValidator
         catch (Exception e) when (e is JsonException or InvalidOperationException or KeyNotFoundException or FormatException or OverflowException or ArgumentException)
         { throw new SliceProcessException(SliceProcessFailure.Protocol, "Malformed M2v native evidence.", e); }
     }
-    internal static P28Data0136TechnicalProducerReport Analyze(RomImage image, string profileId, P28Data0136TechnicalProducerScenario scenario, JsonElement root)
+    internal static P28Data0136TechnicalProducerReport Analyze(RomImage image, string profileId, P28Data0136TechnicalProducerScenario scenario, JsonElement root,
+        Func<int, P28Data0136TechnicalProducerModel>? modelFactory = null, Action<int, int, P28Data0136TechnicalProducerModel>? beforeObservation = null,
+        Func<int, int, bool>? terminalAfter = null)
     {
         P28LimiterScenario.Shape(root, "protocolVersion", "operation", "runnerVersion", "upstreamCommit", "localSemanticFixes", "entryContracts", "compactRows", "thresholdRows", "diagnostics", "syntheticResult", "data0136Sequences");
         _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2v entry contract differs.");
@@ -80,11 +82,12 @@ public static class P28Data0136TechnicalProducerValidator
         {
             var sequence = rows[p]; P28LimiterScenario.Shape(sequence, "imageIndex", "scratchPattern", "completedObservations", "checkpoints");
             var pattern = new[] { 0, 85, 170 }[p]; Require(sequence.GetProperty("imageIndex").GetInt32() == 0 && sequence.GetProperty("scratchPattern").GetInt32() == pattern, "Wrong M2v image/scratch.");
-            var own = new P28Data0136TechnicalProducerModel(scenario.InitialState, pattern); var terminal = false; var completed = 0;
+            var own = modelFactory?.Invoke(p) ?? new P28Data0136TechnicalProducerModel(scenario.InitialState, pattern); var terminal = false; var completed = 0;
             P28Data0136Generation? generation = null; var checkpoints = new List<P28Data0136TechnicalCheckpoint>();
             var calls = sequence.GetProperty("checkpoints"); Require(calls.GetArrayLength() == scenario.Observations.Count, "Missing/extra M2v observations.");
             for (var i = 0; i < scenario.Observations.Count; i++)
             {
+                beforeObservation?.Invoke(p, i, own);
                 var c = calls[i]; P28LimiterScenario.Shape(c, "index", "result", "sourceApplications", "entry", "exit", "ramBefore", "ramAfter", "events", "accesses", "writes", "peripheralAccesses");
                 Require(c.GetProperty("index").GetInt32() == i, "Non-dense M2v evidence.");
                 var before = own.Snapshot(); Require(Numbers(c.GetProperty("ramBefore")).SequenceEqual(before), "Persistent M2v RAM was host-overwritten/reseeded.");
@@ -140,6 +143,7 @@ public static class P28Data0136TechnicalProducerValidator
                 var disposition = status switch { 1 => "UnresolvedInstruction", 2 => "ExecutionError", 3 => "BudgetExceeded", _ when writer is null => i == 0 ? "FirstObservationNoWrite" : "Held", _ when oracle.ZeroCause == "OverflowToZero" => "OverflowToZeroWrite", _ when writer.NewValue == 0 => "NativeZeroWrite", _ => writer.WriterPc == 0x5707 ? "DirectNativeWrite" : "DividedNativeWrite" };
                 checkpoints.Add(new(i, status == 0 ? "StrictMatch" : "Partial", disposition, writer is null ? "Held" : status == 0 ? "NativeWritten" : "PartialNativeWritten",
                     mode, status == 0 ? writer?.NewValue : null, own.Word(0x136), generation, writer, oracle.ZeroCause, oracle.PeripheralReads, readers, c.Clone()));
+                terminal |= terminalAfter?.Invoke(p, i) == true;
             }
             Require(sequence.GetProperty("completedObservations").GetInt32() == completed, "M2v completion count differs.");
             sequences.Add(new(pattern, checkpoints.AsReadOnly()));

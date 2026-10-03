@@ -16,6 +16,8 @@ internal sealed class P28Data0136TechnicalProducerModel
     internal int Pc { get; private set; } = 0x56BE;
     internal int Word(int address) => _ram[address] | (_ram[address + 1] << 8);
     internal int[] Snapshot() => RamAddresses.Select(a => _ram[a]).ToArray();
+    // Composition takes an independent downstream MODEL carrier, never a Rust observation.
+    internal void AcceptModeledAccumulator(int value) => A = value;
     private void SeedWord(int address, int value) { _ram[address] = value & 255; _ram[address + 1] = value >> 8; }
     internal P28Data0136TechnicalProducerModel(P28Data0136TechnicalInitialState s, int scratch)
     {

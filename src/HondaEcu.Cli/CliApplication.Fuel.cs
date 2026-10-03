@@ -8,6 +8,8 @@ public sealed partial class CliApplication
     {
         if (args.Length > 0 && args[0] == "data0136-producer-check")
             return await P28Data0136ProducerCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
+        if (args.Length > 0 && args[0] == "data0136-handoff-check")
+            return await P28Data0136HandoffCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "division-decision-check")
             return await P28DivisionDecisionCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "common-result-consumer-check")

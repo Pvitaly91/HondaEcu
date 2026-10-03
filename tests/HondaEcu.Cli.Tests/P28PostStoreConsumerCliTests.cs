@@ -59,7 +59,7 @@ public sealed class P28PostStoreConsumerCliTests
     {
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var before = w.Snapshot(); Assert.True(File.Exists(w.Runner));
         var r = await w.RunAsync(args); Assert.Equal(CliApplication.VerificationFailed, r.Code);
-        var report = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.29.0", report["runnerVersion"]!.GetValue<string>());
+        var report = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.30.0", report["runnerVersion"]!.GetValue<string>());
         Assert.Equal("post-store-consumer-native-software-test", report["purpose"]!.GetValue<string>());
         foreach (var sequence in report["sequences"]!.AsArray())
         {

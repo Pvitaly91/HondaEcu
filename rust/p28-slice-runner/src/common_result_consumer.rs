@@ -250,7 +250,7 @@ fn ranges() -> Vec<[u16; 2]> {
         [0x7FE, 0x800],
     ]
 }
-fn state(cpu: &Cpu, bus: &mut Bus) -> State {
+pub(crate) fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     let prefix = post_selection_critical::state(cpu, bus);
     bus.configure_scoped_access(ranges(), 4096);
     State {

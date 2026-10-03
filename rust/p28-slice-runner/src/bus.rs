@@ -266,6 +266,8 @@ pub struct Bus {
     // Opt-in M2k data-space observation. Never active during host snapshots.
     native_accesses: Option<Vec<[u32; 5]>>,
     native_pc: u16,
+    // M2w opt-in, independent of nested historical journals. [native,pc,address,width,write,value].
+    continuity: Option<Vec<[u32; 6]>>,
 }
 
 impl Bus {
@@ -291,6 +293,7 @@ impl Bus {
             program_data_ranges: None,
             native_accesses: None,
             native_pc: 0,
+            continuity: None,
         }
     }
 
@@ -383,6 +386,27 @@ impl Bus {
         self.native_pc = pc;
     }
     fn native_access(&mut self, address: u16, width: u32, write: u32, value: u16) {
+        let native = self.native_accesses.is_some();
+        if native || write == 1 {
+            if let Some(rows) = self.continuity.as_mut() {
+                if rows.len() < 32768 {
+                    rows.push([
+                        u32::from(native),
+                        if native {
+                            u32::from(self.native_pc)
+                        } else {
+                            65536
+                        },
+                        u32::from(address),
+                        width,
+                        write,
+                        u32::from(value),
+                    ]);
+                } else {
+                    self.record_fault("data", address as u32, "continuity observation limit");
+                }
+            }
+        }
         if let Some(rows) = self.native_accesses.as_mut() {
             if rows.len() < 4096 {
                 rows.push([
@@ -396,6 +420,12 @@ impl Bus {
                 self.record_fault("data", address as u32, "native observation limit");
             }
         }
+    }
+    pub(crate) fn begin_continuity(&mut self) {
+        self.continuity = Some(vec![]);
+    }
+    pub(crate) fn end_continuity(&mut self) -> Vec<[u32; 6]> {
+        self.continuity.take().unwrap_or_default()
     }
     pub(crate) fn end_write_journal(&mut self) -> Vec<[u32; 3]> {
         self.journal_writes = false;
@@ -546,9 +576,13 @@ impl Bus {
             return 0;
         };
         let before = self.native_accesses.as_ref().map_or(0, Vec::len);
+        let continuity_before = self.continuity.as_ref().map_or(0, Vec::len);
         let value = u16::from_le_bytes([self.read_data_u8(address), self.read_data_u8(high)]);
         if let Some(rows) = self.native_accesses.as_mut() {
             rows.truncate(before);
+        }
+        if let Some(rows) = self.continuity.as_mut() {
+            rows.truncate(continuity_before);
         }
         self.native_access(address, 16, 0, value);
         value
@@ -604,9 +638,13 @@ impl Bus {
         let bytes = value.to_le_bytes();
         let before = self.data_writes.len();
         let access_before = self.native_accesses.as_ref().map_or(0, Vec::len);
+        let continuity_before = self.continuity.as_ref().map_or(0, Vec::len);
         self.write_data_u8(address, bytes[0]);
         self.write_data_u8(high, bytes[1]);
         if self.fault.borrow().is_none() {
+            if let Some(rows) = self.continuity.as_mut() {
+                rows.truncate(continuity_before);
+            }
             if let Some(rows) = self.native_accesses.as_mut() {
                 rows.truncate(access_before);
             }

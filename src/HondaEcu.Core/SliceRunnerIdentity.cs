@@ -5,7 +5,8 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.29.0";
+    internal const string CurrentVersion = "0.30.0";
+    internal const string NativeProducerVersion = "0.29.0";
     internal const string CommonResultConsumerVersion = "0.27.0";
     internal const string DivisionDecisionVersion = "0.28.0";
     internal const string PostSelectionCriticalVersion = "0.26.0";
@@ -50,7 +51,11 @@ internal static class SliceRunnerIdentity
     {
         var version = root.GetProperty("runnerVersion").GetString();
         var actualOperation = operation;
-        var nativeProducerVersion = version == CurrentVersion;
+        if (operation == P28Data0136HandoffValidator.Operation && version != CurrentVersion)
+            throw new SliceProcessException(SliceProcessFailure.Protocol, "M2w requires runner0.30.0; historical runners cannot execute this operation.");
+        if (version == CurrentVersion) version = NativeProducerVersion;
+        if (operation == P28Data0136HandoffValidator.Operation) operation = P28Data0136TechnicalProducerValidator.Operation;
+        var nativeProducerVersion = version == NativeProducerVersion;
         if (operation == P28Data0136TechnicalProducerValidator.Operation && !nativeProducerVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2v requires runner0.29.0; historical runners cannot execute this operation.");
         // Real identity is checked below. Internal inventory selection only reuses
