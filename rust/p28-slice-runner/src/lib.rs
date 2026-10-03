@@ -12,6 +12,8 @@ pub mod division_decision;
 #[cfg(test)]
 mod division_decision_tests;
 pub mod exec;
+#[cfg(test)]
+mod software_word_provenance_tests;
 // Preserve the pinned generated opcode table verbatim.
 #[rustfmt::skip]
 pub mod full_decoder;

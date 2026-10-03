@@ -1,5 +1,12 @@
 # HondaEcu
 
+M2u establishes [static DATA0136 producer provenance](docs/M2U_DATA0136_PRODUCER_CHAIN.md).
+The caller/ownership audit identifies runtime, reset/test and unresolved alias
+candidates, but IRQ/scheduler and mandatory timer dependencies prevent a native
+producer-to2330 integration. Research/Partial/ProducerNotRun; no fake operation
+or version bump (runner0.28.0). Historical snapshots and M2t JGT/zero boundaries
+stay unchanged; model-only/invented tests do not become native producer evidence.
+
 M2t adds [DIV evidence hardening and a separate blocked JGT calculation audit](docs/M2T_DIV_JGT_CALCULATION_CHAIN.md)
 with `research p28-fuel division-decision-check`, runner0.28.0. Native positive
 DIV/CMP provenance and quotient10/11/12 are checked, but primary MSM66201 JGT

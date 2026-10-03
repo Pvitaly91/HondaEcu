@@ -1,5 +1,13 @@
 # Roadmap
 
+M2u delivers [static DATA0136 producer, caller and generation research](M2U_DATA0136_PRODUCER_CHAIN.md).
+IRQ-dependent callers and mandatory TMR2 access leave native producer integration
+NotRun; frozen historical acquisition is not an established software caller.
+Research/Partial/ProducerNotRun, runner0.28.0, no new executable operation. The
+historical M2s/M2t once-initial snapshot remains diagnostic; positive stop233A,
+zero stop2333, unresolved JGT and quartet NotRun remain unchanged. Model-only and
+invented regressions are separate from zero new native producer coverage.
+
 M2t delivers [primary DIV review and blocked JGT calculation evidence](M2T_DIV_JGT_CALCULATION_CHAIN.md).
 The separate runner0.28.0 operation reuses continuous22B1 execution and sole
 once-initial0136 source. Native positive DIV/CMP reaches before233A; primary JGT
