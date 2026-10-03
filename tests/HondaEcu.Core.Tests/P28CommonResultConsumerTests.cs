@@ -323,7 +323,7 @@ public sealed class P28CommonResultConsumerTests
         }
     }
 
-    private static (P28CommonResultConsumerOracle Own, JsonElement Fixture) Oracle(int historyD, bool disable, int divisor = 1, bool b7 = false, int byteBe = 0, int d9 = 46, int source133 = 100, int currentWord = 700)
+    internal static (P28CommonResultConsumerOracle Own, JsonElement Fixture) Oracle(int historyD, bool disable, int divisor = 1, bool b7 = false, int byteBe = 0, int d9 = 46, int source133 = 100, int currentWord = 700)
     {
         var machine = new P28FuelAdditiveOracle([], [], [], [], [], [], [], [], 0, 0x9DC9, 5, 7, 88, 99, 0);
         var r = P28PostSelectionCriticalEvidence.Build(new(machine, [], [], 0, 0), (ushort)currentWord, 0xBA98, 0x5AA5, 0);

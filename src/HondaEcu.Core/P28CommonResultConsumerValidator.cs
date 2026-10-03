@@ -119,12 +119,16 @@ public static class P28CommonResultConsumerValidator
     }
 
     internal static IReadOnlyList<P28CommonResultConsumerSequence> Analyze(RomImage image, P28CommonResultConsumerScenario scenario, JsonElement root, string id)
+        => AnalyzeNative(image, scenario, root, id, Operation, "commonResultSequences", ExpectedContracts());
+
+    internal static IReadOnlyList<P28CommonResultConsumerSequence> AnalyzeNative(RomImage image, P28CommonResultConsumerScenario scenario,
+        JsonElement root, string id, string operation, string sequenceField, JsonElement contracts)
     {
-        P28LimiterScenario.Shape(root, "protocolVersion", "operation", "runnerVersion", "upstreamCommit", "localSemanticFixes", "entryContracts", "compactRows", "thresholdRows", "diagnostics", "syntheticResult", "commonResultSequences");
-        _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2s contract differs.");
+        P28LimiterScenario.Shape(root, "protocolVersion", "operation", "runnerVersion", "upstreamCommit", "localSemanticFixes", "entryContracts", "compactRows", "thresholdRows", "diagnostics", "syntheticResult", sequenceField);
+        _ = SliceRunnerIdentity.Validate(root, operation); Require(Equal(root.GetProperty("entryContracts"), contracts), "Native calculation contract differs.");
         foreach (var key in new[] { "compactRows", "thresholdRows", "diagnostics" }) Require(root.GetProperty(key).GetArrayLength() == 0, "Foreign rows.");
         Require(root.GetProperty("syntheticResult").ValueKind == JsonValueKind.Null, "Foreign synthetic result.");
-        var seq = root.GetProperty("commonResultSequences"); Require(seq.GetArrayLength() == 3, "M2s scratch count differs.");
+        var seq = root.GetProperty(sequenceField); Require(seq.GetArrayLength() == 3, "M2s scratch count differs.");
         var owns = new P28CommonResultConsumerOwn?[3, scenario.Calls.Count]; var modesBefore = new byte[3, scenario.Calls.Count];
         for (var p = 0; p < 3; p++)
         {

@@ -32,6 +32,7 @@ pub struct Request {
     pub fuel_post_store_consumer_chain: Option<crate::post_store::Stimulus>,
     pub fuel_post_selection_critical_chain: Option<crate::post_store::Stimulus>,
     pub fuel_common_result_consumer_chain: Option<crate::common_result_consumer::Stimulus>,
+    pub fuel_division_decision_chain: Option<crate::common_result_consumer::Stimulus>,
     pub vtec_fuel_chain: Option<crate::vtec_fuel::Stimulus>,
     pub ignition_map_lookup: Option<crate::ignition::Stimulus>,
     pub ignition_selector_chain: Option<crate::ignition_selector::Stimulus>,
@@ -116,6 +117,8 @@ pub struct Response {
     pub critical_sequences: Option<Vec<crate::post_selection_critical::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub common_result_sequences: Option<Vec<crate::common_result_consumer::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub division_decision_sequences: Option<Vec<crate::common_result_consumer::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub vtec_fuel_sequences: Option<Vec<crate::vtec_fuel::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -224,6 +227,7 @@ impl Response {
             consumer_sequences: None,
             critical_sequences: None,
             common_result_sequences: None,
+            division_decision_sequences: None,
             vtec_fuel_sequences: None,
             ignition_map_sequences: None,
             ignition_selector_sequences: None,

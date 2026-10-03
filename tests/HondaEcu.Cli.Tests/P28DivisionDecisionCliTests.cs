@@ -3,7 +3,7 @@ using HondaEcu.Core;
 
 namespace HondaEcu.Cli.Tests;
 
-public sealed class P28CommonResultConsumerCliTests
+public sealed class P28DivisionDecisionCliTests
 {
     private static void AssertInputsUnchanged(Dictionary<string, byte[]> before)
     {
@@ -27,10 +27,10 @@ public sealed class P28CommonResultConsumerCliTests
         var first = new P28AdaptiveFuelCall(new(0, 89, 0, 0, 0, sources), 1100, 0, false, false, true, true, true, false, 0, 0);
         var prefix = new P28PostStoreInitial(new(new(new(0, 0, 0, 0, 0, 0, 0xA5, 0), 0xF1, 0xAD, 7, 16, 128, 0xA5), 100, 110, 0, 0, 0xA55A, 0x5AA5), 321);
         var initial = new P28CommonResultConsumerInitial(prefix, new(0, false, false, 0, false, 1, 0, 0));
-        File.WriteAllText(w.Scenario, P28CommonResultConsumerScenario.Create(initial,
+        File.WriteAllText(w.Scenario, P28DivisionDecisionScenario.Create(initial,
             [new(first, false, false), new(first with { Fuel = first.Fuel with { Index = 1 } }, false, false)],
-            "Invented M2s partial CLI fixture; no recovered scheduler or quartet consumer", [0]).ToJson());
-        var args = w.LookupArguments(); args[2] = "common-result-consumer-check"; return args;
+            "Invented M2t partial CLI fixture; no recovered scheduler or quartet consumer", [0]).ToJson());
+        var args = w.LookupArguments(); args[2] = "division-decision-check"; return args;
     }
 
     [Theory]
@@ -82,17 +82,17 @@ public sealed class P28CommonResultConsumerCliTests
         var result = await w.RunAsync(args); Assert.True(result.Code == CliApplication.VerificationFailed, result.Error + result.Output);
         var report = JsonNode.Parse(File.ReadAllText(w.Output))!;
         Assert.Equal("0.28.0", report["runnerVersion"]!.GetValue<string>());
-        Assert.Equal("common-result-consumer-native-software-test", report["purpose"]!.GetValue<string>());
+        Assert.Equal("division-decision-native-software-test", report["purpose"]!.GetValue<string>());
         foreach (var sequence in report["sequences"]!.AsArray())
         {
             var rows = sequence!["checkpoints"]!;
-            Assert.Equal("Unresolved", rows[0]!["disposition"]!.GetValue<string>());
-            Assert.Null(rows[0]!["softwareResult13b"]); Assert.Null(rows[0]!["actual"]!["commonConsumer"]);
+            Assert.Equal("PrefixUnresolved", rows[0]!["disposition"]!.GetValue<string>());
+            Assert.Null(rows[0]!["native"]!["softwareResult13b"]); Assert.Null(rows[0]!["native"]!["actual"]!["commonConsumer"]);
             Assert.Equal("NotRun", rows[1]!["disposition"]!.GetValue<string>());
-            Assert.Null(rows[1]!["softwareResult13b"]); Assert.Null(rows[1]!["actual"]!["commonConsumer"]);
-            Assert.Empty(rows[1]!["actual"]!["prefix"]!["prefix"]!["prefix"]!["prefix"]!["snapshotWrites"]!.AsArray());
+            Assert.Null(rows[1]!["native"]!["softwareResult13b"]); Assert.Null(rows[1]!["native"]!["actual"]!["commonConsumer"]);
+            Assert.Empty(rows[1]!["native"]!["actual"]!["prefix"]!["prefix"]!["prefix"]!["prefix"]!["snapshotWrites"]!.AsArray());
         }
-        Assert.Contains("prefix=Unresolved", result.Output); Assert.Contains("Part B static quartet audit", result.Output);
+        Assert.Contains("prefix=Unresolved", result.Output); Assert.Contains("JGT Blocked/Partial before233A", result.Output);
         Assert.Contains("quartet reader invocations0", result.Output); Assert.Contains("ScriptedConsumerEntry NotEstablished/NotRun", result.Output);
         Assert.Contains("IRQ NotInjected", result.Output); Assert.Contains("elapsed time None", result.Output);
         Assert.Contains("overall consumer chain Partial", result.Output); Assert.Contains("new firmware BIN0", result.Output);
@@ -175,7 +175,7 @@ public sealed class P28CommonResultConsumerCliTests
         using var w = new P28FuelMapCliTests.Workspace(); var result = await w.RunAsync(["help"]);
         Assert.Equal(CliApplication.Success, result.Code); Assert.Contains("post-store-consumer-check", result.Output);
         Assert.Contains("runner-0.25.0", result.Output); Assert.Contains("post-selection-critical-check", result.Output);
-        Assert.Contains("runner-0.26.0", result.Output); Assert.Contains("common-result-consumer-check", result.Output);
-        Assert.Contains("runner-0.27.0", result.Output); Assert.Contains("quartet consumers static/NotRun", result.Output);
+        Assert.Contains("runner-0.26.0", result.Output); Assert.Contains("division-decision-check", result.Output);
+        Assert.Contains("runner-0.28.0", result.Output); Assert.Contains("quartet consumers static/NotRun", result.Output);
     }
 }

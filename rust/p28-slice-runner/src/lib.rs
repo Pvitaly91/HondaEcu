@@ -8,6 +8,9 @@ pub mod checksum;
 pub mod common_result_consumer;
 pub mod cpu;
 pub mod decoder;
+pub mod division_decision;
+#[cfg(test)]
+mod division_decision_tests;
 pub mod exec;
 // Preserve the pinned generated opcode table verbatim.
 #[rustfmt::skip]

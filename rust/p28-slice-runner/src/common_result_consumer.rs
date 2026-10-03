@@ -77,6 +77,17 @@ pub struct Sequence {
     pub checkpoints: Vec<Checkpoint>,
 }
 pub fn validate_request(r: &Request) -> Result<(), String> {
+    if r.fuel_division_decision_chain.is_some() {
+        return Err("M2t stimulus is unavailable to historical M2s".into());
+    }
+    validate_parts(
+        r,
+        r.fuel_common_result_consumer_chain
+            .as_ref()
+            .ok_or("M2s stimulus required")?,
+    )
+}
+pub(crate) fn validate_parts(r: &Request, s: &Stimulus) -> Result<(), String> {
     if [
         r.synthetic.is_some(),
         r.producer_cases.is_some(),
@@ -107,10 +118,6 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
     {
         return Err("M2s accepts only its own closed stimulus".into());
     }
-    let s = r
-        .fuel_common_result_consumer_chain
-        .as_ref()
-        .ok_or("M2s stimulus required")?;
     if s.initial_state.software_sources.word011a_mask1034 & !0x1034 != 0 {
         return Err("M2s011A source permits only mask1034; neighboring owners are retained".into());
     }
@@ -330,9 +337,15 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
         .fuel_common_result_consumer_chain
         .as_ref()
         .expect("validated");
+    response.entry_contracts = entry_contracts();
+    response.common_result_sequences =
+        Some(run_sequences(&r.images[0].rom, &r.scratch_patterns, s));
+    Ok(response)
+}
+pub(crate) fn run_sequences(rom: &[u8], patterns: &[u8], s: &Stimulus) -> Vec<Sequence> {
     let mut sequences = vec![];
-    for &pattern in &r.scratch_patterns {
-        let (mut cpu, mut bus) = initialize(&r.images[0].rom, pattern, &s.initial_state);
+    for &pattern in patterns {
+        let (mut cpu, mut bus) = initialize(rom, pattern, &s.initial_state);
         let mut stopped = false;
         let mut checkpoints = vec![];
         for c in &s.calls {
@@ -369,9 +382,7 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
             checkpoints,
         });
     }
-    response.entry_contracts = entry_contracts();
-    response.common_result_sequences = Some(sequences);
-    Ok(response)
+    sequences
 }
 
 #[cfg(test)]

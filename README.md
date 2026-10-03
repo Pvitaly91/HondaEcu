@@ -1,5 +1,12 @@
 # HondaEcu
 
+M2t adds [DIV evidence hardening and a separate blocked JGT calculation audit](docs/M2T_DIV_JGT_CALCULATION_CHAIN.md)
+with `research p28-fuel division-decision-check`, runner0.28.0. Native positive
+DIV/CMP provenance and quotient10/11/12 are checked, but primary MSM66201 JGT
+evidence remains conflicting: Blocked/Partial before233A, no strict calculation
+completion or fresh output. Historical M2s stays Partial; no branch assumption,
+executor semantic fix, quartet/scheduler expansion, GUI/hardware or firmware output.
+
 M2s adds a [common-result consumer audit and bounded software continuation](docs/M2S_COMMON_RESULT_CONSUMER_CHAIN.md)
 with `research p28-fuel common-result-consumer-check`, runner0.27.0. Same-machine
 continuation from22B1 reaches a local013B software boundary or a strict unresolved

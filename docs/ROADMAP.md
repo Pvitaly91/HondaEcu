@@ -1,5 +1,12 @@
 # Roadmap
 
+M2t delivers [primary DIV review and blocked JGT calculation evidence](M2T_DIV_JGT_CALCULATION_CHAIN.md).
+The separate runner0.28.0 operation reuses continuous22B1 execution and sole
+once-initial0136 source. Native positive DIV/CMP reaches before233A; primary JGT
+predicate remains unresolved, so strict positive calculation completions=0.
+Divide0 stops before2333 without fabricated outputs; M2s remains Partial and
+quartet consumers NotRun. No global branch fix or next-stage/GUI/hardware start.
+
 M2s adds [bounded22B1 software continuation and a separate quartet-consumer audit](M2S_COMMON_RESULT_CONSUMER_CHAIN.md).
 The continuous path has0 quartet-reader invocations; counter/disable paths stop
 before236C after a local byte013B output. Calculation paths refuse zero division
