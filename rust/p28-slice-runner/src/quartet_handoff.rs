@@ -116,12 +116,26 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
         .quartet_consumer_handoff
         .as_ref()
         .ok_or("M2x stimulus required")?;
-    if s.calls.iter().any(|c| c.selector013c > 3) {
+    validate_parts(
+        r,
+        s.format_version,
+        &s.initial_state,
+        &s.calls,
+        &s.trace_event_indexes,
+    )
+}
+pub(crate) fn validate_parts(
+    r: &Request,
+    version: u32,
+    initial: &Initial,
+    input: &[Call],
+    traces: &[u32],
+) -> Result<(), String> {
+    if input.iter().any(|c| c.selector013c > 3) {
         return Err("unsafe selector013c outside0..3".into());
     }
     // Serialize only the already closed source structures, never execution results.
-    let calls = s
-        .calls
+    let calls = input
         .iter()
         .map(|c| post_store::Call {
             adaptive: c.prefix.adaptive.clone(),
@@ -129,13 +143,7 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
             disable12e: c.prefix.disable12e,
         })
         .collect::<Vec<_>>();
-    post_store::validate_parts(
-        r,
-        s.format_version,
-        &s.initial_state.fuel_prefix,
-        &calls,
-        &s.trace_event_indexes,
-    )
+    post_store::validate_parts(r, version, &initial.fuel_prefix, &calls, traces)
 }
 fn configure(bus: &mut Bus) {
     bus.configure_scoped_access(
@@ -226,131 +234,136 @@ pub(crate) fn execute_consumer(cpu: &mut Cpu, bus: &mut Bus) -> post_store::Suff
         accesses,
     }
 }
+pub(crate) fn initialize(rom: &[u8], pattern: u8, initial: &Initial) -> (Cpu, Bus) {
+    let (mut cpu, mut bus) = post_store::initialize(rom, pattern, &initial.fuel_prefix);
+    bus.configure_scoped_access(vec![[0, 4096]], 4096);
+    let prior = read_data_u8(&cpu, &mut bus, 0x12A);
+    write_data_u8(
+        &mut cpu,
+        &mut bus,
+        0x12A,
+        (prior & !2) | if initial.bit012a1 { 2 } else { 0 },
+    );
+    (cpu, bus)
+}
+pub(crate) fn checkpoint(cpu: &Cpu, bus: &mut Bus, call: &Call, index: u32, pattern: u8) -> Event {
+    bus.configure_scoped_access(vec![[0, 4096]], 4096);
+    let before = boundary(cpu, bus);
+    let state_before = state(cpu, bus);
+    Event {
+        index,
+        machine_id: 1,
+        fuel_prefix: prefix::checkpoint(cpu, bus, &call.prefix),
+        consumer: None,
+        disposition: "NotRun",
+        after: before.clone(),
+        before,
+        state_after: state_before.clone(),
+        state_before,
+        abi_writes: vec![],
+        source_writes: vec![],
+        quartet_generations: vec![],
+        selected_slot: None,
+        selected_address: None,
+        selected_generation: None,
+        result_generation: None,
+        continuity_journal: vec![],
+        canaries: [pattern; 3],
+    }
+}
+/// Reuse the exact historical body without creating or resetting a machine.
+/// Caller owns the event-wide journal so a later stage can extend it.
+pub(crate) fn execute_checkpoint(cpu: &mut Cpu, bus: &mut Bus, call: &Call, event: &mut Event) {
+    prefix::execute_checkpoint(cpu, bus, &call.prefix, &mut event.fuel_prefix);
+    if event.fuel_prefix.status != 0 {
+        event.disposition = "ConsumerNotRun";
+    } else {
+        configure(bus);
+        write_data_u8(cpu, bus, 0x13C, call.selector013c);
+        event
+            .source_writes
+            .push([0x13C, 8, call.selector013c as u32]);
+        event.abi_writes = vec![
+            [0, cpu.pc as u32, 0x584],
+            [1, cpu.psw_u16() as u32, 0x1DCA],
+            [2, cpu.lrb as u32, 0x21],
+        ];
+        cpu.pc = 0x584;
+        cpu.set_psw_u16(0x1DCA);
+        cpu.lrb = 0x21;
+        let consumer = execute_consumer(cpu, bus);
+        if consumer.stage.result.status != 0 {
+            event.disposition = match consumer.stage.result.status {
+                3 => "BudgetExceeded",
+                2 => "ExecutionError",
+                _ => "ConsumerPartial",
+            };
+        } else if consumer.accesses.iter().any(|a| {
+            a[0] == 0x5DF && a[1] == 0x3B6 + 2 * call.selector013c as u32 && a[2] == 16 && a[3] == 0
+        }) {
+            event.disposition = "QuartetHandoffStrict";
+            event.selected_slot = Some(call.selector013c as u32);
+            event.selected_address = Some(0x3B6 + 2 * call.selector013c as u32);
+        } else {
+            event.disposition = "ConsumerGateBypassNotHandoff";
+        }
+        event.consumer = Some(consumer);
+    }
+    event.continuity_journal = bus.continuity_snapshot();
+    let mut order = 0;
+    for a in &event.continuity_journal {
+        if a[0] == 1 && a[4] == 1 {
+            let g = Generation {
+                writer_pc: a[1],
+                event_index: event.index,
+                write_order: order,
+                value: a[5],
+            };
+            if matches!(
+                (a[1], a[2], a[3]),
+                (0x22A5, 0x3B6, 16)
+                    | (0x22A8, 0x3B8, 16)
+                    | (0x22AB, 0x3BA, 16)
+                    | (0x22AE, 0x3BC, 16)
+            ) {
+                event.quartet_generations.push(g.clone());
+            }
+            if (a[1], a[2], a[3]) == (0x5EB, 0x196, 16) {
+                event.result_generation = Some(g);
+            }
+            order += 1;
+        }
+    }
+    if let Some(slot) = event.selected_slot {
+        event.selected_generation = event.quartet_generations.get(slot as usize).cloned();
+    }
+    bus.configure_scoped_access(vec![[0, 4096]], 4096);
+    event.after = boundary(cpu, bus);
+    event.state_after = state(cpu, bus);
+    bus.configure_scoped_access(vec![[0x300, 0x301], [0x350, 0x351], [0x3E0, 0x3E1]], 4096);
+    event.canaries = [0x300, 0x350, 0x3E0].map(|a| read_data_u8(cpu, bus, a));
+}
 pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
     let s = r.quartet_consumer_handoff.as_ref().expect("validated");
     response.entry_contracts = entry_contracts();
     let mut sequences = vec![];
     for &pattern in &r.scratch_patterns {
-        let (mut cpu, mut bus) =
-            post_store::initialize(&r.images[0].rom, pattern, &s.initial_state.fuel_prefix);
-        bus.configure_scoped_access(vec![[0, 4096]], 4096);
-        let prior = read_data_u8(&cpu, &mut bus, 0x12A);
-        write_data_u8(
-            &mut cpu,
-            &mut bus,
-            0x12A,
-            (prior & !2) | if s.initial_state.bit012a1 { 2 } else { 0 },
-        );
+        let (mut cpu, mut bus) = initialize(&r.images[0].rom, pattern, &s.initial_state);
         let identity = (&cpu as *const Cpu, &bus as *const Bus);
         let mut terminal = false;
         let mut checkpoints = vec![];
         for (index, call) in s.calls.iter().enumerate() {
-            bus.configure_scoped_access(vec![[0, 4096]], 4096);
-            let before = boundary(&cpu, &mut bus);
-            let state_before = state(&cpu, &mut bus);
-            let mut event = Event {
-                index: index as u32,
-                machine_id: 1,
-                fuel_prefix: prefix::checkpoint(&cpu, &mut bus, &call.prefix),
-                consumer: None,
-                disposition: "NotRun",
-                after: before.clone(),
-                before,
-                state_after: state_before.clone(),
-                state_before,
-                abi_writes: vec![],
-                source_writes: vec![],
-                quartet_generations: vec![],
-                selected_slot: None,
-                selected_address: None,
-                selected_generation: None,
-                result_generation: None,
-                continuity_journal: vec![],
-                canaries: [pattern; 3],
-            };
+            let mut event = checkpoint(&cpu, &mut bus, call, index as u32, pattern);
             if !terminal {
                 bus.begin_continuity();
-                prefix::execute_checkpoint(
-                    &mut cpu,
-                    &mut bus,
-                    &call.prefix,
-                    &mut event.fuel_prefix,
-                );
-                if event.fuel_prefix.status != 0 {
-                    event.disposition = "ConsumerNotRun";
-                    terminal = true;
-                } else {
-                    configure(&mut bus);
-                    write_data_u8(&mut cpu, &mut bus, 0x13C, call.selector013c);
-                    event
-                        .source_writes
-                        .push([0x13C, 8, call.selector013c as u32]);
-                    event.abi_writes = vec![
-                        [0, cpu.pc as u32, 0x584],
-                        [1, cpu.psw_u16() as u32, 0x1DCA],
-                        [2, cpu.lrb as u32, 0x21],
-                    ];
-                    cpu.pc = 0x584;
-                    cpu.set_psw_u16(0x1DCA);
-                    cpu.lrb = 0x21;
-                    let consumer = execute_consumer(&mut cpu, &mut bus);
-                    if consumer.stage.result.status != 0 {
-                        event.disposition = match consumer.stage.result.status {
-                            3 => "BudgetExceeded",
-                            2 => "ExecutionError",
-                            _ => "ConsumerPartial",
-                        };
-                        terminal = true;
-                    } else if consumer.accesses.iter().any(|a| {
-                        a[0] == 0x5DF
-                            && a[1] == 0x3B6 + 2 * call.selector013c as u32
-                            && a[2] == 16
-                            && a[3] == 0
-                    }) {
-                        event.disposition = "QuartetHandoffStrict";
-                        event.selected_slot = Some(call.selector013c as u32);
-                        event.selected_address = Some(0x3B6 + 2 * call.selector013c as u32);
-                    } else {
-                        event.disposition = "ConsumerGateBypassNotHandoff";
-                    }
-                    event.consumer = Some(consumer);
-                }
+                execute_checkpoint(&mut cpu, &mut bus, call, &mut event);
                 event.continuity_journal = bus.end_continuity();
-                let mut order = 0;
-                for a in &event.continuity_journal {
-                    if a[0] == 1 && a[4] == 1 {
-                        let g = Generation {
-                            writer_pc: a[1],
-                            event_index: index as u32,
-                            write_order: order,
-                            value: a[5],
-                        };
-                        if matches!(
-                            (a[1], a[2], a[3]),
-                            (0x22A5, 0x3B6, 16)
-                                | (0x22A8, 0x3B8, 16)
-                                | (0x22AB, 0x3BA, 16)
-                                | (0x22AE, 0x3BC, 16)
-                        ) {
-                            event.quartet_generations.push(g.clone());
-                        }
-                        if (a[1], a[2], a[3]) == (0x5EB, 0x196, 16) {
-                            event.result_generation = Some(g);
-                        }
-                        order += 1;
-                    }
-                }
-                if let Some(slot) = event.selected_slot {
-                    event.selected_generation =
-                        event.quartet_generations.get(slot as usize).cloned();
-                }
+                terminal = !matches!(
+                    event.disposition,
+                    "QuartetHandoffStrict" | "ConsumerGateBypassNotHandoff"
+                );
             }
             assert_eq!(identity, (&cpu as *const Cpu, &bus as *const Bus));
-            bus.configure_scoped_access(vec![[0, 4096]], 4096);
-            event.after = boundary(&cpu, &mut bus);
-            event.state_after = state(&cpu, &mut bus);
-            bus.configure_scoped_access(vec![[0x300, 0x301], [0x350, 0x351], [0x3E0, 0x3E1]], 4096);
-            event.canaries = [0x300, 0x350, 0x3E0].map(|a| read_data_u8(&cpu, &mut bus, a));
             checkpoints.push(event);
         }
         sequences.push(Sequence {

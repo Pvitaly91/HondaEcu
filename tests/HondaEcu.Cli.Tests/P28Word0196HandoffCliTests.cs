@@ -3,7 +3,7 @@ using HondaEcu.Core;
 
 namespace HondaEcu.Cli.Tests;
 
-public sealed class P28QuartetHandoffCliTests
+public sealed class P28Word0196HandoffCliTests
 {
     private static string[] Arguments(P28FuelMapCliTests.Workspace w)
     {
@@ -13,8 +13,8 @@ public sealed class P28QuartetHandoffCliTests
         var src = new P28FuelFactorSources(12345, 65535, 255, 65535, 65535, 255, 255, 0, 0, 255, 107, 0, 0, 0, 0, 0, 0, 0, 0);
         var call = new P28AdaptiveFuelCall(new(0, 89, 0, 0, 0, src), 1100, 0, false, false, true, true, true, false, 0, 0);
         var initial = new P28PostStoreInitial(new(new(new(0, 0, 0, 0, 0, 0, 0xA5, 0), 0xF1, 0xAD, 7, 16, 128, 0xA5), 100, 110, 0, 0, 0xA55A, 0x5AA5), 321);
-        var s = P28QuartetHandoffScenario.Create(new(initial, false), [new(new(call, false, false), 0), new(new(call with { Fuel = call.Fuel with { Index = 1 } }, false, false), 1)], "Invented unsupported prefix;no OEM code", [0]);
-        File.WriteAllText(w.Scenario, s.ToJson()); var args = w.LookupArguments(); args[2] = "quartet-consumer-check"; return args;
+        var s = P28Word0196HandoffScenario.Create(new(new(initial, false), true, 15), [new(new(call, false, false), 0), new(new(call with { Fuel = call.Fuel with { Index = 1 } }, false, false), 1)], "Invented unsupported prefix;no OEM code", [0]);
+        File.WriteAllText(w.Scenario, s.ToJson()); var args = w.LookupArguments(); args[2] = "word0196-consumer-check"; return args;
     }
     [Theory]
     [InlineData("--runner")]
@@ -28,10 +28,10 @@ public sealed class P28QuartetHandoffCliTests
         Assert.Equal(CliApplication.UsageError, (await w.RunAsync(complete.Where(a => a != "--confirm-profile").ToArray())).Code); Assert.False(File.Exists(w.Output));
     }
     [Theory]
-    [InlineData("--quartet")]
+    [InlineData("--timer")]
     [InlineData("--word0196")]
     [InlineData("--x1")]
-    [InlineData("--selected-address")]
+    [InlineData("--p2")]
     [InlineData("--irq-frame")]
     [InlineData("--output-bin")]
     [InlineData("--allow-assumption")]
@@ -40,8 +40,8 @@ public sealed class P28QuartetHandoffCliTests
     public async Task PartialPrefixConsumerNotRunThenTerminalNotRunDoesNotPublishFresh0196()
     {
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var snapshot = w.Snapshot(); var r = await w.RunAsync(args); Assert.True(r.Code == CliApplication.VerificationFailed, r.Output + r.Error); w.AssertUnchanged(snapshot);
-        var n = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.32.0", n["runnerVersion"]!.GetValue<string>()); Assert.Equal("Partial", n["quartetScheduledHandoff"]!.GetValue<string>());
-        foreach (var s in n["sequences"]!.AsArray()) { Assert.Equal("ConsumerNotRun", s!["checkpoints"]![0]!["disposition"]!.GetValue<string>()); Assert.Equal("NotRun", s["checkpoints"]![1]!["disposition"]!.GetValue<string>()); Assert.Null(s["checkpoints"]![0]!["resultGeneration"]); }
+        var n = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.32.0", n["runnerVersion"]!.GetValue<string>()); Assert.Equal("Partial", n["word0196ScheduledHandoff"]!.GetValue<string>());
+        foreach (var s in n["sequences"]!.AsArray()) { Assert.Equal("NoFresh0196", s!["checkpoints"]![0]!["disposition"]!.GetValue<string>()); Assert.Equal("NotRun", s["checkpoints"]![1]!["disposition"]!.GetValue<string>()); Assert.Null(s["checkpoints"]![0]!["producerGeneration0196"]); }
     }
     [Fact]
     public async Task AliasesExistingOutputClosedSchemaAndCancellationPreserveInputs()

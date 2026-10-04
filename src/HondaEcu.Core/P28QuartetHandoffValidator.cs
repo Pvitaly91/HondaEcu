@@ -42,6 +42,8 @@ public sealed record P28QuartetHandoffReport(int FormatVersion, string Purpose, 
 }
 public static class P28QuartetHandoffValidator
 {
+    internal sealed record Continuation(Func<int, int, JsonElement> PreviousAfter, Func<int, int, bool> Terminal,
+        Action<int, int, P28QuartetHandoffCheckpoint, int[]> Observe);
     public const string Operation = "quartetConsumerHandoff";
     public static object CreateRequest(RomImage image, P28QuartetHandoffScenario scenario)
     {
@@ -80,7 +82,7 @@ public static class P28QuartetHandoffValidator
         IReadOnlyList<int> offsets = child is null ? [] : Enumerable.Range(0, original.Size).Where(i => original.Span[i] != child.Span[i]).ToArray();
         return new(1, scenario.Purpose, original.Hash, profile.Id, scenario.Digest, version, scenario.Mutation, offsets, sequences, comparisons, contract);
     }
-    internal static IReadOnlyList<P28QuartetHandoffSequence> Analyze(RomImage image, P28QuartetHandoffScenario scenario, JsonElement root, string id)
+    internal static IReadOnlyList<P28QuartetHandoffSequence> Analyze(RomImage image, P28QuartetHandoffScenario scenario, JsonElement root, string id, Continuation? continuation = null)
     {
         P28LimiterScenario.Shape(root, "protocolVersion", "operation", "runnerVersion", "upstreamCommit", "localSemanticFixes", "entryContracts", "compactRows", "thresholdRows", "diagnostics", "syntheticResult", "quartetHandoffSequences");
         _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2x contract differs.");
@@ -89,20 +91,21 @@ public static class P28QuartetHandoffValidator
         JsonElement Row(int p, int i) => seq[p].GetProperty("checkpoints")[i];
         var view = JsonSerializer.SerializeToElement(new { runnerVersion = root.GetProperty("runnerVersion"), upstreamCommit = root.GetProperty("upstreamCommit"), localSemanticFixes = root.GetProperty("localSemanticFixes"), criticalSequences = seq.EnumerateArray().Select(s => new { scratchPattern = s.GetProperty("scratchPattern"), checkpoints = s.GetProperty("checkpoints").EnumerateArray().Select(c => c.GetProperty("fuelPrefix")).ToArray() }).ToArray() });
         var prefixes = P28PostSelectionCriticalValidator.AnalyzeEvidence(image, scenario.PrefixScenario, view, id,
-            (p, i) => Row(p, i).GetProperty("consumer").ValueKind == JsonValueKind.Object && Row(p, i).GetProperty("consumer").GetProperty("stage").GetProperty("result").GetProperty("status").GetInt32() != 0,
-            continuationBefore: (p, i, before) => { if (i > 0) Require(Equal(before, Row(p, i - 1).GetProperty("after")), "CPU reseeded before next prefix."); }, incomingScbSwitch: true);
+            (p, i) => continuation?.Terminal(p, i) == true || Row(p, i).GetProperty("consumer").ValueKind == JsonValueKind.Object && Row(p, i).GetProperty("consumer").GetProperty("stage").GetProperty("result").GetProperty("status").GetInt32() != 0,
+            continuationBefore: (p, i, before) => { if (i > 0) Require(Equal(before, continuation?.PreviousAfter(p, i - 1) ?? Row(p, i - 1).GetProperty("after")), "CPU reseeded before next prefix."); }, incomingScbSwitch: true);
         var reports = new List<P28QuartetHandoffSequence>();
         for (var p = 0; p < 3; p++)
         {
             var pattern = new[] { 0, 85, 170 }[p]; var s = seq[p]; P28LimiterScenario.Shape(s, "scratchPattern", "machineInstances", "checkpoints");
             Require(N(s, "scratchPattern") == pattern && N(s, "machineInstances") == 1 && s.GetProperty("checkpoints").GetArrayLength() == scenario.Calls.Count, "Second machine/missing events.");
             var ownPrefix = new P28PostSelectionCriticalHistory(image, scenario.PrefixScenario, pattern); var ram = InitialRam(pattern, scenario); var scb1 = Enumerable.Repeat(pattern, 8).ToArray(); scb1[6] = 0x80; scb1[7] = 2;
+            var scb2 = Enumerable.Repeat(pattern, 8).ToArray();
             var stopped = false; JsonElement prior = default; var rows = new List<P28QuartetHandoffCheckpoint>();
             for (var i = 0; i < scenario.Calls.Count; i++)
             {
                 var r = Row(p, i); P28LimiterScenario.Shape(r, "index", "machineId", "fuelPrefix", "consumer", "disposition", "before", "after", "stateBefore", "stateAfter", "abiWrites", "sourceWrites", "quartetGenerations", "selectedSlot", "selectedAddress", "selectedGeneration", "resultGeneration", "continuityJournal", "canaries");
                 Require(N(r, "index") == i && N(r, "machineId") == 1 && Equal(r.GetProperty("canaries"), JsonSerializer.SerializeToElement(new[] { pattern, pattern, pattern })), "Wrong index/machine/canary.");
-                Require(Equal(r.GetProperty("stateBefore"), State(ram)), "Initial/retained RAM overwritten."); if (i > 0) Require(Equal(r.GetProperty("before"), prior.GetProperty("after")), "CPU reset between events.");
+                Require(Equal(r.GetProperty("stateBefore"), State(ram)), "Initial/retained RAM overwritten."); if (i > 0) Require(Equal(r.GetProperty("before"), continuation?.PreviousAfter(p, i - 1) ?? prior.GetProperty("after")), "CPU reset between events.");
                 else
                 {
                     var b = r.GetProperty("before"); P28FuelFactorValidator.ValidateBoundary(b);
@@ -121,7 +124,7 @@ public static class P28QuartetHandoffValidator
                     Require(Equal(r.GetProperty("abiWrites"), JsonSerializer.SerializeToElement(new[] { new[] { 0, 0x22B1, 0x584 }, new[] { 1, own.Oracle.Machine.Psw, 0x1DCA }, new[] { 2, 0x20, 0x21 } })), "Hidden X1/A/USP/frame ABI seed.");
                     Require(consumer.ValueKind == JsonValueKind.Object, "Completed prefix lacks consumer.");
                     var model = P28QuartetHandoffEvidence.Build(own.Oracle.Machine.Accumulator, scenario.Calls[i].Selector013c, (byte)ram[0x124], (byte)ram[0x125], (byte)ram[0x12A], own.After.CommonWords03b6, new(ram));
-                    var count = ValidateConsumer(consumer, f.GetProperty("critical").GetProperty("exit"), model, ram, pattern);
+                    var count = ValidateConsumer(consumer, f.GetProperty("critical").GetProperty("exit"), model, ram, pattern, scb2);
                     var accesses = model.Accesses.Take(count).ToArray(); actualNative.AddRange(accesses); foreach (var a in accesses.Where(a => a[3] == 1)) ram[a[1]] = a[4];
                     var stageResult = consumer.GetProperty("stage").GetProperty("result"); var complete = N(stageResult, "status") == 0; var read = accesses.SingleOrDefault(a => a[0] == 0x5DF && a[1] >= 0x3B6);
                     disposition = !complete ? N(stageResult, "status") switch { 3 => "BudgetExceeded", 2 => "ExecutionError", _ => "ConsumerPartial" } : read is null ? "ConsumerGateBypassNotHandoff" : "QuartetHandoffStrict";
@@ -147,7 +150,8 @@ public static class P28QuartetHandoffValidator
                 Require(Equal(r.GetProperty("stateAfter"), State(ram)), "Retained/fresh0196 or companion history forged.");
                 if (consumer.ValueKind == JsonValueKind.Object) Require(Equal(r.GetProperty("after"), consumer.GetProperty("exit")), "Detached consumer exit.");
                 if (stopped) Require(Equal(r.GetProperty("before"), r.GetProperty("after")) && actualNative.Count == 0 && host.Count == 0, "NotRun changed machine.");
-                rows.Add(new(i, disposition, prefix.Disposition, selectedSlot, selectedAddress, selected, readerValue, resultGeneration, output, generations, r.Clone())); prior = r; stopped |= disposition is "ConsumerPartial" or "ConsumerNotRun" or "ExecutionError" or "BudgetExceeded";
+                var checkpoint = new P28QuartetHandoffCheckpoint(i, disposition, prefix.Disposition, selectedSlot, selectedAddress, selected, readerValue, resultGeneration, output, generations, r.Clone());
+                continuation?.Observe(p, i, checkpoint, scb2); rows.Add(checkpoint); prior = r; stopped |= continuation?.Terminal(p, i) == true || disposition is "ConsumerPartial" or "ConsumerNotRun" or "ExecutionError" or "BudgetExceeded";
             }
             reports.Add(new(id, pattern, rows));
         }
@@ -156,10 +160,10 @@ public static class P28QuartetHandoffValidator
     private static Dictionary<int, int> InitialRam(int pattern, P28QuartetHandoffScenario s) => new() { [0x13C] = pattern, [0x12A] = (pattern & ~2) | (s.InitialState.Bit012a1 ? 2 : 0), [0x124] = s.InitialState.FuelPrefix.Adaptive.Joint.Data0124, [0x125] = pattern, [0x196] = pattern * 257, [0x3BE] = pattern * 257, [0x3C0] = pattern * 257, [0x3C2] = pattern * 257, [0x3C4] = pattern * 257, [0x19B] = pattern, [0x19D] = pattern, [0x19F] = pattern, [0x90] = pattern * 257, [0x92] = pattern * 257 };
     private static JsonElement State(Dictionary<int, int> r) => JsonSerializer.SerializeToElement(new { selector013c = r[0x13C], byte012a = r[0x12A], byte0124 = r[0x124], byte0125 = r[0x125], word0196 = r[0x196], companions03be = new[] { r[0x3BE], r[0x3C0], r[0x3C2], r[0x3C4] }, byte019b = r[0x19B], byte019d = r[0x19D], byte019f = r[0x19F] });
     private static int N(JsonElement e, string k) => e.GetProperty(k).GetInt32();
-    internal static int ValidateConsumer(JsonElement suffix, JsonElement prefixExit, P28QuartetOracle own, Dictionary<int, int> ram, int pattern)
+    internal static int ValidateConsumer(JsonElement suffix, JsonElement prefixExit, P28QuartetOracle own, Dictionary<int, int> ram, int pattern, int[]? registers = null)
     {
         P28LimiterScenario.Shape(suffix, "entry", "exit", "stage", "accesses"); var entry = suffix.GetProperty("entry"); var exit = suffix.GetProperty("exit"); P28FuelFactorValidator.ValidateBoundary(entry); P28FuelFactorValidator.ValidateBoundary(exit);
-        Require(N(prefixExit, "pc") == 0x22B1 && N(entry, "pc") == 0x584 && N(entry, "psw") == 0x1DCA && N(entry, "lrb") == 0x21 && N(entry, "accumulator") == own.Events[0][2] && N(entry, "accumulator") == N(prefixExit, "accumulator") && N(entry, "ssp") == 0x7FE && N(entry, "x1") == ram[0x90] && N(entry, "x2") == ram[0x92] && N(entry, "dp") == pattern * 257 && N(entry, "usp") == pattern * 257 && entry.GetProperty("registers").EnumerateArray().All(n => n.GetInt32() == pattern), "Wrong technical ABI/pointer seed/fake IRQ frame.");
+        Require(N(prefixExit, "pc") == 0x22B1 && N(entry, "pc") == 0x584 && N(entry, "psw") == 0x1DCA && N(entry, "lrb") == 0x21 && N(entry, "accumulator") == own.Events[0][2] && N(entry, "accumulator") == N(prefixExit, "accumulator") && N(entry, "ssp") == 0x7FE && N(entry, "x1") == ram[0x90] && N(entry, "x2") == ram[0x92] && N(entry, "dp") == pattern * 257 && N(entry, "usp") == pattern * 257 && entry.GetProperty("registers").EnumerateArray().Select(n => n.GetInt32()).SequenceEqual(registers ?? Enumerable.Repeat(pattern, 8).ToArray()), "Wrong technical ABI/pointer seed/fake IRQ frame.");
         var stage = suffix.GetProperty("stage"); P28LimiterScenario.Shape(stage, "result", "writes", "events", "sspAfter"); var result = P28AcquisitionValidator.ParseStage(stage.GetProperty("result"), 40, 0, [], null)!;
         var events = Matrix(stage.GetProperty("events"), 8, 40); Require(events.Length == result.Steps && events.Length <= own.Events.Count && events.Select(a => string.Join(',', a)).SequenceEqual(own.Events.Take(events.Length).Select(a => string.Join(',', a))), "Wrong selector/index/arithmetic/flags/events.");
         Require(result.Trace.Count == events.Length, "Missing mandatory trace."); for (var n = 0; n < events.Length; n++) Require(N(result.Trace[n], "pc") == events[n][0] && N(result.Trace[n], "nextPc") == events[n][1] && N(result.Trace[n], "accumulator") == events[n][3] && N(result.Trace[n], "psw") == events[n][5], "Trace detached from native arithmetic.");

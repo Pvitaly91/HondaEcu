@@ -1,5 +1,16 @@
 # Roadmap
 
+M2y delivers [native consumerWord0196 software handoff and timer-boundary audit](M2Y_WORD0196_CONSUMER_HANDOFF.md).
+M2r quartet→M2x05DF/05E2/05EB generation→PC-only technical54F5→actual54FA
+word read→native local store/byte comparison/branch all retain one Cpu/Bus.
+27 quartet-derived strict and6 upstream gate-bypass controls reach stop-before5503;
+36 current-generation reads include3 explicitly partial alternate cases.
+All four slots,18 fresh equal-value generation pairs and6 downstream A/B witnesses
+are separate from invented/model-only/compatibility coverage. Part AValidated;
+Part BNotRun:5508 is a WRITE, and primary peripheral semantics are absent.
+5578 immediate00C0 is not a RAM source. Recovered0196SchedulerNotEstablished,
+Physical0196RoleUnknown;P2/157E/IRQ/GUI/hardware/BINNotRun. No automatic M2z.
+
 M2x delivers the separate [quartet consumer technical slice and scheduled handoff](M2X_QUARTET_CONSUMER_HANDOFF.md).
 Existing native M2r quartet production and technical0584..05ED execute on one
 Cpu/Bus, with disclosed PC/PSW/LRB scheduling and no host index/quartet/result

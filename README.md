@@ -1,5 +1,16 @@
 # HondaEcu
 
+M2y validates the separate [consumerWord0196 scheduled handoff](docs/M2Y_WORD0196_CONSUMER_HANDOFF.md)
+with `research p28-fuel word0196-consumer-check`, runner0.32.0. Native M2x05EB
+generation and actual54FA word read execute on ONE Cpu/Bus, with a PC-only
+technical54F5 transition. The software continuation stops BEFORE TM0 read5503.
+Focused corpus:27 quartet-derived strict handoffs,6 separately classified upstream
+gate-bypass controls,36 same-generation reads and6 downstream A/B witnesses.
+Part A validated; TimerContinuation=NotRun.5508 is a timer WRITE, not another
+read;5578 compares0196 with immediate00C0, not RAM00C0. Primary peripheral
+evidence is insufficient for Part B. SchedulerNotEstablished, Physical0196RoleUnknown;
+P2/157E/IRQ/GUI/hardwareNotRun, BIN0. Historical M2x operation remains unchanged.
+
 M2x validates a separate [native quartet scheduled consumer](docs/M2X_QUARTET_CONSUMER_HANDOFF.md)
 with `research p28-fuel quartet-consumer-check`, runner0.31.0. ONE Cpu/Bus retains
 native M2r quartet generations through ExplicitHarnessSchedule to technical0584,

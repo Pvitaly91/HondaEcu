@@ -427,6 +427,9 @@ impl Bus {
     pub(crate) fn end_continuity(&mut self) -> Vec<[u32; 6]> {
         self.continuity.take().unwrap_or_default()
     }
+    pub(crate) fn continuity_snapshot(&self) -> Vec<[u32; 6]> {
+        self.continuity.clone().unwrap_or_default()
+    }
     pub(crate) fn end_write_journal(&mut self) -> Vec<[u32; 3]> {
         self.journal_writes = false;
         std::mem::take(&mut self.data_writes)

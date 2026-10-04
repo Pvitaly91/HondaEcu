@@ -188,6 +188,10 @@ public sealed partial class CliApplication
           research p28-fuel quartet-consumer-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding.json> --runner <runner-0.31.0>
               --scenario <m2x-scenario.json> --output <new-private-report.json>
+          research p28-fuel word0196-consumer-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding.json> --runner <runner-0.32.0>
+              --scenario <m2y-scenario.json> --output <new-private-report.json>
+              Same-generation0196 software consumer;stop BEFORE timer5503;P2/157E/GUI/hardware/BIN NotRun.
           research p28-fuel data0136-handoff-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding.json> --runner <runner-0.30.0>
               --scenario <m2w-scenario.json> --output <new-private-report.json>

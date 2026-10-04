@@ -5,7 +5,8 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.31.0";
+    internal const string CurrentVersion = "0.32.0";
+    internal const string QuartetVersion = "0.31.0";
     internal const string HandoffVersion = "0.30.0";
     internal const string NativeProducerVersion = "0.29.0";
     internal const string CommonResultConsumerVersion = "0.27.0";
@@ -52,7 +53,10 @@ internal static class SliceRunnerIdentity
     {
         var version = root.GetProperty("runnerVersion").GetString();
         var actualOperation = operation;
-        var quartetVersion = version == CurrentVersion;
+        if (operation == P28Word0196HandoffValidator.Operation && version != CurrentVersion)
+            throw new SliceProcessException(SliceProcessFailure.Protocol, "M2y requires runner0.32.0; historical runners cannot execute this operation.");
+        if (operation == P28Word0196HandoffValidator.Operation) operation = P28QuartetHandoffValidator.Operation;
+        var quartetVersion = version is CurrentVersion or QuartetVersion;
         if (operation == P28QuartetHandoffValidator.Operation && !quartetVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2x requires runner0.31.0; historical runners cannot execute this operation.");
         if (operation == P28QuartetHandoffValidator.Operation) operation = P28Data0136HandoffValidator.Operation;
