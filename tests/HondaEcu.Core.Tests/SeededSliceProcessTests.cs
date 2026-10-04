@@ -2,6 +2,7 @@ using System.Diagnostics;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class SeededSliceProcessTests
 {
     [Theory]
