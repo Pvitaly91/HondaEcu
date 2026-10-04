@@ -11,6 +11,7 @@ public sealed class P28RpmPlannerFixture
     public P28RpmPlannerFixture() => Report = P28RpmPlanner.Analyze(Query);
 }
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28RpmPlannerTests : IClassFixture<P28RpmPlannerFixture>
 {
     private const string Slot = "context_0.pair_0.state_0_threshold";

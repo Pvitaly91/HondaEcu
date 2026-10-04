@@ -4,6 +4,7 @@ using HondaEcu.Core;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28FuelAdditiveTests
 {
     private static P28FuelAdditiveSources Source(int signed = 0, int b1 = 0, int b2 = 0, int unsigned = 0, int factor = 512) => new((ushort)factor, (ushort)unsigned, 0, unchecked((ushort)signed), unchecked((byte)b1), unchecked((byte)b2), 0, 0, 0);

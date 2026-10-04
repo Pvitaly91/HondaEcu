@@ -3,6 +3,7 @@ using HondaEcu.Core;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28IgnitionMapProcessTests
 {
     [Theory]

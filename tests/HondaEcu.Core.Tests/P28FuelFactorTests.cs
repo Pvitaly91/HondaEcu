@@ -5,6 +5,7 @@ using System.Text.Json.Nodes;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28FuelFactorTests
 {
     internal static P28FuelFactorSources Sources() => new(65535, 65535, 255, 65535, 65535, 255, 255, 0, 0, 255, 107, 0, 0, 0, 0, 0, 0, 0, 0);
