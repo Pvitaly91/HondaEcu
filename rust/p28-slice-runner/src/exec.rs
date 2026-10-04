@@ -451,7 +451,10 @@ impl<'a> Exec<'a> {
                     if base == "ADD"
                         && matches!(
                             args[1],
-                            Arg::ImmN16 | Arg::Er(0 | 1) | Arg::Mem(Mem::OffPage)
+                            Arg::ImmN16
+                                | Arg::Er(0 | 1)
+                                | Arg::Mem(Mem::OffPage)
+                                | Arg::Mem(Mem::IdxReg(Reg::X1))
                         )
                     {
                         self.cpu.hc = (a & 15) + (b & 15) > 15;
@@ -1189,6 +1192,28 @@ mod producer_form_tests {
         assert!(cpu.zf);
         assert!(cpu.dd);
         assert_eq!(cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_DD_BIT), before);
+    }
+
+    #[test]
+    fn decoded_word_add_indexed_x1_updates_halfcarry() {
+        for a in [0, 15, 16, 0x8000, 0xFFFF] {
+            for b in [0, 1, 15, 0x8001, 0xFFFF] {
+                for old_hc in [false, true] {
+                    let (mut cpu, mut bus) = machine(&[0xB0, 0x00, 0x04, 0x82]);
+                    cpu.dd = true;
+                    cpu.hc = old_hc;
+                    cpu.a = a;
+                    write_data_u16(&mut cpu, &mut bus, 0x88, 6);
+                    write_data_u16(&mut cpu, &mut bus, 0x406, b);
+                    assert_eq!(step(&mut cpu, &mut bus).unwrap().mnemonic, "ADD A, N16[X1]");
+                    assert_eq!(cpu.hc, (a & 15) + (b & 15) > 15);
+                    assert_eq!(cpu.a, a.wrapping_add(b));
+                    assert_eq!(cpu.cf, u32::from(a) + u32::from(b) > 65535);
+                    assert_eq!(cpu.zf, a.wrapping_add(b) == 0);
+                    assert!(cpu.dd);
+                }
+            }
+        }
     }
 
     #[test]

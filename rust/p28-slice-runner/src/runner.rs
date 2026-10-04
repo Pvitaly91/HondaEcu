@@ -435,6 +435,11 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != crate::quartet_handoff::OPERATION
+        && request.quartet_consumer_handoff.is_some()
+    {
+        return Err("M2x stimulus is unavailable to other operations".into());
+    }
     if request.operation != crate::data0136_handoff::OPERATION
         && request.data0136_division_handoff.is_some()
     {
@@ -655,6 +660,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "acquisitionSequence" => crate::acquisition::validate_request(request)?,
         "data0136TechnicalProducer" => crate::data0136_technical::validate_request(request)?,
         "data0136DivisionHandoff" => crate::data0136_handoff::validate_request(request)?,
+        "quartetConsumerHandoff" => crate::quartet_handoff::validate_request(request)?,
         "statefulVtec" => crate::stateful::validate_request(request)?,
         "limiterSequence" => crate::limiter::validate_request(request)?,
         "adaptiveLimiter" => crate::adaptive::validate_request(request)?,
@@ -691,6 +697,9 @@ pub fn run_request(request: Request) -> Result<Response, String> {
     let mut response = Response::new(request.operation.clone());
     if request.operation == crate::data0136_handoff::OPERATION {
         return crate::data0136_handoff::run(request, response);
+    }
+    if request.operation == crate::quartet_handoff::OPERATION {
+        return crate::quartet_handoff::run(request, response);
     }
     if request.operation == crate::data0136_technical::OPERATION {
         return crate::data0136_technical::run(request, response);

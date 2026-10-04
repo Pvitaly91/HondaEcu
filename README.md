@@ -1,5 +1,16 @@
 # HondaEcu
 
+M2x validates a separate [native quartet scheduled consumer](docs/M2X_QUARTET_CONSUMER_HANDOFF.md)
+with `research p28-fuel quartet-consumer-check`, runner0.31.0. ONE Cpu/Bus retains
+native M2r quartet generations through ExplicitHarnessSchedule to technical0584,
+native013C→X1→selected word05DF, native companion reset/add and native0196 store,
+stop-before05ED. All four ADDRESS-proven slots, repeated fresh equal-value
+generations and30 one-cell in-memory downstream A/B witnesses are checked.
+Alternate branch is terminalPartial; native gate-bypass is not a handoff.
+QuartetTechnicalConsumer/QuartetScheduledHandoff=Validated in the focused corpus;
+RecoveredQuartetScheduler=NotEstablished, IRQNotInjected, physical roleUnknown.
+No1550/downstream/P1/P2, GUI/hardware, firmware output or historical scope changes.
+
 M2w validates a [scheduled native DATA0136-to-DIV handoff](docs/M2W_DATA0136_SCHEDULED_HANDOFF.md)
 with `research p28-fuel data0136-handoff-check`, runner0.30.0. One Cpu/Bus per
 scratch sequence retains native56F3/5707 generation through the explicitly

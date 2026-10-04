@@ -18,6 +18,9 @@ pub mod division_decision;
 #[cfg(test)]
 mod division_decision_tests;
 pub mod exec;
+pub mod quartet_handoff;
+#[cfg(test)]
+mod quartet_handoff_tests;
 #[cfg(test)]
 mod software_word_provenance_tests;
 // Preserve the pinned generated opcode table verbatim.

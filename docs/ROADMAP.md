@@ -1,5 +1,18 @@
 # Roadmap
 
+M2x delivers the separate [quartet consumer technical slice and scheduled handoff](M2X_QUARTET_CONSUMER_HANDOFF.md).
+Existing native M2r quartet production and technical0584..05ED execute on one
+Cpu/Bus, with disclosed PC/PSW/LRB scheduling and no host index/quartet/result
+seed. Native05DF effective addresses prove all four selected generations even
+when values equal; native four-word companion reset precedes05E2 and05EB→0196.
+Focused corpus:108 handoffs,123 native0196 stores,30 in-memory fuel-cell A/B
+witnesses, with gates/terminalPartial/NotRun classified separately. Original-only
+coverage is78 handoffs; B, invented and compatibility counts remain separate.
+QuartetTechnicalConsumer/QuartetScheduledHandoff=Validated; schedulerNotEstablished,
+IRQNotInjected, physical roleUnknown. Historical M2sPartial/M2tJGTBlocked and
+M2wDATA0136 handoff remain unchanged.1550/downstream0196 stay static-only;
+no M2y, GUI/hardware or firmware/export start automatically. PC-only, not flash-ready.
+
 M2u delivers [static DATA0136 producer, caller and generation research](M2U_DATA0136_PRODUCER_CHAIN.md).
 IRQ-dependent callers and mandatory TMR2 access leave native producer integration
 NotRun; frozen historical acquisition is not an established software caller.

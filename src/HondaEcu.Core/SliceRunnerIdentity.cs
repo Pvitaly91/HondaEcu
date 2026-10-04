@@ -5,7 +5,8 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.30.0";
+    internal const string CurrentVersion = "0.31.0";
+    internal const string HandoffVersion = "0.30.0";
     internal const string NativeProducerVersion = "0.29.0";
     internal const string CommonResultConsumerVersion = "0.27.0";
     internal const string DivisionDecisionVersion = "0.28.0";
@@ -51,9 +52,14 @@ internal static class SliceRunnerIdentity
     {
         var version = root.GetProperty("runnerVersion").GetString();
         var actualOperation = operation;
-        if (operation == P28Data0136HandoffValidator.Operation && version != CurrentVersion)
+        var quartetVersion = version == CurrentVersion;
+        if (operation == P28QuartetHandoffValidator.Operation && !quartetVersion)
+            throw new SliceProcessException(SliceProcessFailure.Protocol, "M2x requires runner0.31.0; historical runners cannot execute this operation.");
+        if (operation == P28QuartetHandoffValidator.Operation) operation = P28Data0136HandoffValidator.Operation;
+        if (quartetVersion) version = HandoffVersion;
+        if (operation == P28Data0136HandoffValidator.Operation && version != HandoffVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2w requires runner0.30.0; historical runners cannot execute this operation.");
-        if (version == CurrentVersion) version = NativeProducerVersion;
+        if (version == HandoffVersion) version = NativeProducerVersion;
         if (operation == P28Data0136HandoffValidator.Operation) operation = P28Data0136TechnicalProducerValidator.Operation;
         var nativeProducerVersion = version == NativeProducerVersion;
         if (operation == P28Data0136TechnicalProducerValidator.Operation && !nativeProducerVersion)
@@ -111,6 +117,7 @@ internal static class SliceRunnerIdentity
         if (version is FuelFactorVersion or LimiterFuelVersion or AdaptiveFuelVersion or PostStoreVersion or PostStoreConsumerVersion or PostSelectionCriticalVersion or CommonResultConsumerVersion) expected = [.. expected, "word-rol-er0-through-carry-preserves-noncarry-flags", "word-sll-accumulator-preserves-noncarry-flags"];
         if (version == CommonResultConsumerVersion) expected = [.. expected, "word-add-dp-immediate-half-carry"];
         if (nativeProducerVersion) expected = [.. expected, "byte-sbc-r0-immediate-half-borrow", "word-decrement-x1-half-borrow"];
+        if (quartetVersion) expected = [.. expected, "word-add-a-indexed-x1-half-carry"];
         var fixes = root.GetProperty("localSemanticFixes").EnumerateArray().Select(item => item.GetString()!).ToArray();
         if (!fixes.Order(StringComparer.Ordinal).SequenceEqual(expected.Order(StringComparer.Ordinal)))
         {

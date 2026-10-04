@@ -235,7 +235,7 @@ public sealed class P28Data0136TechnicalProducerTests
         {
             protocolVersion = 1,
             operation = P28Data0136TechnicalProducerValidator.Operation,
-            runnerVersion = SliceRunnerIdentity.CurrentVersion,
+            runnerVersion = SliceRunnerIdentity.HandoffVersion,
             upstreamCommit = P28ByteExecutionValidator.UpstreamCommit,
             localSemanticFixes = fixes,
             entryContracts = P28Data0136TechnicalProducerValidator.ExpectedContracts(),

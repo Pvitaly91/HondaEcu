@@ -185,6 +185,9 @@ public sealed partial class CliApplication
               --baseline-binding <binding.json> --runner <runner-0.29.0>
               --scenario <m2v-scenario.json> --output <new-private-report.json>
               Seeded technical entry56BE; both native writers; frozen sources; no2330 scheduler seam, GUI or BIN.
+          research p28-fuel quartet-consumer-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding.json> --runner <runner-0.31.0>
+              --scenario <m2x-scenario.json> --output <new-private-report.json>
           research p28-fuel data0136-handoff-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding.json> --runner <runner-0.30.0>
               --scenario <m2w-scenario.json> --output <new-private-report.json>

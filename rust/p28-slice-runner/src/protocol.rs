@@ -18,6 +18,7 @@ pub struct Request {
     pub acquisition_sequence: Option<crate::acquisition::SequenceRequest>,
     pub data0136_technical_producer: Option<crate::data0136_technical::Stimulus>,
     pub data0136_division_handoff: Option<crate::data0136_handoff::Stimulus>,
+    pub quartet_consumer_handoff: Option<crate::quartet_handoff::Stimulus>,
     pub stateful_vtec: Option<crate::stateful::Stimulus>,
     pub integrated_chain: Option<crate::chain::Stimulus>,
     pub limiter_sequence: Option<crate::limiter::Stimulus>,
@@ -91,6 +92,8 @@ pub struct Response {
     pub data0136_sequences: Option<Vec<crate::data0136_technical::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data0136_handoff_sequences: Option<Vec<crate::data0136_handoff::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub quartet_handoff_sequences: Option<Vec<crate::quartet_handoff::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stateful_sequences: Option<Vec<crate::stateful::SequenceResult>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -209,6 +212,7 @@ impl Response {
                 "word-add-dp-immediate-half-carry",
                 "byte-sbc-r0-immediate-half-borrow",
                 "word-decrement-x1-half-borrow",
+                "word-add-a-indexed-x1-half-carry",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
@@ -221,6 +225,7 @@ impl Response {
             acquisition_sequences: None,
             data0136_sequences: None,
             data0136_handoff_sequences: None,
+            quartet_handoff_sequences: None,
             stateful_sequences: None,
             chain_sequences: None,
             limiter_sequences: None,
