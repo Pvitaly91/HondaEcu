@@ -20,6 +20,7 @@ pub struct Request {
     pub data0136_division_handoff: Option<crate::data0136_handoff::Stimulus>,
     pub quartet_consumer_handoff: Option<crate::quartet_handoff::Stimulus>,
     pub word0196_consumer_handoff: Option<crate::word0196_handoff::Stimulus>,
+    pub word0196_software_alternate_chain: Option<crate::word0196_alternate::Stimulus>,
     pub stateful_vtec: Option<crate::stateful::Stimulus>,
     pub integrated_chain: Option<crate::chain::Stimulus>,
     pub limiter_sequence: Option<crate::limiter::Stimulus>,
@@ -97,6 +98,8 @@ pub struct Response {
     pub quartet_handoff_sequences: Option<Vec<crate::quartet_handoff::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub word0196_handoff_sequences: Option<Vec<crate::word0196_handoff::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub word0196_alternate_sequences: Option<Vec<crate::word0196_alternate::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stateful_sequences: Option<Vec<crate::stateful::SequenceResult>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -216,6 +219,7 @@ impl Response {
                 "byte-sbc-r0-immediate-half-borrow",
                 "word-decrement-x1-half-borrow",
                 "word-add-a-indexed-x1-half-carry",
+                "byte-rol-off-through-carry-preserves-noncarry-flags",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
@@ -230,6 +234,7 @@ impl Response {
             data0136_handoff_sequences: None,
             quartet_handoff_sequences: None,
             word0196_handoff_sequences: None,
+            word0196_alternate_sequences: None,
             stateful_sequences: None,
             chain_sequences: None,
             limiter_sequences: None,

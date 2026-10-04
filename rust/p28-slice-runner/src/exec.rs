@@ -637,7 +637,15 @@ impl<'a> Exec<'a> {
                 let bits = if byte { 8 } else { 16 };
                 let msb = 1u32 << (bits - 1);
                 let v32 = v as u32 & (msb * 2 - 1);
+                // M2z exact C4 N8 B7 only, primary printed3-120.
+                // Incoming CF participates; ZF/HC/DD are preserved.
+                let reviewed_byte_rol_off =
+                    base == "ROL" && byte && args[0] == Arg::Mem(Mem::OffPage);
                 let (res, carry) = match base {
+                    "ROL" if reviewed_byte_rol_off => (
+                        ((v32 << 1) | u32::from(self.cpu.cf)) & 0xFF,
+                        v32 & 0x80 != 0,
+                    ),
                     // Exact33/DD1 (3-117) and44 B7 (3-118): through incomingCF.
                     "ROL" if !byte && matches!(args[0], Arg::Reg(Reg::A) | Arg::Er(0)) => (
                         ((v32 << 1) | u32::from(self.cpu.cf)) & (msb * 2 - 1),
@@ -662,7 +670,11 @@ impl<'a> Exec<'a> {
                 let reviewed_sll_a = base == "SLL" && args[0] == Arg::Reg(Reg::A);
                 let reviewed_rol_a_or_er0 =
                     base == "ROL" && !byte && matches!(args[0], Arg::Reg(Reg::A) | Arg::Er(0));
-                if !matches!(base, "ROR" | "SRL") && !reviewed_sll_a && !reviewed_rol_a_or_er0 {
+                if !matches!(base, "ROR" | "SRL")
+                    && !reviewed_sll_a
+                    && !reviewed_rol_a_or_er0
+                    && !reviewed_byte_rol_off
+                {
                     self.set_zf(res as u16, byte);
                 }
                 self.write(&args[0], byte, res as u16);

@@ -1,4 +1,4 @@
-//! M2y Part A. Retained machine and PC-only technical schedule; no timer capability.
+//! M2z: native software alternate; no timer/P2 capability or PC556F entry.
 use crate::{
     adaptive::Stage,
     bus::Bus,
@@ -12,17 +12,11 @@ use crate::{
     quartet_handoff as prefix,
     runner::{execute_in_state_observed, SliceContract},
     vtec_fuel::{boundary, CpuBoundary},
+    word0196_handoff as handoff,
 };
 use serde::{Deserialize, Serialize};
-pub const OPERATION: &str = "word0196ConsumerHandoff";
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct Initial {
-    pub quartet_prefix: prefix::Initial,
-    #[serde(rename = "bit0128_2")]
-    pub bit0128_2: bool,
-    pub byte0117: u8,
-}
+pub const OPERATION: &str = "word0196SoftwareAlternateChain";
+pub type Initial = handoff::Initial;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Stimulus {
@@ -36,6 +30,10 @@ pub struct Stimulus {
 pub struct State {
     pub byte0128: u8,
     pub byte0117: u8,
+    pub byte018e: u8,
+    pub byte018f: u8,
+    pub byte012a: u8,
+    pub byte0124: u8,
 }
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -44,10 +42,12 @@ pub struct Event {
     pub machine_id: u32,
     pub prefix: prefix::Event,
     pub consumer: Option<Suffix>,
+    pub alternate: Option<Suffix>,
     pub disposition: &'static str,
     pub provenance: &'static str,
     pub producer_generation0196: Option<prefix::Generation>,
     pub reader_generation0196: Option<prefix::Generation>,
+    pub compare_generation0196: Option<prefix::Generation>,
     pub abi_writes: Vec<[u32; 3]>,
     pub after: CpuBoundary,
     pub state_before: State,
@@ -64,38 +64,39 @@ pub struct Sequence {
 }
 pub fn contract() -> SliceContract {
     SliceContract {
-        entry_pc: 0x54F5,
-        exit_pcs: vec![0x5503, 0x5533, 0x556F],
-        code_ranges: vec![[0x54F5, 0x5503]],
+        entry_pc: 0x556F,
+        exit_pcs: vec![0x5596, 0x55C5],
+        code_ranges: vec![[0x556F, 0x5596], [0x55BF, 0x55C5]],
         psw: 0,
         lrb: 0,
         usp: 0,
-        instruction_budget: 6,
+        instruction_budget: 18,
         data_seeds: vec![],
         output_addresses: vec![],
         program_read_range: None,
     }
 }
 pub fn entry_contracts() -> Vec<serde_json::Value> {
-    vec![
-        serde_json::json!({"id":OPERATION,"formatVersion":1,"prefixContract":prefix::entry_contracts()[0],
-        "entryPc":0x54F5,"stopBefore":0x5503,"alternateStopBefore":[0x5533,0x556F],"codeRanges":[[0x54F5,0x5503]],"instructionBudget":6,
-        "entryClassification":"TechnicalSeeded0196ConsumerEntry","abiWrites":"PC only;A/PSW/LRB/SCB/pointers/USP/SSP/locals retained",
-        "callFrame":"TechnicalEntryDoesNotClaimCallFrame","sourcePolicy":"OnceInitialSoftwareSnapshot;NoEventOrBoundaryReseed",
-        "sourceMasks":[[0x128,4]],"sourceBytes":[0x117],"reader":[0x54FA,0x196,16],"nativeSoftwareStores":[[0x54F8,0x108,8],[0x54FC,0x10A,16]],
-        "generation":"writerPC,eventIndex,zeroBasedAllNativeWriteOrder,value;NoOverlap0196/0197",
-        "machine":"OneCpuOneBusPerSequence;NoSerializationHandoff","interStageScheduling":"ExplicitHarnessSchedule","recovered0196Scheduler":"NotEstablished",
-        "firstHardwareAccess":[0x5503,0x30,16,0],"laterTimerWrite":[0x5508,0x32,16,1],"timerContinuation":"NotRun;PrimaryPeripheralEvidenceMissing;WriteNotReadOnly",
-        "cmp5578":"StaticOnly;0196WordVsImmediate00C0;NotRAM00C0","p2":"NotRun","otherConsumer157E":"StaticOther0196Consumer/NotRun",
-        "partial":"Terminal;UnadmittedPureAlternateNotHardwareBoundary;LaterNotRun","irqDelivery":"NotInjected","elapsedTime":"None","skippedCode":"NotExecuted",
-        "physical0196Role":"Unknown","physicalRpmAvailable":false,"canaryAddresses":[0x300,0x350,0x3E0]}),
-    ]
+    vec![serde_json::json!({"id":OPERATION,"formatVersion":1,
+    "prefixContract":handoff::entry_contracts()[0],
+    "entryPc":0x54F5,"alternateEntry":"ActualJNE5501Taken;NoHostPC556F",
+    "suffixRanges":[[0x556F,0x5596],[0x55BF,0x55C5]],"suffixBudget":18,
+    "stopBefore":[0x5596,0x55C5],"excludedStops":[0x5503,0x5533],
+    "secondReader":[0x5578,0x196,16],"rightOperand":"Immediate00C0;CodeOwnedConstant",
+    "compareFlags":"CF=unsignedBorrow;ZF=equality;HC/DDretained",
+    "branch":[0x557D,0x55BF,0x557F],"branchPredicate":"CF1;Producer5578;NoInterveningFlagWriter",
+    "initial018E018F":"AutomaticScratchInitialHistory;NativePersistentOwnership;NoExternalSource",
+    "native0117":"5582And/55C1Store;RetainedNextEvent",
+    "interStageScheduleTo54F5":"ExplicitHarnessSchedule","softwareAlternate5501To556F":"NativeContinuousControlFlow",
+    "machine":"OneCpuOneBusPerSequence;NoSerializationHandoff","timerContinuation":"NotRun","p2":"NotRun",
+    "partial":"Terminal;RetainPriorNativeWrites;LaterNotRun;NoSourceApplication",
+    "recovered0196Scheduler":"NotEstablished","irqDelivery":"NotInjected","elapsedTime":"None","physical0196Role":"Unknown"})]
 }
 pub fn validate_request(r: &Request) -> Result<(), String> {
     let s = r
-        .word0196_consumer_handoff
+        .word0196_software_alternate_chain
         .as_ref()
-        .ok_or("M2y stimulus required")?;
+        .ok_or("M2z stimulus required")?;
     prefix::validate_parts(
         r,
         s.format_version,
@@ -111,7 +112,10 @@ fn configure(bus: &mut Bus) {
             [0x90, 0x98],
             [0x108, 0x110],
             [0x117, 0x118],
+            [0x124, 0x125],
             [0x128, 0x129],
+            [0x12A, 0x12B],
+            [0x18E, 0x190],
             [0x196, 0x198],
         ],
         4096,
@@ -123,6 +127,10 @@ fn state(cpu: &Cpu, bus: &mut Bus) -> State {
     State {
         byte0128: read_data_u8(cpu, bus, 0x128),
         byte0117: read_data_u8(cpu, bus, 0x117),
+        byte018e: read_data_u8(cpu, bus, 0x18E),
+        byte018f: read_data_u8(cpu, bus, 0x18F),
+        byte012a: read_data_u8(cpu, bus, 0x12A),
+        byte0124: read_data_u8(cpu, bus, 0x124),
     }
 }
 pub fn admission(d: &Decoded) -> FormAdmission {
@@ -133,27 +141,25 @@ pub fn admission(d: &Decoded) -> FormAdmission {
         return FormAdmission::Unsupported;
     }
     match (p.mnemonic, p.dd_mode, p.bytes_pat) {
-        ("JBR off N8.2, rel8", 'U', ["DA", "N8", "rel8"])
-        | ("MOVB r0, #N8", 'U', ["98", "N8"])
-        | ("L A, off N8", 'S', ["E4", "N8"])
-        | ("ST A, er1", '1', ["89"])
-        | ("CMPB off N'8, #N8", 'U', ["C4", "N'8", "C0", "N8"])
-        | ("JNE rel8", 'U', ["CE", "rel8"]) => FormAdmission::Allowed,
+        ("LB A, off N8", 'R', ["F4", "N8"])
+        | ("SLLB A", '0', ["53"])
+        | ("ROLB off N8", 'U', ["C4", "N8", "B7"])
+        | ("LB A, r0", 'R', ["78"])
+        | ("ANDB A, off N8", '0', ["D7", "N8"])
+        | ("CMP off N8, #N16", 'U', ["B4", "N8", "C0", "NL", "NH"])
+        | ("JLT rel8", 'U', ["CA", "rel8"])
+        | ("MOVB r1, off N8", 'U', ["C4", "N8", "49"])
+        | ("ANDB off N8, A", 'U', ["C4", "N8", "D1"])
+        | ("JBS off N8.7, rel8", 'U', ["EF", "N8", "rel8"])
+        | ("JBS off N8.5, rel8", 'U', ["ED", "N8", "rel8"])
+        | ("ORB off N'8, #N8", 'U', ["C4", "N'8", "E0", "N8"])
+        | ("ORB A, #N8", '0', ["E6", "N8"])
+        | ("LB A, #N8", 'R', ["77", "N8"])
+        | ("STB A, off N8", '0', ["D4", "N8"]) => FormAdmission::Allowed,
         _ => FormAdmission::Unsupported,
     }
 }
-pub(crate) fn execute_consumer(cpu: &mut Cpu, bus: &mut Bus) -> Suffix {
-    let mut suffix = execute_prefix(cpu, bus);
-    if suffix.stage.result.status == 0 && suffix.stage.result.stop_pc != 0x5503 {
-        suffix.stage.result.status = 1;
-        suffix.stage.result.error =
-            Some("unadmitted pure alternate continuation; not a timer boundary".into());
-    }
-    suffix
-}
-/// Execute the historical six-form software prefix on the retained machine.
-/// M2y wrapper retains its historical alternate Partial classification.
-pub(crate) fn execute_prefix(cpu: &mut Cpu, bus: &mut Bus) -> Suffix {
+pub(crate) fn execute_alternate(cpu: &mut Cpu, bus: &mut Bus) -> Suffix {
     configure(bus);
     bus.clear_program_reads();
     let entry = boundary(cpu, bus);
@@ -175,42 +181,11 @@ pub(crate) fn execute_prefix(cpu: &mut Cpu, bus: &mut Bus) -> Suffix {
         accesses,
     }
 }
-/// Generation identity comes from a current native writer, not equality alone.
-pub(crate) fn reader_generation(
-    journal: &[[u32; 6]],
-    g: &prefix::Generation,
-    event: u32,
-    address: u32,
-    reader: u32,
-) -> Option<prefix::Generation> {
-    if g.event_index != event {
-        return None;
-    }
-    let w = journal
-        .iter()
-        .position(|a| *a == [1, g.writer_pc, address, 16, 1, g.value])?;
-    if journal[..w]
-        .iter()
-        .filter(|a| a[0] == 1 && a[4] == 1)
-        .count()
-        != g.write_order as usize
-    {
-        return None;
-    }
-    let r = journal
-        .iter()
-        .position(|a| *a == [1, reader, address, 16, 0, g.value])?;
-    if r <= w
-        || journal[w + 1..r]
-            .iter()
-            .any(|a| a[4] == 1 && a[2] < address + 2 && a[2] + a[3] / 8 > address)
-    {
-        return None;
-    }
-    Some(g.clone())
-}
 pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
-    let s = r.word0196_consumer_handoff.as_ref().expect("validated");
+    let s = r
+        .word0196_software_alternate_chain
+        .as_ref()
+        .expect("validated");
     let mut sequences = vec![];
     for &pattern in &r.scratch_patterns {
         let (mut cpu, mut bus) =
@@ -231,6 +206,8 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
             let before = state(&cpu, &mut bus);
             let mut p = prefix::checkpoint(&cpu, &mut bus, call, i as u32, pattern);
             let mut consumer = None;
+            let mut alternate = None;
+            let mut compare_generation = None;
             let mut abi = vec![];
             let mut disposition = "NotRun";
             let mut provenance = "NoFresh0196";
@@ -246,20 +223,44 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                     };
                     abi.push([0, cpu.pc as u32, 0x54F5]);
                     cpu.pc = 0x54F5;
-                    let c = execute_consumer(&mut cpu, &mut bus);
-                    generation =
-                        reader_generation(&bus.continuity_snapshot(), g, i as u32, 0x196, 0x54FA);
-                    disposition = if c.stage.result.status == 0 && generation.is_some() {
+                    let c = handoff::execute_prefix(&mut cpu, &mut bus);
+                    if c.stage.result.status == 0 && cpu.pc == 0x556F {
+                        let next = execute_alternate(&mut cpu, &mut bus);
+                        compare_generation = handoff::reader_generation(
+                            &bus.continuity_snapshot(),
+                            g,
+                            i as u32,
+                            0x196,
+                            0x5578,
+                        );
+                        alternate = Some(next);
+                    }
+                    generation = handoff::reader_generation(
+                        &bus.continuity_snapshot(),
+                        g,
+                        i as u32,
+                        0x196,
+                        0x54FA,
+                    );
+                    disposition = if alternate
+                        .as_ref()
+                        .is_some_and(|a| a.stage.result.status == 0)
+                        && generation.is_some()
+                        && compare_generation.is_some()
+                    {
                         if provenance == "QuartetDerived0196" {
-                            "QuartetDerived0196ConsumerStrict"
+                            "QuartetDerived0196AlternateStrict"
                         } else {
-                            "GateBypass0196ConsumerStrict"
+                            "GateBypass0196AlternateStrict"
                         }
                     } else {
-                        match c.stage.result.status {
+                        match alternate
+                            .as_ref()
+                            .map_or(c.stage.result.status, |a| a.stage.result.status)
+                        {
                             3 => "BudgetExceeded",
                             2 => "ExecutionError",
-                            _ => "0196ConsumerPartial",
+                            _ => "0196AlternatePartial",
                         }
                     };
                     consumer = Some(c);
@@ -268,7 +269,7 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                 }
                 terminal = !matches!(
                     disposition,
-                    "QuartetDerived0196ConsumerStrict" | "GateBypass0196ConsumerStrict"
+                    "QuartetDerived0196AlternateStrict" | "GateBypass0196AlternateStrict"
                 );
             }
             let journal = if disposition == "NotRun" {
@@ -289,8 +290,10 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                 machine_id: 1,
                 producer_generation0196: p.result_generation.clone(),
                 reader_generation0196: generation,
+                compare_generation0196: compare_generation,
                 prefix: p,
                 consumer,
+                alternate,
                 disposition,
                 provenance,
                 abi_writes: abi,
@@ -308,6 +311,6 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
         });
     }
     response.entry_contracts = entry_contracts();
-    response.word0196_handoff_sequences = Some(sequences);
+    response.word0196_alternate_sequences = Some(sequences);
     Ok(response)
 }

@@ -1,5 +1,15 @@
 # HondaEcu
 
+M2z validates the separate [word0196 software-alternate chain](docs/M2Z_WORD0196_SOFTWARE_ALTERNATE.md)
+with `research p28-fuel word0196-alternate-check`,runner0.33.0. Actual JNE5501
+reaches556F on the retained Cpu/Bus;5578 compares the same native0196 generation
+with immediate00C0 and557D consumes its CF.42 current-generation comparisons
+cover below/equal/above and both software branches, stopping BEFORE P2 at5596
+or55C5.39 quartet-derived strict completions and3 gate controls are separate;
+6 one-cell A/B witnesses diverge without crossing the compare boundary.
+Timer/P2/IRQ/GUI/hardwareNotRun;physical roleUnknown;BIN0;no recovered scheduler.
+Historical M2y operation/boundaries remain unchanged.
+
 M2y validates the separate [consumerWord0196 scheduled handoff](docs/M2Y_WORD0196_CONSUMER_HANDOFF.md)
 with `research p28-fuel word0196-consumer-check`, runner0.32.0. Native M2x05EB
 generation and actual54FA word read execute on ONE Cpu/Bus, with a PC-only

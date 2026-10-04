@@ -23,6 +23,9 @@ pub mod quartet_handoff;
 mod quartet_handoff_tests;
 #[cfg(test)]
 mod software_word_provenance_tests;
+pub mod word0196_alternate;
+#[cfg(test)]
+mod word0196_alternate_tests;
 pub mod word0196_handoff;
 #[cfg(test)]
 mod word0196_handoff_tests;

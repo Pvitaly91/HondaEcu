@@ -1,5 +1,14 @@
 # Roadmap
 
+M2z delivers [native word0196 software-alternate comparison](M2Z_WORD0196_SOFTWARE_ALTERNATE.md).
+The separate runner0.33.0 operation continues actual5501->556F without a host
+entry shortcut, validates42 same-generation5578 comparisons and both557D CF
+outcomes, and stops before the first P2 instruction5596/55C5. All four slots,
+native191/192/193 upstream-source sweeps,6 same-branch A/B witnesses and persistent
+0117/018E/018F/012A history are independently checked. Historical M2y remains
+unchanged;timer/P2/157E/IRQ/GUI/hardwareNotRun;physical roleUnknown;BIN0.
+No automatic next milestone, peripheral or scheduler work.
+
 M2y delivers [native consumerWord0196 software handoff and timer-boundary audit](M2Y_WORD0196_CONSUMER_HANDOFF.md).
 M2r quartet→M2x05DF/05E2/05EB generation→PC-only technical54F5→actual54FA
 word read→native local store/byte comparison/branch all retain one Cpu/Bus.

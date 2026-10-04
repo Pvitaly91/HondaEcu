@@ -142,7 +142,7 @@ public static class P28Word0196HandoffValidator
         return Enumerable.Range(0, 3).Select(p => new P28Word0196HandoffSequence(id, new[] { 0, 85, 170 }[p], reports[p])).ToArray();
     }
     private static int N(JsonElement e, string k) => e.GetProperty(k).GetInt32();
-    internal static int[][] ValidateConsumer(JsonElement suffix, JsonElement prefixExit, P28Word0196Oracle own, int[] registers)
+    internal static int[][] ValidateConsumer(JsonElement suffix, JsonElement prefixExit, P28Word0196Oracle own, int[] registers, bool rawPrefix = false)
     {
         P28LimiterScenario.Shape(suffix, "entry", "exit", "stage", "accesses"); var entry = suffix.GetProperty("entry"); var exit = suffix.GetProperty("exit"); P28FuelFactorValidator.ValidateBoundary(entry); P28FuelFactorValidator.ValidateBoundary(exit);
         var expectedEntry = JsonNode.Parse(prefixExit.GetRawText())!; expectedEntry["pc"] = 0x54F5;
@@ -152,7 +152,7 @@ public static class P28Word0196HandoffValidator
         Require(result.Trace.Count == events.Length, "Missing mandatory trace."); for (var n = 0; n < events.Length; n++) Require(N(result.Trace[n], "pc") == events[n][0] && N(result.Trace[n], "nextPc") == events[n][1] && N(result.Trace[n], "accumulator") == events[n][3] && N(result.Trace[n], "psw") == events[n][5], "Detached trace.");
         var count = events.Length == 0 ? 0 : own.AccessEnds[events.Length - 1]; var accesses = own.Accesses.Take(count).ToArray();
         Require(Equal(suffix.GetProperty("accesses"), JsonSerializer.SerializeToElement(accesses)) && Equal(stage.GetProperty("writes"), JsonSerializer.SerializeToElement(accesses.Where(a => a[3] == 1).Select(a => new[] { a[1], a[2], a[4] }).ToArray())), "Wrong0196width/value/address or hardware/P2 access.");
-        var stop = events.Length == 0 ? 0x54F5 : events[^1][1]; Require(result.StopPc == stop && (result.Status != 0 || stop == 0x5503 && events.Length == own.Events.Count) && (stop is not (0x5533 or 0x556F) || result.Status == 1), "Partial/pure alternate claimed hardware boundary.");
+        var stop = events.Length == 0 ? 0x54F5 : events[^1][1]; Require(result.StopPc == stop && (result.Status != 0 || (rawPrefix || stop == 0x5503) && events.Length == own.Events.Count) && (rawPrefix || stop is not (0x5533 or 0x556F) || result.Status == 1), "Partial/pure alternate claimed hardware boundary.");
         Require(result.UsedAssumptions.Count == 0 && result.ProgramReads.Count == 0 && result.ExecutedInstructionBytes.SequenceEqual(own.Events.Take(events.Length).SelectMany((e, n) => Enumerable.Range(e[0], own.Lengths[n])).Distinct().Order()), "Unadmitted extra code/assumption/peripheral.");
         foreach (var a in accesses.Where(a => a[3] == 1)) for (var b = 0; b < a[2] / 8; b++) registers[a[1] + b - 0x108] = (a[4] >> (8 * b)) & 255;
         var expectedExit = expectedEntry.DeepClone(); expectedExit["pc"] = stop; expectedExit["accumulator"] = events.Length == 0 ? own.Events[0][2] : events[^1][3]; var psw = events.Length == 0 ? own.Events[0][4] : events[^1][5]; expectedExit["psw"] = psw; expectedExit["dd"] = (psw & 0x1000) != 0; expectedExit["registers"] = JsonSerializer.SerializeToNode(registers);

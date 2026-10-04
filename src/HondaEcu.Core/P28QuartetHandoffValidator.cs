@@ -43,7 +43,8 @@ public sealed record P28QuartetHandoffReport(int FormatVersion, string Purpose, 
 public static class P28QuartetHandoffValidator
 {
     internal sealed record Continuation(Func<int, int, JsonElement> PreviousAfter, Func<int, int, bool> Terminal,
-        Action<int, int, P28QuartetHandoffCheckpoint, int[]> Observe);
+        Action<int, int, P28QuartetHandoffCheckpoint, int[]> Observe,
+        Action<int, int, int, Dictionary<int, int>>? OwnedState = null);
     public const string Operation = "quartetConsumerHandoff";
     public static object CreateRequest(RomImage image, P28QuartetHandoffScenario scenario)
     {
@@ -117,6 +118,7 @@ public static class P28QuartetHandoffValidator
                 foreach (var write in actualNative.Where(a => a[3] == 1)) if (write[1] is 0x124 or 0x125) ram[write[1]] = write[4];
                 foreach (var write in host) if (write[0] is 0x124 or 0x125) ram[write[0]] = write[2]; // already independently validated old source ownership
                 var disposition = stopped ? "NotRun" : prefix.Disposition == "StrictMatch" ? "" : "ConsumerNotRun"; var generations = new List<P28QuartetGeneration>(); P28QuartetGeneration? selected = null, resultGeneration = null; int? selectedSlot = null, selectedAddress = null, readerValue = null, output = null;
+                var ownConsumerPsw = 0;
                 if (!stopped && prefix.Disposition == "StrictMatch")
                 {
                     var own = ownPrefix.Step(scenario.Calls[i].Prefix); var mapping = P28QuartetHandoffModel.Select(scenario.Calls[i].Selector013c);
@@ -125,6 +127,7 @@ public static class P28QuartetHandoffValidator
                     Require(consumer.ValueKind == JsonValueKind.Object, "Completed prefix lacks consumer.");
                     var model = P28QuartetHandoffEvidence.Build(own.Oracle.Machine.Accumulator, scenario.Calls[i].Selector013c, (byte)ram[0x124], (byte)ram[0x125], (byte)ram[0x12A], own.After.CommonWords03b6, new(ram));
                     var count = ValidateConsumer(consumer, f.GetProperty("critical").GetProperty("exit"), model, ram, pattern, scb2);
+                    ownConsumerPsw = model.Psw;
                     var accesses = model.Accesses.Take(count).ToArray(); actualNative.AddRange(accesses); foreach (var a in accesses.Where(a => a[3] == 1)) ram[a[1]] = a[4];
                     var stageResult = consumer.GetProperty("stage").GetProperty("result"); var complete = N(stageResult, "status") == 0; var read = accesses.SingleOrDefault(a => a[0] == 0x5DF && a[1] >= 0x3B6);
                     disposition = !complete ? N(stageResult, "status") switch { 3 => "BudgetExceeded", 2 => "ExecutionError", _ => "ConsumerPartial" } : read is null ? "ConsumerGateBypassNotHandoff" : "QuartetHandoffStrict";
@@ -151,6 +154,7 @@ public static class P28QuartetHandoffValidator
                 if (consumer.ValueKind == JsonValueKind.Object) Require(Equal(r.GetProperty("after"), consumer.GetProperty("exit")), "Detached consumer exit.");
                 if (stopped) Require(Equal(r.GetProperty("before"), r.GetProperty("after")) && actualNative.Count == 0 && host.Count == 0, "NotRun changed machine.");
                 var checkpoint = new P28QuartetHandoffCheckpoint(i, disposition, prefix.Disposition, selectedSlot, selectedAddress, selected, readerValue, resultGeneration, output, generations, r.Clone());
+                continuation?.OwnedState?.Invoke(p, i, ownConsumerPsw, ram);
                 continuation?.Observe(p, i, checkpoint, scb2); rows.Add(checkpoint); prior = r; stopped |= continuation?.Terminal(p, i) == true || disposition is "ConsumerPartial" or "ConsumerNotRun" or "ExecutionError" or "BudgetExceeded";
             }
             reports.Add(new(id, pattern, rows));

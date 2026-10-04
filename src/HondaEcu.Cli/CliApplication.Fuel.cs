@@ -10,6 +10,8 @@ public sealed partial class CliApplication
             return await P28Data0136ProducerCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "word0196-consumer-check")
             return await P28Word0196HandoffCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
+        if (args.Length > 0 && args[0] == "word0196-alternate-check")
+            return await P28Word0196AlternateCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "quartet-consumer-check")
             return await P28QuartetHandoffCheckAsync(args[1..], cancellationToken).ConfigureAwait(false);
         if (args.Length > 0 && args[0] == "data0136-handoff-check")

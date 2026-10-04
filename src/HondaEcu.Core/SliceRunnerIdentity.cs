@@ -5,7 +5,8 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.32.0";
+    internal const string CurrentVersion = "0.33.0";
+    internal const string Word0196Version = "0.32.0";
     internal const string QuartetVersion = "0.31.0";
     internal const string HandoffVersion = "0.30.0";
     internal const string NativeProducerVersion = "0.29.0";
@@ -53,10 +54,14 @@ internal static class SliceRunnerIdentity
     {
         var version = root.GetProperty("runnerVersion").GetString();
         var actualOperation = operation;
-        if (operation == P28Word0196HandoffValidator.Operation && version != CurrentVersion)
+        var alternateVersion = version == CurrentVersion;
+        if (operation == P28Word0196AlternateValidator.Operation && !alternateVersion)
+            throw new SliceProcessException(SliceProcessFailure.Protocol, "M2z requires runner0.33.0; historical runners cannot execute this operation.");
+        if (operation == P28Word0196AlternateValidator.Operation) operation = P28Word0196HandoffValidator.Operation;
+        if (operation == P28Word0196HandoffValidator.Operation && version is not (CurrentVersion or Word0196Version))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2y requires runner0.32.0; historical runners cannot execute this operation.");
         if (operation == P28Word0196HandoffValidator.Operation) operation = P28QuartetHandoffValidator.Operation;
-        var quartetVersion = version is CurrentVersion or QuartetVersion;
+        var quartetVersion = version is CurrentVersion or Word0196Version or QuartetVersion;
         if (operation == P28QuartetHandoffValidator.Operation && !quartetVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2x requires runner0.31.0; historical runners cannot execute this operation.");
         if (operation == P28QuartetHandoffValidator.Operation) operation = P28Data0136HandoffValidator.Operation;
@@ -122,6 +127,7 @@ internal static class SliceRunnerIdentity
         if (version == CommonResultConsumerVersion) expected = [.. expected, "word-add-dp-immediate-half-carry"];
         if (nativeProducerVersion) expected = [.. expected, "byte-sbc-r0-immediate-half-borrow", "word-decrement-x1-half-borrow"];
         if (quartetVersion) expected = [.. expected, "word-add-a-indexed-x1-half-carry"];
+        if (alternateVersion) expected = [.. expected, "byte-rol-off-through-carry-preserves-noncarry-flags"];
         var fixes = root.GetProperty("localSemanticFixes").EnumerateArray().Select(item => item.GetString()!).ToArray();
         if (!fixes.Order(StringComparer.Ordinal).SequenceEqual(expected.Order(StringComparer.Ordinal)))
         {
