@@ -258,6 +258,9 @@ pub struct Bus {
     data_writes: Vec<[u32; 3]>,
     p1_output_latch: Option<u8>,
     p1_access: bool,
+    p2_output_latch: Option<u8>,
+    p2_access: bool,
+    p2_accesses: Vec<[u32; 5]>,
     limiter_p4: Option<u8>,
     adaptive_ie: Option<u16>,
     decision_events: Option<Vec<[u32; 8]>>,
@@ -286,6 +289,9 @@ impl Bus {
             data_writes: vec![],
             p1_output_latch: None,
             p1_access: false,
+            p2_output_latch: None,
+            p2_access: false,
+            p2_accesses: vec![],
             limiter_p4: None,
             adaptive_ie: None,
             decision_events: None,
@@ -333,6 +339,30 @@ impl Bus {
     }
     pub(crate) fn p1_output_latch(&self) -> Option<u8> {
         self.p1_output_latch
+    }
+    /// M2aa only. Primary MSM66201/207 section5.5/Table5-3: P2IO=FF,
+    /// P2SF implemented bits=0. This is output DATA, never pins or RAM.
+    /// Reset data is undefined; a reviewed once-initial architectural snapshot
+    /// is required. A second initialization is refused, including equal values.
+    pub(crate) fn initialize_p2_output_latch(&mut self, value: u8) -> Result<(), String> {
+        if self.p2_output_latch.is_some() {
+            return Err("P2 architectural snapshot may only be initialized once".into());
+        }
+        self.p2_output_latch = Some(value);
+        Ok(())
+    }
+    pub(crate) fn set_p2_access(&mut self, enabled: bool) {
+        self.p2_access = enabled;
+    }
+    /// Non-native diagnostic inspection; never a readback proof.
+    pub(crate) fn p2_output_latch(&self) -> Option<u8> {
+        self.p2_output_latch
+    }
+    pub(crate) fn begin_p2_accesses(&mut self) {
+        self.p2_accesses.clear();
+    }
+    pub(crate) fn p2_accesses(&self) -> Vec<[u32; 5]> {
+        self.p2_accesses.clone()
     }
     pub(crate) fn start_decision_observer(&mut self) {
         self.decision_events = Some(vec![]);
@@ -521,6 +551,13 @@ impl Bus {
             return 0;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
+            if address == 0x24 && self.p2_access && self.native_accesses.is_some() {
+                if let Some(value) = self.p2_output_latch {
+                    self.p2_accesses
+                        .push([self.native_pc as u32, 0x24, 8, 0, value as u32]);
+                    return value;
+                }
+            }
             if address == 0x2C {
                 if let Some(value) = self.limiter_p4 {
                     return value;
@@ -595,6 +632,19 @@ impl Bus {
             return;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
+            if address == 0x24
+                && self.p2_access
+                && self.native_accesses.is_some()
+                && self.p2_output_latch.is_some()
+            {
+                self.p2_output_latch = Some(value);
+                self.p2_accesses
+                    .push([self.native_pc as u32, 0x24, 8, 1, value as u32]);
+                if self.journal_writes {
+                    self.data_writes.push([0x24, 8, value as u32]);
+                }
+                return;
+            }
             if address == 0x22 && self.p1_access && self.p1_output_latch.is_some() {
                 self.p1_output_latch = Some(value);
                 if self.journal_writes {
@@ -628,7 +678,11 @@ impl Bus {
             }
             return;
         }
-        if address < 0x80 && (self.capture.is_some() || self.p1_output_latch.is_some()) {
+        if address < 0x80
+            && (self.capture.is_some()
+                || self.p1_output_latch.is_some()
+                || self.p2_output_latch.is_some())
+        {
             self.peripheral_accesses
                 .push([address as u32, 16, 1, value as u32]);
             self.record_fault("data", address as u32, "write-word");

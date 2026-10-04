@@ -196,6 +196,10 @@ public sealed partial class CliApplication
               --baseline-binding <binding.json> --runner <runner-0.33.0>
               --scenario <m2z-scenario.json> --output <new-private-report.json>
               Native5501 branch; same-generation5578 compare;stop BEFORE P2;timer/IRQ/GUI/BIN NotRun.
+          research p28-fuel p2-latch-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding.json> --runner <runner-0.34.0>
+              --scenario <m2aa-scenario.json> --output <new-private-report.json>
+              Architectural P2 byte RMW only;reviewed output/primary-mode precondition;no pins,polarity,timer,GUI,BIN.
           research p28-fuel data0136-handoff-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding.json> --runner <runner-0.30.0>
               --scenario <m2w-scenario.json> --output <new-private-report.json>

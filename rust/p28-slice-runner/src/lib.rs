@@ -18,6 +18,9 @@ pub mod division_decision;
 #[cfg(test)]
 mod division_decision_tests;
 pub mod exec;
+pub mod p2_latch;
+#[cfg(test)]
+mod p2_latch_tests;
 pub mod quartet_handoff;
 #[cfg(test)]
 mod quartet_handoff_tests;

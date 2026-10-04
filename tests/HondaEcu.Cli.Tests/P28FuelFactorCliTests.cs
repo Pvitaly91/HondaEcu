@@ -99,7 +99,7 @@ public sealed class P28FuelFactorCliTests
         var before = workspace.Snapshot(); var result = await workspace.RunAsync(args);
         Assert.Equal(CliApplication.VerificationFailed, result.Code);
         var report = JsonNode.Parse(File.ReadAllText(workspace.Output))!;
-        Assert.Equal("0.33.0", report["runnerVersion"]!.GetValue<string>());
+        Assert.Equal("0.34.0", report["runnerVersion"]!.GetValue<string>());
         Assert.Contains("Blocked", report["strictM2i"]!.GetValue<string>());
         foreach (var sequence in report["sequences"]!.AsArray())
         {

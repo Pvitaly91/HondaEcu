@@ -21,6 +21,7 @@ pub struct Request {
     pub quartet_consumer_handoff: Option<crate::quartet_handoff::Stimulus>,
     pub word0196_consumer_handoff: Option<crate::word0196_handoff::Stimulus>,
     pub word0196_software_alternate_chain: Option<crate::word0196_alternate::Stimulus>,
+    pub p2_output_latch_handoff: Option<crate::p2_latch::Stimulus>,
     pub stateful_vtec: Option<crate::stateful::Stimulus>,
     pub integrated_chain: Option<crate::chain::Stimulus>,
     pub limiter_sequence: Option<crate::limiter::Stimulus>,
@@ -100,6 +101,8 @@ pub struct Response {
     pub word0196_handoff_sequences: Option<Vec<crate::word0196_handoff::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub word0196_alternate_sequences: Option<Vec<crate::word0196_alternate::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub p2_latch_sequences: Option<Vec<crate::p2_latch::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stateful_sequences: Option<Vec<crate::stateful::SequenceResult>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -235,6 +238,7 @@ impl Response {
             quartet_handoff_sequences: None,
             word0196_handoff_sequences: None,
             word0196_alternate_sequences: None,
+            p2_latch_sequences: None,
             stateful_sequences: None,
             chain_sequences: None,
             limiter_sequences: None,

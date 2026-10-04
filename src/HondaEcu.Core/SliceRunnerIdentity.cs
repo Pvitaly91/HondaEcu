@@ -5,7 +5,8 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.33.0";
+    internal const string CurrentVersion = "0.34.0";
+    internal const string AlternateVersion = "0.33.0";
     internal const string Word0196Version = "0.32.0";
     internal const string QuartetVersion = "0.31.0";
     internal const string HandoffVersion = "0.30.0";
@@ -54,14 +55,17 @@ internal static class SliceRunnerIdentity
     {
         var version = root.GetProperty("runnerVersion").GetString();
         var actualOperation = operation;
-        var alternateVersion = version == CurrentVersion;
+        if (operation == P28P2LatchValidator.Operation && version != CurrentVersion)
+            throw new SliceProcessException(SliceProcessFailure.Protocol, "M2aa requires runner0.34.0; historical runners cannot execute P2.");
+        if (operation == P28P2LatchValidator.Operation) operation = P28Word0196AlternateValidator.Operation;
+        var alternateVersion = version is CurrentVersion or AlternateVersion;
         if (operation == P28Word0196AlternateValidator.Operation && !alternateVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2z requires runner0.33.0; historical runners cannot execute this operation.");
         if (operation == P28Word0196AlternateValidator.Operation) operation = P28Word0196HandoffValidator.Operation;
-        if (operation == P28Word0196HandoffValidator.Operation && version is not (CurrentVersion or Word0196Version))
+        if (operation == P28Word0196HandoffValidator.Operation && version is not (CurrentVersion or AlternateVersion or Word0196Version))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2y requires runner0.32.0; historical runners cannot execute this operation.");
         if (operation == P28Word0196HandoffValidator.Operation) operation = P28QuartetHandoffValidator.Operation;
-        var quartetVersion = version is CurrentVersion or Word0196Version or QuartetVersion;
+        var quartetVersion = version is CurrentVersion or AlternateVersion or Word0196Version or QuartetVersion;
         if (operation == P28QuartetHandoffValidator.Operation && !quartetVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2x requires runner0.31.0; historical runners cannot execute this operation.");
         if (operation == P28QuartetHandoffValidator.Operation) operation = P28Data0136HandoffValidator.Operation;

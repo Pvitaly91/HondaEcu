@@ -112,14 +112,14 @@ public static class P28Word0196AlternateValidator
         IReadOnlyList<int> offsets = child is null ? [] : Enumerable.Range(0, original.Size).Where(i => original.Span[i] != child.Span[i]).ToArray();
         return new(1, scenario.Purpose, original.Hash, profile.Id, scenario.Digest, version, scenario.Mutation, offsets, sequences, comparisons, contract);
     }
-    internal static IReadOnlyList<P28Word0196AlternateSequence> Analyze(RomImage image, P28Word0196AlternateScenario scenario, JsonElement root, string id)
+    internal static IReadOnlyList<P28Word0196AlternateSequence> Analyze(RomImage image, P28Word0196AlternateScenario scenario, JsonElement root, string id, P28P2LatchValidation? p2 = null)
     {
-        P28LimiterScenario.Shape(root, "protocolVersion", "operation", "runnerVersion", "upstreamCommit", "localSemanticFixes", "entryContracts", "compactRows", "thresholdRows", "diagnostics", "syntheticResult", "word0196AlternateSequences");
-        _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2z contract differs.");
+        P28LimiterScenario.Shape(root, "protocolVersion", "operation", "runnerVersion", "upstreamCommit", "localSemanticFixes", "entryContracts", "compactRows", "thresholdRows", "diagnostics", "syntheticResult", p2 is null ? "word0196AlternateSequences" : "p2LatchSequences");
+        _ = SliceRunnerIdentity.Validate(root, p2 is null ? Operation : P28P2LatchValidator.Operation); Require(Equal(root.GetProperty("entryContracts"), p2 is null ? ExpectedContracts() : P28P2LatchValidator.ExpectedContracts()), "Software/latch contract differs.");
         foreach (var k in new[] { "compactRows", "thresholdRows", "diagnostics" }) Require(root.GetProperty(k).GetArrayLength() == 0, "Foreign rows."); Require(root.GetProperty("syntheticResult").ValueKind == JsonValueKind.Null, "Foreign synthetic result.");
-        var seq = root.GetProperty("word0196AlternateSequences"); Require(seq.GetArrayLength() == 3, "Three scratch histories required.");
+        var seq = root.GetProperty(p2 is null ? "word0196AlternateSequences" : "p2LatchSequences"); Require(seq.GetArrayLength() == 3, "Three scratch histories required.");
         JsonElement Row(int p, int i) => seq[p].GetProperty("checkpoints")[i];
-        bool Terminal(int p, int i) => Row(p, i).GetProperty("disposition").GetString() is not ("QuartetDerived0196AlternateStrict" or "GateBypass0196AlternateStrict");
+        bool Terminal(int p, int i) => p2 is null ? Row(p, i).GetProperty("disposition").GetString() is not ("QuartetDerived0196AlternateStrict" or "GateBypass0196AlternateStrict") : Row(p, i).GetProperty("disposition").GetString() is not ("QuartetDerivedP2LatchStrict" or "GateBypassP2LatchControl");
         var reports = Enumerable.Range(0, 3).Select(_ => new List<P28Word0196AlternateCheckpoint>()).ToArray();
         var owned = new Dictionary<int, int>[3]; var ownPsw = new int[3]; var ram = new Dictionary<int, int>[3];
         for (var p = 0; p < 3; p++) { var pattern = new[] { 0, 85, 170 }[p]; ram[p] = new() { [0x128] = (pattern & ~4) | (scenario.InitialState.Bit0128_2 ? 4 : 0), [0x117] = scenario.InitialState.Byte0117, [0x18E] = pattern, [0x18F] = pattern, [0x12A] = (pattern & ~2) | (scenario.InitialState.QuartetPrefix.Bit012a1 ? 2 : 0), [0x124] = scenario.InitialState.QuartetPrefix.FuelPrefix.Adaptive.Joint.Data0124, [0x108] = pattern, [0x109] = pattern }; }
@@ -143,7 +143,8 @@ public static class P28Word0196AlternateValidator
         {
             var pattern = new[] { 0, 85, 170 }[p]; var s = seq[p]; P28LimiterScenario.Shape(s, "scratchPattern", "machineInstances", "checkpoints");
             Require(N(s, "scratchPattern") == pattern && N(s, "machineInstances") == 1 && s.GetProperty("checkpoints").GetArrayLength() == scenario.Calls.Count, "Second machine or missing event.");
-            var r = Row(p, i); P28LimiterScenario.Shape(r, "index", "machineId", "prefix", "consumer", "alternate", "disposition", "provenance", "producerGeneration0196", "readerGeneration0196", "compareGeneration0196", "abiWrites", "after", "stateBefore", "stateAfter", "continuityJournal", "canaries");
+            var r = Row(p, i); string[] fields = ["index", "machineId", "prefix", "consumer", "alternate", "disposition", "provenance", "producerGeneration0196", "readerGeneration0196", "compareGeneration0196", "abiWrites", "after", "stateBefore", "stateAfter", "continuityJournal", "canaries"];
+            P28LimiterScenario.Shape(r, p2 is null ? fields : [.. fields, "p2", "p2Before", "p2After", "incomingP2Generation", "p2Generation"]);
             Require(N(r, "index") == i && N(r, "machineId") == 1 && Equal(r.GetProperty("canaries"), JsonSerializer.SerializeToElement(new[] { pattern, pattern, pattern })), "Wrong machine/index/canary.");
             var h = ram[p]; Require(Equal(r.GetProperty("stateBefore"), State(h)), "Hidden initial/source/history reseed.");
             // Independently owned M2x RAM and ISA-computed final PSW, not compare observations.
@@ -180,6 +181,7 @@ public static class P28Word0196AlternateValidator
                 else { Require(a.ValueKind == JsonValueKind.Null, "Alternate executed without native5501 taken branch."); disposition = Status(status); }
             }
             else Require(c.ValueKind == JsonValueKind.Null && a.ValueKind == JsonValueKind.Null && r.GetProperty("abiWrites").GetArrayLength() == 0, "Suffix/source ran after terminal or without fresh0196.");
+            if (p2 is not null) (after, disposition) = p2.Finish(p, i, r, after, compare, disposition);
             owned[p][0x12A] = h[0x12A]; // Only independently modeled suffix writes affect next M2x history.
             Require(Equal(r.GetProperty("stateAfter"), State(h)) && Equal(r.GetProperty("after"), after), "Persistent software state/exit forged.");
             Require(r.GetProperty("disposition").GetString() == disposition && r.GetProperty("provenance").GetString() == provenance, "False strict/gate/partial classification.");

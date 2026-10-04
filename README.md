@@ -1,5 +1,15 @@
 # HondaEcu
 
+M2aa validates a separate [P2 output-data latch handoff](docs/M2AA_P2_OUTPUT_LATCH_HANDOFF.md)
+with `research p28-fuel p2-latch-check`,runner0.34.0. Matching primary P2 evidence
+admits byte RMW only under ReviewedStartupPrecondition (all-output/primary port).
+ONE retained Cpu/Bus reaches native5596 AND or55C5 OR through the unchanged
+0196/software chain:42 latch read/write pairs,39 strict plus3 controls,15 same-value
+stores and15 retained-latch reads. All four slots and native191/192/193 are covered.
+Six fuel-cell A/B comparisons have equal latch values with disclosed masking.
+LatchValidated is NOT pins/hardware validation: pinsNotModeled, polarity/roleUnknown,
+timer/IRQ/GUI/hardwareNotRun; BIN0. Historical M2z/M1l stop-beforeP2 is unchanged.
+
 M2z validates the separate [word0196 software-alternate chain](docs/M2Z_WORD0196_SOFTWARE_ALTERNATE.md)
 with `research p28-fuel word0196-alternate-check`,runner0.33.0. Actual JNE5501
 reaches556F on the retained Cpu/Bus;5578 compares the same native0196 generation

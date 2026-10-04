@@ -40,7 +40,7 @@ public sealed class P28QuartetHandoffCliTests
     public async Task PartialPrefixConsumerNotRunThenTerminalNotRunDoesNotPublishFresh0196()
     {
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var snapshot = w.Snapshot(); var r = await w.RunAsync(args); Assert.True(r.Code == CliApplication.VerificationFailed, r.Output + r.Error); w.AssertUnchanged(snapshot);
-        var n = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.33.0", n["runnerVersion"]!.GetValue<string>()); Assert.Equal("Partial", n["quartetScheduledHandoff"]!.GetValue<string>());
+        var n = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.34.0", n["runnerVersion"]!.GetValue<string>()); Assert.Equal("Partial", n["quartetScheduledHandoff"]!.GetValue<string>());
         foreach (var s in n["sequences"]!.AsArray()) { Assert.Equal("ConsumerNotRun", s!["checkpoints"]![0]!["disposition"]!.GetValue<string>()); Assert.Equal("NotRun", s["checkpoints"]![1]!["disposition"]!.GetValue<string>()); Assert.Null(s["checkpoints"]![0]!["resultGeneration"]); }
     }
     [Fact]

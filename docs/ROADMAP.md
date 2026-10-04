@@ -1,5 +1,16 @@
 # Roadmap
 
+M2aa delivers a separate [bounded P2 architectural output-data handoff](M2AA_P2_OUTPUT_LATCH_HANDOFF.md).
+Runner0.34.0 continues native M2z software flow through one byte5596/55C5 RMW,
+then stops5599/55C8. Primary ISA, matching P2/P2IO/P2SF peripheral evidence and
+static configuration review are separate admission authorities. Once-initial raw
+latch snapshot is not executed startup; persistent native generations exclude
+per-event reseed.42 new architectural accesses each direction,39 strict/3 controls,
+all four slots, below/equal/above and15 retained/same-value witnesses are checked.
+Six in-memory fuel A/B cases are masked at the latch, not physical divergence.
+Historical P1/M2z/M1l contracts unchanged; pinsNotModeled, polarity/roleUnknown,
+timer/IRQ/scheduler/GUI/hardware/firmware output excluded. No automatic next stage.
+
 M2z delivers [native word0196 software-alternate comparison](M2Z_WORD0196_SOFTWARE_ALTERNATE.md).
 The separate runner0.33.0 operation continues actual5501->556F without a host
 entry shortcut, validates42 same-generation5578 comparisons and both557D CF
