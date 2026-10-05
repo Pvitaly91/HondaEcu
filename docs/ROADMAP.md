@@ -1,5 +1,14 @@
 # Roadmap
 
+M2ac delivers [below-path ROLB A and second-P2 handoff](M2AC_BELOW_SECOND_P2_HANDOFF.md).
+The separate0.36 operation consumes actual M2ab55CF→55D2 state, executes the
+reviewed opcode33/DD0 semantics and18 native instructions through owned RAM
+and retained stopped TCON0 to a second architectural P2 latch RMW. Fresh G2
+is retained even for same-value output. Stop BEFORE RT5688: no caller frame,
+new schedule seam, timer/TM0/TMR0 progression, IRQ, physical interpretation,
+GUI or hardware. Existing PC54F5 harness schedule remains explicitly technical.
+M2ab/aa/z/y/x/w and unresolved M2t JGT bounds unchanged; no automatic M2ad.
+
 M2ab delivers a separate [post-P2 control-register architectural handoff](M2AB_POST_P2_CONTROL_HANDOFF.md).
 Runner0.35.0: ONE Cpu/Bus from quartet/native0196 through P2 to TRNSIT0046
 or TCON00040. TRNSIT is four readable/writable flags, not a command/strobe;

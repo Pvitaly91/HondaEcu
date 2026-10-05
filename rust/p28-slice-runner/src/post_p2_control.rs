@@ -172,5 +172,6 @@ pub fn run(r: Request, response: Response) -> Result<Response, String> {
             tcon0: s.tcon0_architectural_snapshot,
             trnsit_flags: s.trnsit_architectural_flags,
         }),
+        false,
     )
 }

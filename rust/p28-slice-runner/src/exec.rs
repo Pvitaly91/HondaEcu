@@ -17,6 +17,7 @@
 use crate::bus::{AccessFault, Bus};
 use crate::cpu::Cpu;
 use crate::decoder::{decode, Decoded};
+use crate::full_decoder::FULL_OPCODES;
 use crate::operand::{table, Arg, Mem, Parsed, Reg};
 
 /// One coherent data-space API for CPU SFR aliases, register-bank operands,
@@ -641,8 +642,16 @@ impl<'a> Exec<'a> {
                 // Incoming CF participates; ZF/HC/DD are preserved.
                 let reviewed_byte_rol_off =
                     base == "ROL" && byte && args[0] == Arg::Mem(Mem::OffPage);
+                // M2ac exact33/DD0 ROLB A, independently reviewed printed3-119.
+                let reviewed_byte_rol_a = base == "ROL"
+                    && byte
+                    && !self.cpu.dd
+                    && self.d.len == 1
+                    && FULL_OPCODES[self.d.index].bytes_pat == ["33"]
+                    && self.d.mnemonic == "ROLB A"
+                    && args[0] == Arg::Reg(Reg::A);
                 let (res, carry) = match base {
-                    "ROL" if reviewed_byte_rol_off => (
+                    "ROL" if reviewed_byte_rol_off || reviewed_byte_rol_a => (
                         ((v32 << 1) | u32::from(self.cpu.cf)) & 0xFF,
                         v32 & 0x80 != 0,
                     ),
@@ -674,6 +683,7 @@ impl<'a> Exec<'a> {
                     && !reviewed_sll_a
                     && !reviewed_rol_a_or_er0
                     && !reviewed_byte_rol_off
+                    && !reviewed_byte_rol_a
                 {
                     self.set_zf(res as u16, byte);
                 }
@@ -1414,6 +1424,45 @@ mod producer_form_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Invented operands; exact opcode33/DD split, primary printed3-119/3-117.
+    #[test]
+    fn m2ac_rolb_a_exact_dd0_and_dd1_full_psw() {
+        for dd in [false, true] {
+            for low in [0u16, 0x7F, 0x80, 0xFF] {
+                for carry in [false, true] {
+                    for zf in [false, true] {
+                        let (mut cpu, mut bus) = machine(&[0x33]);
+                        cpu.set_psw_u16(0x2335);
+                        cpu.dd = dd;
+                        cpu.cf = carry;
+                        cpu.zf = zf;
+                        cpu.a = 0xA500 | low;
+                        let before = cpu.psw_u16();
+                        let input = cpu.a;
+                        let d = step(&mut cpu, &mut bus).unwrap();
+                        assert_eq!(d.mnemonic, if dd { "ROL A" } else { "ROLB A" });
+                        let operand = if dd { input } else { low };
+                        let mask = if dd { 65535 } else { 255 };
+                        let result = (u32::from(operand) * 2 + u32::from(carry)) & mask;
+                        let expected = if dd {
+                            result as u16
+                        } else {
+                            0xA500 | result as u16
+                        };
+                        let cf = operand & if dd { 0x8000 } else { 0x80 } != 0;
+                        assert_eq!(cpu.a, expected, "DD={dd};AL={low:02X};CF={carry}");
+                        assert_eq!(
+                            cpu.psw_u16(),
+                            (before & !Cpu::PSW_CF_BIT) | if cf { Cpu::PSW_CF_BIT } else { 0 },
+                            "full PSW preservation"
+                        );
+                        assert_eq!(cpu.pc, 1);
+                    }
+                }
+            }
+        }
+    }
 
     fn machine(bytes: &[u8]) -> (Cpu, Bus) {
         let mut cpu = Cpu::new();

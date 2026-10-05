@@ -260,6 +260,8 @@ pub struct Bus {
     p1_access: bool,
     p2_output_latch: Option<u8>,
     p2_access: bool,
+    p2_access_pc: Option<u16>,
+    all_native: Option<Vec<[u32; 6]>>,
     p2_accesses: Vec<[u32; 5]>,
     // M2ab only: stopped realtime-output control and transition flag storage.
     // No clock, pin edges, command register, pending IRQ or generic SFR map.
@@ -296,6 +298,8 @@ impl Bus {
             p1_access: false,
             p2_output_latch: None,
             p2_access: false,
+            p2_access_pc: None,
+            all_native: None,
             p2_accesses: vec![],
             post_p2_control: None,
             control_access: None,
@@ -391,6 +395,36 @@ impl Bus {
     pub(crate) fn set_p2_access(&mut self, enabled: bool) {
         self.p2_access = enabled;
     }
+    pub(crate) fn set_p2_access_pc(&mut self, pc: Option<u16>) {
+        self.p2_access_pc = pc;
+    }
+    fn p2_enabled(&self) -> bool {
+        self.native_accesses.is_some()
+            && (self.p2_access || self.p2_access_pc == Some(self.native_pc))
+    }
+    pub(crate) fn begin_all_native(&mut self) {
+        self.all_native = Some(vec![]);
+    }
+    pub(crate) fn all_native_snapshot(&self) -> Vec<[u32; 6]> {
+        self.all_native.clone().unwrap_or_default()
+    }
+    pub(crate) fn end_all_native(&mut self) -> Vec<[u32; 6]> {
+        self.all_native.take().unwrap_or_default()
+    }
+    fn observe_all(&mut self, space: u32, address: u16, width: u32, write: u32, value: u16) {
+        if self.native_accesses.is_some() {
+            if let Some(v) = self.all_native.as_mut() {
+                v.push([
+                    space,
+                    self.native_pc as u32,
+                    address as u32,
+                    width,
+                    write,
+                    value as u32,
+                ]);
+            }
+        }
+    }
     /// Non-native diagnostic inspection; never a readback proof.
     pub(crate) fn p2_output_latch(&self) -> Option<u8> {
         self.p2_output_latch
@@ -453,6 +487,7 @@ impl Bus {
         self.native_pc = pc;
     }
     fn native_access(&mut self, address: u16, width: u32, write: u32, value: u16) {
+        self.observe_all(0, address, width, write, value);
         let native = self.native_accesses.is_some();
         if native || write == 1 {
             if let Some(rows) = self.continuity.as_mut() {
@@ -602,12 +637,14 @@ impl Bus {
                     0,
                     value as u32,
                 ]);
+                self.observe_all(2, address, 8, 0, value as u16);
                 return value;
             }
-            if address == 0x24 && self.p2_access && self.native_accesses.is_some() {
+            if address == 0x24 && self.p2_enabled() {
                 if let Some(value) = self.p2_output_latch {
                     self.p2_accesses
                         .push([self.native_pc as u32, 0x24, 8, 0, value as u32]);
+                    self.observe_all(1, address, 8, 0, value as u16);
                     return value;
                 }
             }
@@ -670,12 +707,16 @@ impl Bus {
         };
         let before = self.native_accesses.as_ref().map_or(0, Vec::len);
         let continuity_before = self.continuity.as_ref().map_or(0, Vec::len);
+        let all_before = self.all_native.as_ref().map_or(0, Vec::len);
         let value = u16::from_le_bytes([self.read_data_u8(address), self.read_data_u8(high)]);
         if let Some(rows) = self.native_accesses.as_mut() {
             rows.truncate(before);
         }
         if let Some(rows) = self.continuity.as_mut() {
             rows.truncate(continuity_before);
+        }
+        if let Some(rows) = self.all_native.as_mut() {
+            rows.truncate(all_before);
         }
         self.native_access(address, 16, 0, value);
         value
@@ -705,19 +746,17 @@ impl Bus {
                     1,
                     value as u32,
                 ]);
+                self.observe_all(2, address, 8, 1, value as u16);
                 if self.journal_writes {
                     self.data_writes.push([address as u32, 8, value as u32]);
                 }
                 return;
             }
-            if address == 0x24
-                && self.p2_access
-                && self.native_accesses.is_some()
-                && self.p2_output_latch.is_some()
-            {
+            if address == 0x24 && self.p2_enabled() && self.p2_output_latch.is_some() {
                 self.p2_output_latch = Some(value);
                 self.p2_accesses
                     .push([self.native_pc as u32, 0x24, 8, 1, value as u32]);
+                self.observe_all(1, address, 8, 1, value as u16);
                 if self.journal_writes {
                     self.data_writes.push([0x24, 8, value as u32]);
                 }
@@ -778,11 +817,15 @@ impl Bus {
         let before = self.data_writes.len();
         let access_before = self.native_accesses.as_ref().map_or(0, Vec::len);
         let continuity_before = self.continuity.as_ref().map_or(0, Vec::len);
+        let all_before = self.all_native.as_ref().map_or(0, Vec::len);
         self.write_data_u8(address, bytes[0]);
         self.write_data_u8(high, bytes[1]);
         if self.fault.borrow().is_none() {
             if let Some(rows) = self.continuity.as_mut() {
                 rows.truncate(continuity_before);
+            }
+            if let Some(rows) = self.all_native.as_mut() {
+                rows.truncate(all_before);
             }
             if let Some(rows) = self.native_accesses.as_mut() {
                 rows.truncate(access_before);

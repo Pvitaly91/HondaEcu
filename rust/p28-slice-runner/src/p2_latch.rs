@@ -142,6 +142,7 @@ pub fn run(r: Request, response: Response) -> Result<Response, String> {
         s.p2_output_latch,
         response,
         None,
+        false,
     )
 }
 pub(crate) fn run_chain(
@@ -151,9 +152,11 @@ pub(crate) fn run_chain(
     latch: u8,
     mut response: Response,
     control_config: Option<crate::post_p2_control::Config>,
+    below_enabled: bool,
 ) -> Result<Response, String> {
     let mut sequences = vec![];
     let mut control_sequences = vec![];
+    let mut below_sequences = vec![];
     for &pattern in &r.scratch_patterns {
         let (mut cpu, mut bus) =
             prefix::initialize(&r.images[0].rom, pattern, &initial.quartet_prefix);
@@ -177,6 +180,7 @@ pub(crate) fn run_chain(
         let mut terminal = false;
         let mut checkpoints = vec![];
         let mut control_checkpoints = vec![];
+        let mut below_checkpoints = vec![];
         for (i, call) in calls.iter().enumerate() {
             let before = alternate::state(&cpu, &mut bus);
             let mut p = prefix::checkpoint(&cpu, &mut bus, call, i as u32, pattern);
@@ -186,6 +190,12 @@ pub(crate) fn run_chain(
             let incoming_tcon0_generation = tcon0_generation.clone();
             let incoming_trnsit_generation = trnsit_generation.clone();
             let mut control = None;
+            let mut below = None;
+            let mut first_p2_after = p2_before;
+            let mut first_p2_generation = retained_generation.clone();
+            let mut after_control = control_before;
+            let mut after_tgen = tcon0_generation.clone();
+            let mut after_rgen = trnsit_generation.clone();
             let mut p2 = None;
             let mut consumer = None;
             let mut alternate = None;
@@ -196,6 +206,9 @@ pub(crate) fn run_chain(
             let mut generation = None;
             if !terminal {
                 bus.begin_continuity();
+                if below_enabled {
+                    bus.begin_all_native();
+                }
                 prefix::execute_checkpoint(&mut cpu, &mut bus, call, &mut p);
                 if let Some(g) = &p.result_generation {
                     provenance = if p.selected_generation.is_some() {
@@ -272,6 +285,8 @@ pub(crate) fn run_chain(
                             }
                         };
                         p2 = Some(output);
+                        first_p2_after = bus.p2_output_latch().unwrap();
+                        first_p2_generation = retained_generation.clone();
                         if control_config.is_some()
                             && matches!(
                                 disposition,
@@ -318,6 +333,45 @@ pub(crate) fn run_chain(
                                 _ => "ControlPartial",
                             };
                             control = Some(output);
+                            after_control = bus.post_p2_control().unwrap();
+                            after_tgen = tcon0_generation.clone();
+                            after_rgen = trnsit_generation.clone();
+                            if below_enabled
+                                && cpu.pc == 0x55D2
+                                && matches!(
+                                    disposition,
+                                    "PostP2ControlStrict" | "PostP2ControlGateBypass"
+                                )
+                            {
+                                let output = crate::below_second_p2::execute(&mut cpu, &mut bus);
+                                let all = bus.all_native_snapshot();
+                                for (order, w) in all.iter().filter(|a| a[4] == 1).enumerate() {
+                                    let g = prefix::Generation {
+                                        writer_pc: w[1],
+                                        event_index: i as u32,
+                                        write_order: order as u32,
+                                        value: w[5],
+                                    };
+                                    if w[0] == 1 && w[1] == 0x5682 {
+                                        retained_generation = Some(g);
+                                    } else if w[0] == 2 && w[1] == 0x55D5 {
+                                        tcon0_generation = Some(g);
+                                    }
+                                }
+                                disposition = match output.suffix.stage.result.status {
+                                    0 => {
+                                        if provenance == "QuartetDerived0196" {
+                                            "BelowSecondP2Strict"
+                                        } else {
+                                            "BelowSecondP2GateBypass"
+                                        }
+                                    }
+                                    3 => "BudgetExceeded",
+                                    2 => "ExecutionError",
+                                    _ => "BelowContinuationPartial",
+                                };
+                                below = Some(output);
+                            }
                         }
                     } else if disposition == "0196AlternatePartial" {
                         disposition = "UpstreamPartial";
@@ -332,12 +386,19 @@ pub(crate) fn run_chain(
                         | "GateBypassP2LatchControl"
                         | "PostP2ControlStrict"
                         | "PostP2ControlGateBypass"
+                        | "BelowSecondP2Strict"
+                        | "BelowSecondP2GateBypass"
                 );
             }
             let journal = if disposition == "NotRun" {
                 vec![]
             } else {
                 bus.end_continuity()
+            };
+            let all_native_journal = if below_enabled {
+                bus.end_all_native()
+            } else {
+                vec![]
             };
             // Read-only diagnostics must observe the actual incoming banks even
             // when the prefix stopped before entering M2x's local/SCB bank.
@@ -350,9 +411,17 @@ pub(crate) fn run_chain(
             let event = Event {
                 p2,
                 p2_before,
-                p2_after: bus.p2_output_latch().unwrap(),
+                p2_after: if below_enabled {
+                    first_p2_after
+                } else {
+                    bus.p2_output_latch().unwrap()
+                },
                 incoming_p2_generation,
-                p2_generation: retained_generation.clone(),
+                p2_generation: if below_enabled {
+                    first_p2_generation
+                } else {
+                    retained_generation.clone()
+                },
                 software: alternate::Event {
                     index: i as u32,
                     machine_id: 1,
@@ -373,16 +442,41 @@ pub(crate) fn run_chain(
                 },
             };
             if control_config.is_some() {
-                control_checkpoints.push(crate::post_p2_control::Event {
+                let upstream = crate::post_p2_control::Event {
                     p2: event,
                     control,
                     control_before,
-                    control_after: bus.post_p2_control().unwrap(),
+                    control_after: if below_enabled {
+                        after_control
+                    } else {
+                        bus.post_p2_control().unwrap()
+                    },
                     incoming_tcon0_generation,
-                    tcon0_generation: tcon0_generation.clone(),
+                    tcon0_generation: if below_enabled {
+                        after_tgen
+                    } else {
+                        tcon0_generation.clone()
+                    },
                     incoming_trnsit_generation,
-                    trnsit_generation: trnsit_generation.clone(),
-                });
+                    trnsit_generation: if below_enabled {
+                        after_rgen
+                    } else {
+                        trnsit_generation.clone()
+                    },
+                };
+                if below_enabled {
+                    below_checkpoints.push(crate::below_second_p2::Event {
+                        upstream,
+                        below,
+                        second_p2_after: bus.p2_output_latch().unwrap(),
+                        second_p2_generation: retained_generation.clone(),
+                        final_tcon0: bus.post_p2_control().unwrap()[0],
+                        final_tcon0_generation: tcon0_generation.clone(),
+                        all_native_journal,
+                    });
+                } else {
+                    control_checkpoints.push(upstream);
+                }
             } else {
                 checkpoints.push(event);
             }
@@ -399,8 +493,18 @@ pub(crate) fn run_chain(
                 checkpoints: control_checkpoints,
             });
         }
+        if below_enabled {
+            below_sequences.push(crate::below_second_p2::Sequence {
+                scratch_pattern: pattern,
+                machine_instances: 1,
+                checkpoints: below_checkpoints,
+            });
+        }
     }
-    if control_config.is_some() {
+    if below_enabled {
+        response.entry_contracts = crate::below_second_p2::entry_contracts();
+        response.below_second_p2_sequences = Some(below_sequences);
+    } else if control_config.is_some() {
         response.entry_contracts = crate::post_p2_control::entry_contracts();
         response.post_p2_control_sequences = Some(control_sequences);
     } else {

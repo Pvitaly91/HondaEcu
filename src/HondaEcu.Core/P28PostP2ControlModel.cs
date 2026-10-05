@@ -64,6 +64,7 @@ internal sealed class P28PostP2ControlValidation(P28PostP2ControlScenario scenar
     private readonly int[] _flags = [scenario.TrnsitArchitecturalFlags, scenario.TrnsitArchitecturalFlags, scenario.TrnsitArchitecturalFlags];
     private readonly P28QuartetGeneration?[] _tgen = new P28QuartetGeneration?[3], _rgen = new P28QuartetGeneration?[3];
     internal readonly List<P28PostP2ControlCheckpoint>[] Rows = [[], [], []];
+    internal void RetainBelow(int p, int value, P28QuartetGeneration? generation) { _tcon0[p] = value; _tgen[p] = generation; }
     internal (JsonElement After, string Disposition, int[][] Ram) Finish(int p, int i, JsonElement row, JsonElement before, P28QuartetGeneration? g, string disposition, int byte018e, P28P2LatchCheckpoint p2)
     {
         Require(Equal(row.GetProperty("controlBefore"), JsonSerializer.SerializeToElement(new[] { _tcon0[p], _flags[p] })) && Equal(row.GetProperty("incomingTcon0Generation"), JsonSerializer.SerializeToElement(_tgen[p], JsonDefaults.Create())) && Equal(row.GetProperty("incomingTrnsitGeneration"), JsonSerializer.SerializeToElement(_rgen[p], JsonDefaults.Create())), "Per-event control reseed/stale equal-value generation.");

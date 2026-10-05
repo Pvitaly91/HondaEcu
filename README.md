@@ -1,5 +1,13 @@
 # HondaEcu
 
+M2ac adds a separate [below-path second-P2 architectural handoff](docs/M2AC_BELOW_SECOND_P2_HANDOFF.md).
+Runner0.36.0 independently admits opcode33/DD0 ROLB A after primary ISA review,
+then follows native software branches to a second P2 byte ORB and stops BEFORE
+RT5688 on the retained Cpu/Bus. C# checks full flags, owned RAM, all native
+write chronology and fresh G1→G2 identity, including same-value writes.
+Historical operations retain their old boundaries. No new external source,
+return frame, timer evolution, elapsed time, IRQ, pins, GUI, hardware or BIN.
+
 M2ab adds a separate [bounded post-P2 control-register handoff](docs/M2AB_POST_P2_CONTROL_HANDOFF.md).
 Runner0.35.0 continues the same Cpu/Bus through native TRNSIT0046 or stopped
 TCON00040 RMW; stop-before559D/55D2. Independent C# validates flags, storage,

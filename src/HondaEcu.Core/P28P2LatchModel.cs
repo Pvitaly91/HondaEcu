@@ -47,7 +47,8 @@ internal sealed class P28P2LatchValidation(byte initial)
     private readonly int[] _latch = [initial, initial, initial];
     private readonly P28QuartetGeneration?[] _generation = new P28QuartetGeneration?[3];
     internal readonly List<P28P2LatchCheckpoint>[] Rows = [[], [], []];
-    internal (JsonElement After, string Disposition) Finish(int p, int i, JsonElement row, JsonElement before, P28QuartetGeneration? g, string disposition)
+    internal void RetainBelow(int p, int value, P28QuartetGeneration? generation) { _latch[p] = value; _generation[p] = generation; }
+    internal (JsonElement After, string Disposition) Finish(int p, int i, JsonElement row, JsonElement before, P28QuartetGeneration? g, string disposition, int? upstreamWriteCount = null)
     {
         Require(row.GetProperty("p2Before").GetInt32() == _latch[p] && Equal(row.GetProperty("incomingP2Generation"), JsonSerializer.SerializeToElement(_generation[p], JsonDefaults.Create())), "Per-event P2 reseed or stale equal-value generation.");
         var old = _latch[p]; var incoming = _generation[p]; var output = row.GetProperty("p2"); int? pc = null, al = null;
@@ -60,7 +61,7 @@ internal sealed class P28P2LatchValidation(byte initial)
             {
                 // Peripheral write is separate from RAM journal but its identity
                 // uses the next ALL-native event write ordinal, not value equality.
-                var order = Matrix(row.GetProperty("continuityJournal"), 6, 32768).Count(v => v[0] == 1 && v[4] == 1);
+                var order = upstreamWriteCount ?? Matrix(row.GetProperty("continuityJournal"), 6, 32768).Count(v => v[0] == 1 && v[4] == 1);
                 _generation[p] = new(pc.Value, i, order, value); _latch[p] = value;
             }
             var status = output.GetProperty("suffix").GetProperty("stage").GetProperty("result").GetProperty("status").GetInt32();

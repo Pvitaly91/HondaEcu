@@ -197,13 +197,17 @@ public sealed partial class CliApplication
               --scenario <m2z-scenario.json> --output <new-private-report.json>
               Native5501 branch; same-generation5578 compare;stop BEFORE P2;timer/IRQ/GUI/BIN NotRun.
           research p28-fuel p2-latch-check <original> --profile p28-304 --confirm-profile
-              --baseline-binding <binding.json> --runner <runner-0.34.0-or-0.35.0>
+              --baseline-binding <binding.json> --runner <runner-0.34.0-or-newer>
               --scenario <m2aa-scenario.json> --output <new-private-report.json>
               Architectural P2 byte RMW only;reviewed output/primary-mode precondition;no pins,polarity,timer,GUI,BIN.
           research p28-fuel post-p2-control-check <original> --profile p28-304 --confirm-profile
-              --baseline-binding <binding.json> --runner <runner-0.35.0>
+              --baseline-binding <binding.json> --runner <runner-0.35.0-or-0.36.0>
               --scenario <m2ab-scenario.json> --output <new-private-report.json>
               Same-machine post-P2 control storage;stopped timer precondition;no time/IRQ/pins/GUI/BIN.
+          research p28-fuel below-second-p2-check <original> --profile p28-304 --confirm-profile
+              --baseline-binding <binding.json> --runner <runner-0.36.0>
+              --scenario <below-second-p2-handoff-test.json> --output <new-report.json>
+              Native below continuation;fresh second P2 latch generation;stop BEFORE RT5688;no time/IRQ/pins/GUI/BIN.
           research p28-fuel data0136-handoff-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding.json> --runner <runner-0.30.0>
               --scenario <m2w-scenario.json> --output <new-private-report.json>

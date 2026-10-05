@@ -5,7 +5,8 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.35.0";
+    internal const string CurrentVersion = "0.36.0";
+    internal const string ControlVersion = "0.35.0";
     internal const string P2Version = "0.34.0";
     internal const string AlternateVersion = "0.33.0";
     internal const string Word0196Version = "0.32.0";
@@ -56,20 +57,23 @@ internal static class SliceRunnerIdentity
     {
         var version = root.GetProperty("runnerVersion").GetString();
         var actualOperation = operation;
-        if (operation == P28PostP2ControlValidator.Operation && version != CurrentVersion)
+        if (operation == P28BelowSecondP2Validator.Operation && version != CurrentVersion)
+            throw new SliceProcessException(SliceProcessFailure.Protocol, "M2ac requires runner0.36.0; historical0.35 cannot execute below continuation.");
+        if (operation == P28BelowSecondP2Validator.Operation) operation = P28PostP2ControlValidator.Operation;
+        if (operation == P28PostP2ControlValidator.Operation && version is not (CurrentVersion or ControlVersion))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2ab requires runner0.35.0; historical runners cannot execute control handoff.");
         if (operation == P28PostP2ControlValidator.Operation) operation = P28P2LatchValidator.Operation;
-        if (operation == P28P2LatchValidator.Operation && version is not (CurrentVersion or P2Version))
+        if (operation == P28P2LatchValidator.Operation && version is not (CurrentVersion or ControlVersion or P2Version))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2aa requires runner0.34.0; historical runners cannot execute P2.");
         if (operation == P28P2LatchValidator.Operation) operation = P28Word0196AlternateValidator.Operation;
-        var alternateVersion = version is CurrentVersion or P2Version or AlternateVersion;
+        var alternateVersion = version is CurrentVersion or ControlVersion or P2Version or AlternateVersion;
         if (operation == P28Word0196AlternateValidator.Operation && !alternateVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2z requires runner0.33.0; historical runners cannot execute this operation.");
         if (operation == P28Word0196AlternateValidator.Operation) operation = P28Word0196HandoffValidator.Operation;
-        if (operation == P28Word0196HandoffValidator.Operation && version is not (CurrentVersion or P2Version or AlternateVersion or Word0196Version))
+        if (operation == P28Word0196HandoffValidator.Operation && version is not (CurrentVersion or ControlVersion or P2Version or AlternateVersion or Word0196Version))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2y requires runner0.32.0; historical runners cannot execute this operation.");
         if (operation == P28Word0196HandoffValidator.Operation) operation = P28QuartetHandoffValidator.Operation;
-        var quartetVersion = version is CurrentVersion or P2Version or AlternateVersion or Word0196Version or QuartetVersion;
+        var quartetVersion = version is CurrentVersion or ControlVersion or P2Version or AlternateVersion or Word0196Version or QuartetVersion;
         if (operation == P28QuartetHandoffValidator.Operation && !quartetVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2x requires runner0.31.0; historical runners cannot execute this operation.");
         if (operation == P28QuartetHandoffValidator.Operation) operation = P28Data0136HandoffValidator.Operation;
@@ -136,6 +140,7 @@ internal static class SliceRunnerIdentity
         if (nativeProducerVersion) expected = [.. expected, "byte-sbc-r0-immediate-half-borrow", "word-decrement-x1-half-borrow"];
         if (quartetVersion) expected = [.. expected, "word-add-a-indexed-x1-half-carry"];
         if (alternateVersion) expected = [.. expected, "byte-rol-off-through-carry-preserves-noncarry-flags"];
+        if (root.GetProperty("runnerVersion").GetString() == CurrentVersion) expected = [.. expected, "byte-rol-a-through-carry-preserves-noncarry-flags"];
         var fixes = root.GetProperty("localSemanticFixes").EnumerateArray().Select(item => item.GetString()!).ToArray();
         if (!fixes.Order(StringComparer.Ordinal).SequenceEqual(expected.Order(StringComparer.Ordinal)))
         {

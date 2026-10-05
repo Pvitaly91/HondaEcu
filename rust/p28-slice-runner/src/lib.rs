@@ -1,6 +1,9 @@
 //! Bounded seeded byte execution. No engine simulation or compact-code formula.
 
 pub mod acquisition;
+pub mod below_second_p2;
+#[cfg(test)]
+mod below_second_p2_tests;
 pub mod bus;
 pub mod chain;
 pub mod chain_forms;
