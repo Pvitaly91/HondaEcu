@@ -3,12 +3,12 @@ using HondaEcu.Core;
 
 namespace HondaEcu.Cli.Tests;
 
-public sealed class P28PostP2ControlCliTests
+public sealed class P28CalRtRoundTripCliTests
 {
     private static string[] Arguments(P28FuelMapCliTests.Workspace w)
     {
         var args = P28Word0196AlternateCliTests.Arguments(w); var old = P28Word0196AlternateScenario.Parse(File.ReadAllText(w.Scenario));
-        File.WriteAllText(w.Scenario, P28PostP2ControlScenario.Create(P28P2LatchScenario.Create(old, 0xA5), 0x8B, 15).ToJson()); args[2] = "post-p2-control-check"; return args;
+        File.WriteAllText(w.Scenario, P28CalRtRoundTripScenario.Create(P28P2LatchScenario.Create(old, 0xA5), 0x8B, 15).ToJson()); args[2] = "cal-rt-roundtrip-check"; return args;
     }
     [Theory]
     [InlineData("--runner")]
@@ -23,6 +23,11 @@ public sealed class P28PostP2ControlCliTests
         Assert.Equal(CliApplication.UsageError, (await w.RunAsync(complete.Where(a => a != "--confirm-profile").ToArray())).Code); Assert.False(File.Exists(w.Output));
     }
     [Theory]
+    [InlineData("--return-pc")]
+    [InlineData("--stack-word")]
+    [InlineData("--ssp")]
+    [InlineData("--pc063b")]
+    [InlineData("--pc063e")]
     [InlineData("--p2-pins")]
     [InlineData("--p2-io")]
     [InlineData("--timer")]
@@ -49,8 +54,8 @@ public sealed class P28PostP2ControlCliTests
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var snapshot = w.Snapshot(); var r = await w.RunAsync(args);
         Assert.True(r.Code == CliApplication.VerificationFailed, r.Output + r.Error); w.AssertUnchanged(snapshot);
         var n = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.37.0", n["runnerVersion"]!.GetValue<string>());
-        Assert.Equal("Partial", n["postP2ControlRegisterHandoff"]!.GetValue<string>()); Assert.Equal("NotModeled", n["p2ElectricalPins"]!.GetValue<string>());
-        foreach (var s in n["sequences"]!.AsArray()) { Assert.Equal("NoFresh0196", s!["checkpoints"]![0]!["disposition"]!.GetValue<string>()); Assert.Equal("NotRun", s["checkpoints"]![1]!["disposition"]!.GetValue<string>()); foreach (var c in s["checkpoints"]!.AsArray()) { Assert.Equal(139, c!["tcon0Before"]!.GetValue<int>()); Assert.Equal(139, c["tcon0After"]!.GetValue<int>()); Assert.Equal(15, c["trnsitFlagsBefore"]!.GetValue<int>()); Assert.Equal(15, c["trnsitFlagsAfter"]!.GetValue<int>()); Assert.Null(c["tcon0Generation"]); Assert.Null(c["trnsitGeneration"]); } }
+        Assert.Equal("Partial", n["nativeCallReturnRoundTrip"]!.GetValue<string>()); Assert.Equal("NotModeled", n["p2ElectricalPins"]!.GetValue<string>());
+        foreach (var s in n["sequences"]!.AsArray()) { Assert.Equal("NoFresh0196", s!["checkpoints"]![0]!["disposition"]!.GetValue<string>()); Assert.Equal("NotRun", s["checkpoints"]![1]!["disposition"]!.GetValue<string>()); foreach (var c in s["checkpoints"]!.AsArray()) { Assert.Null(c!["frame"]); Assert.Equal("NotEstablished", c["frameSource"]!.GetValue<string>()); } }
     }
     [Fact]
     public async Task AliasesCancellationSchemaAndExistingReportPreserveInputs()

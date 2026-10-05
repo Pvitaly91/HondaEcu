@@ -543,6 +543,11 @@ See [ROADMAP.md](docs/ROADMAP.md) for milestone details and [P28_304_EVIDENCE.md
 
 No license has been selected. Licensing remains an explicit decision for the repository owner.
 
+M2ad adds the [native CAL/RT round-trip](docs/M2AD_CAL_RT_ROUNDTRIP.md):
+PC-only harness schedule to063B, native call54F5, retained below-path state,
+same-frame RT5688 return063E and balanced SSP. Stop before063E; enclosing caller,
+IRQ frame, scheduler, timers, physical output and GUI remain unestablished/not run.
+
 The D0 portable package can also be checked with
 `./scripts/test-desktop-portable.ps1`. It runs an explicit no-window resource
 diagnostic outside the repository with another working directory and no developer

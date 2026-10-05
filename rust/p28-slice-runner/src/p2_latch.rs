@@ -143,6 +143,7 @@ pub fn run(r: Request, response: Response) -> Result<Response, String> {
         response,
         None,
         false,
+        false,
     )
 }
 pub(crate) fn run_chain(
@@ -153,10 +154,12 @@ pub(crate) fn run_chain(
     mut response: Response,
     control_config: Option<crate::post_p2_control::Config>,
     below_enabled: bool,
+    cal_rt_enabled: bool,
 ) -> Result<Response, String> {
     let mut sequences = vec![];
     let mut control_sequences = vec![];
     let mut below_sequences = vec![];
+    let mut roundtrip_sequences = vec![];
     for &pattern in &r.scratch_patterns {
         let (mut cpu, mut bus) =
             prefix::initialize(&r.images[0].rom, pattern, &initial.quartet_prefix);
@@ -181,6 +184,7 @@ pub(crate) fn run_chain(
         let mut checkpoints = vec![];
         let mut control_checkpoints = vec![];
         let mut below_checkpoints = vec![];
+        let mut roundtrip_checkpoints = vec![];
         for (i, call) in calls.iter().enumerate() {
             let before = alternate::state(&cpu, &mut bus);
             let mut p = prefix::checkpoint(&cpu, &mut bus, call, i as u32, pattern);
@@ -204,6 +208,10 @@ pub(crate) fn run_chain(
             let mut disposition = "NotRun";
             let mut provenance = "NoFresh0196";
             let mut generation = None;
+            let mut native_cal = None;
+            let mut native_rt = None;
+            let mut call_frame = None;
+            let mut stack_journal = vec![];
             if !terminal {
                 bus.begin_continuity();
                 if below_enabled {
@@ -216,8 +224,34 @@ pub(crate) fn run_chain(
                     } else {
                         "ConsumerGateBypass0196"
                     };
-                    abi.push([0, cpu.pc as u32, 0x54F5]);
-                    cpu.pc = 0x54F5;
+                    if cal_rt_enabled {
+                        abi.push([0, cpu.pc as u32, 0x063B]);
+                        cpu.pc = 0x063B; // Sole disclosed PC-only scheduler seam.
+                        let output = crate::cal_rt_roundtrip::execute(&mut cpu, &mut bus, true)?;
+                        if output.suffix.stage.result.status != 0 {
+                            return Err("Exact CAL063B instruction not established".into());
+                        }
+                        let all = bus.all_native_snapshot();
+                        let write = all
+                            .iter()
+                            .filter(|a| a[4] == 1)
+                            .enumerate()
+                            .last()
+                            .ok_or("CAL frame write missing")?;
+                        call_frame = Some(crate::cal_rt_roundtrip::Frame {
+                            writer_pc: 0x063B,
+                            event_index: i as u32,
+                            stack_address: output.suffix.entry.ssp as u32,
+                            width: 16,
+                            return_pc: 0x063B + 3,
+                            write_order: write.0 as u32,
+                        });
+                        stack_journal.extend(output.suffix.accesses.iter().copied());
+                        native_cal = Some(output);
+                    } else {
+                        abi.push([0, cpu.pc as u32, 0x54F5]);
+                        cpu.pc = 0x54F5;
+                    }
                     let c = handoff::execute_prefix(&mut cpu, &mut bus);
                     if c.stage.result.status == 0 && cpu.pc == 0x556F {
                         let next = alternate::execute_alternate(&mut cpu, &mut bus);
@@ -371,12 +405,38 @@ pub(crate) fn run_chain(
                                     _ => "BelowContinuationPartial",
                                 };
                                 below = Some(output);
+                                if cal_rt_enabled
+                                    && matches!(
+                                        disposition,
+                                        "BelowSecondP2Strict" | "BelowSecondP2GateBypass"
+                                    )
+                                {
+                                    let output = crate::cal_rt_roundtrip::execute(
+                                        &mut cpu, &mut bus, false,
+                                    )?;
+                                    disposition = if output.suffix.stage.result.status == 0 {
+                                        if provenance == "QuartetDerived0196" {
+                                            "CallReturnStrict"
+                                        } else {
+                                            "CallReturnGateBypass"
+                                        }
+                                    } else {
+                                        "CallerFramePartial"
+                                    };
+                                    stack_journal.extend(output.suffix.accesses.iter().copied());
+                                    native_rt = Some(output);
+                                }
                             }
                         }
                     } else if disposition == "0196AlternatePartial" {
                         disposition = "UpstreamPartial";
                     }
                     consumer = Some(c);
+                    if cal_rt_enabled
+                        && !matches!(disposition, "CallReturnStrict" | "CallReturnGateBypass")
+                    {
+                        disposition = "CallerFramePartial";
+                    }
                 } else {
                     disposition = "NoFresh0196";
                 }
@@ -388,6 +448,8 @@ pub(crate) fn run_chain(
                         | "PostP2ControlGateBypass"
                         | "BelowSecondP2Strict"
                         | "BelowSecondP2GateBypass"
+                        | "CallReturnStrict"
+                        | "CallReturnGateBypass"
                 );
             }
             let journal = if disposition == "NotRun" {
@@ -465,7 +527,7 @@ pub(crate) fn run_chain(
                     },
                 };
                 if below_enabled {
-                    below_checkpoints.push(crate::below_second_p2::Event {
+                    let below_event = crate::below_second_p2::Event {
                         upstream,
                         below,
                         second_p2_after: bus.p2_output_latch().unwrap(),
@@ -473,7 +535,18 @@ pub(crate) fn run_chain(
                         final_tcon0: bus.post_p2_control().unwrap()[0],
                         final_tcon0_generation: tcon0_generation.clone(),
                         all_native_journal,
-                    });
+                    };
+                    if cal_rt_enabled {
+                        roundtrip_checkpoints.push(crate::cal_rt_roundtrip::Event {
+                            below: below_event,
+                            native_cal,
+                            native_rt,
+                            call_frame,
+                            stack_journal,
+                        });
+                    } else {
+                        below_checkpoints.push(below_event);
+                    }
                 } else {
                     control_checkpoints.push(upstream);
                 }
@@ -494,6 +567,13 @@ pub(crate) fn run_chain(
             });
         }
         if below_enabled {
+            if cal_rt_enabled {
+                roundtrip_sequences.push(crate::cal_rt_roundtrip::Sequence {
+                    scratch_pattern: pattern,
+                    machine_instances: 1,
+                    checkpoints: roundtrip_checkpoints,
+                });
+            }
             below_sequences.push(crate::below_second_p2::Sequence {
                 scratch_pattern: pattern,
                 machine_instances: 1,
@@ -501,7 +581,10 @@ pub(crate) fn run_chain(
             });
         }
     }
-    if below_enabled {
+    if cal_rt_enabled {
+        response.entry_contracts = crate::cal_rt_roundtrip::entry_contracts();
+        response.cal_rt_round_trip_sequences = Some(roundtrip_sequences);
+    } else if below_enabled {
         response.entry_contracts = crate::below_second_p2::entry_contracts();
         response.below_second_p2_sequences = Some(below_sequences);
     } else if control_config.is_some() {

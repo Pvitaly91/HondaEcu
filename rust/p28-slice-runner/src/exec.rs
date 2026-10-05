@@ -774,6 +774,10 @@ impl<'a> Exec<'a> {
                 let ret = self.cpu.pc;
                 self.push_sys(ret);
                 self.cpu.pc = target;
+                // CAL addr16, primary3-29. SF is internal A/STACK mode, not PSW.
+                if self.d.mnemonic == "CAL addr16" && self.d.len == 3 {
+                    self.cpu.sf = false;
+                }
             }
             "SCAL" => {
                 let off = self.d.fields.rel8 as i16;
@@ -788,7 +792,10 @@ impl<'a> Exec<'a> {
                 self.push_sys(ret);
                 self.cpu.pc = self.bus.read_code_u16(0x0028 + n * 2);
             }
-            "RT" => self.cpu.pc = self.pop_sys(),
+            "RT" => {
+                self.cpu.pc = self.pop_sys();
+                self.cpu.sf = false; // Primary3-125; normal PC-only return, NOT RTI.
+            }
             "RTI" => {
                 // MSM66201 instruction manual, RTI (3-126): hardware restores
                 // PSW, LRB, A and PC in that order and advances SSP by eight.
@@ -1423,6 +1430,45 @@ mod producer_form_tests {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn cal_addr16_clears_internal_sf_without_touching_psw() {
+        let mut cpu = Cpu::new();
+        let mut bus = Bus::new(vec![0x32, 8, 0, 0, 0, 0, 0, 0, 1], 0xA5);
+        cpu.sf = true;
+        cpu.a = 0x5678;
+        cpu.lrb = 0x21;
+        cpu.set_psw_u16(0xF331);
+        let psw = cpu.psw_u16();
+        bus.begin_native_accesses();
+        step(&mut cpu, &mut bus).unwrap();
+        assert!(!cpu.sf);
+        assert_eq!(
+            (cpu.pc, cpu.ssp, cpu.a, cpu.lrb, cpu.psw_u16()),
+            (8, 0x7FC, 0x5678, 0x21, psw)
+        );
+        assert_eq!(bus.end_native_accesses(), vec![[0, 0x7FE, 16, 1, 3]]);
+    }
+
+    #[test]
+    fn rt_clears_internal_sf_and_retains_callee_registers() {
+        let mut cpu = Cpu::new();
+        let mut bus = Bus::new(vec![1], 0xA5);
+        cpu.ssp = 0x7FC;
+        write_data_u16(&mut cpu, &mut bus, 0x7FE, 0x1234);
+        cpu.sf = true;
+        cpu.a = 0x9ABC;
+        cpu.lrb = 0x21;
+        cpu.set_psw_u16(0x6331);
+        let psw = cpu.psw_u16();
+        bus.begin_native_accesses();
+        step(&mut cpu, &mut bus).unwrap();
+        assert!(!cpu.sf);
+        assert_eq!(
+            (cpu.pc, cpu.ssp, cpu.a, cpu.lrb, cpu.psw_u16()),
+            (0x1234, 0x7FE, 0x9ABC, 0x21, psw)
+        );
+        assert_eq!(bus.end_native_accesses(), vec![[0, 0x7FE, 16, 0, 0x1234]]);
+    }
     use super::*;
 
     // Invented operands; exact opcode33/DD split, primary printed3-119/3-117.

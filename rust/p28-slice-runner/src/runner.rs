@@ -435,6 +435,11 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != crate::cal_rt_roundtrip::OPERATION
+        && request.cal_rt_round_trip_handoff.is_some()
+    {
+        return Err("Foreign M2ad stimulus".into());
+    }
     if request.operation != crate::below_second_p2::OPERATION
         && request.below_second_p2_handoff.is_some()
     {
@@ -690,6 +695,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "p2OutputLatchHandoff" => crate::p2_latch::validate_request(request)?,
         "postP2ControlHandoff" => crate::post_p2_control::validate_request(request)?,
         "belowSecondP2Handoff" => crate::below_second_p2::validate_request(request)?,
+        "calRtRoundTripHandoff" => crate::cal_rt_roundtrip::validate_request(request)?,
         "statefulVtec" => crate::stateful::validate_request(request)?,
         "limiterSequence" => crate::limiter::validate_request(request)?,
         "adaptiveLimiter" => crate::adaptive::validate_request(request)?,
@@ -729,6 +735,9 @@ pub fn run_request(request: Request) -> Result<Response, String> {
     }
     if request.operation == crate::below_second_p2::OPERATION {
         return crate::below_second_p2::run(request, response);
+    }
+    if request.operation == crate::cal_rt_roundtrip::OPERATION {
+        return crate::cal_rt_roundtrip::run(request, response);
     }
     if request.operation == crate::p2_latch::OPERATION {
         return crate::p2_latch::run(request, response);

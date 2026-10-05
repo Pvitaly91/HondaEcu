@@ -39,7 +39,7 @@ public sealed class P28FuelAdditiveCliTests
     {
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var before = w.Snapshot(); var result = await w.RunAsync(args);
         Assert.Equal(CliApplication.VerificationFailed, result.Code); var report = JsonNode.Parse(File.ReadAllText(w.Output))!;
-        Assert.Equal("0.36.0", report["runnerVersion"]!.GetValue<string>()); Assert.Contains("Blocked", report["strictM2i"]!.GetValue<string>());
+        Assert.Equal("0.37.0", report["runnerVersion"]!.GetValue<string>()); Assert.Contains("Blocked", report["strictM2i"]!.GetValue<string>());
         foreach (var sequence in report["sequences"]!.AsArray())
         {
             var first = sequence!["checkpoints"]![0]!; var next = sequence["checkpoints"]![1]!;

@@ -5,6 +5,9 @@ pub mod below_second_p2;
 #[cfg(test)]
 mod below_second_p2_tests;
 pub mod bus;
+pub mod cal_rt_roundtrip;
+#[cfg(test)]
+mod cal_rt_roundtrip_tests;
 pub mod chain;
 pub mod chain_forms;
 pub mod checksum;

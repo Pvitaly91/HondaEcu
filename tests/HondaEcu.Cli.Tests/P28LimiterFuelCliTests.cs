@@ -37,7 +37,7 @@ public sealed class P28LimiterFuelCliTests
     public async Task ActualPartialNativeDecisionReportsNullFuelAndTerminalSuffixWithoutChangingInputs()
     {
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var before = w.Snapshot(); Assert.True(File.Exists(w.Runner)); var r = await w.RunAsync(args);
-        Assert.Equal(CliApplication.VerificationFailed, r.Code); var report = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.36.0", report["runnerVersion"]!.GetValue<string>());
+        Assert.Equal(CliApplication.VerificationFailed, r.Code); var report = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.37.0", report["runnerVersion"]!.GetValue<string>());
         foreach (var sequence in report["sequences"]!.AsArray())
         { var c = sequence!["checkpoints"]!; Assert.Equal("Unresolved", c[0]!["disposition"]!.GetValue<string>()); Assert.Null(c[0]!["request"]); Assert.Null(c[0]!["fuel"]); Assert.Equal("NotRun", c[1]!["disposition"]!.GetValue<string>()); Assert.Null(c[1]!["actual"]!["input"]); Assert.Empty(c[1]!["actual"]!["inputWrites"]!.AsArray()); }
         Assert.Contains("request=NotRun", r.Output); w.AssertUnchanged(before);

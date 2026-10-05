@@ -1,6 +1,6 @@
 # Bounded P28 research runner
 
-Runner **0.36.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
+Runner **0.37.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
 upstream CPU provenance and license are retained in
 [the third-party notices](../../THIRD_PARTY_NOTICES.md). No OEM image or native
 program fixture is distributed here.
@@ -22,6 +22,7 @@ A successful process exit is not an execution match or a hardware result.
 
 | Operation | Scope |
 |---|---|
+| `calRtRoundTripHandoff` | M2ad: PC-only schedule063B; native CAL54F5, retained M2ac below path and same-frame RT5688→063E; balanced SSP, stop before063E; no enclosing caller/IRQ recovery |
 | `p28Batch` | Existing compact/threshold seeded cases |
 | `producerBatch` | Existing G and staged F cases, with threshold comparisons |
 | `checksumBatch` | Existing 512-call checksum state, exact ordered read coverage |

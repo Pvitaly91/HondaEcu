@@ -483,6 +483,13 @@ hardware/physical limits stay unchanged. Quartet consumer NotRun; firmware BIN0.
 
 Each revision receives explicit evidence and identity rules; similar size or family name is insufficient.
 
+## M2ad — bounded caller-frame milestone
+
+[M2ad CAL/RT](M2AD_CAL_RT_ROUNDTRIP.md) adds native frame creation at063B and
+same-frame return at5688→063E on the retained M2ac machine. Only the scheduler
+PC seam remains technical. No enclosing caller/IRQ/scheduler recovery; no
+execution after063E, timer evolution, physical output, GUI or hardware claim.
+
 ## M5 — P07 research
 
 - P07 main-CPU research

@@ -142,11 +142,11 @@ public static class P28Word0196HandoffValidator
         return Enumerable.Range(0, 3).Select(p => new P28Word0196HandoffSequence(id, new[] { 0, 85, 170 }[p], reports[p])).ToArray();
     }
     private static int N(JsonElement e, string k) => e.GetProperty(k).GetInt32();
-    internal static int[][] ValidateConsumer(JsonElement suffix, JsonElement prefixExit, P28Word0196Oracle own, int[] registers, bool rawPrefix = false)
+    internal static int[][] ValidateConsumer(JsonElement suffix, JsonElement prefixExit, P28Word0196Oracle own, int[] registers, bool rawPrefix = false, bool nativeCall = false)
     {
         P28LimiterScenario.Shape(suffix, "entry", "exit", "stage", "accesses"); var entry = suffix.GetProperty("entry"); var exit = suffix.GetProperty("exit"); P28FuelFactorValidator.ValidateBoundary(entry); P28FuelFactorValidator.ValidateBoundary(exit);
         var expectedEntry = JsonNode.Parse(prefixExit.GetRawText())!; expectedEntry["pc"] = 0x54F5;
-        Require(N(prefixExit, "pc") == 0x5ED && Equal(entry, JsonSerializer.SerializeToElement(expectedEntry)) && entry.GetProperty("registers").EnumerateArray().Select(n => n.GetInt32()).SequenceEqual(registers), "PC-only retained entry violated;fake frame or seed.");
+        Require(N(prefixExit, "pc") == (nativeCall ? 0x54F5 : 0x5ED) && Equal(entry, JsonSerializer.SerializeToElement(expectedEntry)) && entry.GetProperty("registers").EnumerateArray().Select(n => n.GetInt32()).SequenceEqual(registers), "PC-only retained entry violated;fake frame or seed.");
         var stage = suffix.GetProperty("stage"); P28LimiterScenario.Shape(stage, "result", "writes", "events", "sspAfter"); var result = P28AcquisitionValidator.ParseStage(stage.GetProperty("result"), 6, 0, [], null)!;
         var events = Matrix(stage.GetProperty("events"), 8, 6); Require(events.Length == result.Steps && events.Length <= own.Events.Count && events.Select(a => string.Join(',', a)).SequenceEqual(own.Events.Take(events.Length).Select(a => string.Join(',', a))), "Wrong software instruction/compare/flags/branch.");
         Require(result.Trace.Count == events.Length, "Missing mandatory trace."); for (var n = 0; n < events.Length; n++) Require(N(result.Trace[n], "pc") == events[n][0] && N(result.Trace[n], "nextPc") == events[n][1] && N(result.Trace[n], "accumulator") == events[n][3] && N(result.Trace[n], "psw") == events[n][5], "Detached trace.");

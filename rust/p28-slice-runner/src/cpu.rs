@@ -18,6 +18,9 @@ pub struct Cpu {
     pub cf: bool, // Carry / Borrow Flag (CF=1 on borrow for SUB/CMP!)
     pub hc: bool, // Half Carry Flag
     pub dd: bool, // Data Width Mode: true = 16-bit Word mode, false = 8-bit Byte mode
+    // Internal nX-8/300 stack-operand mode, NOT a PSW bit (MAC66K 4-73).
+    // This bounded executor initializes A-mode; STACK operands are not admitted.
+    pub sf: bool,
     // PSW bits with no named flag. The ROM uses several as scratch (PSWH.0 is
     // MIE), so they must survive PUSHS/POPS and interrupt entry/exit rather
     // than being dropped.
@@ -41,6 +44,7 @@ impl Cpu {
             cf: false,
             hc: false,
             dd: false, // Reset PSW is 0x0CC8; DD starts in byte mode.
+            sf: false,
             cycles: 0,
             instructions: 0,
             halted: false,
