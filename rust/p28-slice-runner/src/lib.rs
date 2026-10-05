@@ -21,6 +21,9 @@ pub mod exec;
 pub mod p2_latch;
 #[cfg(test)]
 mod p2_latch_tests;
+pub mod post_p2_control;
+#[cfg(test)]
+mod post_p2_control_tests;
 pub mod quartet_handoff;
 #[cfg(test)]
 mod quartet_handoff_tests;

@@ -435,6 +435,11 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != crate::post_p2_control::OPERATION
+        && request.post_p2_control_handoff.is_some()
+    {
+        return Err("M2ab stimulus is unavailable to historical operations".into());
+    }
     if request.operation != crate::p2_latch::OPERATION && request.p2_output_latch_handoff.is_some()
     {
         return Err("M2aa stimulus is unavailable to other operations".into());
@@ -678,6 +683,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "word0196ConsumerHandoff" => crate::word0196_handoff::validate_request(request)?,
         "word0196SoftwareAlternateChain" => crate::word0196_alternate::validate_request(request)?,
         "p2OutputLatchHandoff" => crate::p2_latch::validate_request(request)?,
+        "postP2ControlHandoff" => crate::post_p2_control::validate_request(request)?,
         "statefulVtec" => crate::stateful::validate_request(request)?,
         "limiterSequence" => crate::limiter::validate_request(request)?,
         "adaptiveLimiter" => crate::adaptive::validate_request(request)?,
@@ -712,6 +718,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == crate::post_p2_control::OPERATION {
+        return crate::post_p2_control::run(request, response);
+    }
     if request.operation == crate::p2_latch::OPERATION {
         return crate::p2_latch::run(request, response);
     }

@@ -133,31 +133,59 @@ pub(crate) fn execute_p2(cpu: &mut Cpu, bus: &mut Bus) -> Output {
         peripheral_accesses,
     }
 }
-pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
+pub fn run(r: Request, response: Response) -> Result<Response, String> {
     let s = r.p2_output_latch_handoff.as_ref().expect("validated");
+    run_chain(
+        &r,
+        &s.initial_state,
+        &s.calls,
+        s.p2_output_latch,
+        response,
+        None,
+    )
+}
+pub(crate) fn run_chain(
+    r: &Request,
+    initial: &handoff::Initial,
+    calls: &[prefix::Call],
+    latch: u8,
+    mut response: Response,
+    control_config: Option<crate::post_p2_control::Config>,
+) -> Result<Response, String> {
     let mut sequences = vec![];
+    let mut control_sequences = vec![];
     for &pattern in &r.scratch_patterns {
         let (mut cpu, mut bus) =
-            prefix::initialize(&r.images[0].rom, pattern, &s.initial_state.quartet_prefix);
+            prefix::initialize(&r.images[0].rom, pattern, &initial.quartet_prefix);
         bus.configure_scoped_access(vec![[0, 4096]], 4096);
         let prior = read_data_u8(&cpu, &mut bus, 0x128);
         write_data_u8(
             &mut cpu,
             &mut bus,
             0x128,
-            (prior & !4) | if s.initial_state.bit0128_2 { 4 } else { 0 },
+            (prior & !4) | if initial.bit0128_2 { 4 } else { 0 },
         );
-        write_data_u8(&mut cpu, &mut bus, 0x117, s.initial_state.byte0117);
+        write_data_u8(&mut cpu, &mut bus, 0x117, initial.byte0117);
         let identity = (&cpu as *const Cpu, &bus as *const Bus);
-        bus.initialize_p2_output_latch(s.p2_output_latch)?;
+        bus.initialize_p2_output_latch(latch)?;
+        if let Some(c) = control_config {
+            bus.initialize_post_p2_control(c.tcon0, c.trnsit_flags)?;
+        }
         let mut retained_generation = None;
+        let mut tcon0_generation = None;
+        let mut trnsit_generation = None;
         let mut terminal = false;
         let mut checkpoints = vec![];
-        for (i, call) in s.calls.iter().enumerate() {
+        let mut control_checkpoints = vec![];
+        for (i, call) in calls.iter().enumerate() {
             let before = alternate::state(&cpu, &mut bus);
             let mut p = prefix::checkpoint(&cpu, &mut bus, call, i as u32, pattern);
             let p2_before = bus.p2_output_latch().expect("initial snapshot");
             let incoming_p2_generation = retained_generation.clone();
+            let control_before = bus.post_p2_control().unwrap_or([0, 0]);
+            let incoming_tcon0_generation = tcon0_generation.clone();
+            let incoming_trnsit_generation = trnsit_generation.clone();
+            let mut control = None;
             let mut p2 = None;
             let mut consumer = None;
             let mut alternate = None;
@@ -244,6 +272,53 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                             }
                         };
                         p2 = Some(output);
+                        if control_config.is_some()
+                            && matches!(
+                                disposition,
+                                "QuartetDerivedP2LatchStrict" | "GateBypassP2LatchControl"
+                            )
+                        {
+                            // Actual native exit PC, actual retained CPU/Bus; no host jump or reseed.
+                            let output =
+                                crate::post_p2_control::execute_control(&mut cpu, &mut bus);
+                            let order = bus
+                                .continuity_snapshot()
+                                .iter()
+                                .filter(|a| a[0] == 1 && a[4] == 1)
+                                .count() as u32
+                                + 1;
+                            for (n, w) in output
+                                .control_accesses
+                                .iter()
+                                .filter(|a| a[3] == 1)
+                                .enumerate()
+                            {
+                                let g = prefix::Generation {
+                                    writer_pc: w[0],
+                                    event_index: i as u32,
+                                    write_order: order + n as u32,
+                                    value: w[4],
+                                };
+                                if w[1] == 0x40 {
+                                    tcon0_generation = Some(g);
+                                } else {
+                                    trnsit_generation = Some(g);
+                                }
+                            }
+                            disposition = match output.suffix.stage.result.status {
+                                0 => {
+                                    if provenance == "QuartetDerived0196" {
+                                        "PostP2ControlStrict"
+                                    } else {
+                                        "PostP2ControlGateBypass"
+                                    }
+                                }
+                                3 => "BudgetExceeded",
+                                2 => "ExecutionError",
+                                _ => "ControlPartial",
+                            };
+                            control = Some(output);
+                        }
                     } else if disposition == "0196AlternatePartial" {
                         disposition = "UpstreamPartial";
                     }
@@ -253,7 +328,10 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                 }
                 terminal = !matches!(
                     disposition,
-                    "QuartetDerivedP2LatchStrict" | "GateBypassP2LatchControl"
+                    "QuartetDerivedP2LatchStrict"
+                        | "GateBypassP2LatchControl"
+                        | "PostP2ControlStrict"
+                        | "PostP2ControlGateBypass"
                 );
             }
             let journal = if disposition == "NotRun" {
@@ -269,7 +347,7 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
             bus.configure_scoped_access(vec![[0x300, 0x301], [0x350, 0x351], [0x3E0, 0x3E1]], 4096);
             let canaries = [0x300, 0x350, 0x3E0].map(|a| read_data_u8(&cpu, &mut bus, a));
             assert_eq!(identity, (&cpu as *const Cpu, &bus as *const Bus));
-            checkpoints.push(Event {
+            let event = Event {
                 p2,
                 p2_before,
                 p2_after: bus.p2_output_latch().unwrap(),
@@ -293,15 +371,41 @@ pub fn run(r: Request, mut response: Response) -> Result<Response, String> {
                     continuity_journal: journal,
                     canaries,
                 },
-            });
+            };
+            if control_config.is_some() {
+                control_checkpoints.push(crate::post_p2_control::Event {
+                    p2: event,
+                    control,
+                    control_before,
+                    control_after: bus.post_p2_control().unwrap(),
+                    incoming_tcon0_generation,
+                    tcon0_generation: tcon0_generation.clone(),
+                    incoming_trnsit_generation,
+                    trnsit_generation: trnsit_generation.clone(),
+                });
+            } else {
+                checkpoints.push(event);
+            }
         }
         sequences.push(Sequence {
             scratch_pattern: pattern,
             machine_instances: 1,
             checkpoints,
         });
+        if control_config.is_some() {
+            control_sequences.push(crate::post_p2_control::Sequence {
+                scratch_pattern: pattern,
+                machine_instances: 1,
+                checkpoints: control_checkpoints,
+            });
+        }
     }
-    response.entry_contracts = entry_contracts();
-    response.p2_latch_sequences = Some(sequences);
+    if control_config.is_some() {
+        response.entry_contracts = crate::post_p2_control::entry_contracts();
+        response.post_p2_control_sequences = Some(control_sequences);
+    } else {
+        response.entry_contracts = entry_contracts();
+        response.p2_latch_sequences = Some(sequences);
+    }
     Ok(response)
 }

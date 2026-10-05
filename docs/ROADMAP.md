@@ -1,5 +1,16 @@
 # Roadmap
 
+M2ab delivers a separate [post-P2 control-register architectural handoff](M2AB_POST_P2_CONTROL_HANDOFF.md).
+Runner0.35.0: ONE Cpu/Bus from quartet/native0196 through P2 to TRNSIT0046
+or TCON00040. TRNSIT is four readable/writable flags, not a command/strobe;
+TCON0 is limited to stopped realtime-output raw snapshots83/87/8B/8F.
+Both branch-specific native effects, flags and generations are independently
+checked; stop-before559D PSWH/MIE and55D2 unadmitted ROLB A. No timer evolution,
+TM0/TMR0 observation/execution, IRQ delivery, elapsed time, pins or hardware.
+Old M2aa0.34 operation/boundaries and M2z/y/x/w/P1 contracts remain unchanged.
+Read-only CLI, closed once-initial source policy, invented public tests/private
+actual evidence; full privacy/preservation and exact-SHA CI. No automatic next stage.
+
 M2aa delivers a separate [bounded P2 architectural output-data handoff](M2AA_P2_OUTPUT_LATCH_HANDOFF.md).
 Runner0.34.0 continues native M2z software flow through one byte5596/55C5 RMW,
 then stops5599/55C8. Primary ISA, matching P2/P2IO/P2SF peripheral evidence and

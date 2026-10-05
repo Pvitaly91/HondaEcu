@@ -39,7 +39,7 @@ public sealed class P28Data0136ProducerCliTests
     {
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var before = w.Snapshot();
         Assert.Equal(CliApplication.VerificationFailed, (await w.RunAsync(args)).Code); w.AssertUnchanged(before);
-        var report = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.34.0", report["runnerVersion"]!.GetValue<string>());
+        var report = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.35.0", report["runnerVersion"]!.GetValue<string>());
         foreach (var seq in report["sequences"]!.AsArray()) { Assert.Null(seq!["checkpoints"]![0]!["nativeWord0136"]); Assert.Equal("NotRun", seq["checkpoints"]![1]!["disposition"]!.GetValue<string>()); }
         Assert.Equal("NotEstablished", report["producerTo2330SchedulerSeam"]!.GetValue<string>());
     }

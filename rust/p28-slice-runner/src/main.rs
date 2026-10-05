@@ -27,7 +27,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                     "adaptiveLimiter", "idleTarget", "fuelMapLookup", "ignitionMapLookup",
                     "vtecFuelChain", "ignitionSelectorChain", "ignitionCorrectionChain",
                     "checksumBatch", "fuelCalculationChain", "fuelAdditiveCorrectionChain",
-                    "fuelFactorProductionChain", "limiterFuelGateChain", "adaptiveLimiterFuelGateChain", "fuelPostStoreChain", "fuelPostStoreConsumerChain", "fuelPostSelectionCriticalChain", "fuelCommonResultConsumerChain", "fuelDivisionDecisionChain", "data0136TechnicalProducer", "data0136DivisionHandoff", "p2OutputLatchHandoff"
+                    "fuelFactorProductionChain", "limiterFuelGateChain", "adaptiveLimiterFuelGateChain", "fuelPostStoreChain", "fuelPostStoreConsumerChain", "fuelPostSelectionCriticalChain", "fuelCommonResultConsumerChain", "fuelDivisionDecisionChain", "data0136TechnicalProducer", "data0136DivisionHandoff", "p2OutputLatchHandoff", "postP2ControlHandoff"
                 ]
             })
         );

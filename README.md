@@ -1,5 +1,12 @@
 # HondaEcu
 
+M2ab adds a separate [bounded post-P2 control-register handoff](docs/M2AB_POST_P2_CONTROL_HANDOFF.md).
+Runner0.35.0 continues the same Cpu/Bus through native TRNSIT0046 or stopped
+TCON00040 RMW; stop-before559D/55D2. Independent C# validates flags, storage,
+0196/P2/control generations and separate native journals. Only narrow once-initial
+architectural snapshots, no timer evolution/elapsed time/IRQ/pins/GUI/hardware/BIN.
+Historical M2aa boundaries remain unchanged.
+
 M2aa validates a separate [P2 output-data latch handoff](docs/M2AA_P2_OUTPUT_LATCH_HANDOFF.md)
 with `research p28-fuel p2-latch-check`,runner0.34.0. Matching primary P2 evidence
 admits byte RMW only under ReviewedStartupPrecondition (all-output/primary port).

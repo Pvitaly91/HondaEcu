@@ -261,6 +261,11 @@ pub struct Bus {
     p2_output_latch: Option<u8>,
     p2_access: bool,
     p2_accesses: Vec<[u32; 5]>,
+    // M2ab only: stopped realtime-output control and transition flag storage.
+    // No clock, pin edges, command register, pending IRQ or generic SFR map.
+    post_p2_control: Option<[u8; 2]>,
+    control_access: Option<(u16, u16)>, // exact address and native instruction PC
+    control_accesses: Vec<[u32; 5]>,
     limiter_p4: Option<u8>,
     adaptive_ie: Option<u16>,
     decision_events: Option<Vec<[u32; 8]>>,
@@ -292,6 +297,9 @@ impl Bus {
             p2_output_latch: None,
             p2_access: false,
             p2_accesses: vec![],
+            post_p2_control: None,
+            control_access: None,
+            control_accesses: vec![],
             limiter_p4: None,
             adaptive_ie: None,
             decision_events: None,
@@ -320,6 +328,35 @@ impl Bus {
 
     pub fn take_fault(&self) -> Option<AccessFault> {
         self.fault.borrow_mut().take()
+    }
+    pub(crate) fn initialize_post_p2_control(
+        &mut self,
+        tcon0: u8,
+        trnsit_flags: u8,
+    ) -> Result<(), String> {
+        if self.post_p2_control.is_some() || tcon0 & !0x0C != 0x83 || trnsit_flags > 15 {
+            return Err(
+                "M2ab requires once-only stopped realtime-output TCON0 and four TRNSIT flags"
+                    .into(),
+            );
+        }
+        self.post_p2_control = Some([tcon0, trnsit_flags]);
+        Ok(())
+    }
+    pub(crate) fn post_p2_control(&self) -> Option<[u8; 2]> {
+        self.post_p2_control
+    }
+    pub(crate) fn set_control_access(&mut self, capability: Option<(u16, u16)>) {
+        self.control_access = capability;
+        self.control_accesses.clear();
+    }
+    pub(crate) fn control_accesses(&self) -> Vec<[u32; 5]> {
+        self.control_accesses.clone()
+    }
+    fn control_enabled(&self, address: u16) -> bool {
+        self.post_p2_control.is_some()
+            && self.native_accesses.is_some()
+            && self.control_access == Some((address, self.native_pc))
     }
     pub fn program_reads(&self) -> Vec<u16> {
         self.program_reads.borrow().clone()
@@ -551,6 +588,22 @@ impl Bus {
             return 0;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
+            if matches!(address, 0x40 | 0x46) && self.control_enabled(address) {
+                let state = self.post_p2_control.unwrap();
+                let value = if address == 0x40 {
+                    state[0]
+                } else {
+                    state[1] | 0xF0
+                };
+                self.control_accesses.push([
+                    self.native_pc as u32,
+                    address as u32,
+                    8,
+                    0,
+                    value as u32,
+                ]);
+                return value;
+            }
             if address == 0x24 && self.p2_access && self.native_accesses.is_some() {
                 if let Some(value) = self.p2_output_latch {
                     self.p2_accesses
@@ -632,6 +685,31 @@ impl Bus {
             return;
         }
         if !(0x80..RAM_SIZE).contains(&(address as usize)) {
+            if matches!(address, 0x40 | 0x46) && self.control_enabled(address) {
+                let state = self.post_p2_control.as_mut().unwrap();
+                if address == 0x40 {
+                    // Only the reviewed TR0OUT bit may change. RUN/mode/clock/buffer
+                    // changes would need separate primary evidence and admission.
+                    if value & !4 != state[0] & !4 {
+                        self.record_fault("data", address as u32, "unadmitted-control-side-effect");
+                        return;
+                    }
+                    state[0] = value;
+                } else {
+                    state[1] = value & 15;
+                } // nonexistent bits always read as 1
+                self.control_accesses.push([
+                    self.native_pc as u32,
+                    address as u32,
+                    8,
+                    1,
+                    value as u32,
+                ]);
+                if self.journal_writes {
+                    self.data_writes.push([address as u32, 8, value as u32]);
+                }
+                return;
+            }
             if address == 0x24
                 && self.p2_access
                 && self.native_accesses.is_some()
@@ -676,6 +754,10 @@ impl Bus {
             if self.journal_writes {
                 self.data_writes.push([address as u32, 16, value as u32]);
             }
+            return;
+        }
+        if address < 0x80 && self.post_p2_control.is_some() {
+            self.record_fault("data", address as u32, "write-word-control");
             return;
         }
         if address < 0x80
