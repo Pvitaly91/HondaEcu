@@ -1,5 +1,12 @@
 # Roadmap
 
+M2ai records the [DATA019B.2 ownership boundary](M2AI_DATA019B2_OWNER_PROVENANCE.md):
+whole listed-ROM extent audit, per-bit ownership rules, conditional571F source
+bit1 and skipped enclosing0611/0635 caller candidates. Runtime owner and strict
+5722 handoff remain NotEstablished/NotRun; no new operation/version/input.
+M2ah Research/Blocked, M2afAA and M2tJgt blockers remain unchanged. No automatic
+M2aj,5725/5733, later live-ins/timers/return/scheduler/IRQ/GUI/hardware/BIN.
+
 M2ah records the [native DATA0136 software-tail prefix boundary](M2AH_DATA0136_SOFTWARE_TAIL.md),
 separate runner0.40.0 operation. Actual M2ag NoWrite exit5719 continues on the same
 CPU/Bus through CMP5719/JNE571D; STOP before5722/019B.2, whose semantic owner is

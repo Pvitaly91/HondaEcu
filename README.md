@@ -1,5 +1,12 @@
 # HondaEcu
 
+M2ai adds [DATA019B.2 semantic-owner provenance research](docs/M2AI_DATA019B2_OWNER_PROVENANCE.md).
+All11,499 listed extents match the original. The conditional571F shift derives
+bit2 from old bit1; earlier0611/0635 calls are skipped by the disclosed caller
+seam. No actual same-machine owner/handoff is established. Runner0.40.0 stays
+unchanged, no new operation/inputs; M2ah still STOPs before5722. Independent
+invented per-bit tests cannot promote scratch/reset values or bit0 RMW ownership.
+
 M2ah adds separate [post-NoWrite software-tail research](docs/M2AH_DATA0136_SOFTWARE_TAIL.md),
 runner0.40.0. Actual M2ag5719 state executes native byte compare/JNE and stops
 BEFORE5722:019B.2 has no authorized semantic owner; scratch canary is not a branch
