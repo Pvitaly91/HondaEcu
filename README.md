@@ -548,6 +548,11 @@ PC-only harness schedule to063B, native call54F5, retained below-path state,
 same-frame RT5688 return063E and balanced SSP. Stop before063E; enclosing caller,
 IRQ frame, scheduler, timers, physical output and GUI remain unestablished/not run.
 
+M2ae adds the [post-return selector producer/handoff](docs/M2AE_POST_RETURN_SELECTOR_HANDOFF.md):
+native RT exit063E→064A, once-initial selector and retained next-event0584
+generation/slot proof, without per-event host013C writes. Stop before064C;
+retained0117 can terminate later callee flow without repair. No recovered loop.
+
 The D0 portable package can also be checked with
 `./scripts/test-desktop-portable.ps1`. It runs an explicit no-window resource
 diagnostic outside the repository with another working directory and no developer

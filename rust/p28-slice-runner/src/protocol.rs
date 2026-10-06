@@ -25,6 +25,7 @@ pub struct Request {
     pub post_p2_control_handoff: Option<crate::post_p2_control::Stimulus>,
     pub below_second_p2_handoff: Option<crate::below_second_p2::Stimulus>,
     pub cal_rt_round_trip_handoff: Option<crate::cal_rt_roundtrip::Stimulus>,
+    pub post_return_selector_handoff: Option<crate::post_return_selector::Stimulus>,
     pub stateful_vtec: Option<crate::stateful::Stimulus>,
     pub integrated_chain: Option<crate::chain::Stimulus>,
     pub limiter_sequence: Option<crate::limiter::Stimulus>,
@@ -112,6 +113,8 @@ pub struct Response {
     pub below_second_p2_sequences: Option<Vec<crate::below_second_p2::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cal_rt_round_trip_sequences: Option<Vec<crate::cal_rt_roundtrip::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub post_return_selector_sequences: Option<Vec<crate::post_return_selector::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stateful_sequences: Option<Vec<crate::stateful::SequenceResult>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -234,6 +237,7 @@ impl Response {
                 "byte-rol-off-through-carry-preserves-noncarry-flags",
                 "byte-rol-a-through-carry-preserves-noncarry-flags",
                 "cal-addr16-rt-clears-internal-stack-flag",
+                "byte-incb-r0-half-carry",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],
@@ -253,6 +257,7 @@ impl Response {
             post_p2_control_sequences: None,
             below_second_p2_sequences: None,
             cal_rt_round_trip_sequences: None,
+            post_return_selector_sequences: None,
             stateful_sequences: None,
             chain_sequences: None,
             limiter_sequences: None,

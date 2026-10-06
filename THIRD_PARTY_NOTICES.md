@@ -46,6 +46,11 @@ from opcode-table ancestry.
 
 ### Opcode-table ancestry
 
+[M2ae](docs/M2AE_POST_RETURN_SELECTOR_HANDOFF.md) corrects only compact INCB r0
+half carry after a failing invented decoded regression and complete primary
+3-61 visual review. No other increment form, decoder table, RTI, dependency or
+OEM program fixture is imported or promoted by this correction.
+
 [M2l](docs/M2L_ADDITIVE_FUEL_CORRECTION_CHAIN.md) fixes two exact executor forms
 after failing decoded tests and primary-manual visual checks: word ROL A33 rotates
 through CF and preserves non-CF flags (printed3-117); word ADD A,er0/off-page

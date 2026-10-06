@@ -542,6 +542,16 @@ impl<'a> Exec<'a> {
                 if base == "INC" && byte && args[0] == Arg::Mem(Mem::Direct) {
                     self.cpu.hc = v & 15 == 15;
                 }
+                // M2ae compact A8 only, primary3-61. No other rN promotion.
+                if base == "INC"
+                    && byte
+                    && args[0] == Arg::R(0)
+                    && self.d.mnemonic == "INCB r0"
+                    && self.d.len == 1
+                    && FULL_OPCODES[self.d.index].bytes_pat == ["A8"]
+                {
+                    self.cpu.hc = v & 15 == 15;
+                }
                 // M1j DECB N16[X1], manual 3-56: CF/DD preserved.
                 if base == "DEC" && byte && args[0] == Arg::Mem(Mem::IdxReg(Reg::X1)) {
                     self.cpu.hc = v & 15 == 0;
@@ -1430,6 +1440,52 @@ mod producer_form_tests {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn m2ae_incb_r0_exact_updates_halfcarry_and_retains_all_other_fields() {
+        // Invented single decoded instruction; primary printed3-61, not OEM code.
+        for lrb in [0x21, 0x143] {
+            let address = lrb << 3;
+            let mut cpu = Cpu::new();
+            let mut bus = Bus::new(vec![0xA8], 0xA5);
+            for value in 0u16..=255 {
+                for dd in [false, true] {
+                    for carry in [false, true] {
+                        for old_hc in [false, true] {
+                            cpu.pc = 0;
+                            cpu.set_psw_u16(0x0333);
+                            cpu.dd = dd;
+                            cpu.cf = carry;
+                            cpu.hc = old_hc;
+                            cpu.lrb = lrb;
+                            cpu.a = 0xBE42;
+                            write_data_u8(&mut cpu, &mut bus, address, value as u8);
+                            let before = cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_HC_BIT);
+                            bus.begin_native_accesses();
+                            bus.set_native_pc(0);
+                            let d = step(&mut cpu, &mut bus).unwrap();
+                            assert_eq!((d.mnemonic, d.len), ("INCB r0", 1));
+                            let next = (value as u8).wrapping_add(1);
+                            assert_eq!(
+                                bus.end_native_accesses(),
+                                [
+                                    [0, u32::from(address), 8, 0, u32::from(value)],
+                                    [0, u32::from(address), 8, 1, u32::from(next)]
+                                ]
+                            );
+                            assert_eq!(cpu.hc, value & 15 == 15, "r0={value:02X};priorHC={old_hc}");
+                            assert_eq!(cpu.zf, next == 0);
+                            assert_eq!(
+                                cpu.psw_u16() & !(Cpu::PSW_ZF_BIT | Cpu::PSW_HC_BIT),
+                                before
+                            );
+                            assert_eq!((cpu.a, cpu.lrb, cpu.ssp, cpu.pc), (0xBE42, lrb, 0x7FE, 1));
+                            assert_eq!(read_data_u8(&cpu, &mut bus, address + 1), 0xA5);
+                        }
+                    }
+                }
+            }
+        }
+    }
     #[test]
     fn cal_addr16_clears_internal_sf_without_touching_psw() {
         let mut cpu = Cpu::new();

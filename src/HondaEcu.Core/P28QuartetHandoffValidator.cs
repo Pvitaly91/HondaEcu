@@ -83,7 +83,7 @@ public static class P28QuartetHandoffValidator
         IReadOnlyList<int> offsets = child is null ? [] : Enumerable.Range(0, original.Size).Where(i => original.Span[i] != child.Span[i]).ToArray();
         return new(1, scenario.Purpose, original.Hash, profile.Id, scenario.Digest, version, scenario.Mutation, offsets, sequences, comparisons, contract);
     }
-    internal static IReadOnlyList<P28QuartetHandoffSequence> Analyze(RomImage image, P28QuartetHandoffScenario scenario, JsonElement root, string id, Continuation? continuation = null)
+    internal static IReadOnlyList<P28QuartetHandoffSequence> Analyze(RomImage image, P28QuartetHandoffScenario scenario, JsonElement root, string id, Continuation? continuation = null, byte? initialRetainedSelector = null)
     {
         P28LimiterScenario.Shape(root, "protocolVersion", "operation", "runnerVersion", "upstreamCommit", "localSemanticFixes", "entryContracts", "compactRows", "thresholdRows", "diagnostics", "syntheticResult", "quartetHandoffSequences");
         _ = SliceRunnerIdentity.Validate(root, Operation); Require(Equal(root.GetProperty("entryContracts"), ExpectedContracts()), "M2x contract differs.");
@@ -100,6 +100,7 @@ public static class P28QuartetHandoffValidator
             var pattern = new[] { 0, 85, 170 }[p]; var s = seq[p]; P28LimiterScenario.Shape(s, "scratchPattern", "machineInstances", "checkpoints");
             Require(N(s, "scratchPattern") == pattern && N(s, "machineInstances") == 1 && s.GetProperty("checkpoints").GetArrayLength() == scenario.Calls.Count, "Second machine/missing events.");
             var ownPrefix = new P28PostSelectionCriticalHistory(image, scenario.PrefixScenario, pattern); var ram = InitialRam(pattern, scenario); var scb1 = Enumerable.Repeat(pattern, 8).ToArray(); scb1[6] = 0x80; scb1[7] = 2;
+            if (initialRetainedSelector is { } initialSelector) ram[0x13C] = initialSelector;
             var scb2 = Enumerable.Repeat(pattern, 8).ToArray();
             var stopped = false; JsonElement prior = default; var rows = new List<P28QuartetHandoffCheckpoint>();
             for (var i = 0; i < scenario.Calls.Count; i++)
@@ -121,11 +122,11 @@ public static class P28QuartetHandoffValidator
                 var ownConsumerPsw = 0;
                 if (!stopped && prefix.Disposition == "StrictMatch")
                 {
-                    var own = ownPrefix.Step(scenario.Calls[i].Prefix); var mapping = P28QuartetHandoffModel.Select(scenario.Calls[i].Selector013c);
-                    var expectedSource = new[] { new[] { 0x13C, 8, (int)scenario.Calls[i].Selector013c } }; Require(Equal(r.GetProperty("sourceWrites"), JsonSerializer.SerializeToElement(expectedSource)), "Hidden selector source."); host.AddRange(expectedSource); ram[0x13C] = mapping.Selector013c;
+                    var own = ownPrefix.Step(scenario.Calls[i].Prefix); var mapping = P28QuartetHandoffModel.Select(initialRetainedSelector is null ? scenario.Calls[i].Selector013c : (byte)ram[0x13C]);
+                    var expectedSource = initialRetainedSelector is null ? new[] { new[] { 0x13C, 8, (int)scenario.Calls[i].Selector013c } } : Array.Empty<int[]>(); Require(Equal(r.GetProperty("sourceWrites"), JsonSerializer.SerializeToElement(expectedSource)), "Hidden selector source."); host.AddRange(expectedSource); ram[0x13C] = mapping.Selector013c;
                     Require(Equal(r.GetProperty("abiWrites"), JsonSerializer.SerializeToElement(new[] { new[] { 0, 0x22B1, 0x584 }, new[] { 1, own.Oracle.Machine.Psw, 0x1DCA }, new[] { 2, 0x20, 0x21 } })), "Hidden X1/A/USP/frame ABI seed.");
                     Require(consumer.ValueKind == JsonValueKind.Object, "Completed prefix lacks consumer.");
-                    var model = P28QuartetHandoffEvidence.Build(own.Oracle.Machine.Accumulator, scenario.Calls[i].Selector013c, (byte)ram[0x124], (byte)ram[0x125], (byte)ram[0x12A], own.After.CommonWords03b6, new(ram));
+                    var model = P28QuartetHandoffEvidence.Build(own.Oracle.Machine.Accumulator, (byte)mapping.Selector013c, (byte)ram[0x124], (byte)ram[0x125], (byte)ram[0x12A], own.After.CommonWords03b6, new(ram));
                     var count = ValidateConsumer(consumer, f.GetProperty("critical").GetProperty("exit"), model, ram, pattern, scb2);
                     ownConsumerPsw = model.Psw;
                     var accesses = model.Accesses.Take(count).ToArray(); actualNative.AddRange(accesses); foreach (var a in accesses.Where(a => a[3] == 1)) ram[a[1]] = a[4];
@@ -148,7 +149,7 @@ public static class P28QuartetHandoffValidator
                 Require(r.GetProperty("disposition").GetString() == disposition, "False completion/disposition.");
                 Require(Equal(r.GetProperty("quartetGenerations"), JsonSerializer.SerializeToElement(generations, JsonDefaults.Create())) && Equal(r.GetProperty("selectedGeneration"), JsonSerializer.SerializeToElement(selected, JsonDefaults.Create())) && Equal(r.GetProperty("resultGeneration"), JsonSerializer.SerializeToElement(resultGeneration, JsonDefaults.Create())), "Stale/neighbor/same-value generation substituted.");
                 Require(Equal(r.GetProperty("selectedSlot"), JsonSerializer.SerializeToElement(selectedSlot)) && Equal(r.GetProperty("selectedAddress"), JsonSerializer.SerializeToElement(selectedAddress)), "Correct value from wrong slot.");
-                ValidateJournal(r, actualNative, host, selectedAddress, selected);
+                ValidateJournal(r, actualNative, host, selectedAddress, selected, initialRetainedSelector is not null);
                 foreach (var a in Matrix(r.GetProperty("continuityJournal"), 6, 32768).Where(a => a[4] == 1)) for (var b = 0; b < a[3] / 8; b++) if (a[2] + b is >= 0x88 and < 0x90) scb1[a[2] + b - 0x88] = (a[5] >> (8 * b)) & 255;
                 Require(Equal(r.GetProperty("stateAfter"), State(ram)), "Retained/fresh0196 or companion history forged.");
                 if (consumer.ValueKind == JsonValueKind.Object) Require(Equal(r.GetProperty("after"), consumer.GetProperty("exit")), "Detached consumer exit.");
@@ -178,13 +179,14 @@ public static class P28QuartetHandoffValidator
         var pointer = events.Length == 0 ? new[] { ram[0x90], ram[0x92] } : own.PointerEnds[events.Length - 1]; Require(N(exit, "x1") == pointer[0] && N(exit, "x2") == pointer[1], "Native index mismatch.");
         foreach (var k in new[] { "lrb", "ssp", "dp", "usp", "registers" }) Require(Equal(entry.GetProperty(k), exit.GetProperty(k)), "Undisclosed bank/stack/caller mutation."); Require(N(stage, "sspAfter") == 0x7FE, "Fake IRQ frame."); return count;
     }
-    internal static void ValidateJournal(JsonElement r, IReadOnlyList<int[]> native, IReadOnlyList<int[]> host, int? address, P28QuartetGeneration? selected)
+    internal static void ValidateJournal(JsonElement r, IReadOnlyList<int[]> native, IReadOnlyList<int[]> host, int? address, P28QuartetGeneration? selected, bool retainedSelector = false)
     {
         Require(N(r, "machineId") == 1, "Second machine."); var journal = Matrix(r.GetProperty("continuityJournal"), 6, 32768);
         Require(journal.All(j => j[0] is 0 or 1 && j[3] is 8 or 16 && j[4] is 0 or 1) && journal.Where(j => j[0] == 1).Select(j => string.Join(',', j.Skip(1))).SequenceEqual(native.Select(j => string.Join(',', j))), "Missing/reordered/foreign native journal.");
         Require(journal.Where(j => j[0] == 0).All(j => j[1] == 65536 && j[4] == 1) && journal.Where(j => j[0] == 0).Select(j => string.Join(',', new[] { j[2], j[3], j[5] })).Order().SequenceEqual(host.Select(j => string.Join(',', j)).Order()), "Hidden host initializer/X1/quartet/0196 setter.");
         Require(!journal.Any(j => j[0] == 0 && j[4] == 1 && j[2] < 0x3BE && j[2] + j[3] / 8 > 0x3B6), "Host quartet copy.");
-        if (r.TryGetProperty("consumer", out var consumer) && consumer.ValueKind == JsonValueKind.Object)
+        if (retainedSelector) Require(!journal.Any(j => j[0] == 0 && j[2] < 0x13D && j[2] + j[3] / 8 > 0x13C), "M2ae host selector write after initialization.");
+        if (!retainedSelector && r.TryGetProperty("consumer", out var consumer) && consumer.ValueKind == JsonValueKind.Object)
         {
             var source = Array.FindIndex(journal, j => j[0] == 0 && j[2] == 0x13C); var lastPrefix = Array.FindLastIndex(journal, j => j[0] == 1 && j[1] >= 0x2200 && j[1] < 0x22B1); var firstConsumer = Array.FindIndex(journal, j => j[0] == 1 && j[1] == 0x584);
             Require(source > lastPrefix && source < firstConsumer, "Selector applied outside disclosed stage schedule.");

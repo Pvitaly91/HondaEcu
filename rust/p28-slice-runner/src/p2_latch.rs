@@ -144,6 +144,7 @@ pub fn run(r: Request, response: Response) -> Result<Response, String> {
         None,
         false,
         false,
+        None,
     )
 }
 pub(crate) fn run_chain(
@@ -155,11 +156,13 @@ pub(crate) fn run_chain(
     control_config: Option<crate::post_p2_control::Config>,
     below_enabled: bool,
     cal_rt_enabled: bool,
+    selector_initial: Option<u8>,
 ) -> Result<Response, String> {
     let mut sequences = vec![];
     let mut control_sequences = vec![];
     let mut below_sequences = vec![];
     let mut roundtrip_sequences = vec![];
+    let mut selector_sequences = vec![];
     for &pattern in &r.scratch_patterns {
         let (mut cpu, mut bus) =
             prefix::initialize(&r.images[0].rom, pattern, &initial.quartet_prefix);
@@ -172,6 +175,9 @@ pub(crate) fn run_chain(
             (prior & !4) | if initial.bit0128_2 { 4 } else { 0 },
         );
         write_data_u8(&mut cpu, &mut bus, 0x117, initial.byte0117);
+        if let Some(value) = selector_initial {
+            bus.initialize_retained_selector(value)?;
+        }
         let identity = (&cpu as *const Cpu, &bus as *const Bus);
         bus.initialize_p2_output_latch(latch)?;
         if let Some(c) = control_config {
@@ -180,12 +186,21 @@ pub(crate) fn run_chain(
         let mut retained_generation = None;
         let mut tcon0_generation = None;
         let mut trnsit_generation = None;
+        let mut selector_generation = None;
         let mut terminal = false;
         let mut checkpoints = vec![];
         let mut control_checkpoints = vec![];
         let mut below_checkpoints = vec![];
         let mut roundtrip_checkpoints = vec![];
+        let mut selector_checkpoints = vec![];
         for (i, call) in calls.iter().enumerate() {
+            let selector_before = if selector_initial.is_some() {
+                bus.configure_scoped_access(vec![[0x13C, 0x13D]], 4096);
+                read_data_u8(&cpu, &mut bus, 0x13C)
+            } else {
+                0
+            };
+            let incoming_selector_generation = selector_generation.clone();
             let before = alternate::state(&cpu, &mut bus);
             let mut p = prefix::checkpoint(&cpu, &mut bus, call, i as u32, pattern);
             let p2_before = bus.p2_output_latch().expect("initial snapshot");
@@ -212,12 +227,38 @@ pub(crate) fn run_chain(
             let mut native_rt = None;
             let mut call_frame = None;
             let mut stack_journal = vec![];
+            let mut post_return = None;
+            let mut reader0584_generation = None;
+            let mut reader063e_generation = None;
+            let mut selector_handoff = "NotRun";
             if !terminal {
                 bus.begin_continuity();
                 if below_enabled {
                     bus.begin_all_native();
                 }
-                prefix::execute_checkpoint(&mut cpu, &mut bus, call, &mut p);
+                if selector_initial.is_some() {
+                    prefix::execute_checkpoint_retained(&mut cpu, &mut bus, call, &mut p);
+                    let all = bus.all_native_snapshot();
+                    reader0584_generation = crate::post_return_selector::reader(
+                        &all,
+                        &incoming_selector_generation,
+                        0x0584,
+                    );
+                    let read = all.iter().any(|a| {
+                        a[0] == 0 && a[1] == 0x0584 && a[2] == 0x13C && a[3] == 8 && a[4] == 0
+                    });
+                    selector_handoff = if !read {
+                        "NextEventSelectorNotReached"
+                    } else if incoming_selector_generation.is_none() {
+                        "InitialSelectorControl"
+                    } else if reader0584_generation.is_some() && p.selected_generation.is_some() {
+                        "NativeSelectorHandoffStrict"
+                    } else {
+                        "NativeSelectorReadWithoutQuartetHandoff"
+                    };
+                } else {
+                    prefix::execute_checkpoint(&mut cpu, &mut bus, call, &mut p);
+                }
                 if let Some(g) = &p.result_generation {
                     provenance = if p.selected_generation.is_some() {
                         "QuartetDerived0196"
@@ -425,6 +466,44 @@ pub(crate) fn run_chain(
                                     };
                                     stack_journal.extend(output.suffix.accesses.iter().copied());
                                     native_rt = Some(output);
+                                    if selector_initial.is_some()
+                                        && matches!(
+                                            disposition,
+                                            "CallReturnStrict" | "CallReturnGateBypass"
+                                        )
+                                    {
+                                        let output = crate::post_return_selector::execute(
+                                            &mut cpu, &mut bus,
+                                        )?;
+                                        let all = bus.all_native_snapshot();
+                                        reader063e_generation = crate::post_return_selector::reader(
+                                            &all,
+                                            &incoming_selector_generation,
+                                            0x063E,
+                                        );
+                                        for (order, w) in
+                                            all.iter().filter(|a| a[4] == 1).enumerate()
+                                        {
+                                            if *w == [0, 0x064A, 0x13C, 8, 1, w[5]] {
+                                                selector_generation = Some(prefix::Generation {
+                                                    writer_pc: 0x064A,
+                                                    event_index: i as u32,
+                                                    write_order: order as u32,
+                                                    value: w[5],
+                                                });
+                                            }
+                                        }
+                                        disposition = if output.stage.result.status == 0 {
+                                            if provenance == "QuartetDerived0196" {
+                                                "PostReturnSelectorStrict"
+                                            } else {
+                                                "PostReturnSelectorGateBypass"
+                                            }
+                                        } else {
+                                            "SelectorProducerPartial"
+                                        };
+                                        post_return = Some(output);
+                                    }
                                 }
                             }
                         }
@@ -433,7 +512,14 @@ pub(crate) fn run_chain(
                     }
                     consumer = Some(c);
                     if cal_rt_enabled
-                        && !matches!(disposition, "CallReturnStrict" | "CallReturnGateBypass")
+                        && !matches!(
+                            disposition,
+                            "CallReturnStrict"
+                                | "CallReturnGateBypass"
+                                | "PostReturnSelectorStrict"
+                                | "PostReturnSelectorGateBypass"
+                                | "SelectorProducerPartial"
+                        )
                     {
                         disposition = "CallerFramePartial";
                     }
@@ -450,6 +536,8 @@ pub(crate) fn run_chain(
                         | "BelowSecondP2GateBypass"
                         | "CallReturnStrict"
                         | "CallReturnGateBypass"
+                        | "PostReturnSelectorStrict"
+                        | "PostReturnSelectorGateBypass"
                 );
             }
             let journal = if disposition == "NotRun" {
@@ -466,6 +554,11 @@ pub(crate) fn run_chain(
             // when the prefix stopped before entering M2x's local/SCB bank.
             bus.configure_scoped_access(vec![[0, 4096]], 4096);
             let after = boundary(&cpu, &mut bus);
+            let selector_after = if selector_initial.is_some() {
+                read_data_u8(&cpu, &mut bus, 0x13C)
+            } else {
+                0
+            };
             let state_after = alternate::state(&cpu, &mut bus);
             bus.configure_scoped_access(vec![[0x300, 0x301], [0x350, 0x351], [0x3E0, 0x3E1]], 4096);
             let canaries = [0x300, 0x350, 0x3E0].map(|a| read_data_u8(&cpu, &mut bus, a));
@@ -537,13 +630,28 @@ pub(crate) fn run_chain(
                         all_native_journal,
                     };
                     if cal_rt_enabled {
-                        roundtrip_checkpoints.push(crate::cal_rt_roundtrip::Event {
+                        let round_trip = crate::cal_rt_roundtrip::Event {
                             below: below_event,
                             native_cal,
                             native_rt,
                             call_frame,
                             stack_journal,
-                        });
+                        };
+                        if selector_initial.is_some() {
+                            selector_checkpoints.push(crate::post_return_selector::Event {
+                                round_trip,
+                                post_return,
+                                selector_before,
+                                selector_after,
+                                incoming_selector_generation,
+                                reader0584_generation,
+                                reader063e_generation,
+                                selector_generation: selector_generation.clone(),
+                                selector_handoff,
+                            });
+                        } else {
+                            roundtrip_checkpoints.push(round_trip);
+                        }
                     } else {
                         below_checkpoints.push(below_event);
                     }
@@ -567,6 +675,14 @@ pub(crate) fn run_chain(
             });
         }
         if below_enabled {
+            if let Some(value) = selector_initial {
+                selector_sequences.push(crate::post_return_selector::Sequence {
+                    scratch_pattern: pattern,
+                    machine_instances: 1,
+                    selector_initialization_writes: vec![[0x13C, 8, u32::from(value)]],
+                    checkpoints: selector_checkpoints,
+                });
+            }
             if cal_rt_enabled {
                 roundtrip_sequences.push(crate::cal_rt_roundtrip::Sequence {
                     scratch_pattern: pattern,
@@ -581,7 +697,10 @@ pub(crate) fn run_chain(
             });
         }
     }
-    if cal_rt_enabled {
+    if selector_initial.is_some() {
+        response.entry_contracts = crate::post_return_selector::entry_contracts();
+        response.post_return_selector_sequences = Some(selector_sequences);
+    } else if cal_rt_enabled {
         response.entry_contracts = crate::cal_rt_roundtrip::entry_contracts();
         response.cal_rt_round_trip_sequences = Some(roundtrip_sequences);
     } else if below_enabled {

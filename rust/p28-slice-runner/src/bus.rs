@@ -278,6 +278,8 @@ pub struct Bus {
     native_pc: u16,
     // M2w opt-in, independent of nested historical journals. [native,pc,address,width,write,value].
     continuity: Option<Vec<[u32; 6]>>,
+    // M2ae only: actual RAM013C, initialized once then writable only by064A.
+    retained_selector: bool,
 }
 
 impl Bus {
@@ -312,6 +314,7 @@ impl Bus {
             native_accesses: None,
             native_pc: 0,
             continuity: None,
+            retained_selector: false,
         }
     }
 
@@ -546,6 +549,14 @@ impl Bus {
         self.read_limit = read_limit;
     }
     pub fn check_data_access(&self, address: u16, operation: &'static str) -> bool {
+        if self.retained_selector
+            && address == 0x13C
+            && operation == "write"
+            && (self.native_accesses.is_none() || self.native_pc != 0x064A)
+        {
+            self.record_fault("data", address as u32, "selector-host-or-unreviewed-writer");
+            return false;
+        }
         if self
             .data_ranges
             .as_ref()
@@ -783,6 +794,10 @@ impl Bus {
         }
     }
     pub fn write_data_u16(&mut self, address: u16, value: u16) {
+        if self.retained_selector && u32::from(address) <= 0x13C && u32::from(address) + 2 > 0x13C {
+            self.record_fault("data", address as u32, "selector-word-overlap");
+            return;
+        }
         if address == 0x1A
             && self.adaptive_ie.is_some()
             && self.check_data_access(address, "write")
@@ -846,5 +861,17 @@ impl Bus {
     }
     pub(crate) fn adaptive_ie(&self) -> Option<u16> {
         self.adaptive_ie
+    }
+    pub(crate) fn initialize_retained_selector(&mut self, value: u8) -> Result<(), String> {
+        if self.retained_selector
+            || value > 3
+            || self.native_accesses.is_some()
+            || self.continuity.is_some()
+        {
+            return Err("M2ae selector is a once-only initial0..3 snapshot".into());
+        }
+        self.ram[0x13C] = value;
+        self.retained_selector = true;
+        Ok(())
     }
 }

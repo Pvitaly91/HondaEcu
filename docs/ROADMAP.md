@@ -490,6 +490,13 @@ same-frame return at5688→063E on the retained M2ac machine. Only the scheduler
 PC seam remains technical. No enclosing caller/IRQ/scheduler recovery; no
 execution after063E, timer evolution, physical output, GUI or hardware claim.
 
+## M2ae — bounded post-return selector milestone
+
+[M2ae selector handoff](M2AE_POST_RETURN_SELECTOR_HANDOFF.md) continues actual
+RT5688→063E through064A, stops before064C and retains native013C generations
+for next-event0584/05DF. Initial control, producer, handoff and terminal callee
+are separate; no host selector/0128/0117 repair or recovered ECU schedule.
+
 ## M5 — P07 research
 
 - P07 main-CPU research

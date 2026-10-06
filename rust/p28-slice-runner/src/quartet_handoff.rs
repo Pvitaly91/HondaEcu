@@ -274,15 +274,35 @@ pub(crate) fn checkpoint(cpu: &Cpu, bus: &mut Bus, call: &Call, index: u32, patt
 /// Reuse the exact historical body without creating or resetting a machine.
 /// Caller owns the event-wide journal so a later stage can extend it.
 pub(crate) fn execute_checkpoint(cpu: &mut Cpu, bus: &mut Bus, call: &Call, event: &mut Event) {
+    execute_checkpoint_selector_policy(cpu, bus, call, event, true);
+}
+/// M2ae alone retains native013C instead of applying the historical source.
+pub(crate) fn execute_checkpoint_retained(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    call: &Call,
+    event: &mut Event,
+) {
+    execute_checkpoint_selector_policy(cpu, bus, call, event, false);
+}
+fn execute_checkpoint_selector_policy(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    call: &Call,
+    event: &mut Event,
+    source: bool,
+) {
     prefix::execute_checkpoint(cpu, bus, &call.prefix, &mut event.fuel_prefix);
     if event.fuel_prefix.status != 0 {
         event.disposition = "ConsumerNotRun";
     } else {
         configure(bus);
-        write_data_u8(cpu, bus, 0x13C, call.selector013c);
-        event
-            .source_writes
-            .push([0x13C, 8, call.selector013c as u32]);
+        if source {
+            write_data_u8(cpu, bus, 0x13C, call.selector013c);
+            event
+                .source_writes
+                .push([0x13C, 8, call.selector013c as u32]);
+        }
         event.abi_writes = vec![
             [0, cpu.pc as u32, 0x584],
             [1, cpu.psw_u16() as u32, 0x1DCA],
@@ -292,6 +312,15 @@ pub(crate) fn execute_checkpoint(cpu: &mut Cpu, bus: &mut Bus, call: &Call, even
         cpu.set_psw_u16(0x1DCA);
         cpu.lrb = 0x21;
         let consumer = execute_consumer(cpu, bus);
+        let selector = if source {
+            Some(u32::from(call.selector013c))
+        } else {
+            consumer
+                .accesses
+                .iter()
+                .find(|a| a[0] == 0x0584 && a[1] == 0x13C && a[2] == 8 && a[3] == 0)
+                .map(|a| a[4])
+        };
         if consumer.stage.result.status != 0 {
             event.disposition = match consumer.stage.result.status {
                 3 => "BudgetExceeded",
@@ -299,11 +328,14 @@ pub(crate) fn execute_checkpoint(cpu: &mut Cpu, bus: &mut Bus, call: &Call, even
                 _ => "ConsumerPartial",
             };
         } else if consumer.accesses.iter().any(|a| {
-            a[0] == 0x5DF && a[1] == 0x3B6 + 2 * call.selector013c as u32 && a[2] == 16 && a[3] == 0
+            a[0] == 0x5DF
+                && selector.is_some_and(|s| a[1] == 0x3B6 + 2 * s)
+                && a[2] == 16
+                && a[3] == 0
         }) {
             event.disposition = "QuartetHandoffStrict";
-            event.selected_slot = Some(call.selector013c as u32);
-            event.selected_address = Some(0x3B6 + 2 * call.selector013c as u32);
+            event.selected_slot = selector;
+            event.selected_address = selector.map(|s| 0x3B6 + 2 * s);
         } else {
             event.disposition = "ConsumerGateBypassNotHandoff";
         }

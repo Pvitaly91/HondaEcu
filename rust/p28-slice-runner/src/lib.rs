@@ -30,6 +30,9 @@ mod p2_latch_tests;
 pub mod post_p2_control;
 #[cfg(test)]
 mod post_p2_control_tests;
+pub mod post_return_selector;
+#[cfg(test)]
+mod post_return_selector_tests;
 pub mod quartet_handoff;
 #[cfg(test)]
 mod quartet_handoff_tests;

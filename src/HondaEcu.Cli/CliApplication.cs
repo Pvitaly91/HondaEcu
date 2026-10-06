@@ -208,6 +208,9 @@ public sealed partial class CliApplication
               --baseline-binding <binding.json> --runner <runner-0.36.0>
               --scenario <below-second-p2-handoff-test.json> --output <new-report.json>
               Native below continuation;fresh second P2 latch generation;stop BEFORE RT5688;no time/IRQ/pins/GUI/BIN.
+          research p28-fuel post-return-selector-check <original> --profile p28-304 --confirm-profile
+            --baseline-binding <binding.json> --runner <runner> --scenario <scenario.json> --output <new-report.json>
+            Native RT exit -> selector producer, retained next-event handoff; stop before064C; no timer/IRQ/GUI/hardware.
           research p28-fuel cal-rt-roundtrip-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding.json> --runner <runner-0.37.0>
               --scenario <m2ad-scenario.json> --output <new-private-report.json>

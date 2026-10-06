@@ -74,7 +74,8 @@ internal sealed class P28BelowSecondP2Validation
     internal readonly List<P28BelowSecondP2Checkpoint>[] Rows = [[], [], []];
     internal (JsonElement After, string Disposition, int[][] Ram) Finish(int p, int i, JsonElement row, JsonElement before, string disposition,
         Dictionary<int, int> ram, P28QuartetHandoffCheckpoint prefix, List<int[]> native,
-        P28P2LatchValidation p2, P28PostP2ControlValidation control, P28CalRtRoundTripValidation? roundTrip = null)
+        P28P2LatchValidation p2, P28PostP2ControlValidation control, P28CalRtRoundTripValidation? roundTrip = null,
+        P28PostReturnSelectorValidation? selector = null, int[]? registers = null, Dictionary<int, int>? selectorRam = null)
     {
         var first = p2.Rows[p][i]; var c = control.Rows[p][i]; var latch = first.NewLatch; var tcon = c.Tcon0After;
         var pg = first.Generation; var tg = c.Tcon0Generation; var incomingP = pg; var incomingT = tg;
@@ -112,6 +113,12 @@ internal sealed class P28BelowSecondP2Validation
             var result = roundTrip.Finish(p, i, row, before, disposition, all);
             before = result.After; disposition = result.Disposition; ownRam = [.. ownRam, .. result.Ram];
         }
+        var bodyRamWrites = ownRam.Count(v => v[3] == 1);
+        if (selector is not null)
+        {
+            var result = selector.Finish(p, i, row, before, disposition, ram, selectorRam!, registers!, all, prefix);
+            before = result.After; disposition = result.Disposition; ownRam = [.. ownRam, .. result.Ram];
+        }
         Require(Equal(row.GetProperty("allNativeJournal"), JsonSerializer.SerializeToElement(all)), "Event-wide RAM/P2/control chronology forged or host reseed.");
         Require(row.GetProperty("secondP2After").GetInt32() == latch && Equal(row.GetProperty("secondP2Generation"), JsonSerializer.SerializeToElement(pg, JsonDefaults.Create())) && row.GetProperty("finalTcon0").GetInt32() == tcon && Equal(row.GetProperty("finalTcon0Generation"), JsonSerializer.SerializeToElement(tg, JsonDefaults.Create())), "Stale G1/fake G2/TCON generation/host reseed.");
         p2.RetainBelow(p, latch, pg); control.RetainBelow(p, tcon, tg);
@@ -120,7 +127,7 @@ internal sealed class P28BelowSecondP2Validation
         // a completed second-P2 semantic result, even if its write already ran.
         Rows[p].Add(new(i, roundTripDisposition, output.ValueKind == JsonValueKind.Null ? null : prefix.ResultGeneration, prefix.SelectedSlot, prefix.SelectedAddress, prefix.SelectedGeneration,
             a, psw, rolA, rolPsw, completed ? old : null, completed ? value : null, incomingP, completed ? pg : null, latch, tcon, incomingT, tg, steps,
-            ownRam.Count(v => v[3] == 1), steps < 3 ? 0 : 2, value is null ? 0 : 1, value is null ? 0 : 1, roundTripBefore.GetProperty("pc").GetInt32()));
+            bodyRamWrites, steps < 3 ? 0 : 2, value is null ? 0 : 1, value is null ? 0 : 1, roundTripBefore.GetProperty("pc").GetInt32()));
         return (before, disposition, ownRam);
     }
 }
