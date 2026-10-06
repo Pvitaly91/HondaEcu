@@ -8,6 +8,8 @@ pub mod bus;
 pub mod cal_rt_roundtrip;
 #[cfg(test)]
 mod cal_rt_roundtrip_tests;
+#[cfg(test)]
+mod caller_gate_blocked_tests;
 pub mod chain;
 pub mod chain_forms;
 pub mod checksum;

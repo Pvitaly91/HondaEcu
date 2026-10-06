@@ -1,5 +1,14 @@
 # Roadmap
 
+M2af records the [primary native DATA0136 caller boundary](M2AF_NATIVE_DATA0136_CALLER_HANDOFF.md):
+Research/Blocked under the existing retained source contract. Primary064C taken
+requires scratchAA, whose retained012A.3 makes065F/0662 skip CAL0664. No new
+011F/012A source, host toggle, technical ABI reseed or caller/producer execution
+is manufactured. Other fallthrough routes are static-only, not globally excluded.
+Runner remains0.38.0; no new operation or CLI. Fresh M2ae upstream witnesses and
+invented guard tests are separate from native caller/0136 counts, which remain0.
+No automatic M2ag, tail5719/RT5801/return0667, scheduling, timer/IRQ, GUI or hardware.
+
 M2ac delivers [below-path ROLB A and second-P2 handoff](M2AC_BELOW_SECOND_P2_HANDOFF.md).
 The separate0.36 operation consumes actual M2ab55CF→55D2 state, executes the
 reviewed opcode33/DD0 semantics and18 native instructions through owned RAM

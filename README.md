@@ -553,6 +553,14 @@ native RT exit063E→064A, once-initial selector and retained next-event0584
 generation/slot proof, without per-event host013C writes. Stop before064C;
 retained0117 can terminate later callee flow without repair. No recovered loop.
 
+M2af establishes the [native DATA0136 caller research boundary](docs/M2AF_NATIVE_DATA0136_CALLER_HANDOFF.md).
+The primary064C-taken route is blocked by retained ownership: scratchAA makes
+011F.3 set but also012A.3 set, so RB065F/JNE0662 skip CAL0664. Other scratch
+patterns do not select that primary branch. Fallthrough routes remain static-only,
+not globally excluded. No gate/ABI repair, new operation/version/CLI or native
+producer claim; runner0.38.0 and historical M2ae/M2v contracts remain unchanged.
+Public invented guard tests are separate from OEM execution; no GUI/hardware/BIN.
+
 The D0 portable package can also be checked with
 `./scripts/test-desktop-portable.ps1`. It runs an explicit no-window resource
 diagnostic outside the repository with another working directory and no developer
