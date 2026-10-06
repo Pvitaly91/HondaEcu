@@ -75,7 +75,8 @@ internal sealed class P28BelowSecondP2Validation
     internal (JsonElement After, string Disposition, int[][] Ram) Finish(int p, int i, JsonElement row, JsonElement before, string disposition,
         Dictionary<int, int> ram, P28QuartetHandoffCheckpoint prefix, List<int[]> native,
         P28P2LatchValidation p2, P28PostP2ControlValidation control, P28CalRtRoundTripValidation? roundTrip = null,
-        P28PostReturnSelectorValidation? selector = null, int[]? registers = null, Dictionary<int, int>? selectorRam = null)
+        P28PostReturnSelectorValidation? selector = null, int[]? registers = null, Dictionary<int, int>? selectorRam = null,
+        P28FallthroughData0136Validation? caller = null)
     {
         var first = p2.Rows[p][i]; var c = control.Rows[p][i]; var latch = first.NewLatch; var tcon = c.Tcon0After;
         var pg = first.Generation; var tg = c.Tcon0Generation; var incomingP = pg; var incomingT = tg;
@@ -117,6 +118,11 @@ internal sealed class P28BelowSecondP2Validation
         if (selector is not null)
         {
             var result = selector.Finish(p, i, row, before, disposition, ram, selectorRam!, registers!, all, prefix);
+            before = result.After; disposition = result.Disposition; ownRam = [.. ownRam, .. result.Ram];
+        }
+        if (caller is not null)
+        {
+            var result = caller.Finish(p, i, row, before, disposition, ram, registers!, all);
             before = result.After; disposition = result.Disposition; ownRam = [.. ownRam, .. result.Ram];
         }
         Require(Equal(row.GetProperty("allNativeJournal"), JsonSerializer.SerializeToElement(all)), "Event-wide RAM/P2/control chronology forged or host reseed.");

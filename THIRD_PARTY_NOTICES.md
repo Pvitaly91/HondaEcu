@@ -112,6 +112,11 @@ These component licenses do not determine the license of HondaEcu's own code.
 
 ## Windows Desktop Research Preview distribution
 
+M2ag runner0.39.0 adds a separate bounded fallthrough caller/NoWrite integration
+and narrow frozen-source journal without new executor semantic fixes. Upstream
+attribution/opcode table/license and old boundaries remain unchanged. Public tests
+are invented, no OEM routine windows. See [M2ag](docs/M2AG_FALLTHROUGH_DATA0136_CALLER.md).
+
 The D0 portable build includes the .NET 8 runtime and Windows Desktop/WPF runtime.
 Their exact resolved package identifiers and versions are listed in the portable
 `PUBLISH-MANIFEST.json`. Complete license and third-party notice files from those

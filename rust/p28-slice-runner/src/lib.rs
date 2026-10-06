@@ -26,6 +26,9 @@ pub mod division_decision;
 #[cfg(test)]
 mod division_decision_tests;
 pub mod exec;
+pub mod fallthrough_data0136;
+#[cfg(test)]
+mod fallthrough_data0136_tests;
 pub mod p2_latch;
 #[cfg(test)]
 mod p2_latch_tests;

@@ -21,7 +21,7 @@ pub struct Output {
     pub sf_before: bool,
     pub sf_after: bool,
 }
-#[derive(Debug, Serialize)]
+#[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Frame {
     pub writer_pc: u32,
@@ -165,6 +165,7 @@ pub fn run(r: Request, response: Response) -> Result<Response, String> {
         }),
         true,
         true,
+        None,
         None,
     )
 }

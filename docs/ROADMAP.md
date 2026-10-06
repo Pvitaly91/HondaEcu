@@ -1,5 +1,12 @@
 # Roadmap
 
+M2ag adds the [bounded fallthrough DATA0136 caller](M2AG_FALLTHROUGH_DATA0136_CALLER.md),
+separate runner0.39.0 operation. Scratch00 naturally reaches CAL0664 from actual
+M2ae064C exit via retained011F/011B/012A, then NoWrite body stops-before5719.
+Retained slot0,frozenTMR2/conditionalIRQH; no technical56BE reseed or TCON2/TRNSIT
+on strict core. Pending0667 frame terminalizes later events. Fresh0136NotCreated;
+M2af primaryBlocked unchanged; no autoM2ah/tail/return,scheduler/IRQ/time/GUI/BIN.
+
 M2af records the [primary native DATA0136 caller boundary](M2AF_NATIVE_DATA0136_CALLER_HANDOFF.md):
 Research/Blocked under the existing retained source contract. Primary064C taken
 requires scratchAA, whose retained012A.3 makes065F/0662 skip CAL0664. No new

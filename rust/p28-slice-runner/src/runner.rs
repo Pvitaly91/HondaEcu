@@ -435,6 +435,11 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != crate::fallthrough_data0136::OPERATION
+        && request.fallthrough_data0136_caller_handoff.is_some()
+    {
+        return Err("Foreign M2ag stimulus".into());
+    }
     if request.operation != crate::post_return_selector::OPERATION
         && request.post_return_selector_handoff.is_some()
     {
@@ -702,6 +707,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "belowSecondP2Handoff" => crate::below_second_p2::validate_request(request)?,
         "calRtRoundTripHandoff" => crate::cal_rt_roundtrip::validate_request(request)?,
         "postReturnSelectorHandoff" => crate::post_return_selector::validate_request(request)?,
+        "fallthroughData0136CallerHandoff" => {
+            crate::fallthrough_data0136::validate_request(request)?
+        }
         "statefulVtec" => crate::stateful::validate_request(request)?,
         "limiterSequence" => crate::limiter::validate_request(request)?,
         "adaptiveLimiter" => crate::adaptive::validate_request(request)?,
@@ -738,6 +746,9 @@ pub fn run_request(request: Request) -> Result<Response, String> {
     let mut response = Response::new(request.operation.clone());
     if request.operation == crate::post_return_selector::OPERATION {
         return crate::post_return_selector::run(request, response);
+    }
+    if request.operation == crate::fallthrough_data0136::OPERATION {
+        return crate::fallthrough_data0136::run(request, response);
     }
     if request.operation == crate::post_p2_control::OPERATION {
         return crate::post_p2_control::run(request, response);

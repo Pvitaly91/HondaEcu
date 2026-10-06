@@ -1,5 +1,11 @@
 # HondaEcu
 
+M2ag adds a separate [native fallthrough DATA0136 caller entry](docs/M2AG_FALLTHROUGH_DATA0136_CALLER.md),
+runner0.39.0. Actual M2ae state reaches native CAL0664 and a retained-state
+first-observation NoWrite producer, stopping before5719 with a pending0667 frame.
+Later events are NotRun; no ABI/slot/gate repair, fresh0136 writer, time/IRQ,
+physical units, GUI, hardware or BIN. M2af primaryBlocked and old boundaries remain.
+
 M2ac adds a separate [below-path second-P2 architectural handoff](docs/M2AC_BELOW_SECOND_P2_HANDOFF.md).
 Runner0.36.0 independently admits opcode33/DD0 ROLB A after primary ISA review,
 then follows native software branches to a second P2 byte ORB and stops BEFORE

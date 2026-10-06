@@ -5,7 +5,8 @@ namespace HondaEcu.Core;
 /// <summary>Explicit compatibility inventory, not executable attestation or a hardware trust anchor.</summary>
 internal static class SliceRunnerIdentity
 {
-    internal const string CurrentVersion = "0.38.0";
+    internal const string CurrentVersion = "0.39.0";
+    internal const string PostReturnVersion = "0.38.0";
     internal const string RoundTripVersion = "0.37.0";
     internal const string BelowVersion = "0.36.0";
     internal const string ControlVersion = "0.35.0";
@@ -59,29 +60,32 @@ internal static class SliceRunnerIdentity
     {
         var version = root.GetProperty("runnerVersion").GetString();
         var actualOperation = operation;
-        if (operation == P28PostReturnSelectorValidator.Operation && version != CurrentVersion)
+        if (operation == P28FallthroughData0136Validator.Operation && version != CurrentVersion)
+            throw new SliceProcessException(SliceProcessFailure.Protocol, "M2ag requires runner0.39.0; historical0.38 cannot execute native fallthrough caller.");
+        if (operation == P28FallthroughData0136Validator.Operation) operation = P28PostReturnSelectorValidator.Operation;
+        if (operation == P28PostReturnSelectorValidator.Operation && version is not (CurrentVersion or PostReturnVersion))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2ae requires runner0.38.0; historical0.37 cannot execute retained selector handoff.");
         if (operation == P28PostReturnSelectorValidator.Operation) operation = P28CalRtRoundTripValidator.Operation;
-        if (operation == P28CalRtRoundTripValidator.Operation && version is not (CurrentVersion or RoundTripVersion))
+        if (operation == P28CalRtRoundTripValidator.Operation && version is not (CurrentVersion or PostReturnVersion or RoundTripVersion))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2ad requires runner0.37.0; historical0.36 cannot execute native caller round-trip.");
         if (operation == P28CalRtRoundTripValidator.Operation) operation = P28BelowSecondP2Validator.Operation;
-        if (operation == P28BelowSecondP2Validator.Operation && version is not (CurrentVersion or RoundTripVersion or BelowVersion))
+        if (operation == P28BelowSecondP2Validator.Operation && version is not (CurrentVersion or PostReturnVersion or RoundTripVersion or BelowVersion))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2ac requires runner0.36.0; historical0.35 cannot execute below continuation.");
         if (operation == P28BelowSecondP2Validator.Operation) operation = P28PostP2ControlValidator.Operation;
-        if (operation == P28PostP2ControlValidator.Operation && version is not (CurrentVersion or RoundTripVersion or BelowVersion or ControlVersion))
+        if (operation == P28PostP2ControlValidator.Operation && version is not (CurrentVersion or PostReturnVersion or RoundTripVersion or BelowVersion or ControlVersion))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2ab requires runner0.35.0; historical runners cannot execute control handoff.");
         if (operation == P28PostP2ControlValidator.Operation) operation = P28P2LatchValidator.Operation;
-        if (operation == P28P2LatchValidator.Operation && version is not (CurrentVersion or RoundTripVersion or BelowVersion or ControlVersion or P2Version))
+        if (operation == P28P2LatchValidator.Operation && version is not (CurrentVersion or PostReturnVersion or RoundTripVersion or BelowVersion or ControlVersion or P2Version))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2aa requires runner0.34.0; historical runners cannot execute P2.");
         if (operation == P28P2LatchValidator.Operation) operation = P28Word0196AlternateValidator.Operation;
-        var alternateVersion = version is CurrentVersion or RoundTripVersion or BelowVersion or ControlVersion or P2Version or AlternateVersion;
+        var alternateVersion = version is CurrentVersion or PostReturnVersion or RoundTripVersion or BelowVersion or ControlVersion or P2Version or AlternateVersion;
         if (operation == P28Word0196AlternateValidator.Operation && !alternateVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2z requires runner0.33.0; historical runners cannot execute this operation.");
         if (operation == P28Word0196AlternateValidator.Operation) operation = P28Word0196HandoffValidator.Operation;
-        if (operation == P28Word0196HandoffValidator.Operation && version is not (CurrentVersion or RoundTripVersion or BelowVersion or ControlVersion or P2Version or AlternateVersion or Word0196Version))
+        if (operation == P28Word0196HandoffValidator.Operation && version is not (CurrentVersion or PostReturnVersion or RoundTripVersion or BelowVersion or ControlVersion or P2Version or AlternateVersion or Word0196Version))
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2y requires runner0.32.0; historical runners cannot execute this operation.");
         if (operation == P28Word0196HandoffValidator.Operation) operation = P28QuartetHandoffValidator.Operation;
-        var quartetVersion = version is CurrentVersion or RoundTripVersion or BelowVersion or ControlVersion or P2Version or AlternateVersion or Word0196Version or QuartetVersion;
+        var quartetVersion = version is CurrentVersion or PostReturnVersion or RoundTripVersion or BelowVersion or ControlVersion or P2Version or AlternateVersion or Word0196Version or QuartetVersion;
         if (operation == P28QuartetHandoffValidator.Operation && !quartetVersion)
             throw new SliceProcessException(SliceProcessFailure.Protocol, "M2x requires runner0.31.0; historical runners cannot execute this operation.");
         if (operation == P28QuartetHandoffValidator.Operation) operation = P28Data0136HandoffValidator.Operation;
@@ -148,9 +152,9 @@ internal static class SliceRunnerIdentity
         if (nativeProducerVersion) expected = [.. expected, "byte-sbc-r0-immediate-half-borrow", "word-decrement-x1-half-borrow"];
         if (quartetVersion) expected = [.. expected, "word-add-a-indexed-x1-half-carry"];
         if (alternateVersion) expected = [.. expected, "byte-rol-off-through-carry-preserves-noncarry-flags"];
-        if (root.GetProperty("runnerVersion").GetString() is CurrentVersion or RoundTripVersion or BelowVersion) expected = [.. expected, "byte-rol-a-through-carry-preserves-noncarry-flags"];
-        if (root.GetProperty("runnerVersion").GetString() is CurrentVersion or RoundTripVersion) expected = [.. expected, "cal-addr16-rt-clears-internal-stack-flag"];
-        if (root.GetProperty("runnerVersion").GetString() == CurrentVersion) expected = [.. expected, "byte-incb-r0-half-carry"];
+        if (root.GetProperty("runnerVersion").GetString() is CurrentVersion or PostReturnVersion or RoundTripVersion or BelowVersion) expected = [.. expected, "byte-rol-a-through-carry-preserves-noncarry-flags"];
+        if (root.GetProperty("runnerVersion").GetString() is CurrentVersion or PostReturnVersion or RoundTripVersion) expected = [.. expected, "cal-addr16-rt-clears-internal-stack-flag"];
+        if (root.GetProperty("runnerVersion").GetString() is CurrentVersion or PostReturnVersion) expected = [.. expected, "byte-incb-r0-half-carry"];
         var fixes = root.GetProperty("localSemanticFixes").EnumerateArray().Select(item => item.GetString()!).ToArray();
         if (!fixes.Order(StringComparer.Ordinal).SequenceEqual(expected.Order(StringComparer.Ordinal)))
         {

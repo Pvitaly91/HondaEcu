@@ -1,9 +1,14 @@
 # Bounded P28 research runner
 
-Runner **0.38.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
+Runner **0.39.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
 upstream CPU provenance and license are retained in
 [the third-party notices](../../THIRD_PARTY_NOTICES.md). No OEM image or native
 program fixture is distributed here.
+
+M2ag adds `fallthroughData0136CallerHandoff`: retained064C fallthrough, native
+CAL0664 and bounded NoWrite to stop5719. No ABI/slot/gate seed; pending0667 frame
+terminalizes later events. No fresh0136,time/IRQ/GUI/BIN. See
+[M2ag](../../docs/M2AG_FALLTHROUGH_DATA0136_CALLER.md); old boundaries/fixes unchanged.
 
 Build and test from the repository root:
 

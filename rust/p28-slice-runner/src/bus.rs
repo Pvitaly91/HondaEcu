@@ -253,6 +253,9 @@ pub struct Bus {
     read_limit: usize,
     data_ranges: Option<Vec<[u16; 2]>>,
     capture: Option<CaptureObservation>,
+    // M2ag only: exact-PC frozen source permissions; no unprovided IRQH/TCON2.
+    no_write_capture: bool,
+    no_write_irqh: bool,
     peripheral_accesses: Vec<[u32; 4]>,
     journal_writes: bool,
     data_writes: Vec<[u32; 3]>,
@@ -293,6 +296,8 @@ impl Bus {
             read_limit: 256,
             data_ranges: None,
             capture: None,
+            no_write_capture: false,
+            no_write_irqh: false,
             peripheral_accesses: vec![],
             journal_writes: false,
             data_writes: vec![],
@@ -474,7 +479,18 @@ impl Bus {
     }
     pub(crate) fn observe_capture(&mut self, observation: Option<CaptureObservation>) {
         self.capture = observation;
+        self.no_write_capture = false;
+        self.no_write_irqh = false;
         self.peripheral_accesses.clear();
+    }
+    pub(crate) fn observe_no_write_capture(&mut self, tmr2: u16, irqh: Option<u8>) {
+        self.observe_capture(Some(CaptureObservation {
+            tmr2,
+            irqh: irqh.unwrap_or(0),
+            tcon2: 0,
+        }));
+        self.no_write_capture = true;
+        self.no_write_irqh = irqh.is_some(); // absent placeholders are NOT sources
     }
     pub(crate) fn begin_write_journal(&mut self) {
         self.data_writes.clear();
@@ -670,6 +686,19 @@ impl Bus {
                 }
             }
             if let Some(observation) = self.capture {
+                if self.no_write_capture
+                    && !(address == 0x19
+                        && self.no_write_irqh
+                        && self.native_accesses.is_some()
+                        && self.native_pc == 0x56C9)
+                {
+                    self.record_fault(
+                        "data",
+                        address as u32,
+                        "unprovided-or-detached-frozen-source",
+                    );
+                    return 0;
+                }
                 let value = match address {
                     0x19 => Some(observation.irqh),
                     0x42 => Some(observation.tcon2),
@@ -678,6 +707,9 @@ impl Bus {
                 if let Some(value) = value {
                     self.peripheral_accesses
                         .push([address as u32, 8, 0, value as u32]);
+                    if self.no_write_capture {
+                        self.observe_all(3, address, 8, 0, value as u16);
+                    }
                     return value;
                 }
             }
@@ -704,8 +736,17 @@ impl Bus {
                 && address == 0x3A
             {
                 if let Some(observation) = self.capture {
+                    if self.no_write_capture
+                        && !(self.native_accesses.is_some() && self.native_pc == 0x56BE)
+                    {
+                        self.record_fault("data", address as u32, "detached-frozen-tmr2-source");
+                        return 0;
+                    }
                     self.peripheral_accesses
                         .push([address as u32, 16, 0, observation.tmr2 as u32]);
+                    if self.no_write_capture {
+                        self.observe_all(3, address, 16, 0, observation.tmr2);
+                    }
                     return observation.tmr2;
                 }
             }
