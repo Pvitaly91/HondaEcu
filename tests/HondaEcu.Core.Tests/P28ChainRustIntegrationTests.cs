@@ -2,6 +2,7 @@ using System.Text.Json;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28ChainRustIntegrationTests
 {
     internal static byte[] Toy()

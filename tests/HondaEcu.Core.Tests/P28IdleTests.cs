@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28IdleTests
 {
     internal static byte[] Image()
@@ -121,6 +122,6 @@ public sealed class P28IdleTests
         var host = Path.Combine(ExecutionTestPaths.RepositoryRoot, "tests", "HondaEcu.Slice.TestHost", "bin", configuration, "net8.0", "HondaEcu.Slice.TestHost.dll"); Assert.True(File.Exists(host));
         var options = new SliceProcessOptions { Arguments = [host, "timeout"], Timeout = TimeSpan.FromMilliseconds(500) };
         var ex = await Assert.ThrowsAsync<SliceProcessException>(() => P28IdleValidator.ExecuteAsync(im, profile, binding, true, "dotnet", Scenario(), options)); Assert.Equal(SliceProcessFailure.Timeout, ex.Failure);
-        using var ct = new CancellationTokenSource(500); await Assert.ThrowsAnyAsync<OperationCanceledException>(() => P28IdleValidator.ExecuteAsync(im, profile, binding, true, "dotnet", Scenario(), options with { Timeout = TimeSpan.FromSeconds(15) }, ct.Token));
+        await ProcessHandshake.AssertActiveCancellationAsync((activeOptions, token) => P28IdleValidator.ExecuteAsync(im, profile, binding, true, "dotnet", Scenario(), activeOptions, token));
     }
 }

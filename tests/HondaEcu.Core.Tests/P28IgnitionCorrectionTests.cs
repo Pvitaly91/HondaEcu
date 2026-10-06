@@ -150,79 +150,16 @@ public sealed class P28IgnitionCorrectionTests
     [Fact]
     public async Task M2iTransportSeparatesAlreadyCancelledTimeoutAndActiveChildCancellation()
     {
-        var (image, profile, binding) = P28AcquisitionValidatorTests.Fixture(
-            P28IgnitionMapTests.InventedImage(true).ToArray());
-        var host = Path.Combine(ExecutionTestPaths.RepositoryRoot, "tests", "HondaEcu.Slice.TestHost",
-            "bin", new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name, "net8.0",
-            "HondaEcu.Slice.TestHost.dll");
-        Assert.True(File.Exists(host));
-        var marker = Path.Combine(Path.GetTempPath(), $"hondaecu-m2i-active-{Guid.NewGuid():N}.pid");
-        Process? child = null;
-        using var active = new CancellationTokenSource();
-        try
-        {
-            using (var cancelled = new CancellationTokenSource())
-            {
-                cancelled.Cancel();
-                await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-                    P28IgnitionCorrectionValidator.ExecuteAsync(image, profile, binding, true, "dotnet",
-                        Scenario(), new SliceProcessOptions { Arguments = [host, "pid-sleep", marker] },
-                        cancelled.Token));
-                Assert.False(File.Exists(marker));
-            }
-            var timeout = await Assert.ThrowsAsync<SliceProcessException>(() =>
-                P28IgnitionCorrectionValidator.ExecuteAsync(image, profile, binding, true, "dotnet",
-                    Scenario(), new SliceProcessOptions
-                    {
-                        Arguments = [host, "timeout"],
-                        Timeout = TimeSpan.FromMilliseconds(300)
-                    }));
-            Assert.Equal(SliceProcessFailure.Timeout, timeout.Failure);
-            var running = P28IgnitionCorrectionValidator.ExecuteAsync(image, profile, binding, true,
-                "dotnet", Scenario(), new SliceProcessOptions
-                {
-                    Arguments = [host, "pid-sleep", marker],
-                    Timeout = TimeSpan.FromSeconds(15)
-                }, active.Token);
-            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
-            int? pid = null;
-            while (DateTime.UtcNow < deadline)
-            {
-                if (File.Exists(marker))
-                {
-                    try
-                    {
-                        var value = await File.ReadAllTextAsync(marker);
-                        if (int.TryParse(value, System.Globalization.NumberStyles.None,
-                            System.Globalization.CultureInfo.InvariantCulture, out var observed) && observed > 0)
-                        {
-                            pid = observed;
-                            break;
-                        }
-                    }
-                    catch (IOException) { /* The child may still hold the new marker open. */ }
-                }
-                await Task.Delay(20);
-            }
-            Assert.True(pid.HasValue, "M2i child must publish a readable PID before cancellation.");
-            child = Process.GetProcessById(pid.Value);
-            Assert.False(child.HasExited);
-            Assert.False(running.IsCompleted);
-            active.Cancel();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => running);
-            child.Refresh();
-            Assert.True(child.HasExited, $"M2i child PID {pid} survived active cancellation.");
-        }
-        finally
-        {
-            active.Cancel();
-            child?.Dispose();
-            // Windows may briefly retain the just-exited child's marker handle.
-            for (var attempt = 0; File.Exists(marker) && attempt < 10; attempt++)
-            {
-                try { File.Delete(marker); }
-                catch (IOException) when (attempt < 9) { await Task.Delay(50); }
-            }
-        }
+        var (image, profile, binding) = P28AcquisitionValidatorTests.Fixture(P28IgnitionMapTests.InventedImage(true).ToArray());
+        Assert.True(File.Exists(ProcessHandshake.HostPath));
+        var options = new SliceProcessOptions { Arguments = [ProcessHandshake.HostPath, "timeout"], Timeout = TimeSpan.FromMilliseconds(300) };
+        var timeout = await Assert.ThrowsAsync<SliceProcessException>(() => P28IgnitionCorrectionValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), options));
+        Assert.Equal(SliceProcessFailure.Timeout, timeout.Failure);
+        var marker = Path.Combine(Path.GetTempPath(), $"never-started-{Guid.NewGuid():N}.pid");
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => P28IgnitionCorrectionValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(),
+            options with { Arguments = [ProcessHandshake.HostPath, "pid-sleep", marker] }, cancelled.Token));
+        Assert.False(File.Exists(marker));
+        await ProcessHandshake.AssertActiveCancellationAsync((activeOptions, token) => P28IgnitionCorrectionValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), activeOptions, token));
     }
 }

@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28AdaptiveFuelTests
 {
     internal static P28AdaptiveFuelScenario Scenario() => P28AdaptiveFuelScenario.Create(
@@ -123,20 +124,17 @@ public sealed class P28AdaptiveFuelTests
     [Fact]
     public async Task JointTransportKeepsAlreadyCancelledTimeoutAndActiveChildCancellationDistinct()
     {
-        var host = Path.Combine(ExecutionTestPaths.RepositoryRoot, "tests", "HondaEcu.Slice.TestHost", "bin", new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name, "net8.0", "HondaEcu.Slice.TestHost.dll");
-        var marker = Path.Combine(Path.GetTempPath(), $"m2o-child-{Guid.NewGuid():N}.txt"); var request = P28AdaptiveFuelValidator.CreateRequest(RomImage.FromBytes(Image()), Scenario());
-        using var active = new CancellationTokenSource(); Process? child = null;
-        try
-        {
-            using (var cancelled = new CancellationTokenSource()) { cancelled.Cancel(); await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SeededSliceProcess.ExchangeAsync("dotnet", request, new SliceProcessOptions { Arguments = [host, "pid-sleep", marker] }, cancelled.Token)); Assert.False(File.Exists(marker)); }
-            var timeout = await Assert.ThrowsAsync<SliceProcessException>(() => SeededSliceProcess.ExchangeAsync("dotnet", request, new SliceProcessOptions { Arguments = [host, "timeout"], Timeout = TimeSpan.FromMilliseconds(300) })); Assert.Equal(SliceProcessFailure.Timeout, timeout.Failure);
-            var running = SeededSliceProcess.ExchangeAsync("dotnet", request, new SliceProcessOptions { Arguments = [host, "pid-sleep", marker], Timeout = TimeSpan.FromSeconds(15) }, active.Token);
-            int? pid = null; var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
-            while (DateTime.UtcNow < deadline) { if (File.Exists(marker)) { try { if (int.TryParse(await File.ReadAllTextAsync(marker), out var value) && value > 0) { pid = value; break; } } catch (IOException) { } } await Task.Delay(20); }
-            Assert.True(pid.HasValue); child = Process.GetProcessById(pid!.Value); Assert.False(child.HasExited); active.Cancel();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => running); child.Refresh(); Assert.True(child.HasExited);
-        }
-        finally { active.Cancel(); child?.Dispose(); for (var i = 0; File.Exists(marker) && i < 10; i++) { try { File.Delete(marker); } catch (IOException) when (i < 9) { await Task.Delay(50); } } }
+        var host = ProcessHandshake.HostPath;
+        var request = P28AdaptiveFuelValidator.CreateRequest(RomImage.FromBytes(Image()), Scenario());
+        var marker = Path.Combine(Path.GetTempPath(), $"never-started-{Guid.NewGuid():N}.pid");
+        using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => SeededSliceProcess.ExchangeAsync("dotnet", request,
+            new SliceProcessOptions { Arguments = [host, "pid-sleep", marker] }, cancelled.Token));
+        Assert.False(File.Exists(marker));
+        var timeout = await Assert.ThrowsAsync<SliceProcessException>(() => SeededSliceProcess.ExchangeAsync("dotnet", request,
+            new SliceProcessOptions { Arguments = [host, "timeout"], Timeout = TimeSpan.FromMilliseconds(300) }));
+        Assert.Equal(SliceProcessFailure.Timeout, timeout.Failure);
+        await ProcessHandshake.AssertActiveCancellationAsync((options, token) => SeededSliceProcess.ExchangeAsync("dotnet", request, options, token));
     }
     [Theory]
     [InlineData(99, 12, 0, 12)]

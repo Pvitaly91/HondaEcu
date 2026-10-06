@@ -36,8 +36,6 @@ public sealed class P28IgnitionMapProcessTests
         var exception = await Assert.ThrowsAsync<SliceProcessException>(() =>
             P28IgnitionMapValidator.ExecuteAsync(image, profile, binding, true, "dotnet", scenario, options));
         Assert.Equal(SliceProcessFailure.Timeout, exception.Failure);
-        using var cancellation = new CancellationTokenSource(500);
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => P28IgnitionMapValidator.ExecuteAsync(image, profile,
-            binding, true, "dotnet", scenario, options with { Timeout = TimeSpan.FromSeconds(15) }, cancellation.Token));
+        await ProcessHandshake.AssertActiveCancellationAsync((activeOptions, token) => P28IgnitionMapValidator.ExecuteAsync(image, profile, binding, true, "dotnet", scenario, activeOptions, token));
     }
 }

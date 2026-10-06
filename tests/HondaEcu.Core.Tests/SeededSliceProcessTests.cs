@@ -41,9 +41,8 @@ public sealed class SeededSliceProcessTests
     [Fact]
     public async Task CallerCancellationTerminatesTheMockChildAndIsNotReportedAsAMismatch()
     {
-        using var cancellation = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
-            SeededSliceProcess.ExchangeAsync("dotnet", new { protocolVersion = 1 }, HostOptions("timeout"), cancellation.Token));
+        await ProcessHandshake.AssertActiveCancellationAsync((options, token) =>
+            SeededSliceProcess.ExchangeAsync("dotnet", new { protocolVersion = 1 }, options, token));
     }
 
     [Fact]
@@ -65,58 +64,8 @@ public sealed class SeededSliceProcessTests
     [Fact]
     public async Task ActiveCancellationKillsObservedChildProcessTree()
     {
-        var marker = Path.Combine(Path.GetTempPath(), $"hondaecu-m2h-active-{Guid.NewGuid():N}.pid");
-        Process? child = null;
-        Task<SliceProcessResponse>? running = null;
-        using var cancellation = new CancellationTokenSource();
-        try
-        {
-            var options = HostOptions("pid-sleep") with { Arguments = [.. HostOptions("pid-sleep").Arguments, marker] };
-            running = SeededSliceProcess.ExchangeAsync("dotnet", new { protocolVersion = 1 }, options, cancellation.Token);
-            var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
-            int? pid = null;
-            while (DateTime.UtcNow < deadline)
-            {
-                if (File.Exists(marker))
-                {
-                    try
-                    {
-                        var value = await File.ReadAllTextAsync(marker);
-                        if (int.TryParse(value, System.Globalization.NumberStyles.None,
-                            System.Globalization.CultureInfo.InvariantCulture, out var observed) && observed > 0)
-                        {
-                            pid = observed;
-                            break;
-                        }
-                    }
-                    catch (IOException) { /* The child may still hold the new marker open. */ }
-                }
-                await Task.Delay(20);
-            }
-            Assert.True(pid.HasValue, "The child must publish a readable PID before cancellation.");
-            child = Process.GetProcessById(pid.Value);
-            Assert.False(child.HasExited);
-            Assert.False(running.IsCompleted);
-            cancellation.Cancel();
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(() => running);
-            child.Refresh();
-            Assert.True(child.HasExited, $"Child PID {pid} survived cancellation.");
-        }
-        finally
-        {
-            cancellation.Cancel();
-            if (running is not null)
-            {
-                try { await running; }
-                catch (Exception) { /* Preserve the original test failure after stopping the child. */ }
-            }
-            child?.Dispose();
-            for (var attempt = 0; File.Exists(marker) && attempt < 10; attempt++)
-            {
-                try { File.Delete(marker); }
-                catch (IOException) when (attempt < 9) { await Task.Delay(50); }
-            }
-        }
+        await ProcessHandshake.AssertActiveCancellationAsync((options, token) =>
+            SeededSliceProcess.ExchangeAsync("dotnet", new { protocolVersion = 1 }, options, token), processTree: true);
     }
 
     [Fact]

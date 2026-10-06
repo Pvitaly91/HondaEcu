@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28CommonResultConsumerTests
 {
     internal static P28CommonResultConsumerScenario Scenario()
@@ -295,32 +296,12 @@ public sealed class P28CommonResultConsumerTests
     public async Task NewValidatorExecuteSeparatesTimeoutAndActiveCancellationWithoutOutput()
     {
         var (image, profile, binding) = P28AcquisitionValidatorTests.Fixture(P28AdaptiveFuelTests.Image());
-        var host = Path.Combine(ExecutionTestPaths.RepositoryRoot, "tests", "HondaEcu.Slice.TestHost", "bin", new DirectoryInfo(AppContext.BaseDirectory).Parent!.Name, "net8.0", "HondaEcu.Slice.TestHost.dll");
-        var options = new SliceProcessOptions { Arguments = [host, "timeout"], Timeout = TimeSpan.FromMilliseconds(300) };
-        var timeout = await Assert.ThrowsAsync<SliceProcessException>(() => P28CommonResultConsumerValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), options)); Assert.Equal(SliceProcessFailure.Timeout, timeout.Failure);
+        var options = new SliceProcessOptions { Arguments = [ProcessHandshake.HostPath, "timeout"], Timeout = TimeSpan.FromMilliseconds(300) };
+        var timeout = await Assert.ThrowsAsync<SliceProcessException>(() => P28CommonResultConsumerValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), options));
+        Assert.Equal(SliceProcessFailure.Timeout, timeout.Failure);
         using var cancelled = new CancellationTokenSource(); cancelled.Cancel();
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => P28CommonResultConsumerValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), options, cancelled.Token));
-        var marker = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".pid");
-        using var active = new CancellationTokenSource(); Process? child = null;
-        try
-        {
-            var running = P28CommonResultConsumerValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(),
-                options with { Arguments = [host, "pid-sleep", marker], Timeout = TimeSpan.FromSeconds(15) }, active.Token);
-            int? pid = null; var limit = Stopwatch.StartNew();
-            while (limit.Elapsed < TimeSpan.FromSeconds(8))
-            {
-                if (File.Exists(marker)) { try { if (int.TryParse(await File.ReadAllTextAsync(marker), out var value) && value > 0) { pid = value; break; } } catch (IOException) { } }
-                await Task.Delay(20);
-            }
-            Assert.True(pid.HasValue, "Active child must publish its PID before cancellation."); child = Process.GetProcessById(pid.Value); Assert.False(child.HasExited);
-            active.Cancel(); await Assert.ThrowsAnyAsync<OperationCanceledException>(() => running);
-            await child.WaitForExitAsync(); Assert.True(child.HasExited);
-        }
-        finally
-        {
-            active.Cancel(); if (child is not null) { if (!child.HasExited) child.Kill(entireProcessTree: true); child.Dispose(); }
-            for (var i = 0; File.Exists(marker) && i < 10; i++) { try { File.Delete(marker); } catch (IOException) when (i < 9) { await Task.Delay(50); } }
-        }
+        await ProcessHandshake.AssertActiveCancellationAsync((activeOptions, token) => P28CommonResultConsumerValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), activeOptions, token));
     }
 
     internal static (P28CommonResultConsumerOracle Own, JsonElement Fixture) Oracle(int historyD, bool disable, int divisor = 1, bool b7 = false, int byteBe = 0, int d9 = 46, int source133 = 100, int currentWord = 700)

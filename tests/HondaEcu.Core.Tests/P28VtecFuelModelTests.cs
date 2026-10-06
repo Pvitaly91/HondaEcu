@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28VtecFuelModelTests
 {
     private static RomImage InventedImage(bool layoutGuard = false)
@@ -138,9 +139,6 @@ public sealed class P28VtecFuelModelTests
         var failure = await Assert.ThrowsAsync<SliceProcessException>(() => P28VtecFuelValidator.ExecuteAsync(
             image, profile, binding, true, "dotnet", Scenario(), options: options));
         Assert.Equal(SliceProcessFailure.Timeout, failure.Failure);
-        using var cancellation = new CancellationTokenSource(500);
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => P28VtecFuelValidator.ExecuteAsync(
-            image, profile, binding, true, "dotnet", Scenario(), options: options with { Timeout = TimeSpan.FromSeconds(15) },
-            cancellationToken: cancellation.Token));
+        await ProcessHandshake.AssertActiveCancellationAsync((activeOptions, token) => P28VtecFuelValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), options: activeOptions, cancellationToken: token));
     }
 }

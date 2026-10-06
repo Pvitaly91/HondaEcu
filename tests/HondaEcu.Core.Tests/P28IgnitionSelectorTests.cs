@@ -4,6 +4,7 @@ using HondaEcu.Core;
 
 namespace HondaEcu.Core.Tests;
 
+[Collection(TimingSensitiveTestCollection.Name)]
 public sealed class P28IgnitionSelectorTests
 {
     private static P28IgnitionSelectorScenario Scenario() => P28IgnitionSelectorScenario.Create(
@@ -133,9 +134,6 @@ public sealed class P28IgnitionSelectorTests
         var timeout = await Assert.ThrowsAsync<SliceProcessException>(() => P28IgnitionSelectorValidator.ExecuteAsync(
             image, profile, binding, true, "dotnet", Scenario(), options));
         Assert.Equal(SliceProcessFailure.Timeout, timeout.Failure);
-        using var cancellation = new CancellationTokenSource(500);
-        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => P28IgnitionSelectorValidator.ExecuteAsync(
-            image, profile, binding, true, "dotnet", Scenario(), options with { Timeout = TimeSpan.FromSeconds(15) },
-            cancellation.Token));
+        await ProcessHandshake.AssertActiveCancellationAsync((activeOptions, token) => P28IgnitionSelectorValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), activeOptions, token));
     }
 }

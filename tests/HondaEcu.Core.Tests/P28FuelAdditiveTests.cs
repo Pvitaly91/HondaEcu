@@ -128,7 +128,7 @@ public sealed class P28FuelAdditiveTests
         var host = Path.Combine(ExecutionTestPaths.RepositoryRoot, "tests", "HondaEcu.Slice.TestHost", "bin", configuration, "net8.0", "HondaEcu.Slice.TestHost.dll");
         var options = new SliceProcessOptions { Arguments = [host, "timeout"], Timeout = TimeSpan.FromMilliseconds(500) };
         var e = await Assert.ThrowsAsync<SliceProcessException>(() => P28FuelAdditiveValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), options)); Assert.Equal(SliceProcessFailure.Timeout, e.Failure);
-        using var cancellation = new CancellationTokenSource(500); await Assert.ThrowsAnyAsync<OperationCanceledException>(() => P28FuelAdditiveValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), options with { Timeout = TimeSpan.FromSeconds(15) }, cancellation.Token));
+        await ProcessHandshake.AssertActiveCancellationAsync((activeOptions, token) => P28FuelAdditiveValidator.ExecuteAsync(image, profile, binding, true, "dotnet", Scenario(), activeOptions, token));
     }
     [Fact]
     public async Task InventedNativeProductionVcalReturnAndConsumptionUseRealSubprocess()
