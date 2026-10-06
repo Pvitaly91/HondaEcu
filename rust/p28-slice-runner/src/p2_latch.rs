@@ -242,6 +242,7 @@ pub(crate) fn run_chain(
             let mut pending_return_word = None;
             let mut caller_route = "NotRun";
             let mut producer_admission = "NotRun";
+            let mut software_tail = None;
             if !terminal {
                 bus.begin_continuity();
                 if below_enabled {
@@ -593,6 +594,25 @@ pub(crate) fn run_chain(
                                 } else {
                                     "ProducerBodyPartial"
                                 };
+                                if r.operation == crate::data0136_tail::OPERATION
+                                    && body.suffix.stage.result.status == 0
+                                {
+                                    let frame = producer_call_frame
+                                        .as_ref()
+                                        .ok_or("Native0664 frame required for tail")?;
+                                    let tail =
+                                        crate::data0136_tail::execute(&mut cpu, &mut bus, frame)?;
+                                    disposition = if tail.disposition == "TailLiveInBlocked" {
+                                        if provenance == "QuartetDerived0196" {
+                                            "TailLiveInBlocked"
+                                        } else {
+                                            "TailLiveInBlockedGateControl"
+                                        }
+                                    } else {
+                                        "TailExecutionPartial"
+                                    };
+                                    software_tail = Some(tail);
+                                }
                                 producer = Some(body);
                             } else {
                                 disposition = "ProducerEntryBlockedControl";
@@ -752,6 +772,7 @@ pub(crate) fn run_chain(
                                     pending_return_word,
                                     caller_route,
                                     producer_admission,
+                                    software_tail,
                                 });
                             } else {
                                 selector_checkpoints.push(selector_event);
@@ -813,8 +834,13 @@ pub(crate) fn run_chain(
         }
     }
     if caller_config.is_some() {
-        response.entry_contracts = crate::fallthrough_data0136::entry_contracts();
-        response.fallthrough_data0136_caller_sequences = Some(caller_sequences);
+        if r.operation == crate::data0136_tail::OPERATION {
+            response.entry_contracts = crate::data0136_tail::entry_contracts();
+            response.data0136_tail_sequences = Some(caller_sequences);
+        } else {
+            response.entry_contracts = crate::fallthrough_data0136::entry_contracts();
+            response.fallthrough_data0136_caller_sequences = Some(caller_sequences);
+        }
     } else if selector_initial.is_some() {
         response.entry_contracts = crate::post_return_selector::entry_contracts();
         response.post_return_selector_sequences = Some(selector_sequences);

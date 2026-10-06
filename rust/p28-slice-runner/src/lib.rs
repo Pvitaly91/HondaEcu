@@ -18,6 +18,9 @@ pub mod cpu;
 pub mod data0136_handoff;
 #[cfg(test)]
 mod data0136_handoff_tests;
+pub mod data0136_tail;
+#[cfg(test)]
+mod data0136_tail_tests;
 pub mod data0136_technical;
 #[cfg(test)]
 mod data0136_technical_tests;

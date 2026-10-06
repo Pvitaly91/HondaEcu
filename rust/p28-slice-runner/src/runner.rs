@@ -435,6 +435,11 @@ pub(crate) fn threshold_contract(code: u8, context: u8, prior: u8, enabled: bool
 }
 
 fn validate_request(request: &Request) -> Result<(), String> {
+    if request.operation != crate::data0136_tail::OPERATION
+        && request.data0136_tail_to_timer_boundary.is_some()
+    {
+        return Err("Foreign M2ah stimulus".into());
+    }
     if request.operation != crate::fallthrough_data0136::OPERATION
         && request.fallthrough_data0136_caller_handoff.is_some()
     {
@@ -710,6 +715,7 @@ fn validate_request(request: &Request) -> Result<(), String> {
         "fallthroughData0136CallerHandoff" => {
             crate::fallthrough_data0136::validate_request(request)?
         }
+        "data0136TailToTimerBoundary" => crate::data0136_tail::validate_request(request)?,
         "statefulVtec" => crate::stateful::validate_request(request)?,
         "limiterSequence" => crate::limiter::validate_request(request)?,
         "adaptiveLimiter" => crate::adaptive::validate_request(request)?,
@@ -744,6 +750,9 @@ fn validate_request(request: &Request) -> Result<(), String> {
 pub fn run_request(request: Request) -> Result<Response, String> {
     validate_request(&request)?;
     let mut response = Response::new(request.operation.clone());
+    if request.operation == crate::data0136_tail::OPERATION {
+        return crate::data0136_tail::run(request, response);
+    }
     if request.operation == crate::post_return_selector::OPERATION {
         return crate::post_return_selector::run(request, response);
     }

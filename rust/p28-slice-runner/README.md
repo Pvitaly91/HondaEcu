@@ -1,9 +1,14 @@
 # Bounded P28 research runner
 
-Runner **0.39.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
+Runner **0.40.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
 upstream CPU provenance and license are retained in
 [the third-party notices](../../THIRD_PARTY_NOTICES.md). No OEM image or native
 program fixture is distributed here.
+
+M2ah adds `data0136TailToTimerBoundary`: native post-NoWrite CMP/JNE prefix,
+STOP BEFORE5722/unowned019B.2. Not timer-boundary completion; no source/ABI repair,
+fresh0136, time/IRQ or return. [M2ah](../../docs/M2AH_DATA0136_SOFTWARE_TAIL.md).
+Historical M2ag still stops5719; no executor fix or JGT/global policy change.
 
 M2ag adds `fallthroughData0136CallerHandoff`: retained064C fallthrough, native
 CAL0664 and bounded NoWrite to stop5719. No ABI/slot/gate seed; pending0667 frame

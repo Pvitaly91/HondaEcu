@@ -76,7 +76,7 @@ internal sealed class P28BelowSecondP2Validation
         Dictionary<int, int> ram, P28QuartetHandoffCheckpoint prefix, List<int[]> native,
         P28P2LatchValidation p2, P28PostP2ControlValidation control, P28CalRtRoundTripValidation? roundTrip = null,
         P28PostReturnSelectorValidation? selector = null, int[]? registers = null, Dictionary<int, int>? selectorRam = null,
-        P28FallthroughData0136Validation? caller = null)
+        P28FallthroughData0136Validation? caller = null, P28Data0136TailValidation? tail = null)
     {
         var first = p2.Rows[p][i]; var c = control.Rows[p][i]; var latch = first.NewLatch; var tcon = c.Tcon0After;
         var pg = first.Generation; var tg = c.Tcon0Generation; var incomingP = pg; var incomingT = tg;
@@ -124,6 +124,12 @@ internal sealed class P28BelowSecondP2Validation
         {
             var result = caller.Finish(p, i, row, before, disposition, ram, registers!, all);
             before = result.After; disposition = result.Disposition; ownRam = [.. ownRam, .. result.Ram];
+        }
+        if (tail is not null)
+        {
+            Require(caller is not null, "Tail lacks independent caller validation.");
+            var next = tail.Finish(p, i, row, before, disposition, caller!.Rows[p][i], all);
+            before = next.After; disposition = next.Disposition; ownRam = [.. ownRam, .. next.Ram];
         }
         Require(Equal(row.GetProperty("allNativeJournal"), JsonSerializer.SerializeToElement(all)), "Event-wide RAM/P2/control chronology forged or host reseed.");
         Require(row.GetProperty("secondP2After").GetInt32() == latch && Equal(row.GetProperty("secondP2Generation"), JsonSerializer.SerializeToElement(pg, JsonDefaults.Create())) && row.GetProperty("finalTcon0").GetInt32() == tcon && Equal(row.GetProperty("finalTcon0Generation"), JsonSerializer.SerializeToElement(tg, JsonDefaults.Create())), "Stale G1/fake G2/TCON generation/host reseed.");

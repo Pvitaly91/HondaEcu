@@ -27,6 +27,7 @@ pub struct Request {
     pub cal_rt_round_trip_handoff: Option<crate::cal_rt_roundtrip::Stimulus>,
     pub post_return_selector_handoff: Option<crate::post_return_selector::Stimulus>,
     pub fallthrough_data0136_caller_handoff: Option<crate::fallthrough_data0136::Stimulus>,
+    pub data0136_tail_to_timer_boundary: Option<crate::fallthrough_data0136::Stimulus>,
     pub stateful_vtec: Option<crate::stateful::Stimulus>,
     pub integrated_chain: Option<crate::chain::Stimulus>,
     pub limiter_sequence: Option<crate::limiter::Stimulus>,
@@ -118,6 +119,8 @@ pub struct Response {
     pub post_return_selector_sequences: Option<Vec<crate::post_return_selector::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub fallthrough_data0136_caller_sequences: Option<Vec<crate::fallthrough_data0136::Sequence>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub data0136_tail_sequences: Option<Vec<crate::fallthrough_data0136::Sequence>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stateful_sequences: Option<Vec<crate::stateful::SequenceResult>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -262,6 +265,7 @@ impl Response {
             cal_rt_round_trip_sequences: None,
             post_return_selector_sequences: None,
             fallthrough_data0136_caller_sequences: None,
+            data0136_tail_sequences: None,
             stateful_sequences: None,
             chain_sequences: None,
             limiter_sequences: None,

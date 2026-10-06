@@ -112,11 +112,11 @@ public static class P28Word0196AlternateValidator
         IReadOnlyList<int> offsets = child is null ? [] : Enumerable.Range(0, original.Size).Where(i => original.Span[i] != child.Span[i]).ToArray();
         return new(1, scenario.Purpose, original.Hash, profile.Id, scenario.Digest, version, scenario.Mutation, offsets, sequences, comparisons, contract);
     }
-    internal static IReadOnlyList<P28Word0196AlternateSequence> Analyze(RomImage image, P28Word0196AlternateScenario scenario, JsonElement root, string id, P28P2LatchValidation? p2 = null, P28PostP2ControlValidation? control = null, P28BelowSecondP2Validation? below = null, P28CalRtRoundTripValidation? roundTrip = null, P28PostReturnSelectorValidation? selector = null, P28FallthroughData0136Validation? caller = null)
+    internal static IReadOnlyList<P28Word0196AlternateSequence> Analyze(RomImage image, P28Word0196AlternateScenario scenario, JsonElement root, string id, P28P2LatchValidation? p2 = null, P28PostP2ControlValidation? control = null, P28BelowSecondP2Validation? below = null, P28CalRtRoundTripValidation? roundTrip = null, P28PostReturnSelectorValidation? selector = null, P28FallthroughData0136Validation? caller = null, P28Data0136TailValidation? tail = null)
     {
-        var key = caller is not null ? "fallthroughData0136CallerSequences" : selector is not null ? "postReturnSelectorSequences" : roundTrip is not null ? "calRtRoundTripSequences" : below is not null ? "belowSecondP2Sequences" : control is not null ? "postP2ControlSequences" : p2 is null ? "word0196AlternateSequences" : "p2LatchSequences";
+        var key = tail is not null ? "data0136TailSequences" : caller is not null ? "fallthroughData0136CallerSequences" : selector is not null ? "postReturnSelectorSequences" : roundTrip is not null ? "calRtRoundTripSequences" : below is not null ? "belowSecondP2Sequences" : control is not null ? "postP2ControlSequences" : p2 is null ? "word0196AlternateSequences" : "p2LatchSequences";
         P28LimiterScenario.Shape(root, "protocolVersion", "operation", "runnerVersion", "upstreamCommit", "localSemanticFixes", "entryContracts", "compactRows", "thresholdRows", "diagnostics", "syntheticResult", key);
-        _ = SliceRunnerIdentity.Validate(root, caller is not null ? P28FallthroughData0136Validator.Operation : selector is not null ? P28PostReturnSelectorValidator.Operation : roundTrip is not null ? P28CalRtRoundTripValidator.Operation : below is not null ? P28BelowSecondP2Validator.Operation : control is not null ? P28PostP2ControlValidator.Operation : p2 is null ? Operation : P28P2LatchValidator.Operation); Require(Equal(root.GetProperty("entryContracts"), caller is not null ? P28FallthroughData0136Validator.ExpectedContracts() : selector is not null ? P28PostReturnSelectorValidator.ExpectedContracts() : roundTrip is not null ? P28CalRtRoundTripValidator.ExpectedContracts() : below is not null ? P28BelowSecondP2Validator.ExpectedContracts() : control is not null ? P28PostP2ControlValidator.ExpectedContracts() : p2 is null ? ExpectedContracts() : P28P2LatchValidator.ExpectedContracts()), "Software/latch/control contract differs.");
+        _ = SliceRunnerIdentity.Validate(root, tail is not null ? P28Data0136TailValidator.Operation : caller is not null ? P28FallthroughData0136Validator.Operation : selector is not null ? P28PostReturnSelectorValidator.Operation : roundTrip is not null ? P28CalRtRoundTripValidator.Operation : below is not null ? P28BelowSecondP2Validator.Operation : control is not null ? P28PostP2ControlValidator.Operation : p2 is null ? Operation : P28P2LatchValidator.Operation); Require(Equal(root.GetProperty("entryContracts"), tail is not null ? P28Data0136TailValidator.ExpectedContracts() : caller is not null ? P28FallthroughData0136Validator.ExpectedContracts() : selector is not null ? P28PostReturnSelectorValidator.ExpectedContracts() : roundTrip is not null ? P28CalRtRoundTripValidator.ExpectedContracts() : below is not null ? P28BelowSecondP2Validator.ExpectedContracts() : control is not null ? P28PostP2ControlValidator.ExpectedContracts() : p2 is null ? ExpectedContracts() : P28P2LatchValidator.ExpectedContracts()), "Software/latch/control contract differs.");
         foreach (var k in new[] { "compactRows", "thresholdRows", "diagnostics" }) Require(root.GetProperty(k).GetArrayLength() == 0, "Foreign rows."); Require(root.GetProperty("syntheticResult").ValueKind == JsonValueKind.Null, "Foreign synthetic result.");
         var seq = root.GetProperty(key); Require(seq.GetArrayLength() == 3, "Three scratch histories required.");
         JsonElement Row(int p, int i) => seq[p].GetProperty("checkpoints")[i];
@@ -152,6 +152,7 @@ public static class P28Word0196AlternateValidator
             if (roundTrip is not null) fields = [.. fields, "nativeCal", "nativeRt", "callFrame", "stackJournal"];
             if (selector is not null) fields = [.. fields, "postReturn", "selectorBefore", "selectorAfter", "incomingSelectorGeneration", "reader0584Generation", "reader063eGeneration", "selectorGeneration", "selectorHandoff"];
             if (caller is not null) fields = [.. fields, "caller", "producer", "producerCallFrame", "pendingReturnWord", "callerRoute", "producerAdmission"];
+            if (tail is not null && r.TryGetProperty("softwareTail", out _)) fields = [.. fields, "softwareTail"];
             P28LimiterScenario.Shape(r, fields);
             selector?.Start(p, i, r, prefix);
             Require(N(r, "index") == i && N(r, "machineId") == 1 && Equal(r.GetProperty("canaries"), JsonSerializer.SerializeToElement(new[] { pattern, pattern, pattern })), "Wrong machine/index/canary.");
@@ -199,7 +200,7 @@ public static class P28Word0196AlternateValidator
             }
             if (below is not null)
             {
-                var next = below.Finish(p, i, r, after, disposition, h, prefix, native, p2!, control!, roundTrip, selector, registers, owned[p], caller);
+                var next = below.Finish(p, i, r, after, disposition, h, prefix, native, p2!, control!, roundTrip, selector, registers, owned[p], caller, tail);
                 after = next.After; disposition = next.Disposition; native.AddRange(next.Ram);
             }
             owned[p][0x12A] = h[0x12A]; // Only independently modeled suffix writes affect next M2x history.

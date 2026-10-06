@@ -214,6 +214,9 @@ public sealed partial class CliApplication
           research p28-fuel fallthrough-data0136-caller-check <original> --profile p28-304 --confirm-profile
             --baseline-binding <binding.json> --runner <runner-0.39.0> --scenario <scenario.json> --output <new-report.json>
             Native fallthrough CAL0664/NoWrite producer;STOP BEFORE5719;frame pending;no time/IRQ/GUI/hardware/BIN.
+          research p28-fuel data0136-tail-check <original> --profile p28-304 --confirm-profile
+            --baseline-binding <binding.json> --runner <runner-0.40.0> --scenario <scenario.json> --output <new-report.json>
+            Native post-NoWrite prefix;STOP before unowned019B.2 at5722;timer5793NotRun;frame pending;BIN0.
           research p28-fuel cal-rt-roundtrip-check <original> --profile p28-304 --confirm-profile
               --baseline-binding <binding.json> --runner <runner-0.37.0>
               --scenario <m2ad-scenario.json> --output <new-private-report.json>

@@ -112,6 +112,12 @@ These component licenses do not determine the license of HondaEcu's own code.
 
 ## Windows Desktop Research Preview distribution
 
+M2ah runner0.40.0 adds a separate bounded post-NoWrite software-prefix validator,
+blocked before an unowned scratch bit; no new executor semantic fix. Upstream
+CPU/opcode table/license attribution and historical boundaries are unchanged.
+Only invented public fixtures, no OEM routine windows. See
+[M2ah](docs/M2AH_DATA0136_SOFTWARE_TAIL.md).
+
 M2ag runner0.39.0 adds a separate bounded fallthrough caller/NoWrite integration
 and narrow frozen-source journal without new executor semantic fixes. Upstream
 attribution/opcode table/license and old boundaries remain unchanged. Public tests

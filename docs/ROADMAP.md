@@ -1,5 +1,13 @@
 # Roadmap
 
+M2ah records the [native DATA0136 software-tail prefix boundary](M2AH_DATA0136_SOFTWARE_TAIL.md),
+separate runner0.40.0 operation. Actual M2ag NoWrite exit5719 continues on the same
+CPU/Bus through CMP5719/JNE571D; STOP before5722/019B.2, whose semantic owner is
+not established by RB05D5 clearing onlybit0. No new fields/canary promotion.
+JLE OR independently reviewed but NotRun past that earlier live-in blocker;
+JGT remains Blocked. Pending0667 frame/retained0136 preserved;5793TM3/readers
+5782/5787NotRun. No automatic M2ai/timer/return/scheduler/IRQ/GUI/hardware/BIN.
+
 M2ag adds the [bounded fallthrough DATA0136 caller](M2AG_FALLTHROUGH_DATA0136_CALLER.md),
 separate runner0.39.0 operation. Scratch00 naturally reaches CAL0664 from actual
 M2ae064C exit via retained011F/011B/012A, then NoWrite body stops-before5719.

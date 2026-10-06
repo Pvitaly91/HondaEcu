@@ -1,5 +1,12 @@
 # HondaEcu
 
+M2ah adds separate [post-NoWrite software-tail research](docs/M2AH_DATA0136_SOFTWARE_TAIL.md),
+runner0.40.0. Actual M2ag5719 state executes native byte compare/JNE and stops
+BEFORE5722:019B.2 has no authorized semantic owner; scratch canary is not a branch
+source. Pending0667 frame and retained0136 persist.5793/TM3/readers5782/5787NotRun;
+zero new source fields, no ABI/slot/pointer repair/time/IRQ/GUI/hardware/BIN.
+Historical M2ag still stops5719 and M2af/JGT blockers remain unchanged.
+
 M2ag adds a separate [native fallthrough DATA0136 caller entry](docs/M2AG_FALLTHROUGH_DATA0136_CALLER.md),
 runner0.39.0. Actual M2ae state reaches native CAL0664 and a retained-state
 first-observation NoWrite producer, stopping before5719 with a pending0667 frame.

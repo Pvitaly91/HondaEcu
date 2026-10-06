@@ -41,7 +41,7 @@ pub struct Stimulus {
     pub trnsit_architectural_flags: u8,
 }
 impl Stimulus {
-    fn body_calls(&self) -> Vec<prefix::Call> {
+    pub(crate) fn body_calls(&self) -> Vec<prefix::Call> {
         self.calls
             .iter()
             .map(|c| prefix::Call {
@@ -75,6 +75,8 @@ pub struct Event {
     pub pending_return_word: Option<u16>,
     pub caller_route: &'static str,
     pub producer_admission: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub software_tail: Option<crate::data0136_tail::Output>,
 }
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -107,6 +109,9 @@ pub fn validate_request(r: &Request) -> Result<(), String> {
         .fallthrough_data0136_caller_handoff
         .as_ref()
         .ok_or("M2ag stimulus required")?;
+    validate_parts(r, s)
+}
+pub(crate) fn validate_parts(r: &Request, s: &Stimulus) -> Result<(), String> {
     if s.initial_selector013c > 3
         || s.tcon0_architectural_snapshot & !12 != 0x83
         || s.trnsit_architectural_flags > 15
