@@ -1,5 +1,11 @@
 # HondaEcu
 
+M2aj records [pre-063B caller/shift-history feasibility](docs/M2AJ_PRE063B_CALLER_PROVENANCE.md):
+0611/0635 are alternative early calls, not a sequential pair in one bounded
+invocation. The first shift still needs oldbit1 for5722, and genuine RT5801 is
+required before a later caller. Slot5, IRQ/timer and history remain unproved.
+Research/Blocked; runner0.40.0, no new operation/CLI; M2ah boundaries unchanged.
+
 M2ai adds [DATA019B.2 semantic-owner provenance research](docs/M2AI_DATA019B2_OWNER_PROVENANCE.md).
 All11,499 listed extents match the original. The conditional571F shift derives
 bit2 from old bit1; earlier0611/0635 calls are skipped by the disclosed caller

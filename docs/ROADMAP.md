@@ -1,5 +1,12 @@
 # Roadmap
 
+M2aj adds [pre-063B caller provenance research](M2AJ_PRE063B_CALLER_PROVENANCE.md):
+alternative0611/0635 callers, native slot-source candidates, first5722 bootstrap
+barrier, distinct frames/RT5801 obligations and conditional012A.3 later-call gate.
+No strict earlier-call/shift history or runnable operation is established;
+runner0.40.0 and historical M2ai/M2ah/M2ag/M2af/M2v/M2w/M2t limits unchanged.
+No automatic M2ak, IRQ/timer/return/tail/JGT/GUI/hardware continuation.
+
 M2ai records the [DATA019B.2 ownership boundary](M2AI_DATA019B2_OWNER_PROVENANCE.md):
 whole listed-ROM extent audit, per-bit ownership rules, conditional571F source
 bit1 and skipped enclosing0611/0635 caller candidates. Runtime owner and strict
