@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2ak records [independent DATA019B bootstrap provenance](docs/M2AK_DATA019B1_BOOTSTRAP_PROVENANCE.md):
+conditional native zero initialization and constant-copy bit sources, with exact
+reset/alias/first-reader continuity gates. SLLB off-object ZF discrepancy is a
+confirmed static defect note only. M2ah remains blocked; runner0.40.0, no new operation.
+
 M2aj records [pre-063B caller/shift-history feasibility](docs/M2AJ_PRE063B_CALLER_PROVENANCE.md):
 0611/0635 are alternative early calls, not a sequential pair in one bounded
 invocation. The first shift still needs oldbit1 for5722, and genuine RT5801 is

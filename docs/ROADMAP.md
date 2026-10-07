@@ -1,5 +1,11 @@
 # Roadmap
 
+M2ak adds [independent bootstrap-source research](M2AK_DATA019B1_BOOTSTRAP_PROVENANCE.md):
+the conditional2710 initialization domain, temporary-pattern/restoration distinction,
+3174 constant-bit invariant and separate no-shift/shift first5722 obligations.
+No current M2ah owner or runtime integration is established; SLLB defect note has
+no executor/admission change. Runner0.40.0; no automatic M2al or tail/IRQ/GUI work.
+
 M2aj adds [pre-063B caller provenance research](M2AJ_PRE063B_CALLER_PROVENANCE.md):
 alternative0611/0635 callers, native slot-source candidates, first5722 bootstrap
 barrier, distinct frames/RT5801 obligations and conditional012A.3 later-call gate.
