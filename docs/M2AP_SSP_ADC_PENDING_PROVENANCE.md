@@ -127,7 +127,9 @@ Frame019A writes low6D/high27: both019B.1/.2 become1 from a **new conditional
 CAL-derived generation**, not retained CLR2706 zero ownership and not M2ah input.
 Frame0230 low6D sets0230.3/H to1. Frame025A sets threshold276D; for a separately
 owned H1, d=(TM2−276D) mod65536<00C8 corresponds toTM2 in276D..2834.
-H0 does not read TM2/threshold at all. One aligned two-byte frame cannot
+H0 bypasses the pre-reader timer/threshold comparison. Its pending1 ADC body
+later reads TM2 at5CC2 and rewrites025A/B; that external dependency is not removed.
+One aligned two-byte frame cannot
 overlap both auxiliary words; independent H1 and threshold changes cannot be
 assembled from mutually exclusive frame addresses.
 
@@ -175,6 +177,14 @@ call lies in this interval. IE remains code-owned0000 from CLR2758/ST2759
 in that separately reached, noasync/noalias domain. **Polling fresh pending
 does not require delivered ISR.** NMI/context effects remain independent gates.
 
+Further source-specific narrowing: every bounded first exit has cleared words
+00FA and00F8; the tail and safe047E/F frame do not overwrite them. Under that
+complete retained domain, body IE writes from00FA/00F8 also remain0000 despite
+MIE clear/set. This removes saved-mask-value uncertainty for that first helper,
+not for generic callers or unknown aliases/context. Body MOV5CC2 still reads
+external TM2 word0038/39 and writes threshold025A/B. P2/ADC/TM2 effects,
+actual fresh pending and native return remain unestablished.
+
 Twelve literal direct IRQ references were checked in the reused inventory:
 word clears and selected-bit RMW/readers, but no direct literal IRQ4 setter.
 This is not a global absence claim for page aliases, indirect or asynchronous
@@ -199,7 +209,7 @@ supplied conditional post-C ADC factor. None is an executable scenario field.
 | Correlated sources/conditions | Listed route and writes | Earliest unresolved dependency /static status |
 |---|---|---|
 | S/F safe; reset-derivedH0; C; no fresh update | RB5CA0old0/ZF1→JEQ→5CCE marker/BRK5CD2 | Actual entry/absence-of-event/control effects; ConditionalFaultRoute |
-| Same H0; C→freshP retained at reader | RBold1/ZF0→P2/indexed ADC body→RT5CCD | P unobserved; P2/ADC/masks/currentframe/RT; ConditionalNormalReturn only |
+| Same H0; C→freshP retained at reader | RBold1/ZF0→P2/indexed ADC/TM2 body→RT5CCD | P unobserved; P2/ADC/TM2/control/currentframe/RT; ConditionalNormalReturn only |
 | IndependentlyH1; ownedT; d<C8 | Timer/mask route→RT5CCD; IRQ reader bypassed | TM2/control/frame/return; pending not necessary on this route |
 | H1; d>=C8; C→P old1 | ADC fallback body→RT5CCD | Additional timer/mask/ack history and P/RT; conditional only |
 | H1; d>=C8; readerold0 | Fault marker/BRK, not normalRT | Same history/control gates; ConditionalFaultRoute |
