@@ -1,5 +1,12 @@
 # Roadmap
 
+M2aq adds [first RAM-test CAL/RT provenance research](M2AQ_FIRST_RAMTEST_CAL_RT_PROVENANCE.md):
+bounded caller/selftest gates, exact first-call contract and fresh restored-frame
+lineage are static/invented only. Applicable reset/WDT/external sources and one
+actual Cpu/Bus history are missing: Research/Blocked, ExecutionPreflightBlocked.
+Actual-ROM0; exactDEC DP HC discrepancy is note-only. No executor/admission/version
+change or historical promotion. STOP: no M2ar, secondCALL, loop, IRQ, GUI/hardware.
+
 M2ap adds [SSP and ADC pending-factor research](M2AP_SSP_ADC_PENDING_PROVENANCE.md):
 five explicit SSP writers, cold-path seven-call exclusion, fresh restored-frame
 lineage and native scan command10 narrow first-helper requirements.

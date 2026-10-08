@@ -1,5 +1,11 @@
 # HondaEcu
 
+M2aq records [first native RAM-test CAL/RT provenance research](docs/M2AQ_FIRST_RAMTEST_CAL_RT_PROVENANCE.md):
+reset-vector24ED is static; rooted early history and external selftest sources
+remain unestablished. First2689 frame generations/RT5C80 are specification-only.
+ExecutionPreflightBlocked, actual-ROM0; invented tests cannot grant native success.
+Runner0.41.0/protocol1 and historical boundaries unchanged; no runtime capability.
+
 M2ap records [native SSP/frame and ADC pending provenance](docs/M2AP_SSP_ADC_PENDING_PROVENANCE.md):
 independent24F8 SSP source, bounded restoration/call-history gates and native
 ADC scan configuration distinguish pending from interrupt delivery.
