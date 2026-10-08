@@ -1,5 +1,11 @@
 # HondaEcu
 
+M2ap records [native SSP/frame and ADC pending provenance](docs/M2AP_SSP_ADC_PENDING_PROVENANCE.md):
+independent24F8 SSP source, bounded restoration/call-history gates and native
+ADC scan configuration distinguish pending from interrupt delivery.
+Actual SSP276A, postclear ADC event and RT5CCD remain NotEstablished/NotRun.
+Research/Blocked; runner0.41.0/protocol1 and M2ao beforeIE2759 frontier unchanged.
+
 M2ao records the [post-initialization DATA019B preservation frontier](docs/M2AO_RESET_TAIL_019B_PRESERVATION.md):
 conditional post-store retention through the audited loop and exit272A startup,
 strictly before ST IE2759. Active-pointer self-alias, helper auxiliary history

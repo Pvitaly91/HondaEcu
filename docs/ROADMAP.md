@@ -1,5 +1,13 @@
 # Roadmap
 
+M2ap adds [SSP and ADC pending-factor research](M2AP_SSP_ADC_PENDING_PROVENANCE.md):
+five explicit SSP writers, cold-path seven-call exclusion, fresh restored-frame
+lineage and native scan command10 narrow first-helper requirements.
+Pending can exist while delivery is disabled; no actual ADC event/native return
+or reset-to-ISR owner is established. M2ao strict frontier unchanged.
+No executor/admission/version change; actual-ROM0, Research/Blocked.
+STOP: no automatic M2aq,JGTfix,runtime reset,IRQ,first5722,GUI or hardware work.
+
 M2ao adds [post-initialization DATA019B preservation research](M2AO_RESET_TAIL_019B_PRESERVATION.md):
 140 bounded word footprints,20 distinct conditional first-exit pairs and
 source retention after CLR2758/before ST IE2759 in the explicit audited domain.
