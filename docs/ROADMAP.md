@@ -1,5 +1,11 @@
 # Roadmap
 
+M2ar adds [reset/WDT/DATA4700 provenance research](M2AR_RESET_WDT_EXTERNAL4700_PROVENANCE.md):
+complete Jan1998 manufacturer reset tables, cause/wake separation and exact
+numeric noninterference distinguish code decisions from unknown read effects.
+Device/reset applicability and WDT3C remain unresolved; actual-ROM0, no ISA fix,
+operation/admission/version or historical promotion. STOP: no M2as/runtime/GUI.
+
 M2aq adds [first RAM-test CAL/RT provenance research](M2AQ_FIRST_RAMTEST_CAL_RT_PROVENANCE.md):
 bounded caller/selftest gates, exact first-call contract and fresh restored-frame
 lineage are static/invented only. Applicable reset/WDT/external sources and one

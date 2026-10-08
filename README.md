@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2ar records [reset/WDT/external DATA4700 provenance research](docs/M2AR_RESET_WDT_EXTERNAL4700_PROVENANCE.md):
+dated manufacturer reset fields and bounded numeric DATA4700 noninterference
+narrow the evidence gap. Exact ECU/reset, WDT3C and external read effects remain
+unestablished: Research/Blocked, actual-ROM0. No runtime/admission/version change.
+
 M2aq records [first native RAM-test CAL/RT provenance research](docs/M2AQ_FIRST_RAMTEST_CAL_RT_PROVENANCE.md):
 reset-vector24ED is static; rooted early history and external selftest sources
 remain unestablished. First2689 frame generations/RT5C80 are specification-only.
