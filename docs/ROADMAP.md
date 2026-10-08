@@ -1,5 +1,11 @@
 # Roadmap
 
+M2al adds [JGT2714 primary evidence and loop analysis](M2AL_JGT2714_PRIMARY_SEMANTICS.md):
+new applicable1998 instruction-list evidence is not decisive; equality/termination
+remain unresolved. A scoped non47 target prefix has a JGT-independent static proof.
+No owner-to5722 integration, executor fix or M2t/SLLB promotion; runner0.40.0.
+No automatic M2am, runtime bootstrap, IRQ/timer/fullboot, GUI or hardware work.
+
 M2ak adds [independent bootstrap-source research](M2AK_DATA019B1_BOOTSTRAP_PROVENANCE.md):
 the conditional2710 initialization domain, temporary-pattern/restoration distinction,
 3174 constant-bit invariant and separate no-shift/shift first5722 obligations.

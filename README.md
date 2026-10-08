@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2al records [primary JGT2714 and loop research](docs/M2AL_JGT2714_PRIMARY_SEMANTICS.md):
+OR/AND remains PrimaryConflictUnresolved. Independent static analysis separates
+conditional termination from a cold/non47 target-store proof valid for both opaque
+branch edges. No runtime/admission change; runner0.40.0, actual-ROM execution0.
+
 M2ak records [independent DATA019B bootstrap provenance](docs/M2AK_DATA019B1_BOOTSTRAP_PROVENANCE.md):
 conditional native zero initialization and constant-copy bit sources, with exact
 reset/alias/first-reader continuity gates. SLLB off-object ZF discrepancy is a
