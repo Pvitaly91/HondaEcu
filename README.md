@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2an applies the [exact SLLB off-page semantic fix](docs/M2AN_SLLB_OFFPAGE_SEMANTIC_FIX.md):
+C4 N8 D7 preserves every noncarry flag;runner0.41.0 adds one distinct fix identity.
+Exhaustive invented ISA tests do not add admission or unblock571F/5722/JGT.
+M2ah/M2ak/M2al/M2am research boundaries unchanged;new actual-ROM execution0.
+
 M2am prepares [independent C8 equality evidence acquisition](docs/M2AM_C8_EQUALITY_EVIDENCE.md):
 no decisive new silicon/primary correction; equality and less remain NotEstablished.
 Vendor inquiry DraftReady/NotSent and compatible-silicon protocol NotExecuted.

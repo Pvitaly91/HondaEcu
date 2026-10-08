@@ -1,5 +1,11 @@
 # Roadmap
 
+M2an adds the [exact C4 N8 D7 semantic correction](M2AN_SLLB_OFFPAGE_SEMANTIC_FIX.md):
+runner0.41.0 / byte-sll-off-page-preserves-noncarry-flags;protocol1 unchanged.
+All256 bytes and16 incoming flag combinations in two invented pages are checked.
+No new operation/admission,actual-ROM0;M2ah STOPbefore5722 and C8 blockers retained.
+No automatic M2ao,runtime571F,first5722,JGTfix,IRQ/timer/GUI/hardware work.
+
 M2am adds [C8 equality evidence acquisition](M2AM_C8_EQUALITY_EVIDENCE.md):
 no new decisive independent proof; actual equality/less NotEstablished and the
 primary conflict unresolved. Official general support route is not verified

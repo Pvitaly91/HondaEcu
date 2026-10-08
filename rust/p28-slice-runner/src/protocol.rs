@@ -244,6 +244,7 @@ impl Response {
                 "byte-rol-a-through-carry-preserves-noncarry-flags",
                 "cal-addr16-rt-clears-internal-stack-flag",
                 "byte-incb-r0-half-carry",
+                "byte-sll-off-page-preserves-noncarry-flags",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],

@@ -117,7 +117,7 @@ public sealed class P28LimiterFuelTests
                 outputAddresses = new[] { 0x124, 0x3A2, 0x3A3, 0x3B4, 0x3B5 }
             }
         });
-        Assert.Equal("0.40.0", response.Response.GetProperty("runnerVersion").GetString()); var r = response.Response.GetProperty("syntheticResult"); Assert.Equal(0, r.GetProperty("status").GetInt32());
+        Assert.Equal("0.41.0", response.Response.GetProperty("runnerVersion").GetString()); var r = response.Response.GetProperty("syntheticResult"); Assert.Equal(0, r.GetProperty("status").GetInt32());
         Assert.Equal(new[] { raw < 100 ? 0xF5 : 0xD5, a, 0, b, 0 }, r.GetProperty("outputs").EnumerateArray().Select(v => v.GetInt32()));
         var trace = r.GetProperty("trace").EnumerateArray().ToArray(); Assert.Contains(trace, e => e.GetProperty("pc").GetInt32() == 6);
         Assert.Contains(trace, e => e.GetProperty("pc").GetInt32() == 13 && e.GetProperty("nextPc").GetInt32() == (raw < 100 ? 16 : 17));

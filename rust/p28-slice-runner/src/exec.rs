@@ -660,6 +660,17 @@ impl<'a> Exec<'a> {
                     && FULL_OPCODES[self.d.index].bytes_pat == ["33"]
                     && self.d.mnemonic == "ROLB A"
                     && args[0] == Arg::Reg(Reg::A);
+                // M2an exact C4 N8 D7, primary printed3-145: CF only.
+                // DD-neutral: preserve either incoming DD, ZF and HC.
+                let pattern = &FULL_OPCODES[self.d.index];
+                let reviewed_byte_sll_off = base == "SLL"
+                    && byte
+                    && self.d.mnemonic == "SLLB off N8"
+                    && self.d.len == 3
+                    && pattern.bytes_pat == ["C4", "N8", "D7"]
+                    && pattern.dd_mode == 'U'
+                    && self.d.dd_after.is_none()
+                    && args[0] == Arg::Mem(Mem::OffPage);
                 let (res, carry) = match base {
                     "ROL" if reviewed_byte_rol_off || reviewed_byte_rol_a => (
                         ((v32 << 1) | u32::from(self.cpu.cf)) & 0xFF,
@@ -694,6 +705,7 @@ impl<'a> Exec<'a> {
                     && !reviewed_rol_a_or_er0
                     && !reviewed_byte_rol_off
                     && !reviewed_byte_rol_a
+                    && !reviewed_byte_sll_off
                 {
                     self.set_zf(res as u16, byte);
                 }

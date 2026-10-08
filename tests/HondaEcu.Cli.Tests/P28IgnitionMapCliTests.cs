@@ -82,7 +82,7 @@ public sealed class P28IgnitionMapCliTests
                 RomImage.Load(Baseline).Hash, P28VtecInspector.ComputeProfileDigest(profile)).ToJson());
             File.WriteAllText(Scenario, P28IgnitionMapScenario.Create(new(0, 0, 0, 0, 0, 0, 0, 0, 0),
                 [new(0, "ignition_map_0", 0, 0, 0)], "Invented CLI test.").ToJson());
-            Runner = Path.Combine(repository, "rust", "p28-slice-runner", "target", "release",
+            Runner = Environment.GetEnvironmentVariable("HONDAECU_SLICE_RUNNER") ?? Path.Combine(repository, "rust", "p28-slice-runner", "target", "release",
                 OperatingSystem.IsWindows() ? "p28-slice-runner.exe" : "p28-slice-runner");
         }
         public string Root { get; } = Path.Combine(Path.GetTempPath(), $"hondaecu-ignition-cli-{Guid.NewGuid():N}");

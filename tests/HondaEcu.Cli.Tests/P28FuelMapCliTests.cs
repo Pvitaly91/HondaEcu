@@ -97,7 +97,7 @@ public sealed class P28FuelMapCliTests
                 RomImage.Load(Baseline).Hash, P28VtecInspector.ComputeProfileDigest(profile)).ToJson());
             File.WriteAllText(Scenario, P28FuelMapScenario.Create(new(0, 0, 0, 0, 0, 0, 0, 9, 0),
                 [new(0, "map_0", 0, 0, 0), new(1, "map_1", 255, 255, 255)], "Invented CLI subprocess test.").ToJson());
-            Runner = Path.Combine(repository, "rust", "p28-slice-runner", "target", "release", OperatingSystem.IsWindows() ? "p28-slice-runner.exe" : "p28-slice-runner");
+            Runner = Environment.GetEnvironmentVariable("HONDAECU_SLICE_RUNNER") ?? Path.Combine(repository, "rust", "p28-slice-runner", "target", "release", OperatingSystem.IsWindows() ? "p28-slice-runner.exe" : "p28-slice-runner");
         }
 
         public string Root { get; } = Path.Combine(Path.GetTempPath(), $"hondaecu-fuel-cli-{Guid.NewGuid():N}");

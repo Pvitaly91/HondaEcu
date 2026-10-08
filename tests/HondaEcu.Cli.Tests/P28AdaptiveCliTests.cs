@@ -45,7 +45,7 @@ public sealed class P28AdaptiveCliTests
         var initial = new P28AdaptiveState(new(0, 0, 0, 255, 7, 100, 110), 0, 0, 0, 0);
         var calls = Enumerable.Range(0, 2).Select(i => new P28AdaptiveCall(new(i, 101, false, false, 254), 1000, false, false, false, false, true, 0, 0, 0)).ToArray();
         File.WriteAllText(w.Scenario, P28AdaptiveScenario.Create(initial, calls, "Invented headless CLI E2E").ToJson());
-        var runner = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(w.Profile.SourcePath)!, "../../rust/p28-slice-runner/target/release", OperatingSystem.IsWindows() ? "p28-slice-runner.exe" : "p28-slice-runner"));
+        var runner = Environment.GetEnvironmentVariable("HONDAECU_SLICE_RUNNER") ?? Path.GetFullPath(Path.Combine(Path.GetDirectoryName(w.Profile.SourcePath)!, "../../rust/p28-slice-runner/target/release", OperatingSystem.IsWindows() ? "p28-slice-runner.exe" : "p28-slice-runner"));
         Assert.True(File.Exists(runner), "Pinned Rust runner is required, not an optional skipped test.");
         var args = Args(w); args[Array.IndexOf(args, "--runner") + 1] = runner;
         var snapshot = w.InputSnapshot(); var runnerBefore = File.ReadAllBytes(runner);
