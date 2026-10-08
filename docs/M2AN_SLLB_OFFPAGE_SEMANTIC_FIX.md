@@ -407,4 +407,3 @@ The table is an independent arithmetic specification,not executor output.
 |FD|FA|1|0|1|
 |FE|FC|1|0|1|
 |FF|FE|1|0|1|
-
