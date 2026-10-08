@@ -1,5 +1,11 @@
 # HondaEcu
 
+M2ao records the [post-initialization DATA019B preservation frontier](docs/M2AO_RESET_TAIL_019B_PRESERVATION.md):
+conditional post-store retention through the audited loop and exit272A startup,
+strictly before ST IE2759. Active-pointer self-alias, helper auxiliary history
+and genuine IRQ/frame gates are explicit; no reset-to-ISR/5722 runtime owner.
+Research/Blocked; runner0.41.0/protocol1 unchanged, M2ao actual-ROM execution0.
+
 M2an applies the [exact SLLB off-page semantic fix](docs/M2AN_SLLB_OFFPAGE_SEMANTIC_FIX.md):
 C4 N8 D7 preserves every noncarry flag;runner0.41.0 adds one distinct fix identity.
 Exhaustive invented ISA tests do not add admission or unblock571F/5722/JGT.

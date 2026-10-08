@@ -1,5 +1,13 @@
 # Roadmap
 
+M2ao adds [post-initialization DATA019B preservation research](M2AO_RESET_TAIL_019B_PRESERVATION.md):
+140 bounded word footprints,20 distinct conditional first-exit pairs and
+source retention after CLR2758/before ST IE2759 in the explicit audited domain.
+First-helper auxiliary bit3 excludes the timer route only in that correlated
+domain; normal return requires a fresh pending factor plus real frame/effect proof.
+No runtime/admission/version change; Research/Blocked, actual-ROM0.
+No automatic M2ap,startup,571F/5722,JGTfix,IRQ/fullboot,GUI or hardware work.
+
 M2an adds the [exact C4 N8 D7 semantic correction](M2AN_SLLB_OFFPAGE_SEMANTIC_FIX.md):
 runner0.41.0 / byte-sll-off-page-preserves-noncarry-flags;protocol1 unchanged.
 All256 bytes and16 incoming flag combinations in two invented pages are checked.
