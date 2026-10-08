@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2am prepares [independent C8 equality evidence acquisition](docs/M2AM_C8_EQUALITY_EVIDENCE.md):
+no decisive new silicon/primary correction; equality and less remain NotEstablished.
+Vendor inquiry DraftReady/NotSent and compatible-silicon protocol NotExecuted.
+Research/Blocked; runner0.40.0, no executor/admission change or actual-ROM execution.
+
 M2al records [primary JGT2714 and loop research](docs/M2AL_JGT2714_PRIMARY_SEMANTICS.md):
 OR/AND remains PrimaryConflictUnresolved. Independent static analysis separates
 conditional termination from a cold/non47 target-store proof valid for both opaque

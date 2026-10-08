@@ -1,5 +1,11 @@
 # Roadmap
 
+M2am adds [C8 equality evidence acquisition](M2AM_C8_EQUALITY_EVIDENCE.md):
+no new decisive independent proof; actual equality/less NotEstablished and the
+primary conflict unresolved. Official general support route is not verified
+legacy-device support; inquiry ready/NotSent, protocol ready/NotExecuted.
+No fix, runtime or M2an continuation; runner0.40.0, actual-ROM execution0.
+
 M2al adds [JGT2714 primary evidence and loop analysis](M2AL_JGT2714_PRIMARY_SEMANTICS.md):
 new applicable1998 instruction-list evidence is not decisive; equality/termination
 remain unresolved. A scoped non47 target prefix has a JGT-independent static proof.
