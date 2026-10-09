@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2as records [Reset/WDT hardware-document acquisition](docs/M2AS_RESET_WDT_CHAPTER4_EVIDENCE.md):
+new nondecisive OKI1990 book, verified printed58-65 gap and historical archive
+locator; no recovered hardware pages or exact WDT3C decoder. Research/Blocked,
+NoUncertaintyReduction, actual-ROM0; inquiry ready/NotSent, no runtime change.
+
 M2ar records [reset/WDT/external DATA4700 provenance research](docs/M2AR_RESET_WDT_EXTERNAL4700_PROVENANCE.md):
 dated manufacturer reset fields and bounded numeric DATA4700 noninterference
 narrow the evidence gap. Exact ECU/reset, WDT3C and external read effects remain

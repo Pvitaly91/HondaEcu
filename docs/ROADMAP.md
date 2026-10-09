@@ -1,5 +1,11 @@
 # Roadmap
 
+M2as adds [Reset/WDT Chapter4 evidence acquisition](M2AS_RESET_WDT_CHAPTER4_EVIDENCE.md):
+new OKI1990 book is nondecisive; printed58-65 gap has unknown section allocation.
+Historical alternate ZIP locator is not recovered manual identity. WDT3C and
+hardware-safe24F8 remain unestablished; Research/Blocked, NoUncertaintyReduction.
+Actual-ROM0; inquiry ready/NotSent; STOP: no M2at/reset/CAL/ISA/GUI/hardware.
+
 M2ar adds [reset/WDT/DATA4700 provenance research](M2AR_RESET_WDT_EXTERNAL4700_PROVENANCE.md):
 complete Jan1998 manufacturer reset tables, cause/wake separation and exact
 numeric noninterference distinguish code decisions from unknown read effects.
