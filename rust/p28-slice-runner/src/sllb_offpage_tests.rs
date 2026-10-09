@@ -125,11 +125,11 @@ fn assert_off_case(input: u8, flags: u8, lrb: u16, address: u16, bank: u16) {
     assert_eq!((cpu.sf, cpu.halted), (before.sf, before.halted));
     assert_eq!(cpu.pc, START + 3);
     assert_eq!(cpu.instructions, before.instructions + 1);
-    // Historical decoder accounting control ONLY, not a primary cycle claim.
-    // The exact C4 form's primary INT count is 7; the existing generic decoder
-    // retains 2*length=6 here. This semantic fix must not alter that residual.
-    assert_eq!(decoded.cycles, 6);
-    assert_eq!(cpu.cycles, before.cycles + 6);
+    // M2au exact INT accounting, primary3-145; not measured physical time.
+    // This remains the unchanged M2an semantic regression; only cycle
+    // expectations reflect the separately reviewed exact-form accounting fix.
+    assert_eq!(decoded.cycles, 7);
+    assert_eq!(cpu.cycles, before.cycles + 7);
     for (canary_address, expected) in canaries {
         assert_eq!(
             read_data_u8(&cpu, &mut bus, canary_address),

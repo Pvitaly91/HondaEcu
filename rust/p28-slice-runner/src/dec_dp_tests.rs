@@ -132,9 +132,9 @@ fn check_case(
     assert_eq!((cpu.sf, cpu.halted), (before.sf, before.halted));
     assert_eq!(cpu.pc, START + 1);
     assert_eq!(cpu.instructions, before.instructions + 1);
-    // Preserve historical decoder accounting; not measured physical time.
-    assert_eq!(decoded.cycles, 2);
-    assert_eq!(cpu.cycles, before.cycles + 2);
+    // M2au exact INT accounting, primary3-55; not measured physical time.
+    assert_eq!(decoded.cycles, 3);
+    assert_eq!(cpu.cycles, before.cycles + 3);
     for &(address, expected) in canaries {
         assert_eq!(
             read_data_u8(cpu, bus, address),

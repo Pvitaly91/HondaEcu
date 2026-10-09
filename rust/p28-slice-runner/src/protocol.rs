@@ -246,6 +246,8 @@ impl Response {
                 "byte-incb-r0-half-carry",
                 "byte-sll-off-page-preserves-noncarry-flags",
                 "word-decrement-dp-half-borrow",
+                "word-dec-dp-int-cycle-count",
+                "byte-sll-offpage-int-cycle-count",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],

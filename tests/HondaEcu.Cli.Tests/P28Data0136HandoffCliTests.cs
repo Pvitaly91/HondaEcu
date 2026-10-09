@@ -47,7 +47,7 @@ public sealed class P28Data0136HandoffCliTests
     {
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var before = w.Snapshot(); var r = await w.RunAsync(args);
         Assert.True(r.Code == CliApplication.VerificationFailed, r.Output + r.Error); w.AssertUnchanged(before); var report = JsonNode.Parse(File.ReadAllText(w.Output))!;
-        Assert.Equal("0.42.0", report["runnerVersion"]!.GetValue<string>()); Assert.Equal("Partial", report["technicalScheduledHandoff"]!.GetValue<string>());
+        Assert.Equal("0.43.0", report["runnerVersion"]!.GetValue<string>()); Assert.Equal("Partial", report["technicalScheduledHandoff"]!.GetValue<string>());
         foreach (var seq in report["sequences"]!.AsArray()) { Assert.Equal("ProducerPartial", seq!["checkpoints"]![0]!["disposition"]!.GetValue<string>()); Assert.Equal("NotRun", seq["checkpoints"]![1]!["disposition"]!.GetValue<string>()); Assert.Null(seq["checkpoints"]![0]!["readerGeneration"]); }
         Assert.Equal("NotEstablished", report["recoveredEcuScheduler"]!.GetValue<string>());
     }

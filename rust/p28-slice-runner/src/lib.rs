@@ -71,6 +71,10 @@ pub mod ignition;
 pub mod ignition_correction;
 pub mod ignition_selector;
 pub mod instruction_forms;
+#[cfg(test)]
+mod int_cycle_form_tests;
+#[cfg(test)]
+mod int_cycle_tests;
 pub mod limiter;
 pub mod limiter_fuel;
 pub mod operand;

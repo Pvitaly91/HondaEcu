@@ -172,7 +172,7 @@ public sealed class DecDpRunnerIdentityTests
     [InlineData(false)]
     [InlineData(true)]
     [Trait("Category", "RustIntegration")]
-    public async Task Actual042RunnerDisclosesOnlyOneNewFixButRefusesUnadmittedDecDpBeforeStep(bool dd)
+    public async Task Actual043RunnerDisclosesTwoCycleFixesButRefusesUnadmittedDecDpBeforeStep(bool dd)
     {
         // Newly invented byte82 at PC0; SCB7 DP is ordinary RAM00BC/D.
         // These seeds are only a generic invented wire-refusal fixture, not ECU history.
@@ -199,10 +199,10 @@ public sealed class DecDpRunnerIdentityTests
         });
         var root = response.Response;
         Assert.Equal(1, root.GetProperty("protocolVersion").GetInt32());
-        Assert.Equal("0.42.0", root.GetProperty("runnerVersion").GetString());
+        Assert.Equal("0.43.0", root.GetProperty("runnerVersion").GetString());
         var inventory = SliceRunnerIdentity.Validate(root, "synthetic");
-        Assert.Equal(Fixes("0.42.0"), inventory);
-        Assert.Equal(new[] { DecDpFix }, inventory.Except(Fixes("0.41.0"), StringComparer.Ordinal));
+        Assert.Equal([.. Fixes("0.42.0"), "word-dec-dp-int-cycle-count", "byte-sll-offpage-int-cycle-count"], inventory);
+        Assert.Equal(new[] { "word-dec-dp-int-cycle-count", "byte-sll-offpage-int-cycle-count" }, inventory.Except(Fixes("0.42.0"), StringComparer.Ordinal));
         var result = root.GetProperty("syntheticResult");
         Assert.Equal(2, result.GetProperty("status").GetInt32());
         Assert.Equal("unimplemented in reviewed slice subset: DEC DP", result.GetProperty("error").GetString());

@@ -148,7 +148,7 @@ public sealed class SllbOffPageRunnerIdentityTests
 
     [Fact]
     [Trait("Category", "RustIntegration")]
-    public async Task Actual042RunnerRetainsTheSllbFixButStillRefusesUnadmittedOffPageSllb()
+    public async Task Actual043RunnerRetainsTheSllbFixButStillRefusesUnadmittedOffPageSllb()
     {
         // Invented C4 B6 D7 at PC0, LRB0063 -> RAM03B6. No ECU caller provenance.
         // The unchanged generic synthetic policy refuses this exact form.
@@ -176,10 +176,10 @@ public sealed class SllbOffPageRunnerIdentityTests
         });
         var root = response.Response;
         Assert.Equal(1, root.GetProperty("protocolVersion").GetInt32());
-        Assert.Equal("0.42.0", root.GetProperty("runnerVersion").GetString());
+        Assert.Equal("0.43.0", root.GetProperty("runnerVersion").GetString());
         var inventory = SliceRunnerIdentity.Validate(root, "synthetic");
-        Assert.Equal([.. Fixes("0.41.0"), "word-decrement-dp-half-borrow"], inventory);
-        Assert.Equal(new[] { NewFix, "word-decrement-dp-half-borrow" }, inventory.Except(HistoricalFixes, StringComparer.Ordinal));
+        Assert.Equal([.. Fixes("0.41.0"), "word-decrement-dp-half-borrow", "word-dec-dp-int-cycle-count", "byte-sll-offpage-int-cycle-count"], inventory);
+        Assert.Equal(new[] { NewFix, "word-decrement-dp-half-borrow", "word-dec-dp-int-cycle-count", "byte-sll-offpage-int-cycle-count" }, inventory.Except(HistoricalFixes, StringComparer.Ordinal));
         var result = root.GetProperty("syntheticResult");
         Assert.Equal(2, result.GetProperty("status").GetInt32());
         Assert.Equal("unimplemented in reviewed slice subset: SLLB off N8", result.GetProperty("error").GetString());

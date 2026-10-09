@@ -1,6 +1,6 @@
 # Bounded P28 research runner
 
-Runner **0.41.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
+Runner **0.43.0**, wire protocol **1**, pinned Rust **1.85.1**. The original
 upstream CPU provenance and license are retained in
 [the third-party notices](../../THIRD_PARTY_NOTICES.md). No OEM image or native
 program fixture is distributed here.

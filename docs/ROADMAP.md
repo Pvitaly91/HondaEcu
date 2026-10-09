@@ -1,5 +1,11 @@
 # Roadmap
 
+M2au adds [exact INT cycle accounting](M2AU_EXACT_INT_CYCLE_ACCOUNTING.md):
+DEC DP/82 2→3 and off-page SLLB/C4 N8 D7 6→7 only, no semantic/admission change.
+Runner0.43.0/protocol1, two cycle identities; physical timing still unknown.
+M2an/M2at semantics preserved; M2aq preflight and WDT/C8 remain blocked, actual-ROM0.
+STOP: no M2av/native reset/CAL/IRQ/timer/WDT/C8/GUI/hardware continuation.
+
 M2at adds the [exact DEC DP/82 semantic correction](M2AT_DEC_DP_HALFCARRY_SEMANTIC_FIX.md):
 HC half-borrow only, both DD modes; unchanged result/ZF/CF/DD and non-target controls.
 Runner0.42.0/protocol1, sole new word-decrement-dp-half-borrow identity;

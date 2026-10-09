@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2au corrects [exact internal cycle accounting](docs/M2AU_EXACT_INT_CYCLE_ACCOUNTING.md):
+DEC DP/82=3 and off-page SLLB/C4 N8 D7=7; state semantics and other costs retained.
+Runner0.43.0/protocol1 adds two exact accounting identities, not runtime admission
+or physical timing. Historical inventories and reset/WDT/CAL blockers remain intact.
+
 M2at applies the [exact DEC DP half-carry fix](docs/M2AT_DEC_DP_HALFCARRY_SEMANTIC_FIX.md):
 opcode82/U updates HC from low-nibble borrow; result/ZF and CF/DD boundaries
 retained. Runner0.42.0/protocol1 adds only word-decrement-dp-half-borrow;

@@ -17,7 +17,10 @@
 
 use std::sync::OnceLock;
 
-use crate::full_decoder::FULL_OPCODES;
+use crate::{
+    full_decoder::{OpcodePattern, FULL_OPCODES},
+    operand::{table, Arg, Mem, Parsed, Reg},
+};
 
 /// Longest encoding in the table, used to bound the fetch window.
 pub const MAX_INSN_LEN: usize = 6;
@@ -44,7 +47,8 @@ pub struct Decoded {
     pub fields: Fields,
     /// DD after this instruction, when it forces a mode; None leaves it unchanged.
     pub dd_after: Option<bool>,
-    /// INT (internal-memory) machine cycles for this encoding, per `int_cycles`.
+    /// INT (internal-memory) machine cycles for this matched encoding: exact
+    /// reviewed overrides, otherwise the historical `int_cycles` fallback.
     /// For conditional branches this is the *not-taken* cost; `exec` adds the
     /// taken penalty at run time.
     pub cycles: u16,
@@ -54,8 +58,9 @@ pub struct Decoded {
 /// MSM66201/66207 instruction manual's "Instruction List" cycle tables
 /// (chapter 3 §3, the `Int*1 Int*2` column).
 ///
-/// Across every operation class the all-internal-operand cost is **2 cycles per
-/// instruction byte** plus a small per-operation adjustment. The large
+/// Historical generic fallback: **2 cycles per instruction byte** plus a
+/// per-operation adjustment. Exact reviewed forms override it after matching.
+/// This is not a claim that every encoding's primary cost is verified. The large
 /// multi-cycle operations (MUL/DIV/RTI/CAL/...) and the ROM-table reads
 /// (LC/LCB/CMPC) carry the fixed extras below; a *taken* conditional branch adds
 /// four more cycles, which `exec` applies at run time since only it knows the
@@ -128,6 +133,37 @@ fn int_cycles(mnemonic: &str, len: usize) -> u16 {
         _ => 0,
     };
     base + extra
+}
+
+/// Exact primary INT costs, not physical clocks or external-memory surcharges.
+/// The operand parser uses only the pinned table/text, never decoder recursion.
+pub(crate) fn exact_form_int_cycles(
+    pattern: &OpcodePattern,
+    parsed: Option<&Parsed>,
+) -> Option<u16> {
+    if pattern.dd_mode != 'U' {
+        return None;
+    }
+    let parsed = parsed?;
+    if pattern.mnemonic == "DEC DP"
+        && pattern.bytes_pat == ["82"]
+        && parsed.op == "DEC"
+        && !parsed.byte_width
+        && parsed.args == [Arg::Reg(Reg::Dp)]
+    {
+        // MSM66201 Instruction Manual printed3-55 / Table3-11 printed3-189.
+        Some(3)
+    } else if pattern.mnemonic == "SLLB off N8"
+        && pattern.bytes_pat == ["C4", "N8", "D7"]
+        && parsed.op == "SLLB"
+        && parsed.byte_width
+        && parsed.args == [Arg::Mem(Mem::OffPage)]
+    {
+        // Printed3-145 / Table3-9 printed3-187: INT7, separate EXT12.
+        Some(7)
+    } else {
+        None
+    }
 }
 
 fn hex_byte(tok: &str) -> Option<u8> {
@@ -223,7 +259,8 @@ pub fn decode(dd: bool, fetch: impl Fn(usize) -> u8) -> Option<Decoded> {
                 'R' => Some(false),
                 _ => None,
             },
-            cycles: int_cycles(p.mnemonic, p.bytes_pat.len()),
+            cycles: exact_form_int_cycles(p, table()[pi as usize].as_ref())
+                .unwrap_or_else(|| int_cycles(p.mnemonic, p.bytes_pat.len())),
         });
     }
 
