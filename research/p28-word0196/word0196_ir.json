@@ -1,0 +1,1459 @@
+{
+  "schemaVersion": 1,
+  "classification": "ReviewedInstructionFaithfulOfflineIR",
+  "entryPc": 21871,
+  "stopBeforePcs": [
+    21910,
+    21957
+  ],
+  "context": {
+    "lrb": 33,
+    "currentPage": 256,
+    "localBank": 264,
+    "scb": "DerivedPSWLowThreeBits",
+    "requiredIncomingDD": "Either;556FresetsDD0",
+    "aliasesOutsideDeclaredFields": "NotEstablished",
+    "instructionExtents": "IndependentlyComparedToProtectedOriginalAndListing",
+    "physicalNames": "Unknown",
+    "cycles": "Excluded;NoCycleEquivalenceClaim"
+  },
+  "stateTypes": {
+    "AL": "u8",
+    "AH": "u8",
+    "A": "u16",
+    "PSW": "u16",
+    "PC": "pc16",
+    "RAMByte": "u8",
+    "RAMWord": "u16",
+    "CF": "bool",
+    "ZF": "bool",
+    "HC": "bool",
+    "DD": "bool"
+  },
+  "numericRules": {
+    "unsignedOnly": true,
+    "byteTruncation": "Modulo256",
+    "wordAccess": "EvenLittleEndian",
+    "loadByteExtension": "None;AHpreserved",
+    "signExtension": "NoneInThisFragment",
+    "accumulatorByteOperations": "DD0;EstablishedBy556F"
+  },
+  "retainedState": [
+    "AH",
+    "HC",
+    "OtherPSW",
+    "LRB",
+    "X1",
+    "X2",
+    "DP",
+    "USP",
+    "SSP",
+    "SF",
+    "Halted",
+    "RAM0124",
+    "RAM0128",
+    "RAM0196",
+    "RAM0197",
+    "localr0",
+    "localr2..r7"
+  ],
+  "provenanceRestrictions": {
+    "nativeOwnerAcceptedFromHost": false,
+    "hostContext": "OfflineAnnotationOnly",
+    "actualRuntimeSource": "NotEstablished",
+    "word0196PhysicalRole": "Unknown"
+  },
+  "instructions": [
+    {
+      "pc": 21871,
+      "form": {
+        "mnemonic": "LB A, off N8",
+        "pinnedPatternIndex": 747,
+        "length": 2,
+        "ddMode": "R",
+        "parsedOperation": "LB",
+        "operands": [
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          {
+            "kind": "CurrentPageRam",
+            "address": 398,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021"
+      ],
+      "inputs": [
+        "RAM018E:u8",
+        "AH:u8"
+      ],
+      "outputs": [
+        "AL:u8"
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF",
+        "DD"
+      ],
+      "flagsPreserved": [
+        "CF",
+        "HC",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "LoadAccumulatorLow",
+          "type": "u8",
+          "source": {
+            "kind": "CurrentPageRam",
+            "address": 398,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "extension": "None",
+          "preserveHighByte": true
+        },
+        {
+          "op": "AssignZeroFlag",
+          "type": "bool",
+          "value": "AL"
+        },
+        {
+          "op": "AssignDataDescriptor",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21873
+      ],
+      "provenance": {
+        "primaryPdfPage": 124,
+        "primaryPrintedPage": "3-70",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR556F"
+        ]
+      }
+    },
+    {
+      "pc": 21873,
+      "form": {
+        "mnemonic": "SLLB A",
+        "pinnedPatternIndex": 2198,
+        "length": 1,
+        "ddMode": "0",
+        "parsedOperation": "SLLB",
+        "operands": [
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "AL:u8"
+      ],
+      "outputs": [
+        "AL:u8"
+      ],
+      "flagsRead": [
+        "DD"
+      ],
+      "flagsWritten": [
+        "CF"
+      ],
+      "flagsPreserved": [
+        "ZF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "LogicalShiftLeft",
+          "type": "u8",
+          "source": "AL",
+          "distance": 1,
+          "truncation": "Modulo256",
+          "zeroFill": true
+        },
+        {
+          "op": "AssignCarryFromOldBit",
+          "type": "bool",
+          "source": "AL",
+          "bit": 7
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21874
+      ],
+      "provenance": {
+        "primaryPdfPage": 197,
+        "primaryPrintedPage": "3-144",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5571"
+        ]
+      }
+    },
+    {
+      "pc": 21874,
+      "form": {
+        "mnemonic": "ROLB off N8",
+        "pinnedPatternIndex": 1862,
+        "length": 3,
+        "ddMode": "U",
+        "parsedOperation": "ROLB",
+        "operands": [
+          {
+            "kind": "CurrentPageRam",
+            "address": 398,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM018E:u8",
+        "CF:bool"
+      ],
+      "outputs": [
+        "RAM018E:u8"
+      ],
+      "flagsRead": [
+        "CF"
+      ],
+      "flagsWritten": [
+        "CF"
+      ],
+      "flagsPreserved": [
+        "ZF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "ReadModifyWriteRotateThroughCarry",
+          "type": "u8",
+          "destination": {
+            "kind": "CurrentPageRam",
+            "address": 398,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "direction": "Left",
+          "distance": 1,
+          "carryInput": "IncomingCF",
+          "carryOutput": "OldBit7",
+          "truncation": "Modulo256",
+          "orderedWrite": true,
+          "sameValueWrite": "RetainFreshOrdinal"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21877
+      ],
+      "provenance": {
+        "primaryPdfPage": 173,
+        "primaryPrintedPage": "3-120",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5572"
+        ]
+      }
+    },
+    {
+      "pc": 21877,
+      "form": {
+        "mnemonic": "LB A, r0",
+        "pinnedPatternIndex": 739,
+        "length": 1,
+        "ddMode": "R",
+        "parsedOperation": "LB",
+        "operands": [
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          {
+            "kind": "LocalRegister",
+            "name": "r0",
+            "widthBits": 8,
+            "address": 264
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM0108:u8",
+        "AH:u8"
+      ],
+      "outputs": [
+        "AL:u8"
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF",
+        "DD"
+      ],
+      "flagsPreserved": [
+        "CF",
+        "HC",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "LoadAccumulatorLow",
+          "type": "u8",
+          "source": {
+            "kind": "LocalRegister",
+            "name": "r0",
+            "widthBits": 8,
+            "address": 264
+          },
+          "extension": "None",
+          "preserveHighByte": true
+        },
+        {
+          "op": "AssignZeroFlag",
+          "type": "bool",
+          "value": "AL"
+        },
+        {
+          "op": "AssignDataDescriptor",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21878
+      ],
+      "provenance": {
+        "primaryPdfPage": 124,
+        "primaryPrintedPage": "3-70",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5575"
+        ]
+      }
+    },
+    {
+      "pc": 21878,
+      "form": {
+        "mnemonic": "ANDB A, off N8",
+        "pinnedPatternIndex": 333,
+        "length": 2,
+        "ddMode": "0",
+        "parsedOperation": "ANDB",
+        "operands": [
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          {
+            "kind": "CurrentPageRam",
+            "address": 398,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "AL:u8",
+        "RAM018E:u8"
+      ],
+      "outputs": [
+        "AL:u8"
+      ],
+      "flagsRead": [
+        "DD"
+      ],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsPreserved": [
+        "CF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "BitwiseAnd",
+          "type": "u8",
+          "destination": {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          "left": "AL",
+          "right": {
+            "kind": "CurrentPageRam",
+            "address": 398,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "preserveHighByte": true
+        },
+        {
+          "op": "AssignZeroFlag",
+          "type": "bool",
+          "value": "AL"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21880
+      ],
+      "provenance": {
+        "primaryPdfPage": 76,
+        "primaryPrintedPage": "3-24",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5576"
+        ]
+      }
+    },
+    {
+      "pc": 21880,
+      "form": {
+        "mnemonic": "CMP off N8, #N16",
+        "pinnedPatternIndex": 498,
+        "length": 5,
+        "ddMode": "U",
+        "parsedOperation": "CMP",
+        "operands": [
+          {
+            "kind": "CurrentPageRam",
+            "address": 406,
+            "widthBits": 16,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "LittleEndian"
+          },
+          {
+            "kind": "CodeOwnedImmediate",
+            "value": 192,
+            "widthBits": 16
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM0196:u16"
+      ],
+      "outputs": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "CF",
+        "ZF"
+      ],
+      "flagsPreserved": [
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "UnsignedCompare",
+          "type": "u16",
+          "left": {
+            "kind": "CurrentPageRam",
+            "address": 406,
+            "widthBits": 16,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "LittleEndian"
+          },
+          "right": {
+            "kind": "CodeOwnedImmediate",
+            "value": 192,
+            "widthBits": 16
+          },
+          "carryMeaning": "UnsignedBorrow",
+          "zeroMeaning": "Equal",
+          "accumulatorWrite": false,
+          "ramWrite": false,
+          "extension": "None"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21885
+      ],
+      "provenance": {
+        "primaryPdfPage": 90,
+        "primaryPrintedPage": "3-38",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5578"
+        ]
+      }
+    },
+    {
+      "pc": 21885,
+      "form": {
+        "mnemonic": "JLT rel8",
+        "pinnedPatternIndex": 719,
+        "length": 2,
+        "ddMode": "U",
+        "parsedOperation": "JLT",
+        "operands": []
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "CF:bool"
+      ],
+      "outputs": [],
+      "flagsRead": [
+        "CF"
+      ],
+      "flagsWritten": [],
+      "flagsPreserved": [
+        "CF",
+        "ZF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "ConditionalJump",
+          "type": "pc16",
+          "condition": "CF",
+          "ifTrue": 21951,
+          "ifFalse": 21887
+        }
+      ],
+      "branchPredicate": {
+        "op": "FlagIsSet",
+        "type": "bool",
+        "flag": "CF"
+      },
+      "successors": [
+        21951,
+        21887
+      ],
+      "provenance": {
+        "primaryPdfPage": 120,
+        "primaryPrintedPage": "3-66",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR557D"
+        ]
+      }
+    },
+    {
+      "pc": 21887,
+      "form": {
+        "mnemonic": "MOVB r1, off N8",
+        "pinnedPatternIndex": 1504,
+        "length": 3,
+        "ddMode": "U",
+        "parsedOperation": "MOVB",
+        "operands": [
+          {
+            "kind": "LocalRegister",
+            "name": "r1",
+            "widthBits": 8,
+            "address": 265
+          },
+          {
+            "kind": "CurrentPageRam",
+            "address": 279,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM0117:u8"
+      ],
+      "outputs": [
+        "RAM0109:u8"
+      ],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsPreserved": [
+        "CF",
+        "ZF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "CopyByte",
+          "type": "u8",
+          "source": {
+            "kind": "CurrentPageRam",
+            "address": 279,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "destination": {
+            "kind": "LocalRegister",
+            "name": "r1",
+            "widthBits": 8,
+            "address": 265
+          },
+          "orderedWrite": true,
+          "sameValueWrite": "RetainFreshOrdinal"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21890
+      ],
+      "provenance": {
+        "primaryPdfPage": 153,
+        "primaryPrintedPage": "3-99",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR557F"
+        ]
+      }
+    },
+    {
+      "pc": 21890,
+      "form": {
+        "mnemonic": "ANDB off N8, A",
+        "pinnedPatternIndex": 349,
+        "length": 3,
+        "ddMode": "U",
+        "parsedOperation": "ANDB",
+        "operands": [
+          {
+            "kind": "CurrentPageRam",
+            "address": 279,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM0117:u8",
+        "AL:u8"
+      ],
+      "outputs": [
+        "RAM0117:u8"
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsPreserved": [
+        "CF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "ReadModifyWriteAnd",
+          "type": "u8",
+          "destination": {
+            "kind": "CurrentPageRam",
+            "address": 279,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "source": "AL",
+          "orderedWrite": true,
+          "sameValueWrite": "RetainFreshOrdinal"
+        },
+        {
+          "op": "AssignZeroFlag",
+          "type": "bool",
+          "value": "WriteResult"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21893
+      ],
+      "provenance": {
+        "primaryPdfPage": 77,
+        "primaryPrintedPage": "3-25",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5582"
+        ]
+      }
+    },
+    {
+      "pc": 21893,
+      "form": {
+        "mnemonic": "JBS off N8.7, rel8",
+        "pinnedPatternIndex": 716,
+        "length": 3,
+        "ddMode": "U",
+        "parsedOperation": "JBS",
+        "operands": [
+          {
+            "kind": "CurrentPageRam",
+            "address": 298,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM012A:u8"
+      ],
+      "outputs": [],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsPreserved": [
+        "CF",
+        "ZF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "ConditionalJump",
+          "type": "pc16",
+          "condition": {
+            "op": "BitIsSet",
+            "type": "bool",
+            "address": 298,
+            "bit": 7
+          },
+          "ifTrue": 21906,
+          "ifFalse": 21896
+        }
+      ],
+      "branchPredicate": {
+        "op": "BitIsSet",
+        "type": "bool",
+        "address": 298,
+        "bit": 7
+      },
+      "successors": [
+        21906,
+        21896
+      ],
+      "provenance": {
+        "primaryPdfPage": 119,
+        "primaryPrintedPage": "3-65",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5585/5588"
+        ]
+      }
+    },
+    {
+      "pc": 21896,
+      "form": {
+        "mnemonic": "JBS off N8.5, rel8",
+        "pinnedPatternIndex": 714,
+        "length": 3,
+        "ddMode": "U",
+        "parsedOperation": "JBS",
+        "operands": [
+          {
+            "kind": "CurrentPageRam",
+            "address": 292,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM0124:u8"
+      ],
+      "outputs": [],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsPreserved": [
+        "CF",
+        "ZF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "ConditionalJump",
+          "type": "pc16",
+          "condition": {
+            "op": "BitIsSet",
+            "type": "bool",
+            "address": 292,
+            "bit": 5
+          },
+          "ifTrue": 21906,
+          "ifFalse": 21899
+        }
+      ],
+      "branchPredicate": {
+        "op": "BitIsSet",
+        "type": "bool",
+        "address": 292,
+        "bit": 5
+      },
+      "successors": [
+        21906,
+        21899
+      ],
+      "provenance": {
+        "primaryPdfPage": 119,
+        "primaryPrintedPage": "3-65",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5585/5588"
+        ]
+      }
+    },
+    {
+      "pc": 21899,
+      "form": {
+        "mnemonic": "ANDB off N8, A",
+        "pinnedPatternIndex": 349,
+        "length": 3,
+        "ddMode": "U",
+        "parsedOperation": "ANDB",
+        "operands": [
+          {
+            "kind": "CurrentPageRam",
+            "address": 399,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM018F:u8",
+        "AL:u8"
+      ],
+      "outputs": [
+        "RAM018F:u8"
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsPreserved": [
+        "CF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "ReadModifyWriteAnd",
+          "type": "u8",
+          "destination": {
+            "kind": "CurrentPageRam",
+            "address": 399,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "source": "AL",
+          "orderedWrite": true,
+          "sameValueWrite": "RetainFreshOrdinal"
+        },
+        {
+          "op": "AssignZeroFlag",
+          "type": "bool",
+          "value": "WriteResult"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21902
+      ],
+      "provenance": {
+        "primaryPdfPage": 77,
+        "primaryPrintedPage": "3-25",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR558B/558E"
+        ]
+      }
+    },
+    {
+      "pc": 21902,
+      "form": {
+        "mnemonic": "ORB off N'8, #N8",
+        "pinnedPatternIndex": 1678,
+        "length": 4,
+        "ddMode": "U",
+        "parsedOperation": "ORB",
+        "operands": [
+          {
+            "kind": "CurrentPageRam",
+            "address": 298,
+            "widthBits": 8,
+            "selectorField": "n8_alt",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          {
+            "kind": "CodeOwnedImmediate",
+            "value": 1,
+            "widthBits": 8
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM012A:u8"
+      ],
+      "outputs": [
+        "RAM012A:u8"
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsPreserved": [
+        "CF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "ReadModifyWriteOr",
+          "type": "u8",
+          "destination": {
+            "kind": "CurrentPageRam",
+            "address": 298,
+            "widthBits": 8,
+            "selectorField": "n8_alt",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "source": {
+            "kind": "CodeOwnedImmediate",
+            "value": 1,
+            "widthBits": 8
+          },
+          "orderedWrite": true,
+          "sameValueWrite": "RetainFreshOrdinal"
+        },
+        {
+          "op": "AssignZeroFlag",
+          "type": "bool",
+          "value": "WriteResult"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21906
+      ],
+      "provenance": {
+        "primaryPdfPage": 163,
+        "primaryPrintedPage": "3-110",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR558B/558E"
+        ]
+      }
+    },
+    {
+      "pc": 21906,
+      "form": {
+        "mnemonic": "LB A, off N8",
+        "pinnedPatternIndex": 747,
+        "length": 2,
+        "ddMode": "R",
+        "parsedOperation": "LB",
+        "operands": [
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          {
+            "kind": "CurrentPageRam",
+            "address": 399,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "RAM018F:u8",
+        "AH:u8"
+      ],
+      "outputs": [
+        "AL:u8"
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF",
+        "DD"
+      ],
+      "flagsPreserved": [
+        "CF",
+        "HC",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "LoadAccumulatorLow",
+          "type": "u8",
+          "source": {
+            "kind": "CurrentPageRam",
+            "address": 399,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "extension": "None",
+          "preserveHighByte": true
+        },
+        {
+          "op": "AssignZeroFlag",
+          "type": "bool",
+          "value": "AL"
+        },
+        {
+          "op": "AssignDataDescriptor",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21908
+      ],
+      "provenance": {
+        "primaryPdfPage": 124,
+        "primaryPrintedPage": "3-70",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5592/5594"
+        ]
+      }
+    },
+    {
+      "pc": 21908,
+      "form": {
+        "mnemonic": "ORB A, #N8",
+        "pinnedPatternIndex": 1619,
+        "length": 2,
+        "ddMode": "0",
+        "parsedOperation": "ORB",
+        "operands": [
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          {
+            "kind": "CodeOwnedImmediate",
+            "value": 240,
+            "widthBits": 8
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "AL:u8",
+        "AH:u8"
+      ],
+      "outputs": [
+        "AL:u8"
+      ],
+      "flagsRead": [
+        "DD"
+      ],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsPreserved": [
+        "CF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "BitwiseOr",
+          "type": "u8",
+          "destination": {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          "left": "AL",
+          "right": {
+            "kind": "CodeOwnedImmediate",
+            "value": 240,
+            "widthBits": 8
+          },
+          "preserveHighByte": true
+        },
+        {
+          "op": "AssignZeroFlag",
+          "type": "bool",
+          "value": "AL"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21910
+      ],
+      "provenance": {
+        "primaryPdfPage": 160,
+        "primaryPrintedPage": "3-107",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR5592/5594"
+        ]
+      }
+    },
+    {
+      "pc": 21951,
+      "form": {
+        "mnemonic": "LB A, #N8",
+        "pinnedPatternIndex": 738,
+        "length": 2,
+        "ddMode": "R",
+        "parsedOperation": "LB",
+        "operands": [
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          {
+            "kind": "CodeOwnedImmediate",
+            "value": 15,
+            "widthBits": 8
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "AH:u8"
+      ],
+      "outputs": [
+        "AL:u8"
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF",
+        "DD"
+      ],
+      "flagsPreserved": [
+        "CF",
+        "HC",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "LoadAccumulatorLow",
+          "type": "u8",
+          "source": {
+            "kind": "CodeOwnedImmediate",
+            "value": 15,
+            "widthBits": 8
+          },
+          "extension": "None",
+          "preserveHighByte": true
+        },
+        {
+          "op": "AssignZeroFlag",
+          "type": "bool",
+          "value": "AL"
+        },
+        {
+          "op": "AssignDataDescriptor",
+          "type": "bool",
+          "value": false
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21953
+      ],
+      "provenance": {
+        "primaryPdfPage": 124,
+        "primaryPrintedPage": "3-70",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR55BF/55C1/55C3"
+        ]
+      }
+    },
+    {
+      "pc": 21953,
+      "form": {
+        "mnemonic": "STB A, off N8",
+        "pinnedPatternIndex": 2301,
+        "length": 2,
+        "ddMode": "0",
+        "parsedOperation": "STB",
+        "operands": [
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          {
+            "kind": "CurrentPageRam",
+            "address": 279,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "AL:u8"
+      ],
+      "outputs": [
+        "RAM0117:u8"
+      ],
+      "flagsRead": [
+        "DD"
+      ],
+      "flagsWritten": [],
+      "flagsPreserved": [
+        "CF",
+        "ZF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "StoreByte",
+          "type": "u8",
+          "source": "AL",
+          "destination": {
+            "kind": "CurrentPageRam",
+            "address": 279,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "orderedWrite": true,
+          "sameValueWrite": "RetainFreshOrdinal"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21955
+      ],
+      "provenance": {
+        "primaryPdfPage": 208,
+        "primaryPrintedPage": "3-155",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR55BF/55C1/55C3"
+        ]
+      }
+    },
+    {
+      "pc": 21955,
+      "form": {
+        "mnemonic": "STB A, off N8",
+        "pinnedPatternIndex": 2301,
+        "length": 2,
+        "ddMode": "0",
+        "parsedOperation": "STB",
+        "operands": [
+          {
+            "kind": "AccumulatorLow",
+            "name": "AL",
+            "widthBits": 8,
+            "address": null
+          },
+          {
+            "kind": "CurrentPageRam",
+            "address": 399,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          }
+        ]
+      },
+      "incomingContext": [
+        "LRB0021",
+        "ByteModeEstablishedAt556F"
+      ],
+      "inputs": [
+        "AL:u8"
+      ],
+      "outputs": [
+        "RAM018F:u8"
+      ],
+      "flagsRead": [
+        "DD"
+      ],
+      "flagsWritten": [],
+      "flagsPreserved": [
+        "CF",
+        "ZF",
+        "HC",
+        "DD",
+        "OtherPSW"
+      ],
+      "effects": [
+        {
+          "op": "StoreByte",
+          "type": "u8",
+          "source": "AL",
+          "destination": {
+            "kind": "CurrentPageRam",
+            "address": 399,
+            "widthBits": 8,
+            "selectorField": "n8",
+            "requiredLrb": 33,
+            "byteOrder": "NotApplicable"
+          },
+          "orderedWrite": true,
+          "sameValueWrite": "RetainFreshOrdinal"
+        }
+      ],
+      "branchPredicate": null,
+      "successors": [
+        21957
+      ],
+      "provenance": {
+        "primaryPdfPage": 208,
+        "primaryPrintedPage": "3-155",
+        "nativeExtentIndependentlyVerified": true,
+        "cStatementTags": [
+          "IR55BF/55C1/55C3"
+        ]
+      }
+    }
+  ]
+}

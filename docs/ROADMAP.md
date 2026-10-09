@@ -1,5 +1,11 @@
 # Roadmap
 
+M2av adds [structured IR and compilable C11 research](M2AV_WORD0196_STRUCTURED_C_EQUIVALENCE.md)
+for M2z's software-only556F to before5596/55C5, with independent specification,
+unchanged C# oracle and validated historical observations compared separately.
+No runner/version/admission change; no physical time or ECU compilation claim.
+STOP after delivery: no M2aw/firmware/ROM replacement/reset/IRQ/timer/GUI/hardware.
+
 M2au adds [exact INT cycle accounting](M2AU_EXACT_INT_CYCLE_ACCOUNTING.md):
 DEC DP/82 2→3 and off-page SLLB/C4 N8 D7 6→7 only, no semantic/admission change.
 Runner0.43.0/protocol1, two cycle identities; physical timing still unknown.

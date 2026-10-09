@@ -71,6 +71,10 @@ jobs:
       - name: Test .NET and real Rust process end-to-end (synthetic only)
         run: dotnet test HondaEcu.sln --configuration Release --no-build
 
+      - name: M2av host C11 and independent differential tests (invented only)
+        shell: pwsh
+        run: ./research/p28-word0196/run-host-tests.ps1 -RunTag ci
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 

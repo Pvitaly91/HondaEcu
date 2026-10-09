@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2av adds [bounded structured IR and host C11 equivalence](docs/M2AV_WORD0196_STRUCTURED_C_EQUIVALENCE.md)
+for the verified M2z software path556F to stop-before5596/55C5. Ordered RAM/flags
+effects are preserved; compiled C is offline research, not original Honda source
+or ECU firmware. Runner0.43.0/protocol1/38 fixes and runtime boundaries unchanged.
+
 M2au corrects [exact internal cycle accounting](docs/M2AU_EXACT_INT_CYCLE_ACCOUNTING.md):
 DEC DP/82=3 and off-page SLLB/C4 N8 D7=7; state semantics and other costs retained.
 Runner0.43.0/protocol1 adds two exact accounting identities, not runtime admission
