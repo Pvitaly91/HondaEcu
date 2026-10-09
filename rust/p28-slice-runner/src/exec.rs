@@ -560,6 +560,19 @@ impl<'a> Exec<'a> {
                 if base == "DEC" && !byte && args[0] == Arg::Reg(Reg::X1) {
                     self.cpu.hc = v & 15 == 0;
                 }
+                // M2at exact DEC DP/82, primary3-55: low-nibble borrow only.
+                // This is not permission for other word DEC forms or startup.
+                if base == "DEC"
+                    && !byte
+                    && args == &[Arg::Reg(Reg::Dp)]
+                    && self.d.mnemonic == "DEC DP"
+                    && self.d.len == 1
+                    && FULL_OPCODES[self.d.index].bytes_pat == ["82"]
+                    && FULL_OPCODES[self.d.index].dd_mode == 'U'
+                    && self.d.dd_after.is_none()
+                {
+                    self.cpu.hc = v & 15 == 0;
+                }
                 self.write(&args[0], byte, res);
             }
             "MUL" => {

@@ -245,6 +245,7 @@ impl Response {
                 "cal-addr16-rt-clears-internal-stack-flag",
                 "byte-incb-r0-half-carry",
                 "byte-sll-off-page-preserves-noncarry-flags",
+                "word-decrement-dp-half-borrow",
             ],
             entry_contracts: vec![],
             compact_rows: vec![],

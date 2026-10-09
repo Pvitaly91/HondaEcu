@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2at applies the [exact DEC DP half-carry fix](docs/M2AT_DEC_DP_HALFCARRY_SEMANTIC_FIX.md):
+opcode82/U updates HC from low-nibble borrow; result/ZF and CF/DD boundaries
+retained. Runner0.42.0/protocol1 adds only word-decrement-dp-half-borrow;
+historical0.40/0.41 inventories remain valid. No admission/reset/WDT/CAL/GUI change.
+
 M2as records [Reset/WDT hardware-document acquisition](docs/M2AS_RESET_WDT_CHAPTER4_EVIDENCE.md):
 new nondecisive OKI1990 book, verified printed58-65 gap and historical archive
 locator; no recovered hardware pages or exact WDT3C decoder. Research/Blocked,

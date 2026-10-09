@@ -1,5 +1,11 @@
 # Roadmap
 
+M2at adds the [exact DEC DP/82 semantic correction](M2AT_DEC_DP_HALFCARRY_SEMANTIC_FIX.md):
+HC half-borrow only, both DD modes; unchanged result/ZF/CF/DD and non-target controls.
+Runner0.42.0/protocol1, sole new word-decrement-dp-half-borrow identity;
+no new operation/admission. M2aq preflight and M2as WDT remain blocked, actual-ROM0.
+STOP: no M2au/reset/CAL/IRQ/JGT/WDT/GUI/hardware continuation.
+
 M2as adds [Reset/WDT Chapter4 evidence acquisition](M2AS_RESET_WDT_CHAPTER4_EVIDENCE.md):
 new OKI1990 book is nondecisive; printed58-65 gap has unknown section allocation.
 Historical alternate ZIP locator is not recovered manual identity. WDT3C and

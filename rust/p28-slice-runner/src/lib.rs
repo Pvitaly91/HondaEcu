@@ -24,6 +24,8 @@ mod data0136_tail_tests;
 pub mod data0136_technical;
 #[cfg(test)]
 mod data0136_technical_tests;
+#[cfg(test)]
+mod dec_dp_tests;
 pub mod decoder;
 pub mod division_decision;
 #[cfg(test)]

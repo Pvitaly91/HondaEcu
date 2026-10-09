@@ -48,7 +48,7 @@ public sealed class P28PostP2ControlCliTests
     {
         using var w = new P28FuelMapCliTests.Workspace(); var args = Arguments(w); var snapshot = w.Snapshot(); var r = await w.RunAsync(args);
         Assert.True(r.Code == CliApplication.VerificationFailed, r.Output + r.Error); w.AssertUnchanged(snapshot);
-        var n = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.41.0", n["runnerVersion"]!.GetValue<string>());
+        var n = JsonNode.Parse(File.ReadAllText(w.Output))!; Assert.Equal("0.42.0", n["runnerVersion"]!.GetValue<string>());
         Assert.Equal("Partial", n["postP2ControlRegisterHandoff"]!.GetValue<string>()); Assert.Equal("NotModeled", n["p2ElectricalPins"]!.GetValue<string>());
         foreach (var s in n["sequences"]!.AsArray()) { Assert.Equal("NoFresh0196", s!["checkpoints"]![0]!["disposition"]!.GetValue<string>()); Assert.Equal("NotRun", s["checkpoints"]![1]!["disposition"]!.GetValue<string>()); foreach (var c in s["checkpoints"]!.AsArray()) { Assert.Equal(139, c!["tcon0Before"]!.GetValue<int>()); Assert.Equal(139, c["tcon0After"]!.GetValue<int>()); Assert.Equal(15, c["trnsitFlagsBefore"]!.GetValue<int>()); Assert.Equal(15, c["trnsitFlagsAfter"]!.GetValue<int>()); Assert.Null(c["tcon0Generation"]); Assert.Null(c["trnsitGeneration"]); } }
     }
