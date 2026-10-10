@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2ay",
+  "profile": "ASM662_Pinned_Static_BuildBlocked",
+  "exactBase": "e5564b24579a71c6a32ca0f71ee48fb0fd8ef548",
+  "sourceProvenance": {
+    "repository": "VIRUXE/asm662",
+    "commit": "94612d10370eb4ddf97d4f349168298e1a3da8a0",
+    "tree": "991770bbfeb8f515df5cc3d986aecfc42a3b2a5b",
+    "inventoryStatus": "ExactMirrorIdentityVerifiedNotCanonicalUpstreamAuthentication",
+    "treeEntries": 67,
+    "treeBlobs": 61,
+    "reviewedTextBlobs": 43,
+    "sourceManifestSha256": "eefdffa3c4516163f69dd21366d083970ec701c4136fd92c643794649dfee60e",
+    "integrityAuditSha256": "cc7a94ef00a39e0e5ad87a9b3a08eae8cdf480b789718665a717b0b1d280ae70"
+  },
+  "licenseEvidence": {
+    "OriginalSourceLicenseEvidence": "OriginalAuthorBroadBSDGrant;ExactVariantAndCompleteNoticesUnknown",
+    "MirrorLicenseClaim": "UnlicenseAdditionConfirmed;RelicensingAuthorityNotEstablished",
+    "ThirdPartyComponentRights": "NotEstablishedForCompleteSourceSet",
+    "LocalResearchUseStatus": "BuildBlockedPendingApplicableRights",
+    "RedistributionStatus": "NotEstablished;NoPublicThirdPartySource",
+    "manifestSha256": "52fb636dece0813970230043b5e6ba67b27ce1ad8f2f30df4c8bfc99eff52e17"
+  },
+  "rcsMaterialization": {
+    "filesRecovered": 39,
+    "status": "ExplicitTrunkHeadFullTextRecovered;CoherenceSeparate",
+    "headBytes": 1792620,
+    "olderDeltaVersionsMaterialized": 0,
+    "parserValidation": "IndependentByteGrammarAndWholeDeltatextRegex;9Positive16RefusalFixtures",
+    "standardRcsToolUsed": false,
+    "keywordExpansion": "None",
+    "manifestSha256": "19cfe3552e83c7dd8e1539cb664ef01eef02c6c22192c98dac9a77ef1da9b8f4"
+  },
+  "sourceIntegrity": {
+    "coherentBuildTree": false,
+    "status": "CoherentSourceReconstructionBlocked",
+    "originalInputsPresent": 11,
+    "missingOriginalInputs": 0,
+    "generatedIntermediatesAbsentButDeclaredOutputs": 5,
+    "generatedArtifactsVerified": false,
+    "staleGeneratedArtifacts": 4,
+    "mismatch": "TableHeadTBR_CachedGeneratedTRB;NotEmittedByteMismatch",
+    "dependencyManifestSha256": "be4b507aad22d186dde369545c1d2c5baa6cb3e5acd42f7e222d396c595f4ec7"
+  },
+  "buildDependencies": {
+    "status": "PartiallyEstablished;TrustedFlexYaccNotEstablished",
+    "msvcFileVersion": "19.42.34435.0",
+    "nmakeFileVersion": "14.42.34435.0",
+    "perlObservedVersion": "5.38.2",
+    "flexVersion": null,
+    "yaccVersion": null,
+    "historicalCommandsExecuted": false,
+    "inventorySha256": "cae34fd9ff8196d81b948887a6a5b1c22f39ac0358573314b2d043b7df28a20e"
+  },
+  "safetyAudit": {
+    "status": "UnsafeExecutionPathConfirmed",
+    "firstFinding": "UnrestrictedPRELOADExternalRead",
+    "findings": 11,
+    "observedExploit": false,
+    "upstreamPatched": false,
+    "manifestSha256": "30285d3af4f355edaf403b378e6a9f4d62ec6901193f48175c261b6b123db62f",
+    "mitigation": "SeparateProposalOnlyNotImplemented",
+    "proposalSha256": "49057907992923d00386ccb2711443dc66b96f5ef45a0f6f17975fbaa8a15f45"
+  },
+  "buildVerification": {
+    "status": "NotRun",
+    "builds": 0,
+    "executableSha256": null,
+    "reproducibility": "NotEvaluated",
+    "preflight": "BuildPreflightBlocked"
+  },
+  "syntheticOutputVerification": {
+    "status": "NotRun",
+    "outputs": 0,
+    "classification": "SyntheticAssemblerOutputNotFirmwareBIN",
+    "generatedFormsCompared": 0,
+    "mismatches": null
+  },
+  "primaryOpcodeExpectations": {
+    "status": "PrimaryEncodingExpectationEstablished",
+    "exactForms": 15,
+    "independence": "ManufacturerManualNotASMTableOrDecoderOrOracle",
+    "manifestSha256": "a268815a0c04a4e2f0fccb64021ead26e1cbdaa02c1cc435d816f7d35fa2ab44",
+    "verifiedGeneratedForms": 0
+  },
+  "capabilities": [
+    {
+      "form": "LB A, off N8",
+      "length": 2,
+      "dd": "EitherSetsZero",
+      "primaryPage": "3-70",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "SLLB A",
+      "length": 1,
+      "dd": "RequiresZero",
+      "primaryPage": "3-144",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "ROLB off N8",
+      "length": 3,
+      "dd": "Independent",
+      "primaryPage": "3-120",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "LB A, r0",
+      "length": 1,
+      "dd": "EitherSetsZero",
+      "primaryPage": "3-70",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "ANDB A, off N8",
+      "length": 2,
+      "dd": "RequiresZero",
+      "primaryPage": "3-24",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "CMP off N8, #N16",
+      "length": 5,
+      "dd": "Independent",
+      "primaryPage": "3-38",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "JLT rel8",
+      "length": 2,
+      "dd": "Independent",
+      "primaryPage": "3-66/67",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "MOVB r1, off N8",
+      "length": 3,
+      "dd": "Independent",
+      "primaryPage": "3-99",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "ANDB off N8, A",
+      "length": 3,
+      "dd": "Independent",
+      "primaryPage": "3-25",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "JBS off N8.7, rel8",
+      "length": 3,
+      "dd": "Independent",
+      "primaryPage": "3-65",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "JBS off N8.5, rel8",
+      "length": 3,
+      "dd": "Independent",
+      "primaryPage": "3-65",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "ORB off N'8, #N8",
+      "length": 4,
+      "dd": "Independent",
+      "primaryPage": "3-110",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "ORB A, #N8",
+      "length": 2,
+      "dd": "RequiresZero",
+      "primaryPage": "3-107",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "LB A, #N8",
+      "length": 2,
+      "dd": "EitherSetsZero",
+      "primaryPage": "3-70",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    },
+    {
+      "form": "STB A, off N8",
+      "length": 2,
+      "dd": "RequiresZero",
+      "primaryPage": "3-155",
+      "DerivedTableRowPresent": true,
+      "CoherentAssemblerGrammarAvailable": false,
+      "HostAssemblerSmokePassed": false,
+      "PrimaryEncodingVerified": false,
+      "TargetSemanticsVerified": false
+    }
+  ],
+  "actualRuntimeExecution": {
+    "status": "NativeExecutionNotObserved",
+    "runtimeVerified": false,
+    "assemblerExecutions": 0,
+    "actualRomExecutions": 0
+  },
+  "firmwareReadiness": {
+    "ready": false,
+    "status": "TargetCodeGenerationNotReady",
+    "productionObjects": 0,
+    "firmwareBin": 0
+  },
+  "permissions": {
+    "hostExecution": false,
+    "sourceBuild": false,
+    "syntheticAssembly": false,
+    "romAssembly": false,
+    "thirdPartyRedistribution": false,
+    "hardware": false,
+    "gui": false
+  },
+  "preservation": {
+    "runner": "0.43.0",
+    "protocol": 1,
+    "fixIdentities": 38,
+    "m2av": "BoundedSourceLevelEquivalenceEstablished",
+    "m2aw": "TargetArchitectureContextContractEstablished",
+    "m2ax": "VendorAcquisitionResearchBlocked",
+    "compilerAbi": "NotEstablished",
+    "m2ah": "STOPbefore5722",
+    "data019b2Owner": "NotEstablished",
+    "wdt3c": "Unresolved",
+    "jgtC8": "Unresolved",
+    "cal2689Rt5c80": "NotRun",
+    "resetFullboot": "Blocked",
+    "scheduler": "NotEstablished",
+    "irq": "NotInjected",
+    "timer": "NotModeled",
+    "physicalFuelTimeDegrees": "Unavailable",
+    "status": "PcInspectionOnly/NotFlashReady"
+  },
+  "result": {
+    "classification": "M2ay ASM662 Build/Encoding ResearchBlocked",
+    "firstBlocker": "LicenseApplicabilityUnresolvedForCompleteSourceSet"
+  }
+}

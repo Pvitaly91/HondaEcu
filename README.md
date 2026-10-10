@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2ay adds [ASM662 source/build safety research](docs/M2AY_ASM662_SOURCE_BUILD_VERIFICATION.md):
+exact-pinned private RCS recovery and independent15-form primary expectations;
+complete-set rights, generated-source coherence and unsafe PRELOAD block build/run.
+No assembler output/ROM/firmware; M2av/M2aw/M2ax and production retained.
+
 M2ax records [MAC66K v4/DCL acquisition research](docs/M2AX_MAC66K_V4_DCL_PROVENANCE.md):
 no verified vendor package or actual M66201 DCL acquired. Closed provenance policy,
 15-form documentary matrix and a future-only runtime plan; no tool execution or

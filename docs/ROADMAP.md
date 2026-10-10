@@ -1,5 +1,10 @@
 # Roadmap
 
+M2ay adds [ASM662 source/build verification](M2AY_ASM662_SOURCE_BUILD_VERIFICATION.md).
+ResearchBlocked: unresolved complete-set rights, incoherent cached generated heads,
+unsafe PRELOAD. Primary expectations15, generated verification0; no build/run/BIN.
+STOP after delivery: no M2az, lowering, original-ROM assembly, GUI or hardware.
+
 M2ax adds [MAC66K v4 and M66201 DCL provenance gates](M2AX_MAC66K_V4_DCL_PROVENANCE.md).
 Toolchain Acquisition Research/Blocked: actual vendor assets0, usage/version match
 unknown. Static/invented policy only; M2av/M2aw retained, code generation NotReady.
