@@ -1,5 +1,10 @@
 # Roadmap
 
+M2bc adds [independent15-form decode/encode compatibility](M2BC_INDEPENDENT_15FORM_DECODE_ENCODE_COMPATIBILITY.md).
+Primary decode and bidirectional synthetic compatibility verified separately;
+no stream/state progression, production decoder change or runtime permission.
+STOP after delivery: no M2bd/lowering/linker/ROM/firmware/GUI/hardware.
+
 M2bb adds the [independent typed15-form encoder](M2BB_INDEPENDENT_15FORM_ENCODER.md).
 Synthetic Encoding Verified: primary byte matches, full width/offset/rel8/DD/error
 tests, pure single-instruction in-memory API. No full fragment, ROM or firmware.

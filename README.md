@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2bc adds [independent15-form decoding and bidirectional compatibility](docs/M2BC_INDEPENDENT_15FORM_DECODE_ENCODE_COMPATIBILITY.md):
+primary typed decode proof is separate from round-trip compatibility; exact
+single synthetic payload, atomic refusals, no streams/runtime/firmware.
+M2bb encoder and production/admission remain unchanged.
+
 M2bb adds a [typed15-form synthetic encoder](docs/M2BB_INDEPENDENT_15FORM_ENCODER.md):
 own pure Python implementation matches independent manufacturer vectors;
 immutable1..5byte in-memory results or atomic errors only. No ROM/files/assembly

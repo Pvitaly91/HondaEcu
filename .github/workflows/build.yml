@@ -131,6 +131,14 @@ jobs:
           python -B research/p28-word0196/independent_encoder_tests.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: M2bc independent decoder and bidirectional primary-vector compatibility
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_independent_decode_encode_contract.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/independent_decoder_tests.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 
