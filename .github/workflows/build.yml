@@ -107,6 +107,22 @@ jobs:
           python -B research/p28-word0196/asm662_original_release_tests.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: M2ba Doc contribution provenance and invented-only regressions
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_doc_contribution.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/doc_contribution_tests.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2ba independent encoder design and invented-only regressions
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_independent_encoder_design.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/independent_encoder_design_tests.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 

@@ -1,5 +1,11 @@
 # Roadmap
 
+M2ba adds [Doc rights and independent encoder design](M2BA_DOC_OPCODE_RIGHTS_AND_ENCODER_ROUTE.md).
+Independent Encoder Route Specified / Historical ASM662 Blocked: primary15 forms,
+typed/DD/LE16/rel8/error scope; no encoder implementation or target output.
+Recommend own invented-only15-form encoder as a separately authorized next step.
+STOP after delivery: no M2bb, actual encoder, ASM662 build, ROM, GUI or hardware.
+
 M2az adds [original ASM662 release/component research](M2AZ_ASM662_ORIGINAL_RELEASE_PROVENANCE.md).
 Official0.9 acquired/source input closure10; original Bison exception established,
 Doc/component rights unresolved. Static-only ResearchBlocked; no build/run/target bytes.

@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2ba specifies the [Doc rights / independent encoder route](docs/M2BA_DOC_OPCODE_RIGHTS_AND_ENCODER_ROUTE.md):
+author Git/original0.9 correspondence reviewed; Doc component rights unresolved.
+Primary-manual design for15 exact forms established, not implemented; historical
+ASM662 remains blocked. No assembler/ROM/target output; prior contracts retained.
+
 M2az adds [original ASM662 release provenance](docs/M2AZ_ASM662_ORIGINAL_RELEASE_PROVENANCE.md):
 official0.9 source archive recovered;4 distributions integrity-checked, component
 notices and bounded source chronology reviewed. Doc rights remain unresolved;

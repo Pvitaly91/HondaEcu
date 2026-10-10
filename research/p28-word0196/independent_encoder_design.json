@@ -1,0 +1,853 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2ba",
+  "exactBase": "5c819e0f5675850050c5bc3a8e6301a66d448136",
+  "route": "PrimaryManualDerivedIndependentEncoderRoute",
+  "status": "SpecificationEstablished;ImplementationNotStarted",
+  "legalCleanRoomClaim": false,
+  "conceptualInterface": "EncodeInstruction(reviewedFormId,typedOperands,incomingDD,originPC) -> EncodedInstruction | ExplicitError",
+  "sources": {
+    "manual": "Oki_66201_Instruction_Manual.pdf",
+    "edition": "September1991",
+    "sha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+    "independentlyReviewedM2ayExpectationsSha256": "a268815a0c04a4e2f0fccb64021ead26e1cbdaa02c1cc435d816f7d35fa2ab44",
+    "implementationInputs": [
+      "PrimaryManufacturerFunctionalFacts",
+      "IndependentPrimaryExpectationLedger"
+    ],
+    "excludedInputs": [
+      "ASM662Source",
+      "ASM662Grammar",
+      "ASM662Generators",
+      "DocDerivedTables",
+      "RustDecoderOutput",
+      "CSharpExecutorOutput"
+    ],
+    "priorThirdPartySourceExposureDisclosed": true,
+    "arrangement": "OwnFixedFormIdentifiersAndTypedSpecification"
+  },
+  "operandTypes": {
+    "AccumulatorA": "FixedA;no value field",
+    "Register0": "Exact0",
+    "Register1": "Exact1",
+    "PageOffset8": "RawOffsetInteger0..255;notDATA16;noLRBconversion",
+    "EvenPageOffset8": "Even0..254;conservativeProfileOnly;CPUAlignsOddWordAddressDown",
+    "Immediate8": "Integer0..255",
+    "Immediate16": "Integer0..65535;lowByteFirst",
+    "PageBit7": "RawOffset0..255AndExactBit7",
+    "PageBit5": "RawOffset0..255AndExactBit5",
+    "TargetPC16": "Integer0..65535;explicitTargetNotLabel"
+  },
+  "policies": {
+    "incomingDD": "ExactInteger0Or1;unknownRejected",
+    "originPC": "ExactInteger0..65535",
+    "instructionExtent": "origin+length<=65536;lastByteMayBeFFFF",
+    "relativeBoundary": "NoWrapProfile;nextPC<=65535;linearSignedDifference;noModuloRepair",
+    "wordAlignmentReference": {
+      "pdfPage": 22,
+      "printedPage": "1-18",
+      "rule": "CPUWordReadAlignsDown;OddOffsetRefusalIsEncoderProfileRestrictionNotISAIllegal"
+    },
+    "littleEndianReference": {
+      "pdfPage": 9,
+      "printedPage": "1-5"
+    },
+    "lbDD": "EitherIncoming;ExecutedLBsetsDD0;encodingDoesNotExecuteOrMutateContext",
+    "output": "FutureExactLengthOnly;noZeroDefaultPaddingOrTruncation",
+    "errorCodes": [
+      "RequestShape",
+      "UnsupportedForm",
+      "IncomingDDInvalid",
+      "WrongDD",
+      "OriginInvalid",
+      "OriginSpanOutsideProfile",
+      "OperandCount",
+      "OperandKind",
+      "OperandShape",
+      "OperandRange",
+      "FixedOperandMismatch",
+      "OddWordOffsetOutsideProfile",
+      "Rel8OutOfRange"
+    ],
+    "operandValidationOrder": "LeftToRight;kindThenShapeThenRangeThenFixedValueThenAlignmentThenRelative;errorCodesDoNotDeclareGlobalCrossOperandPriority",
+    "unsupported": "Reject;noDerivedFallback"
+  },
+  "exactForms": [
+    {
+      "reviewedFormId": "lb-a-page",
+      "mnemonic": "LB A,off N8",
+      "pdfPage": 124,
+      "printedPage": "3-70",
+      "dataWidth": 8,
+      "incomingDD": "EitherSets0",
+      "operandOrder": [
+        "AccumulatorA",
+        "PageOffset8"
+      ],
+      "components": [
+        "F4",
+        "offset8"
+      ],
+      "expectedLength": 2,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "lb-a-page",
+          "typedOperands": [
+            {
+              "kind": "AccumulatorA"
+            },
+            {
+              "kind": "PageOffset8",
+              "value": 55
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          244,
+          55
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow"
+      ]
+    },
+    {
+      "reviewedFormId": "sllb-a",
+      "mnemonic": "SLLB A",
+      "pdfPage": 197,
+      "printedPage": "3-144",
+      "dataWidth": 8,
+      "incomingDD": "Requires0",
+      "operandOrder": [
+        "AccumulatorA"
+      ],
+      "components": [
+        "53"
+      ],
+      "expectedLength": 1,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "sllb-a",
+          "typedOperands": [
+            {
+              "kind": "AccumulatorA"
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          83
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow",
+        "wrongDD"
+      ]
+    },
+    {
+      "reviewedFormId": "rolb-page",
+      "mnemonic": "ROLB off N8",
+      "pdfPage": 173,
+      "printedPage": "3-120",
+      "dataWidth": 8,
+      "incomingDD": "Independent",
+      "operandOrder": [
+        "PageOffset8"
+      ],
+      "components": [
+        "C4",
+        "offset8",
+        "B7"
+      ],
+      "expectedLength": 3,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "rolb-page",
+          "typedOperands": [
+            {
+              "kind": "PageOffset8",
+              "value": 55
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          196,
+          55,
+          183
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow"
+      ]
+    },
+    {
+      "reviewedFormId": "lb-a-r0",
+      "mnemonic": "LB A,r0",
+      "pdfPage": 124,
+      "printedPage": "3-70",
+      "dataWidth": 8,
+      "incomingDD": "EitherSets0",
+      "operandOrder": [
+        "AccumulatorA",
+        "Register0"
+      ],
+      "components": [
+        "78"
+      ],
+      "expectedLength": 1,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "lb-a-r0",
+          "typedOperands": [
+            {
+              "kind": "AccumulatorA"
+            },
+            {
+              "kind": "Register0",
+              "value": 0
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          120
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow"
+      ]
+    },
+    {
+      "reviewedFormId": "andb-a-page",
+      "mnemonic": "ANDB A,off N8",
+      "pdfPage": 76,
+      "printedPage": "3-24",
+      "dataWidth": 8,
+      "incomingDD": "Requires0",
+      "operandOrder": [
+        "AccumulatorA",
+        "PageOffset8"
+      ],
+      "components": [
+        "D7",
+        "offset8"
+      ],
+      "expectedLength": 2,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "andb-a-page",
+          "typedOperands": [
+            {
+              "kind": "AccumulatorA"
+            },
+            {
+              "kind": "PageOffset8",
+              "value": 55
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          215,
+          55
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow",
+        "wrongDD"
+      ]
+    },
+    {
+      "reviewedFormId": "cmp-page-imm16",
+      "mnemonic": "CMP off N8,#N16",
+      "pdfPage": 90,
+      "printedPage": "3-38",
+      "dataWidth": 16,
+      "incomingDD": "Independent",
+      "operandOrder": [
+        "EvenPageOffset8",
+        "Immediate16"
+      ],
+      "components": [
+        "B4",
+        "offset8",
+        "C0",
+        "imm16Low",
+        "imm16High"
+      ],
+      "expectedLength": 5,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "cmp-page-imm16",
+          "typedOperands": [
+            {
+              "kind": "EvenPageOffset8",
+              "value": 54
+            },
+            {
+              "kind": "Immediate16",
+              "value": 42330
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          180,
+          54,
+          192,
+          90,
+          165
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow",
+        "oddWordOffsetProfileRefusal",
+        "imm16Overflow",
+        "bigEndianExpectation"
+      ]
+    },
+    {
+      "reviewedFormId": "jlt-rel8",
+      "mnemonic": "JLT rel8",
+      "pdfPage": 120,
+      "printedPage": "3-66/3-67",
+      "dataWidth": null,
+      "incomingDD": "Independent",
+      "operandOrder": [
+        "TargetPC16"
+      ],
+      "components": [
+        "CA",
+        "rel8"
+      ],
+      "expectedLength": 2,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": "targetPC-(originPC+instructionLength);signed[-128,127];twoComplement8",
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "jlt-rel8",
+          "typedOperands": [
+            {
+              "kind": "TargetPC16",
+              "value": 265
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          202,
+          7
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow",
+        "rel8BelowMinus128",
+        "rel8Above127",
+        "nextPCWrap"
+      ]
+    },
+    {
+      "reviewedFormId": "movb-r1-page",
+      "mnemonic": "MOVB r1,off N8",
+      "pdfPage": 153,
+      "printedPage": "3-99",
+      "dataWidth": 8,
+      "incomingDD": "Independent",
+      "operandOrder": [
+        "Register1",
+        "PageOffset8"
+      ],
+      "components": [
+        "C4",
+        "offset8",
+        "49"
+      ],
+      "expectedLength": 3,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "movb-r1-page",
+          "typedOperands": [
+            {
+              "kind": "Register1",
+              "value": 1
+            },
+            {
+              "kind": "PageOffset8",
+              "value": 55
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          196,
+          55,
+          73
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow"
+      ]
+    },
+    {
+      "reviewedFormId": "andb-page-a",
+      "mnemonic": "ANDB off N8,A",
+      "pdfPage": 77,
+      "printedPage": "3-25",
+      "dataWidth": 8,
+      "incomingDD": "Independent",
+      "operandOrder": [
+        "PageOffset8",
+        "AccumulatorA"
+      ],
+      "components": [
+        "C4",
+        "offset8",
+        "D1"
+      ],
+      "expectedLength": 3,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "andb-page-a",
+          "typedOperands": [
+            {
+              "kind": "PageOffset8",
+              "value": 55
+            },
+            {
+              "kind": "AccumulatorA"
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          196,
+          55,
+          209
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow"
+      ]
+    },
+    {
+      "reviewedFormId": "jbs-page-bit7",
+      "mnemonic": "JBS off N8.7,rel8",
+      "pdfPage": 119,
+      "printedPage": "3-65",
+      "dataWidth": 8,
+      "incomingDD": "Independent",
+      "operandOrder": [
+        "PageBit7",
+        "TargetPC16"
+      ],
+      "components": [
+        "EF",
+        "offset8",
+        "rel8"
+      ],
+      "expectedLength": 3,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": "targetPC-(originPC+instructionLength);signed[-128,127];twoComplement8",
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "jbs-page-bit7",
+          "typedOperands": [
+            {
+              "kind": "PageBit7",
+              "offset": 55,
+              "bit": 7
+            },
+            {
+              "kind": "TargetPC16",
+              "value": 508
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 512
+        },
+        "staticExpectedBytes": [
+          239,
+          55,
+          249
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow",
+        "rel8BelowMinus128",
+        "rel8Above127",
+        "nextPCWrap"
+      ]
+    },
+    {
+      "reviewedFormId": "jbs-page-bit5",
+      "mnemonic": "JBS off N8.5,rel8",
+      "pdfPage": 119,
+      "printedPage": "3-65",
+      "dataWidth": 8,
+      "incomingDD": "Independent",
+      "operandOrder": [
+        "PageBit5",
+        "TargetPC16"
+      ],
+      "components": [
+        "ED",
+        "offset8",
+        "rel8"
+      ],
+      "expectedLength": 3,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": "targetPC-(originPC+instructionLength);signed[-128,127];twoComplement8",
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "jbs-page-bit5",
+          "typedOperands": [
+            {
+              "kind": "PageBit5",
+              "offset": 55,
+              "bit": 5
+            },
+            {
+              "kind": "TargetPC16",
+              "value": 778
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 768
+        },
+        "staticExpectedBytes": [
+          237,
+          55,
+          7
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow",
+        "rel8BelowMinus128",
+        "rel8Above127",
+        "nextPCWrap"
+      ]
+    },
+    {
+      "reviewedFormId": "orb-page-imm8",
+      "mnemonic": "ORB off N'8,#N8",
+      "pdfPage": 163,
+      "printedPage": "3-110",
+      "dataWidth": 8,
+      "incomingDD": "Independent",
+      "operandOrder": [
+        "PageOffset8",
+        "Immediate8"
+      ],
+      "components": [
+        "C4",
+        "offset8",
+        "E0",
+        "imm8"
+      ],
+      "expectedLength": 4,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "orb-page-imm8",
+          "typedOperands": [
+            {
+              "kind": "PageOffset8",
+              "value": 55
+            },
+            {
+              "kind": "Immediate8",
+              "value": 166
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          196,
+          55,
+          224,
+          166
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow"
+      ]
+    },
+    {
+      "reviewedFormId": "orb-a-imm8",
+      "mnemonic": "ORB A,#N8",
+      "pdfPage": 160,
+      "printedPage": "3-107",
+      "dataWidth": 8,
+      "incomingDD": "Requires0",
+      "operandOrder": [
+        "AccumulatorA",
+        "Immediate8"
+      ],
+      "components": [
+        "E6",
+        "imm8"
+      ],
+      "expectedLength": 2,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "orb-a-imm8",
+          "typedOperands": [
+            {
+              "kind": "AccumulatorA"
+            },
+            {
+              "kind": "Immediate8",
+              "value": 166
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          230,
+          166
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow",
+        "wrongDD"
+      ]
+    },
+    {
+      "reviewedFormId": "lb-a-imm8",
+      "mnemonic": "LB A,#N8",
+      "pdfPage": 124,
+      "printedPage": "3-70",
+      "dataWidth": 8,
+      "incomingDD": "EitherSets0",
+      "operandOrder": [
+        "AccumulatorA",
+        "Immediate8"
+      ],
+      "components": [
+        "77",
+        "imm8"
+      ],
+      "expectedLength": 2,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "lb-a-imm8",
+          "typedOperands": [
+            {
+              "kind": "AccumulatorA"
+            },
+            {
+              "kind": "Immediate8",
+              "value": 166
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          119,
+          166
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow"
+      ]
+    },
+    {
+      "reviewedFormId": "stb-a-page",
+      "mnemonic": "STB A,off N8",
+      "pdfPage": 208,
+      "printedPage": "3-155",
+      "dataWidth": 8,
+      "incomingDD": "Requires0",
+      "operandOrder": [
+        "AccumulatorA",
+        "PageOffset8"
+      ],
+      "components": [
+        "D4",
+        "offset8"
+      ],
+      "expectedLength": 2,
+      "evidenceSourceSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "relativeArithmetic": null,
+      "positiveSyntheticExample": {
+        "request": {
+          "reviewedFormId": "stb-a-page",
+          "typedOperands": [
+            {
+              "kind": "AccumulatorA"
+            },
+            {
+              "kind": "PageOffset8",
+              "value": 55
+            }
+          ],
+          "incomingDD": 0,
+          "originPC": 256
+        },
+        "staticExpectedBytes": [
+          212,
+          55
+        ]
+      },
+      "negativeCases": [
+        "unknownForm",
+        "wrongOperandKind",
+        "wrongOperandCount",
+        "invalidIncomingDD",
+        "originSpanOverflow",
+        "wrongDD"
+      ]
+    }
+  ],
+  "knownLimits": [
+    "ROLBWordLongDescriptionTypo;ByteHeadingAndCodeTableUsed",
+    "JGT_C8ConflictUnresolvedOutsideScope",
+    "ADDer3_A_4781PrimaryMissingOutsideScope",
+    "PrimedNInORBIsSeparateVariableNotNewAddressMode"
+  ],
+  "futureVerification": {
+    "inventedOnly": true,
+    "boundaryValues": [
+      0,
+      1,
+      127,
+      128,
+      254,
+      255,
+      256,
+      65535,
+      65536
+    ],
+    "rel8Boundaries": [
+      -129,
+      -128,
+      -1,
+      0,
+      127,
+      128
+    ],
+    "primaryStaticExamples": 15,
+    "byteComparison": "FutureEmittedBytesVersusSealedPrimaryExpectations;NotPerformed",
+    "independentReviewRequired": true,
+    "rejectOutputOnError": true,
+    "semanticReplacementGates": [
+      "Flags",
+      "CPUContext",
+      "RegisterAllocation",
+      "MemoryWrites",
+      "ControlFlow",
+      "ActualTargetExecutionEquivalence"
+    ]
+  },
+  "exclusions": {
+    "encoderImplemented": false,
+    "assemblerExecutions": 0,
+    "generatorExecutions": 0,
+    "actualRomExecutions": 0,
+    "targetBytes": 0,
+    "targetAssemblyFiles": 0,
+    "targetObjects": 0,
+    "firmwareBin": 0,
+    "runtimeVerified": false,
+    "noPreload": true,
+    "noRomInput": true,
+    "noLinker": true,
+    "noMemoryPlacement": true,
+    "noCompilerAbiAssumption": true,
+    "noFirmwareOutput": true,
+    "noNativeFragmentReplacement": true,
+    "noProductionChange": true
+  },
+  "nextMilestone": "ImplementOwn15FormTypedInstructionEncoderAndInventedPrimaryVectorTestsOnly;SeparateAuthorizationRequired"
+}
