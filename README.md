@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2az adds [original ASM662 release provenance](docs/M2AZ_ASM662_ORIGINAL_RELEASE_PROVENANCE.md):
+official0.9 source archive recovered;4 distributions integrity-checked, component
+notices and bounded source chronology reviewed. Doc rights remain unresolved;
+no ASM662 build/run/target bytes. M2av-M2ay and production remain unchanged.
+
 M2ay adds [ASM662 source/build safety research](docs/M2AY_ASM662_SOURCE_BUILD_VERIFICATION.md):
 exact-pinned private RCS recovery and independent15-form primary expectations;
 complete-set rights, generated-source coherence and unsafe PRELOAD block build/run.

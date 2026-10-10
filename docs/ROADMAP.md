@@ -1,5 +1,10 @@
 # Roadmap
 
+M2az adds [original ASM662 release/component research](M2AZ_ASM662_ORIGINAL_RELEASE_PROVENANCE.md).
+Official0.9 acquired/source input closure10; original Bison exception established,
+Doc/component rights unresolved. Static-only ResearchBlocked; no build/run/target bytes.
+STOP after delivery: no M2ba, patches, assembly, firmware, GUI or hardware.
+
 M2ay adds [ASM662 source/build verification](M2AY_ASM662_SOURCE_BUILD_VERIFICATION.md).
 ResearchBlocked: unresolved complete-set rights, incoherent cached generated heads,
 unsafe PRELOAD. Primary expectations15, generated verification0; no build/run/BIN.

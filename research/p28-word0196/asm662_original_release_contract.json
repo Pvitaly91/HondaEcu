@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2az",
+  "exactBase": "c6cb67cad0d8c207c837648ca6de0ab7bd7ec310",
+  "profile": "OfficialASM66209Acquired_Static_ComponentRightsBlocked",
+  "releases": [
+    {
+      "version": "0.9",
+      "url": "https://sourceforge.net/projects/pgmfi/files/asm662/asm662%20version%200.9/asm662-0.9.tar.gz/download",
+      "filename": "asm662-0.9.tar.gz",
+      "documentaryDate": "2003-07-08",
+      "bytes": 188873,
+      "sha256": "2471660d08fe827af9ed1582354804eb7c16e82775bb8b6e5190317a253e5444",
+      "acquired": true,
+      "archiveFormat": "GzipTar",
+      "integrity": "Verified",
+      "members": 56,
+      "regularFiles": 48,
+      "archivedExecutables": 0,
+      "sourcePresent": true,
+      "officialListingChecksums": "MD5_SHA1_SHA256Match;SamePublisherNotIndependentLineage",
+      "binaryMaterialization": false,
+      "execution": false
+    },
+    {
+      "version": "Win32 1.0",
+      "url": "https://sourceforge.net/projects/pgmfi/files/asm662/v1.0%20win32/asm662-win32-v1.0.zip/download",
+      "filename": "asm662-win32-v1.0.zip",
+      "documentaryDate": "2003-07-11",
+      "bytes": 215910,
+      "sha256": "92a05e8666723c78f77c384c75fd3e98b3c13d11a5dbf5176cacf40865c83638",
+      "acquired": true,
+      "archiveFormat": "ZIP",
+      "integrity": "Verified",
+      "members": 7,
+      "regularFiles": 7,
+      "archivedExecutables": 2,
+      "sourcePresent": false,
+      "officialListingChecksums": "MD5_SHA1_SHA256Match;SamePublisherNotIndependentLineage",
+      "binaryMaterialization": false,
+      "execution": false
+    },
+    {
+      "version": "Win32 1.1",
+      "url": "https://sourceforge.net/projects/pgmfi/files/asm662/v1.1%20win32/asm662-win32-v1.1.zip/download",
+      "filename": "asm662-win32-v1.1.zip",
+      "documentaryDate": "2003-07-28",
+      "bytes": 206013,
+      "sha256": "929d96a336fa8133112741b129ffff2b0ff7b7962a6ddaf4caa8cab54096da93",
+      "acquired": true,
+      "archiveFormat": "ZIP",
+      "integrity": "Verified",
+      "members": 2,
+      "regularFiles": 2,
+      "archivedExecutables": 2,
+      "sourcePresent": false,
+      "officialListingChecksums": "MD5_SHA1_SHA256Match;SamePublisherNotIndependentLineage",
+      "binaryMaterialization": false,
+      "execution": false
+    },
+    {
+      "version": "Win32 1.2",
+      "url": "https://sourceforge.net/projects/pgmfi/files/asm662/win32%20v1.2/asm662-win32-v1.2.zip/download",
+      "filename": "asm662-win32-v1.2.zip",
+      "documentaryDate": "2003-10-08",
+      "bytes": 221582,
+      "sha256": "a9e16ddb146224940ec3588de29d304454b21515eca94575b77051db9349a0ed",
+      "acquired": true,
+      "archiveFormat": "ZIP",
+      "integrity": "Verified",
+      "members": 7,
+      "regularFiles": 7,
+      "archivedExecutables": 2,
+      "sourcePresent": false,
+      "officialListingChecksums": "MD5_SHA1_SHA256Match;SamePublisherNotIndependentLineage",
+      "binaryMaterialization": false,
+      "execution": false
+    }
+  ],
+  "provenance": {
+    "status": "OfficialCurrentDistributionAndCVSMetadataVerified;NoDetachedHistoricalSignatureClaim",
+    "specificUploader": null,
+    "acquisitionManifestSha256": "e28086df3fd5a4c1354901f43c5c825ac61427f34fec08a4d1a9b41c66a784a9"
+  },
+  "originalSource": {
+    "identity": "Official0.9_20030708",
+    "originalInputCount": 10,
+    "missingOriginalInputs": 0,
+    "complete": true,
+    "coherence": "BoundedStaticInputAndTRBConsistency;FullRegeneratedEqualityNotVerified",
+    "preloadImplementation": false,
+    "preloadReservedToken": true,
+    "deviceRegisterMap": "NoLater66207RegsHeader;NotDeviceEquivalenceProof",
+    "dependencyManifestSha256": "d2c4a32cc0495e62dc5a2f91131cdecc6cc0d9832ab8626ed794ed932e6adae8",
+    "boundedCoherenceManifestSha256": "830956d04a0dcd02b36cf72b757a69369463b0d42654e16cc23ad33b502a6f23"
+  },
+  "licensing": {
+    "OriginalProjectBSDStatementVerified": true,
+    "OriginalReleaseLicenseTextVerified": false,
+    "OriginalReleaseBSDCoverageVerified": false,
+    "author": "Andy Sloane/a1k0n",
+    "exactBsdVariant": null,
+    "ComponentLicenseVerified": "Bison1.75OutputExceptionWithinExactGeneratedFiles;OtherCoverageUnresolved",
+    "ThirdPartyRightsVerified": false,
+    "DocContributionRightsEstablished": false,
+    "MirrorRelicensingAuthorityEstablished": false,
+    "LocalBuildRightsEstablished": false,
+    "PublicRedistributionRightsEstablished": false,
+    "legalProhibitionProved": false,
+    "manifestSha256": "fd0d5f06cc5a689478dfb072a65cb3ec474dc80579bdd634550f3088bd47fea6",
+    "docProvenanceSha256": "cd93ef57f38ef0a47010a278c46ed02a828cfc54d4314e4057ef6a482b632a81"
+  },
+  "correspondence": {
+    "m2ayCommit": "94612d10370eb4ddf97d4f349168298e1a3da8a0",
+    "matchedComponents": 32,
+    "byteIdentical": 10,
+    "changed": 22,
+    "mixedRevisionsAllowed": false,
+    "manifestSha256": "9da09ff36190777ab8c72494dbb30ce3d51fd038d39a298410f4f2e8dc93b6bf"
+  },
+  "chronology": {
+    "original09": "TRB;NoImplementedPRELOAD;Bison1.75",
+    "preloadIntroduction": "RCSParser1.3_Main1.3_20030711",
+    "tableRename": "RCS1.9_20060205_TRBtoTBR",
+    "m2ayCachedGenerated": "2004TRB;Byacc1.9;NotRegeneratedFor2006Table",
+    "runtimeInference": false,
+    "manifestSha256": "756c7ebcade68415eb39009ef3e91d017185773cd682a3a7e8ca294c62818d52"
+  },
+  "security": {
+    "original09": "NoPreloadPath;OtherUnsafeArithmeticDiagnosticsIOAndDDRemain",
+    "m2ayResultUnchanged": "UnsafeExecutionPathConfirmed",
+    "mitigation": "BuildSecurityMitigationDesigned;BuildSecurityMitigationNotImplemented",
+    "preferredPreload": "A_CompletelyDisabled",
+    "patchesApplied": 0,
+    "designSha256": "881b2cd24736e13631ece8eecab92c4cb95193451a64a776d68510e81eb9971f",
+    "sourceFindingsSha256": "a4ffb4af7ac058667499a4829fc5c90307de369363c77cf4e280336ce1005b07"
+  },
+  "buildAuthorization": {
+    "status": "ForbiddenInM2az;FuturePrerequisitesUnresolved",
+    "permission": false,
+    "compilerExecuted": false,
+    "generatorExecuted": false,
+    "makeExecuted": false,
+    "builds": 0,
+    "buildLogs": null,
+    "executableSha256": null
+  },
+  "runtime": {
+    "status": "AssemblerExecutionNotRun",
+    "runtimeVerified": false,
+    "assemblerExecutions": 0,
+    "actualRomExecutions": 0,
+    "nativeHistoryCreated": false
+  },
+  "syntheticOutput": {
+    "status": "AssemblerEncodingNotVerified",
+    "outputs": 0,
+    "generatedFormsCompared": 0,
+    "mismatches": null
+  },
+  "firmware": {
+    "ready": false,
+    "status": "TargetCodeGenerationNotReady",
+    "targetBytes": 0,
+    "objects": 0,
+    "firmwareBin": 0
+  },
+  "preservation": {
+    "m2av": "BoundedSourceLevelEquivalenceEstablished",
+    "m2aw": "TargetArchitectureContextContractEstablished",
+    "m2ax": "MAC66KAcquisitionResearchBlocked",
+    "m2ay": "ASM662BuildEncodingResearchBlocked",
+    "runner": "0.43.0",
+    "protocol": 1,
+    "fixIdentities": 38,
+    "compilerAbi": "NotEstablished",
+    "wdt3c": "Unresolved",
+    "jgtC8": "Unresolved",
+    "resetCalFullboot": "BlockedNotRun",
+    "m2ah": "STOPbefore5722",
+    "data019b2Owner": "NotEstablished",
+    "strictM2i": "Blocked",
+    "irq": "NotInjected",
+    "timer": "NotModeled",
+    "scheduler": "NotEstablished",
+    "guiHardware": "NotRun",
+    "flash": "PcInspectionOnly/NotFlashReady"
+  },
+  "result": {
+    "classification": "M2az Original Source/License ResearchBlocked",
+    "firstBlocker": "DocContributionRightsNotEstablished"
+  }
+}
