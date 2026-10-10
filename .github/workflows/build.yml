@@ -75,6 +75,14 @@ jobs:
         shell: pwsh
         run: ./research/p28-word0196/run-host-tests.ps1 -RunTag ci
 
+      - name: M2aw target ABI contract and invented-only regressions
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_target_contract.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/target_contract_tests.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 

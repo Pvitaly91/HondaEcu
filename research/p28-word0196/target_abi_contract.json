@@ -1,0 +1,1361 @@
+{
+  "schemaVersion": 1,
+  "contractKind": "BoundedTargetContextResearch",
+  "fragmentId": "word0196SoftwareAlternate556F",
+  "target": {
+    "manufacturer": "OKI",
+    "core": "nX-8/200",
+    "standardDevices": [
+      "MSM66201",
+      "MSM66207"
+    ],
+    "deviceApplicability": "NamedStandardDeviceArchitectureOnly;CustomerAsicConditional",
+    "customerAsicIdentity": "NotEstablished",
+    "standardDeviceMemory": {
+      "MSM66201": {
+        "internalRamStart": 128,
+        "internalRamEnd": 639,
+        "ramBytes": 512,
+        "rangeStatus": "ConfirmedPrimaryArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "DS1998"
+        ]
+      },
+      "MSM66207": {
+        "internalRamStart": null,
+        "internalRamEnd": null,
+        "ramBytes": 1024,
+        "rangeStatus": "SizeConfirmed;ExactFullRangeNotEstablishedInReviewedPrimary",
+        "sourceRefs": [
+          "DS1998"
+        ]
+      }
+    }
+  },
+  "scope": {
+    "entryPc": 21871,
+    "stopBeforePcs": [
+      21910,
+      21957
+    ],
+    "instructionSites": 18,
+    "exactForms": 15,
+    "excluded": [
+      "P2",
+      "Timer",
+      "IRQ",
+      "Reset",
+      "WDT",
+      "ROMReplacement",
+      "TargetAssemblyGeneration",
+      "TargetObject",
+      "FirmwareBIN"
+    ],
+    "hostSourceLevelEquivalence": "BoundedSourceLevelEquivalenceEstablished",
+    "targetMachineCodeEquivalence": "NotEstablished",
+    "actualRomExecutions": 0,
+    "firmwareBin": 0
+  },
+  "evidenceSources": [
+    {
+      "id": "IM1991",
+      "classification": "ManufacturerPrimary",
+      "title": "MSM66201 Instruction Manual",
+      "edition": "First edition September 1991",
+      "url": "https://mycomputerninja.com/~jon/www.pgmfi.org/twiki/pub/Library/66kAssemblerDocs/Oki_66201_Instruction_Manual.pdf",
+      "pages": [
+        "1-5",
+        "1-7",
+        "1-10..1-24",
+        "3-29",
+        "3-125"
+      ],
+      "applicability": "MSM66201/nX-8/200 architecture; not OEM ASIC identity"
+    },
+    {
+      "id": "DS1998",
+      "classification": "ManufacturerPrimary",
+      "title": "MSM66201/66P201/66207/66P207",
+      "edition": "E2E1027-27-Y4 January 1998",
+      "url": null,
+      "pages": [
+        "1",
+        "9",
+        "10",
+        "11",
+        "13"
+      ],
+      "applicability": "Named standard devices; not proof of customer-specific ECU ASIC"
+    },
+    {
+      "id": "MAC1993",
+      "classification": "ManufacturerPrimary",
+      "title": "MAC66K Assembler Package User's Manual",
+      "edition": "Third edition November 1993; MAC66K Ver.4.XX",
+      "url": "https://datasheet.datasheetarchive.com/originals/library/Datasheets-UEA1/DSAFRAZ0014345.pdf",
+      "pages": [
+        "1-1",
+        "1-5",
+        "1-7",
+        "3-3..3-8",
+        "3-32..3-33",
+        "4-23..4-24",
+        "4-73",
+        "4-116",
+        "4-150",
+        "4-157",
+        "4-159",
+        "4-163..4-185",
+        "4-194..4-210",
+        "4-242",
+        "5-1..5-32",
+        "7-3..7-12"
+      ],
+      "applicability": "nX-8/200 assembler target support; nX-8/300 STACK/A statement is not nX-8/200 proof"
+    },
+    {
+      "id": "M2Z",
+      "classification": "HistoricalBoundedNativeEvidence",
+      "title": "M2z native word0196 software-alternate comparison chain",
+      "edition": "Historical software-only corpus",
+      "url": "docs/M2Z_WORD0196_SOFTWARE_ALTERNATE.md",
+      "pages": [
+        "Native entry; generation; CFG"
+      ],
+      "applicability": "Retained technical same-machine bounded historical observations; not recovered ECU scheduler"
+    },
+    {
+      "id": "M2AV",
+      "classification": "IndependentHostSourceRepresentation",
+      "title": "M2av bounded word0196 structured IR and C11 equivalence",
+      "edition": "M2av",
+      "url": "docs/M2AV_WORD0196_STRUCTURED_C_EQUIVALENCE.md",
+      "pages": [
+        "Compact state; primary semantics; evidence limits"
+      ],
+      "applicability": "Host replay equivalence only; not native ABI or target binary"
+    },
+    {
+      "id": "M2Y",
+      "classification": "HistoricalBoundedNativeEvidence",
+      "title": "M2y native consumerWord0196 scheduled handoff",
+      "edition": "M2y",
+      "url": "docs/M2Y_WORD0196_CONSUMER_HANDOFF.md",
+      "pages": [
+        "Source entry live-ins; alias limits"
+      ],
+      "applicability": "Technical retained SSP07FE, SCB2 and LRB0021; not an actual reset/caller frame"
+    },
+    {
+      "id": "CC665S",
+      "classification": "CrossFamilyPrimaryLead",
+      "title": "CC665S User's Manual",
+      "edition": "First edition March 1999; CC665S Ver.2.01",
+      "url": "https://datasheet.datasheetarchive.com/originals/library/Datasheets-A1/DSAUTAZ0012723.pdf",
+      "pages": [
+        "User6..8",
+        "User22",
+        "User90",
+        "User153..157",
+        "Language22"
+      ],
+      "applicability": "Reviewed primary targets500/500S; /T string unvalidated; no200 compiler/ABI support established"
+    },
+    {
+      "id": "ASM662",
+      "classification": "DerivedThirdPartyLead",
+      "title": "asm662/dasm662 research context",
+      "edition": "Pinned historical source",
+      "url": "docs/M2J_ADD_ER3_ISA_EVIDENCE.md",
+      "pages": [
+        "Source independence"
+      ],
+      "applicability": "Derived encoding/tool hints; neither manufacturer ISA proof nor OEM ABI"
+    }
+  ],
+  "architectureContract": {
+    "status": "TargetArchitectureVerifiedWithinScope",
+    "addressSpaces": {
+      "program": {
+        "widthBits": 16,
+        "role": "InstructionAndExplicitProgramData",
+        "sourceRefs": [
+          "IM1991"
+        ]
+      },
+      "data": {
+        "widthBits": 16,
+        "role": "RegistersRamSfrAndExternalData",
+        "sourceRefs": [
+          "IM1991",
+          "DS1998"
+        ]
+      },
+      "distinct": true,
+      "hostPointerRepresentsNativeAddress": false
+    },
+    "registerMappings": [
+      {
+        "hostField": "a",
+        "native": "A",
+        "nativeDataAddress": 6,
+        "widthBits": 16,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2AV"
+        ],
+        "ownership": "Current native accumulator lineage; host value only OfflineReplaySnapshot",
+        "preservation": "Reproduce reviewed AL writes; retain AH"
+      },
+      {
+        "hostField": "a.low8",
+        "native": "AL",
+        "widthBits": 8,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "M2AV"
+        ],
+        "ownership": "Low byte of A",
+        "preservation": "LB/SLL/AND/OR effects exactly as M2av; no sign extension"
+      },
+      {
+        "hostField": "a.high8",
+        "native": "AH",
+        "widthBits": 8,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "M2AV"
+        ],
+        "ownership": "High byte of A",
+        "preservation": "Preserved by every scoped byte AL update"
+      },
+      {
+        "hostField": "psw",
+        "native": "PSW",
+        "nativeDataAddress": 4,
+        "widthBits": 16,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2AV"
+        ],
+        "ownership": "Retained native PSW; host snapshot is not authorization",
+        "preservation": "CF/ZF/DD effects only as specified; HC and all other PSW bits retained"
+      },
+      {
+        "hostField": "pc",
+        "native": "NativePC",
+        "widthBits": 16,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "M2Z",
+          "M2AV"
+        ],
+        "ownership": "Native instruction address, not host C return address",
+        "preservation": "Entry556F; native branch-selected continuation5596/55C5 before P2"
+      },
+      {
+        "hostField": "lrb",
+        "native": "LRB",
+        "nativeDataAddress": 2,
+        "widthBits": 16,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "M2Y",
+          "M2AV"
+        ],
+        "ownership": "Retained native LRB0021; not an adapter seed",
+        "preservation": "Preserve0021; required current page0100 and local bank0108"
+      },
+      {
+        "hostField": "x1",
+        "native": "X1 selected by SCB",
+        "widthBits": 16,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Y"
+        ],
+        "ownership": "Native pointing register bank PSW&7",
+        "preservation": "Preserve selected bank value and all unselected banks; no hidden allocation"
+      },
+      {
+        "hostField": "x2",
+        "native": "X2 selected by SCB",
+        "widthBits": 16,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Y"
+        ],
+        "ownership": "Native pointing register bank PSW&7",
+        "preservation": "Preserve selected bank value and all unselected banks; no hidden allocation"
+      },
+      {
+        "hostField": "dp",
+        "native": "DP selected by SCB",
+        "widthBits": 16,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Y"
+        ],
+        "ownership": "Native pointing register bank PSW&7",
+        "preservation": "Preserve selected bank value and all unselected banks; no hidden allocation"
+      },
+      {
+        "hostField": "usp",
+        "native": "USP selected by SCB",
+        "widthBits": 16,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Y"
+        ],
+        "ownership": "Native pointing register bank PSW&7",
+        "preservation": "Preserve selected bank value and all unselected banks; no hidden allocation"
+      },
+      {
+        "hostField": "ssp",
+        "native": "SSP",
+        "nativeDataAddress": 0,
+        "widthBits": 16,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "M2Y"
+        ],
+        "ownership": "Native retained system stack pointer; actual reset/caller frame unknown",
+        "preservation": "No stack writes/calls/prologue/epilogue in this fragment; retain incoming SSP",
+        "historicalTechnicalValue": 2046,
+        "actualEntryValueStatus": "NotEstablished"
+      },
+      {
+        "hostField": "sf",
+        "native": "SF (CAL/RT clear symbol; location not established)",
+        "widthBits": 1,
+        "status": "ConditionalPrimaryConflictUnresolved",
+        "sourceRefs": [
+          "M2AV",
+          "IM1991",
+          "MAC1993"
+        ],
+        "ownership": "MSM66201 CAL/RT print SF-clear; MAC66K4-116 says stackflag only nX-8/300; conflict retained, host SF not native observation",
+        "preservation": "No scoped SF writer; retain host replay value; no inferred SF0 or nX-8/300 STACK/A interpretation",
+        "nativeLocation": null,
+        "nativeWidthBits": null,
+        "widthBasis": "HostLogicalBooleanDomainOnly;NeitherCStorageSizeNorNativeWidth",
+        "actualNativeStateSerialized": false,
+        "evidenceInterpretations": [
+          {
+            "source": "IM1991",
+            "pages": [
+              "3-29",
+              "3-125"
+            ],
+            "statement": "Applicable MSM66201 CAL/RT Function prints SF<-0"
+          },
+          {
+            "source": "MAC1993",
+            "pages": [
+              "4-73",
+              "4-116"
+            ],
+            "statement": "STACK/A stackflag described only for nX-8/300"
+          }
+        ]
+      },
+      {
+        "hostField": "halted",
+        "native": "HostReplayHaltedMetadata",
+        "widthBits": 1,
+        "status": "HostOnly",
+        "sourceRefs": [
+          "M2AV"
+        ],
+        "ownership": "Host driver testing metadata; not an ordinary native CPU register",
+        "preservation": "Host replay requiresfalse; not target runtime owner",
+        "nativeLocation": null,
+        "nativeWidthBits": null,
+        "widthBasis": "HostLogicalBooleanDomainOnly;NoOrdinaryNativeRegisterOrCStorageSize"
+      },
+      {
+        "hostField": "local[0..7]",
+        "native": "r0..r7 at LRB-selected DATA0108..010F",
+        "widthBits": 8,
+        "status": "ConfirmedArchitecture",
+        "sourceRefs": [
+          "IM1991",
+          "M2AV"
+        ],
+        "ownership": "Current native local-bank bytes; retained historical r0; only r1 written in suffix",
+        "preservation": "r0 and r2..r7 retained; r1 changed only by557F in not-below path",
+        "count": 8
+      },
+      {
+        "hostField": "ram0117",
+        "native": "DATA0117",
+        "widthBits": 8,
+        "status": "ConfirmedWithinBoundedEvidence",
+        "sourceRefs": [
+          "M2Z",
+          "M2AV"
+        ],
+        "ownership": "Once-initial historical source, then native5582/55C1 lineage",
+        "preservation": "Native branch-specific stores/order; no per-event reseed"
+      },
+      {
+        "hostField": "ram0124",
+        "native": "DATA0124",
+        "widthBits": 8,
+        "status": "ConfirmedWithinBoundedEvidence",
+        "sourceRefs": [
+          "M2Z",
+          "M2AV"
+        ],
+        "ownership": "Retained upstream native software lineage",
+        "preservation": "Read only when first gatefalse; retain all bits"
+      },
+      {
+        "hostField": "ram0128",
+        "native": "DATA0128",
+        "widthBits": 8,
+        "status": "ConfirmedWithinBoundedEvidence",
+        "sourceRefs": [
+          "M2Y",
+          "M2Z",
+          "M2AV"
+        ],
+        "ownership": "Once-initial masked0128.2 historical input; not runtimephysicalsourceproof",
+        "preservation": "Retained; no fragment access"
+      },
+      {
+        "hostField": "ram012a",
+        "native": "DATA012A",
+        "widthBits": 8,
+        "status": "ConfirmedWithinBoundedEvidence",
+        "sourceRefs": [
+          "M2Z",
+          "M2AV"
+        ],
+        "ownership": "Retained upstream bit1/neighbors, native558E bit0 history",
+        "preservation": "First-gate bit7 read; OR bit0 only both gatesfalse; retain neighbors"
+      },
+      {
+        "hostField": "ram018e",
+        "native": "DATA018E",
+        "widthBits": 8,
+        "status": "ConfirmedWithinBoundedEvidence",
+        "sourceRefs": [
+          "M2Z",
+          "M2AV"
+        ],
+        "ownership": "Historical initial scratch then native5572 history",
+        "preservation": "ROL through CF; ordered store even equal value"
+      },
+      {
+        "hostField": "ram018f",
+        "native": "DATA018F",
+        "widthBits": 8,
+        "status": "ConfirmedWithinBoundedEvidence",
+        "sourceRefs": [
+          "M2Z",
+          "M2AV"
+        ],
+        "ownership": "Historical initial scratch then native558B/55C3 history",
+        "preservation": "Branch-specific RMW/STB order; retained if skipped"
+      },
+      {
+        "hostField": "ram0196[0..1]",
+        "native": "DATA0196/0197 little-endian word",
+        "widthBits": 16,
+        "status": "ConfirmedWithinBoundedEvidence",
+        "sourceRefs": [
+          "IM1991",
+          "M2Z",
+          "M2AV"
+        ],
+        "ownership": "Current native05EB generation, same-generation54FA/5578 readers in historical corpus",
+        "preservation": "Read-only word in suffix; retain both bytes; no host-derived generation"
+      }
+    ],
+    "flagRequirements": [
+      {
+        "name": "CF",
+        "bit": 15,
+        "mask": 32768,
+        "liveIn": "FirstLB556F retains incomingCF; SLL5571 overwrites before ROL5572",
+        "liveOut": "CF from wordCMP5578:1below,0equal/above; no later CF writer",
+        "changes": [
+          "SLL5571",
+          "ROL5572",
+          "CMP5578"
+        ],
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2AV"
+        ]
+      },
+      {
+        "name": "ZF",
+        "bit": 14,
+        "mask": 16384,
+        "liveIn": "FirstLB556F overwrites from018E",
+        "liveOut": "Below:0 fromLB0F; not-below:0 from finalAL ORF0",
+        "changes": [
+          "LB",
+          "ANDB",
+          "ORB",
+          "CMP"
+        ],
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2AV"
+        ]
+      },
+      {
+        "name": "HC",
+        "bit": 13,
+        "mask": 8192,
+        "liveIn": "Retained original value",
+        "liveOut": "IncomingHC unchanged",
+        "changes": [],
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2AV"
+        ]
+      },
+      {
+        "name": "DD",
+        "bit": 12,
+        "mask": 4096,
+        "liveIn": "Either0or1; firstLB556F clears0 before sensitive AL forms",
+        "liveOut": "0 on both exits",
+        "changes": [
+          "LB556F",
+          "LB5575",
+          "LB5592",
+          "LB55BF"
+        ],
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2AV"
+        ]
+      },
+      {
+        "name": "SCB",
+        "bit": 0,
+        "mask": 7,
+        "liveIn": "PSW&7; historical2 is not universal ABI constant",
+        "liveOut": "IncomingSCB unchanged",
+        "changes": [],
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Y",
+          "M2AV"
+        ]
+      }
+    ],
+    "bankContext": {
+      "requiredLrb": 33,
+      "currentPage": 256,
+      "localBankBase": 264,
+      "localBankEnd": 271,
+      "localBankFormula": "(LRB << 3) & 0xFFFF",
+      "currentPageFormula": "((LRB >> 5) << 8) & 0xFFFF",
+      "scbFormula": "PSW & 7",
+      "pointingRegisterBankFormula": "0x80 + 8*SCB",
+      "pointingRegisterOrder": [
+        "X1",
+        "X2",
+        "DP",
+        "USP"
+      ],
+      "pointingRegisterOffsets": [
+        0,
+        2,
+        4,
+        6
+      ],
+      "historicalScb": 2,
+      "historicalPointingStorage": [
+        144,
+        151
+      ],
+      "alternativeLocalBankExample": {
+        "lrb": 32,
+        "currentPage": 256,
+        "localBankBase": 256,
+        "localBankEnd": 263,
+        "classification": "ArchitectureAliasExample;NotPermittedFragmentContext"
+      }
+    },
+    "ramAccessMap": [
+      {
+        "address": 264,
+        "widthBits": 8,
+        "space": "Data",
+        "byteOrder": "Byte",
+        "mode": "LocalRegister",
+        "requiredLrb": 33,
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Z",
+          "M2AV"
+        ],
+        "readerSites": [
+          "5575"
+        ],
+        "writerSites": [
+          "557F"
+        ],
+        "ownership": "Native r0 from earlier54F8; retained",
+        "physicalRole": "Unknown",
+        "standardDevicePlacement": "ConfirmedMSM66201InternalRAM0080..027F;MSM66207FullRangeConditional",
+        "customerAsicApplicability": "ConditionalNotEstablished",
+        "aliasesOutsideScope": "PossibleIndirectIndexedStackOrDifferentLRB;NotGloballyExcluded",
+        "count": 8,
+        "endAddress": 271,
+        "localWrites": [
+          {
+            "address": 265,
+            "pc": "557F"
+          }
+        ],
+        "localAliases": "r0..r7; er0..er3 pair consecutive LE bytes"
+      },
+      {
+        "address": 279,
+        "widthBits": 8,
+        "space": "Data",
+        "byteOrder": "Byte",
+        "mode": "CurrentPage",
+        "requiredLrb": 33,
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Z",
+          "M2AV"
+        ],
+        "readerSites": [
+          "557F",
+          "5582"
+        ],
+        "writerSites": [
+          "5582",
+          "55C1"
+        ],
+        "ownership": "Historical once-initial then native suffix history",
+        "physicalRole": "Unknown",
+        "standardDevicePlacement": "ConfirmedMSM66201InternalRAM0080..027F;MSM66207FullRangeConditional",
+        "customerAsicApplicability": "ConditionalNotEstablished",
+        "aliasesOutsideScope": "PossibleIndirectIndexedStackOrDifferentLRB;NotGloballyExcluded"
+      },
+      {
+        "address": 292,
+        "widthBits": 8,
+        "space": "Data",
+        "byteOrder": "Byte",
+        "mode": "CurrentPage",
+        "requiredLrb": 33,
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Z",
+          "M2AV"
+        ],
+        "readerSites": [
+          "5588"
+        ],
+        "writerSites": [],
+        "ownership": "Upstream retained software gate",
+        "physicalRole": "Unknown",
+        "standardDevicePlacement": "ConfirmedMSM66201InternalRAM0080..027F;MSM66207FullRangeConditional",
+        "customerAsicApplicability": "ConditionalNotEstablished",
+        "aliasesOutsideScope": "PossibleIndirectIndexedStackOrDifferentLRB;NotGloballyExcluded"
+      },
+      {
+        "address": 296,
+        "widthBits": 8,
+        "space": "Data",
+        "byteOrder": "Byte",
+        "mode": "RetainedBoundaryState",
+        "requiredLrb": 33,
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Z",
+          "M2AV"
+        ],
+        "readerSites": [],
+        "writerSites": [],
+        "ownership": "Historical once-initial masked gate; no access in suffix",
+        "physicalRole": "Unknown",
+        "standardDevicePlacement": "ConfirmedMSM66201InternalRAM0080..027F;MSM66207FullRangeConditional",
+        "customerAsicApplicability": "ConditionalNotEstablished",
+        "aliasesOutsideScope": "PossibleIndirectIndexedStackOrDifferentLRB;NotGloballyExcluded"
+      },
+      {
+        "address": 298,
+        "widthBits": 8,
+        "space": "Data",
+        "byteOrder": "Byte",
+        "mode": "CurrentPage",
+        "requiredLrb": 33,
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Z",
+          "M2AV"
+        ],
+        "readerSites": [
+          "5585",
+          "558E"
+        ],
+        "writerSites": [
+          "558E"
+        ],
+        "ownership": "Retained neighboring bits; native bit0 write",
+        "physicalRole": "Unknown",
+        "standardDevicePlacement": "ConfirmedMSM66201InternalRAM0080..027F;MSM66207FullRangeConditional",
+        "customerAsicApplicability": "ConditionalNotEstablished",
+        "aliasesOutsideScope": "PossibleIndirectIndexedStackOrDifferentLRB;NotGloballyExcluded"
+      },
+      {
+        "address": 398,
+        "widthBits": 8,
+        "space": "Data",
+        "byteOrder": "Byte",
+        "mode": "CurrentPage",
+        "requiredLrb": 33,
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Z",
+          "M2AV"
+        ],
+        "readerSites": [
+          "556F",
+          "5572",
+          "5576"
+        ],
+        "writerSites": [
+          "5572"
+        ],
+        "ownership": "Historical scratch initial, then native ROL history",
+        "physicalRole": "Unknown",
+        "standardDevicePlacement": "ConfirmedMSM66201InternalRAM0080..027F;MSM66207FullRangeConditional",
+        "customerAsicApplicability": "ConditionalNotEstablished",
+        "aliasesOutsideScope": "PossibleIndirectIndexedStackOrDifferentLRB;NotGloballyExcluded"
+      },
+      {
+        "address": 399,
+        "widthBits": 8,
+        "space": "Data",
+        "byteOrder": "Byte",
+        "mode": "CurrentPage",
+        "requiredLrb": 33,
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Z",
+          "M2AV"
+        ],
+        "readerSites": [
+          "558B",
+          "5592"
+        ],
+        "writerSites": [
+          "558B",
+          "55C3"
+        ],
+        "ownership": "Historical scratch initial, then native branch history",
+        "physicalRole": "Unknown",
+        "standardDevicePlacement": "ConfirmedMSM66201InternalRAM0080..027F;MSM66207FullRangeConditional",
+        "customerAsicApplicability": "ConditionalNotEstablished",
+        "aliasesOutsideScope": "PossibleIndirectIndexedStackOrDifferentLRB;NotGloballyExcluded"
+      },
+      {
+        "address": 406,
+        "widthBits": 16,
+        "space": "Data",
+        "byteOrder": "LittleEndian",
+        "mode": "CurrentPage",
+        "requiredLrb": 33,
+        "sourceRefs": [
+          "IM1991",
+          "DS1998",
+          "M2Z",
+          "M2AV"
+        ],
+        "readerSites": [
+          "5578"
+        ],
+        "writerSites": [],
+        "ownership": "Native05EB word generation; historical same-generation54FA and5578",
+        "physicalRole": "Unknown",
+        "standardDevicePlacement": "ConfirmedMSM66201InternalRAM0080..027F;MSM66207FullRangeConditional",
+        "customerAsicApplicability": "ConditionalNotEstablished",
+        "aliasesOutsideScope": "PossibleIndirectIndexedStackOrDifferentLRB;NotGloballyExcluded",
+        "highByteAddress": 407,
+        "lowByteAddress": 406,
+        "immediateComparison": 192
+      }
+    ],
+    "wordAliasMap": {
+      "systemWordAddressRule": "EffectiveAddressAndFFFE;ExistingBoundedInputsUseEvenAddresses",
+      "relevantAlignedPairs": [
+        [
+          278,
+          279
+        ],
+        [
+          292,
+          293
+        ],
+        [
+          296,
+          297
+        ],
+        [
+          298,
+          299
+        ],
+        [
+          398,
+          399
+        ],
+        [
+          406,
+          407
+        ]
+      ],
+      "oddWord0197EffectiveAddress": 406,
+      "highByte0197OverlapsWord0196": true,
+      "aliasesGrantAccessPermission": false,
+      "indirectIndexedStackAliasesOutsideScope": "Possible;NoGlobalAbsenceProof",
+      "sourceRefs": [
+        "IM1991",
+        "M2Y",
+        "M2AV"
+      ]
+    },
+    "stackRequirements": {
+      "nativeRegister": "SSP",
+      "widthBits": 16,
+      "frameAvailability": "NotEstablished",
+      "actualEntryValue": null,
+      "technicalHistoricalValue": 2046,
+      "technicalValueIsNotRuntimeProof": true,
+      "fragmentAccesses": 0,
+      "hiddenStackWritesAllowed": false,
+      "systemWordRule": "EvenAddressLittleEndian",
+      "unknownSspMayAliasRegistersRamOrSfr": true,
+      "callSemantics": "CALaddr16 writes nextPC at oldSSP then decrementsSSP by2",
+      "returnSemantics": "RT incrementsSSP by2 then reads wordPC",
+      "returnFrameMustNotBeSynthesized": true,
+      "sfClearDocumentedForCalRt": true,
+      "sfMeaningAndStorage": "PrimaryConflictUnresolved;DoNotImportNX8_300STACK_A",
+      "sourceRefs": [
+        "IM1991",
+        "M2Y"
+      ],
+      "sfFromCrossFamilyApplied": false,
+      "entryCreatesCallFrame": false,
+      "priorCallFrames": "NotEstablished"
+    },
+    "ramLayoutStatus": "DataMemoryLayoutVerifiedWithinScopeForStandardMSM66201;MSM66207AndASICConditional",
+    "nativeContextMapping": "NativeContextMapped"
+  },
+  "compilerAbi": {
+    "status": "CompilerAbiNotEstablished",
+    "nativeCCompiler": "TargetCCompilerNotEstablished",
+    "cTypeLayout": "TargetCTypeLayoutNotEstablished",
+    "hostStructIsNativeLayout": false,
+    "absoluteHostPointerCastAllowed": false,
+    "unknownFields": [
+      {
+        "name": "targetCompiler",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "compilerVersion",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "targetSupportProof",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "argumentPassing",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "returnValues",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "callerSavedRegisters",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "calleeSavedRegisters",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "stackFrameLayout",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "stackAlignment",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "CHAR_BIT",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "charBits",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "shortBits",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "intBits",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "longBits",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "pointerWidths",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "pointerAddressSpaces",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "structAlignment",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "structPacking",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "boolRepresentation",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "integerPromotions",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "fixedWidthTypesAvailability",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "symbolNaming",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "runtimeHelpers",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "memoryModel",
+        "status": "NotEstablished",
+        "value": null
+      },
+      {
+        "name": "linkerConfiguration",
+        "status": "NotEstablished",
+        "value": null
+      }
+    ],
+    "unknownIsZero": false,
+    "hostCompilationImpliesTargetCompilation": false
+  },
+  "firmwareIntegration": {
+    "status": "FirmwareIntegrationNotEstablished",
+    "entry": {
+      "classification": "NativeBasicBlockEntry",
+      "pc": 21871,
+      "nativePredecessor": "JNE5501",
+      "nativeSubroutineEntry": "NotEstablished",
+      "hostEntry": "HostReplayFunctionEntry",
+      "proposedAdapter": "ProposedTargetAdapterEntry;NotImplemented",
+      "ordinaryCCallAllowed": false,
+      "contextSource": "RetainedSameCpuBusNativeHistory",
+      "scheduleSeam": "05ED->54F5 ExplicitHarnessSchedule",
+      "requiredLrb": 33,
+      "scb": "RetainIncomingPSWLow3;Historical2",
+      "dd": "Either;556Fclears0",
+      "sf": "PrimaryConflictUnresolved;NoPhysicalBooleanMappingOrAssumedClearInFragment",
+      "liveStateSource": "NativeCurrentGenerationOnly",
+      "inventedRegisterPrologueAllowed": false,
+      "status": "NativeEntryContractConditional"
+    },
+    "exit": {
+      "classification": "NativeExitContinuationIdentified",
+      "targets": [
+        {
+          "pc": 21910,
+          "branch": "NotBelow",
+          "lastSite": "5594",
+          "al": "018F|F0",
+          "cf": 0,
+          "zf": 0,
+          "dd": 0
+        },
+        {
+          "pc": 21957,
+          "branch": "Below",
+          "lastSite": "55C3",
+          "al": 15,
+          "cf": 1,
+          "zf": 0,
+          "dd": 0
+        }
+      ],
+      "stopBeforePeripheral": true,
+      "ordinaryRTAllowed": false,
+      "implicitCReturnAllowed": false,
+      "transferOption": "FutureVerifiedNativeJumpOrTrampoline;StaticOptionOnly",
+      "p2ExecutionAllowed": false,
+      "downstreamLiveOutKnowledge": "P2BoundaryAndIncomingAL/PSWIdentified;WiderContinuationNotEstablished"
+    },
+    "preservedContext": [
+      "AH",
+      "HC",
+      "OtherPSW",
+      "SCB",
+      "LRB",
+      "X1",
+      "X2",
+      "DP",
+      "USP",
+      "SSP",
+      "SFHostReplay",
+      "localr0",
+      "localr2..r7",
+      "DATA0124",
+      "DATA0128",
+      "DATA0196",
+      "DATA0197",
+      "UnrepresentedNativeStateRequiresFutureProof"
+    ],
+    "semanticObligations": {
+      "nativeLoadFlags": "LB writesAL only, ZF frombyte, DD0; CF/HC retained",
+      "rotate": "ByteROLthroughIncomingCF; CFonly",
+      "compare": "Unsigned16 word0196 vs codeOwnedImmediate00C0; CFborrow/ZFequality; A/HC/DDretained",
+      "gates": "012A.7 first;0124.5 only firstfalse; flagsretained",
+      "memoryWriteOrder": "RetainExactNativeSiteOrder",
+      "sameValueWrites": "RetainSeparateOrderedWrites",
+      "skippedWrites": "DoNotEmitOnSkippedCFGPaths",
+      "volatileAloneEstablishesEquivalence": false,
+      "compilerReorderingAllowed": false,
+      "physicalTimingEstablished": false
+    },
+    "provenance": {
+      "hostReplayAnnotations": "OfflineAnnotationOnly",
+      "nativeOwnerAcceptedFromHost": false,
+      "secondMachineHandoffAllowed": false,
+      "reseedAt556FAllowed": false,
+      "nativeCurrent0196": "Writer05EB,currentEventAndAllNativeOrdinal;54FAAnd5578SameGeneration",
+      "staleEqualValueAccepted": false,
+      "unknownSourceDefaultZero": false,
+      "unknownPeripheralDefaultZero": false,
+      "nativePath13Witnesses": 0,
+      "actualExecutionPermission": false
+    },
+    "hazards": [
+      "Exact ECU device/revision/customer-specific ASIC identity and applicable mapping not established",
+      "Independent target C compiler and nX-8/200 compiler ABI not established",
+      "Target C type/pointer/struct layout not established",
+      "Provenance-verified operational assembler/linker runtime not verified",
+      "Native entry adapter implementation/register-allocation/flags/stack proof absent",
+      "Actual incoming system stack value and frame availability not established by technical07FE",
+      "SF primary conflict: MSM66201 CAL/RT printSFclear; MAC66K4-116 limitsstackflagto300;200 mode/storage/compiler treatment unresolved",
+      "Continuation transfer and downstream live-out integration not executed",
+      "Native source/generation continuity requires same retained CPU/Bus history, not host replay",
+      "13-step CFG path lacks historical native witness",
+      "Target generated-code equivalence and safe placement/linking not established",
+      "Whole-ROM checksum/identity/flash/physical integration not established"
+    ]
+  },
+  "toolchains": [
+    {
+      "id": "MAC66K_RAS66K_RL66K",
+      "classification": "AssemblerTargetSupportDocumented",
+      "runtime": "AssemblerRuntimeNotVerified",
+      "manufacturerDocumentation": true,
+      "documentedCore": "nX-8/200",
+      "documentedTypeTargets": [
+        "M66201"
+      ],
+      "objectLinkerSupport": "RASRelocatableOBJ->RLResolvedABS;OperationalPipelineNotRun",
+      "compilerAbiEstablished": false,
+      "executableVerified": false,
+      "sourceRefs": [
+        "MAC1993"
+      ],
+      "documentedVersion": "4.XX",
+      "exactDeviceDcl": {
+        "MSM66201": "TYPE(M66201)Documented;DclBytesNotAcquired",
+        "MSM66207": "ExactDclNotEstablished"
+      },
+      "matchingDclAcquired": false,
+      "objectVersionCompatibility": {
+        "v2_to_v4": "ExplicitlyIncompatible",
+        "binaryObjectSchema": "NotEstablished"
+      },
+      "conversion": {
+        "tool": "OH",
+        "inputRequirement": "NoUnresolvedRelocation",
+        "documentedOutputs": [
+          "IntelHEX(default)",
+          "MotorolaS2(/S)"
+        ],
+        "flatBinEstablished": false,
+        "imageGenerationRun": false
+      },
+      "documentedFeatures": [
+        {
+          "id": "DeviceSelection",
+          "mechanism": "TYPE uses authoritative matching deviceDCL; DCL includes allowedmemory/SFR/instructions",
+          "pages": [
+            "4-23",
+            "4-24",
+            "3-32",
+            "3-33"
+          ]
+        },
+        {
+          "id": "AssemblySyntax",
+          "mechanism": "Labels; A/Rn/ERn and OFF operands; individual core restrictions must be checked",
+          "pages": [
+            "4-27",
+            "4-28",
+            "4-122..4-127",
+            "A-5..A-14"
+          ]
+        },
+        {
+          "id": "AbsoluteAndTypedAddresses",
+          "mechanism": "CODE/DATA typed symbols; CSEG/DSEG AT; ORG constrained bysegment",
+          "pages": [
+            "4-157",
+            "4-159",
+            "4-163",
+            "4-165",
+            "4-178"
+          ]
+        },
+        {
+          "id": "RelocationAndSymbols",
+          "mechanism": "SEGMENT/RSEG; PUBLIC/EXTRN; RL resolves external/library symbols and emits allocationmap",
+          "pages": [
+            "4-168..4-174",
+            "4-184",
+            "4-185",
+            "5-1"
+          ]
+        },
+        {
+          "id": "LinkerPlacement",
+          "mechanism": "RL /CODE and /DATA documented; exactsafeECUplacementNotEstablished",
+          "pages": [
+            "5-12..5-19",
+            "5-31",
+            "5-32"
+          ]
+        },
+        {
+          "id": "UsingState",
+          "mechanism": "USING declares/checks assumptions; emitsNO native stateinitialization",
+          "pages": [
+            "3-7",
+            "3-8",
+            "4-194..4-208"
+          ]
+        },
+        {
+          "id": "No500LocalBankImport",
+          "mechanism": "USING LREG unavailable100..400; AER/AR/LRBANK500-only; not200LRBcontext",
+          "pages": [
+            "4-210",
+            "A-5",
+            "A-9"
+          ]
+        }
+      ],
+      "usingInitializesNativeRegisters": false,
+      "full15FormEncodingVerified": false
+    },
+    {
+      "id": "CC665S",
+      "classification": "CrossFamilyTargetSupportNotApplicable",
+      "runtime": "NotRun",
+      "manufacturerDocumentation": true,
+      "documentedCore": [
+        "nX-8/500",
+        "nX-8/500S"
+      ],
+      "nx8_200Compatibility": "NotEstablished",
+      "compilerAbiEstablished": false,
+      "executableVerified": false,
+      "sourceRefs": [
+        "CC665S"
+      ],
+      "documentedVersion": "2.01",
+      "documentedTargetOptions": [
+        "/nX500",
+        "/nX500S"
+      ],
+      "defaultTarget": "nX-8/500S",
+      "typeStringValidated": false,
+      "typeStringEstablishesTargetSupport": false,
+      "abiDocumentApplicability": "500/500SOnly;Not200"
+    },
+    {
+      "id": "ASM662_DASM662",
+      "classification": "DerivedResearchLeadOnly",
+      "runtime": "NotRun",
+      "manufacturerDocumentation": false,
+      "documentedCore": "DerivedContext;NotManufacturerProof",
+      "compilerAbiEstablished": false,
+      "executableVerified": false,
+      "sourceRefs": [
+        "ASM662"
+      ]
+    }
+  ],
+  "codeGenerationRoutes": [
+    {
+      "id": "A",
+      "route": "StructuredC->NativeCCompiler->NX8_200ObjectLinker",
+      "status": "Blocked",
+      "requiredEvidence": [
+        "ExactTargetCCompiler",
+        "CompilerABI",
+        "CTypePointerLayout",
+        "MemoryModel",
+        "RuntimeHelpers",
+        "Linker",
+        "GeneratedCodeVerification"
+      ],
+      "foundTools": [
+        "MAC66K assembler documentation is not a C compiler"
+      ],
+      "nextExperiment": "ObtainApplicablePrimaryNX8_200CompilerAndABIDocument;NotPerformed"
+    },
+    {
+      "id": "B",
+      "route": "VerifiedIR->NativeAssembly->VerifiedAssemblerLinker",
+      "status": "DocumentedRouteConditionalNotReady",
+      "requiredEvidence": [
+        "ExactEncoding",
+        "RegisterAllocation",
+        "StatePreservation",
+        "LabelBranchLayout",
+        "AbsoluteDataAccess",
+        "OrderedWrites",
+        "Flags",
+        "SectionsRelocationPlacement",
+        "NativeContinuation",
+        "OperationalToolProvenance"
+      ],
+      "foundTools": [
+        "MAC66K_RAS66K_RL66K manufacturer documentation"
+      ],
+      "fewerUnknownCompilerDependenciesThanA": true,
+      "nextExperiment": "AfterSeparateProvenanceLicenseRuntimeAuthorizationObtainInvented15FormTYPE_M66201ListingAndIndependentEncodingDDCheck;NotPerformed"
+    },
+    {
+      "id": "C",
+      "route": "VerifiedAlgorithm->ManuallyReviewedBoundedAssembly",
+      "status": "DocumentedRouteConditionalNotReady",
+      "requiredEvidence": [
+        "ExactInstructionSemantics",
+        "VerifiedAssembler",
+        "ContextContract",
+        "GeneratedInstructionReview",
+        "NativeEquivalence",
+        "PlacementAndContinuation"
+      ],
+      "foundTools": [
+        "MAC66K assembler documentation;derived asm662 lead"
+      ],
+      "nextExperiment": "AfterSeparateVerifiedAssemblerAuthorizationReviewInventedBoundedNativeFragmentWithFlagsOrderedWritesTwoContinuations;NotPerformed"
+    }
+  ],
+  "permissions": {
+    "firmwareReady": false,
+    "targetCodeGeneration": "NotRun",
+    "targetCompilation": false,
+    "targetAssembly": false,
+    "targetObject": false,
+    "firmwareImage": false,
+    "romReplacement": false,
+    "nativeTrampoline": false,
+    "hardwareExecution": false,
+    "guiExecution": false,
+    "unverifiedToolchainExecution": false,
+    "peripheralAccess": false,
+    "interruptInjection": false
+  },
+  "preservation": {
+    "runnerVersion": "0.43.0",
+    "protocol": 1,
+    "semanticFixCount": 38,
+    "m2avSemantics": "Unchanged",
+    "irLayer": "SeparateTargetMetadata;NoIRModification",
+    "hostFieldMappingIsNotTargetAbi": true
+  }
+}

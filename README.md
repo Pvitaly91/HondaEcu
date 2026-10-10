@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2aw establishes a [bounded nX-8/200 context/memory contract](docs/M2AW_NX8_200_TARGET_ABI_CONTRACT.md)
+separate from compiler ABI and firmware integration. MAC66K target support is
+documented; target C compiler/ABI/runtime remain unverified. No target code/BIN
+or new ROM run; M2av equivalence and runner0.43.0/protocol1/38 fixes retained.
+
 M2av adds [bounded structured IR and host C11 equivalence](docs/M2AV_WORD0196_STRUCTURED_C_EQUIVALENCE.md)
 for the verified M2z software path556F to stop-before5596/55C5. Ordered RAM/flags
 effects are preserved; compiled C is offline research, not original Honda source

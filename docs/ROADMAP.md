@@ -1,5 +1,10 @@
 # Roadmap
 
+M2aw adds the [bounded nX-8/200 target-context contract](M2AW_NX8_200_TARGET_ABI_CONTRACT.md):
+register/RAM/entry/continuation obligations separated from unknown C ABI/types
+and unverified assembler runtime. TargetCodeGenerationNotReady; actual-ROM0/BIN0.
+M2av source equivalence preserved; STOP: no M2ax/code generation/firmware/hardware.
+
 M2av adds [structured IR and compilable C11 research](M2AV_WORD0196_STRUCTURED_C_EQUIVALENCE.md)
 for M2z's software-only556F to before5596/55C5, with independent specification,
 unchanged C# oracle and validated historical observations compared separately.
