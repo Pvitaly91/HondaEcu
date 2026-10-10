@@ -1,0 +1,607 @@
+{
+  "schemaVersion": 1,
+  "contractKind": "ToolchainProvenanceResearchOnly",
+  "profile": "MAC66K4_M66201_DocumentationOnly_NoArtifacts",
+  "target": {
+    "manufacturer": "OKI",
+    "core": "nX-8/200",
+    "device": "MSM66201",
+    "typeDirective": "TYPE(M66201)",
+    "customerAsicApplicability": "NotEstablished",
+    "m66207DclInterchangeability": "NotEstablished"
+  },
+  "scope": {
+    "fragment": "word0196SoftwareAlternate556F",
+    "entryPc": 21871,
+    "stopBeforePcs": [
+      21910,
+      21957
+    ],
+    "instructionSites": 18,
+    "forms": 15,
+    "actualOriginalRomExecutions": 0,
+    "targetAssemblerExecutions": 0,
+    "targetLinkerExecutions": 0,
+    "targetObjects": 0,
+    "firmwareBin": 0
+  },
+  "sources": [
+    {
+      "id": "MAC1993",
+      "kind": "ManufacturerManual",
+      "document": "E2Y0002-29-62",
+      "edition": "ThirdEditionNovember1993",
+      "documentedPackageVersion": "4.XX",
+      "url": "https://datasheet.datasheetarchive.com/originals/library/Datasheets-UEA1/DSAFRAZ0014345.pdf",
+      "sha256": "ab616efc40babc07d28f44e2e46f8fe53e6c0ddb4edbe948bb02c8ac098b4f2d",
+      "pages": [
+        "1-1",
+        "1-5",
+        "1-7",
+        "2-2",
+        "3-32..3-33",
+        "4-22",
+        "4-23..4-24",
+        "4-242",
+        "5-1..5-32",
+        "7-3..7-12"
+      ],
+      "scope": "DocumentedCapabilitiesOnly;NotSoftwareDistributionOrRuntimeProof"
+    },
+    {
+      "id": "IM1991",
+      "kind": "ManufacturerInstructionManual",
+      "document": "MSM66201InstructionManual",
+      "edition": "FirstEditionSeptember1991",
+      "url": "https://mycomputerninja.com/~jon/www.pgmfi.org/twiki/pub/Library/66kAssemblerDocs/Oki_66201_Instruction_Manual.pdf",
+      "sha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "scope": "ReviewedInstructionSemanticsOnly;NotToolGeneratedEncodingOrNativeBehaviorProof"
+    },
+    {
+      "id": "M2AV",
+      "kind": "RepositoryBoundedHostEquivalence",
+      "document": "docs/M2AV_WORD0196_STRUCTURED_C_EQUIVALENCE.md",
+      "scope": "UnchangedHistoricalSourceLevelEquivalence;NotTargetToolchainProof"
+    }
+  ],
+  "package": {
+    "name": "MAC66K",
+    "documentedVersion": "4.XX",
+    "actualVersion": null,
+    "actualVersionStatus": "NotEstablished",
+    "publisher": "OKI",
+    "distributionOriginalFilename": null,
+    "distributionSha256": null
+  },
+  "acquisition": {
+    "status": "VendorPackageNotAcquired",
+    "candidateFound": false,
+    "actualArtifacts": [],
+    "provenanceStatus": "PackageProvenanceNotEstablished",
+    "usageRights": "UsageRightsNotEstablished",
+    "license": null,
+    "licenseEvidence": null,
+    "candidateUrlsAreNotAcquisitionProof": true
+  },
+  "components": [
+    {
+      "name": "RAS66K",
+      "status": "NotAcquired",
+      "originalFilename": null,
+      "sha256": null,
+      "actualVersion": null,
+      "versionEvidence": null,
+      "objectFormat": null,
+      "sourceProvenance": "NotEstablished",
+      "usageRights": "UsageRightsNotEstablished"
+    },
+    {
+      "name": "RL66K",
+      "status": "NotAcquired",
+      "originalFilename": null,
+      "sha256": null,
+      "actualVersion": null,
+      "versionEvidence": null,
+      "objectFormat": null,
+      "sourceProvenance": "NotEstablished",
+      "usageRights": "UsageRightsNotEstablished"
+    },
+    {
+      "name": "LIB66K",
+      "status": "NotAcquired",
+      "originalFilename": null,
+      "sha256": null,
+      "actualVersion": null,
+      "versionEvidence": null,
+      "objectFormat": null,
+      "sourceProvenance": "NotEstablished",
+      "usageRights": "UsageRightsNotEstablished"
+    },
+    {
+      "name": "OH66K",
+      "status": "NotAcquired",
+      "originalFilename": null,
+      "sha256": null,
+      "actualVersion": null,
+      "versionEvidence": null,
+      "objectFormat": null,
+      "sourceProvenance": "NotEstablished",
+      "usageRights": "UsageRightsNotEstablished"
+    },
+    {
+      "name": "MP",
+      "status": "NotAcquired",
+      "originalFilename": null,
+      "sha256": null,
+      "actualVersion": null,
+      "versionEvidence": null,
+      "objectFormat": null,
+      "sourceProvenance": "NotEstablished",
+      "usageRights": "UsageRightsNotEstablished"
+    }
+  ],
+  "archive": {
+    "format": null,
+    "sha256": null,
+    "integrity": "NotEstablished",
+    "crc": "NotEstablished",
+    "completeness": "NotEstablished",
+    "affectedMembers": null,
+    "unaffectedMembers": null,
+    "directoryTraversalCheck": "NotRunNoAcquiredPackage",
+    "duplicates": null,
+    "repaired": false,
+    "repacked": false
+  },
+  "dcl": {
+    "selectionName": "M66201",
+    "documentaryExpectedFilename": "M66201.DCL",
+    "namingBasis": "TYPEArgumentPlusDotDCL;DocumentedRuleNotObservedFile",
+    "actualFilename": null,
+    "sha256": null,
+    "status": "NotAcquired",
+    "format": null,
+    "formatStatus": "DclFormatNotEstablished",
+    "magic": null,
+    "targetIdentity": null,
+    "targetIdentityStatus": "DclTargetIdentityNotEstablished",
+    "version": null,
+    "versionCompatibility": "NotEstablished",
+    "registerMap": null,
+    "programDataRestrictions": null,
+    "deviceInstructionRestrictions": null,
+    "manufacturerReference": null,
+    "modified": null,
+    "m66207DclAcquired": false,
+    "m66207DclCompatibility": "NotEstablished"
+  },
+  "versionCompatibility": {
+    "status": "PackageVersionMatchIncomplete",
+    "assemblerLinker": "NotEstablished",
+    "librarianConverter": "NotEstablished",
+    "dclAssembler": "NotEstablished",
+    "v2AndV4ObjectFormats": "ExplicitlyIncompatible",
+    "binaryObjectSchema": "NotEstablished"
+  },
+  "dependencies": {
+    "documentedRequirement": "MatchingDeviceControlFileRequiredForTYPE",
+    "documentedDiskFiles": [
+      "RAS66K.EXE",
+      "RL66K.EXE",
+      "LIB66K.EXE",
+      "OH66K.EXE",
+      "MP.EXE",
+      "M66XXX.DCL",
+      "MAC66K.DOC",
+      "DCL66K.DOC"
+    ],
+    "documentedDclFamilyFormat": "Text;ActualM66201BytesNotAcquired",
+    "diskFilesSource": {
+      "source": "MAC1993",
+      "page": "2-2"
+    },
+    "missingInvalidDclError": "ExitCode3DclOrFatalDocumented;NotExecuted",
+    "dclErrorSource": {
+      "source": "MAC1993",
+      "printedPage": "4-22",
+      "pdfPage": 105
+    },
+    "actualReleaseFiles": null,
+    "actualReleaseFilesStatus": "NotEstablished",
+    "configurationFiles": null,
+    "configurationStatus": "NotEstablished",
+    "releaseNotes": null,
+    "installationInstructions": null
+  },
+  "capabilities": [
+    {
+      "patternIndex": 747,
+      "form": "LB A, off N8",
+      "instructionLength": 2,
+      "ddMode": "R",
+      "historicalSites": [
+        "556F",
+        "5592"
+      ],
+      "primaryInstructionPage": "3-70",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 2198,
+      "form": "SLLB A",
+      "instructionLength": 1,
+      "ddMode": "0",
+      "historicalSites": [
+        "5571"
+      ],
+      "primaryInstructionPage": "3-144",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 1862,
+      "form": "ROLB off N8",
+      "instructionLength": 3,
+      "ddMode": "U",
+      "historicalSites": [
+        "5572"
+      ],
+      "primaryInstructionPage": "3-120",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 739,
+      "form": "LB A, r0",
+      "instructionLength": 1,
+      "ddMode": "R",
+      "historicalSites": [
+        "5575"
+      ],
+      "primaryInstructionPage": "3-70",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 333,
+      "form": "ANDB A, off N8",
+      "instructionLength": 2,
+      "ddMode": "0",
+      "historicalSites": [
+        "5576"
+      ],
+      "primaryInstructionPage": "3-24",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 498,
+      "form": "CMP off N8, #N16",
+      "instructionLength": 5,
+      "ddMode": "U",
+      "historicalSites": [
+        "5578"
+      ],
+      "primaryInstructionPage": "3-38",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 719,
+      "form": "JLT rel8",
+      "instructionLength": 2,
+      "ddMode": "U",
+      "historicalSites": [
+        "557D"
+      ],
+      "primaryInstructionPage": "3-66",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 1504,
+      "form": "MOVB r1, off N8",
+      "instructionLength": 3,
+      "ddMode": "U",
+      "historicalSites": [
+        "557F"
+      ],
+      "primaryInstructionPage": "3-99",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 349,
+      "form": "ANDB off N8, A",
+      "instructionLength": 3,
+      "ddMode": "U",
+      "historicalSites": [
+        "5582",
+        "558B"
+      ],
+      "primaryInstructionPage": "3-25",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 716,
+      "form": "JBS off N8.7, rel8",
+      "instructionLength": 3,
+      "ddMode": "U",
+      "historicalSites": [
+        "5585"
+      ],
+      "primaryInstructionPage": "3-65",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 714,
+      "form": "JBS off N8.5, rel8",
+      "instructionLength": 3,
+      "ddMode": "U",
+      "historicalSites": [
+        "5588"
+      ],
+      "primaryInstructionPage": "3-65",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 1678,
+      "form": "ORB off N'8, #N8",
+      "instructionLength": 4,
+      "ddMode": "U",
+      "historicalSites": [
+        "558E"
+      ],
+      "primaryInstructionPage": "3-110",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 1619,
+      "form": "ORB A, #N8",
+      "instructionLength": 2,
+      "ddMode": "0",
+      "historicalSites": [
+        "5594"
+      ],
+      "primaryInstructionPage": "3-107",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 738,
+      "form": "LB A, #N8",
+      "instructionLength": 2,
+      "ddMode": "R",
+      "historicalSites": [
+        "55BF"
+      ],
+      "primaryInstructionPage": "3-70",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    },
+    {
+      "patternIndex": 2301,
+      "form": "STB A, off N8",
+      "instructionLength": 2,
+      "ddMode": "0",
+      "historicalSites": [
+        "55C1",
+        "55C3"
+      ],
+      "primaryInstructionPage": "3-155",
+      "documentedAssemblerCapability": "DocumentedSyntaxAndNX8_200CoreSupportOnly",
+      "documentarySources": [
+        "MAC1993",
+        "IM1991",
+        "M2AV"
+      ],
+      "deviceDclSpecificCapability": "NotEstablished",
+      "toolRuntimeVerified": false,
+      "exactGeneratedEncodingVerified": false,
+      "generatedNativeBehaviorVerified": false,
+      "historicalNativeEvidence": "M2avBoundedSourceObservationsUnchanged;NotGeneratedCodeProof"
+    }
+  ],
+  "safetyPolicy": {
+    "manualIsSoftwareDistribution": false,
+    "searchSnippetIsAcquiredBytes": false,
+    "hashEstablishesAuthenticityOrLicense": false,
+    "filenameEstablishesDeviceIdentity": false,
+    "documentationIsRuntimeOrEncodingProof": false,
+    "dclRecognitionIsOpcodeProof": false,
+    "asm662IsManufacturerPrimary": false,
+    "hostCompilationIsNativeCodeGeneration": false,
+    "unknownIsZero": false,
+    "rightsUnknownBlocksUse": true,
+    "unresolvedIntegrityBlocksAcceptance": true,
+    "duplicateBytesAreIndependentSources": false,
+    "embeddedTimestampEstablishesVersion": false,
+    "crossDeviceDclInterchangeable": false,
+    "v2ObjectsCompatibleWithV4": false,
+    "repairedOrRepackedArchiveIsOriginalDistribution": false,
+    "validatorAuthenticatesExternalClaims": false,
+    "classificationGrantsExecutionPermission": false
+  },
+  "permissions": {
+    "archiveToolExecution": false,
+    "targetAssembly": false,
+    "targetObject": false,
+    "relocatableObject": false,
+    "absoluteObject": false,
+    "hexOrSRecord": false,
+    "firmwareBin": false,
+    "romReplacement": false,
+    "nativeTrampoline": false,
+    "productionHarnessUse": false,
+    "hardware": false,
+    "gui": false,
+    "vendorMessage": false,
+    "firmwareReady": false
+  },
+  "result": {
+    "classification": "M2axToolchainAcquisitionResearchBlocked",
+    "assemblerTargetSupport": "AssemblerTargetSupportDocumented",
+    "runtime": "AssemblerRuntimeNotVerified",
+    "toolExecution": "ToolExecutionNotRun",
+    "assemblyGeneration": "TargetAssemblyGenerationNotRun",
+    "objects": "TargetObjectNotGenerated",
+    "codeGeneration": "TargetCodeGenerationNotReady",
+    "integration": "FirmwareIntegrationNotEstablished",
+    "remainingBlockers": [
+      "AuthenticMAC66Kv4DistributionNotAcquired",
+      "PackageProvenanceNotEstablished",
+      "UsageRightsNotEstablished",
+      "ArchiveIntegrityAndCompletenessNotEstablished",
+      "VersionMatchedRAS_RL_LIB_OH_MPNotAcquired",
+      "M66201DclBytesAndTargetIdentityNotEstablished",
+      "DclFormatAndVersionCompatibilityNotEstablished",
+      "ReleaseSpecificDependenciesNotEstablished",
+      "AssemblerRuntimeNotVerified",
+      "ExactGeneratedEncodingNotVerified",
+      "GeneratedNativeBehaviorNotVerified",
+      "FirmwareIntegrationNotEstablished"
+    ]
+  },
+  "preservation": {
+    "runnerVersion": "0.43.0",
+    "protocol": 1,
+    "fixIdentities": 38,
+    "m2av": "BoundedSourceLevelEquivalenceEstablishedWithinUnchangedScope",
+    "m2aw": "TargetArchitectureContextContractEstablishedWithinUnchangedScope",
+    "sf": "PrimaryConflictUnresolved",
+    "compilerAbi": "CompilerAbiNotEstablished",
+    "irSha256": "4fdbd6b7dbdd8f48d5a43e123ca93a33a003c22556a0c40b5296d5f409e085c4",
+    "targetContractSha256": "1e8b20872693c0a7dcfbcfc867b85c55c3a759eef616651d6760c08b9dd5af66"
+  }
+}

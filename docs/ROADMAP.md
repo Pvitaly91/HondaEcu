@@ -1,5 +1,10 @@
 # Roadmap
 
+M2ax adds [MAC66K v4 and M66201 DCL provenance gates](M2AX_MAC66K_V4_DCL_PROVENANCE.md).
+Toolchain Acquisition Research/Blocked: actual vendor assets0, usage/version match
+unknown. Static/invented policy only; M2av/M2aw retained, code generation NotReady.
+STOP: no M2ay/tool runtime/target assembly/object/image/ROM/GUI/hardware continuation.
+
 M2aw adds the [bounded nX-8/200 target-context contract](M2AW_NX8_200_TARGET_ABI_CONTRACT.md):
 register/RAM/entry/continuation obligations separated from unknown C ABI/types
 and unverified assembler runtime. TargetCodeGenerationNotReady; actual-ROM0/BIN0.

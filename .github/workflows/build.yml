@@ -83,6 +83,14 @@ jobs:
           python -B research/p28-word0196/target_contract_tests.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: M2ax toolchain provenance and invented-only regressions
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_toolchain_provenance.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/toolchain_provenance_tests.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 

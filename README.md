@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2ax records [MAC66K v4/DCL acquisition research](docs/M2AX_MAC66K_V4_DCL_PROVENANCE.md):
+no verified vendor package or actual M66201 DCL acquired. Closed provenance policy,
+15-form documentary matrix and a future-only runtime plan; no tool execution or
+target outputs. M2av/M2aw contracts and runner0.43.0/protocol1/38 identities retained.
+
 M2aw establishes a [bounded nX-8/200 context/memory contract](docs/M2AW_NX8_200_TARGET_ABI_CONTRACT.md)
 separate from compiler ABI and firmware integration. MAC66K target support is
 documented; target C compiler/ABI/runtime remain unverified. No target code/BIN
