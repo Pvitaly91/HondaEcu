@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2bd adds [typed IR-to-form and static dataflow obligations](docs/M2BD_WORD0196_TYPED_LOWERING_OBLIGATIONS.md):
+18 reviewed sites map to15 closed forms; DD/flags/liveness/CFG and ordered
+memory effects are checked without calling codecs or emitting a program.
+Native ABI/integration remain unresolved; production and prior evidence unchanged.
+
 M2bc adds [independent15-form decoding and bidirectional compatibility](docs/M2BC_INDEPENDENT_15FORM_DECODE_ENCODE_COMPATIBILITY.md):
 primary typed decode proof is separate from round-trip compatibility; exact
 single synthetic payload, atomic refusals, no streams/runtime/firmware.

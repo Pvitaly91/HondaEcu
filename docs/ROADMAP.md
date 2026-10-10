@@ -1,5 +1,10 @@
 # Roadmap
 
+M2bd establishes [bounded typed lowering obligations](M2BD_WORD0196_TYPED_LOWERING_OBLIGATIONS.md).
+18 sites/15 forms, DD/flag/dataflow/CFG and four-path memory obligations checked;
+static specification only, no emitted bytes, assembly, native program or ABI.
+STOP after delivery: no M2be/emission/stream/linker/ROM/firmware/GUI/hardware.
+
 M2bc adds [independent15-form decode/encode compatibility](M2BC_INDEPENDENT_15FORM_DECODE_ENCODE_COMPATIBILITY.md).
 Primary decode and bidirectional synthetic compatibility verified separately;
 no stream/state progression, production decoder change or runtime permission.
