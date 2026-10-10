@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2bb adds a [typed15-form synthetic encoder](docs/M2BB_INDEPENDENT_15FORM_ENCODER.md):
+own pure Python implementation matches independent manufacturer vectors;
+immutable1..5byte in-memory results or atomic errors only. No ROM/files/assembly
+CLI/native execution/firmware; M2ba design and production contracts retained.
+
 M2ba specifies the [Doc rights / independent encoder route](docs/M2BA_DOC_OPCODE_RIGHTS_AND_ENCODER_ROUTE.md):
 author Git/original0.9 correspondence reviewed; Doc component rights unresolved.
 Primary-manual design for15 exact forms established, not implemented; historical

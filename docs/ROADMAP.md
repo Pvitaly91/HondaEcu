@@ -1,5 +1,10 @@
 # Roadmap
 
+M2bb adds the [independent typed15-form encoder](M2BB_INDEPENDENT_15FORM_ENCODER.md).
+Synthetic Encoding Verified: primary byte matches, full width/offset/rel8/DD/error
+tests, pure single-instruction in-memory API. No full fragment, ROM or firmware.
+STOP after delivery: no M2bc/lowering/linker/ROM/WDT/C8/reset/GUI/hardware.
+
 M2ba adds [Doc rights and independent encoder design](M2BA_DOC_OPCODE_RIGHTS_AND_ENCODER_ROUTE.md).
 Independent Encoder Route Specified / Historical ASM662 Blocked: primary15 forms,
 typed/DD/LE16/rel8/error scope; no encoder implementation or target output.
