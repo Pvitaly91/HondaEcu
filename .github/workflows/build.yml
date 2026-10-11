@@ -147,6 +147,14 @@ jobs:
           python -B research/p28-word0196/typed_lowering_tests.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: M2be invented-only layout geometry and branch feasibility
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_layout_feasibility_contract.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/layout_feasibility_tests.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 

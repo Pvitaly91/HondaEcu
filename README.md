@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2be adds [invented-only layout feasibility](docs/M2BE_WORD0196_LAYOUT_FEASIBILITY.md):
+45 instruction-length bytes, internal fallthrough/rel8/NoWrap checks and retained
+static context. Dense geometry exposes a terminal fallthrough hazard;
+all native exits/ROM placement/integration remain unverified and execution-blocked.
+
 M2bd adds [typed IR-to-form and static dataflow obligations](docs/M2BD_WORD0196_TYPED_LOWERING_OBLIGATIONS.md):
 18 reviewed sites map to15 closed forms; DD/flags/liveness/CFG and ordered
 memory effects are checked without calling codecs or emitting a program.

@@ -1,5 +1,10 @@
 # Roadmap
 
+M2be establishes [synthetic layout/branch feasibility](M2BE_WORD0196_LAYOUT_FEASIBILITY.md).
+45/86/41 extent geometry and three blocks16/23/6; no bytes or program emitted.
+Branch/adjacency success does not prove native exit isolation or ROM placement.
+STOP after delivery: no M2bf/code emission/assembler/linker/ROM/firmware/GUI/hardware.
+
 M2bd establishes [bounded typed lowering obligations](M2BD_WORD0196_TYPED_LOWERING_OBLIGATIONS.md).
 18 sites/15 forms, DD/flag/dataflow/CFG and four-path memory obligations checked;
 static specification only, no emitted bytes, assembly, native program or ABI.
