@@ -1,5 +1,10 @@
 # Roadmap
 
+M2bf specifies [external continuations and primary transfer-form evidence](M2BF_WORD0196_EXTERNAL_CONTINUATION_EVIDENCE.md).
+SJ relative reach, direct J16-bit targets, indirect-pointer blockers and terminal hazards
+are checked without emission. Native exit isolation/downstream rejoin remain unverified.
+STOP after delivery: no M2bg/encoder extension/emission/placement/ROM/firmware/GUI/hardware.
+
 M2be establishes [synthetic layout/branch feasibility](M2BE_WORD0196_LAYOUT_FEASIBILITY.md).
 45/86/41 extent geometry and three blocks16/23/6; no bytes or program emitted.
 Branch/adjacency success does not prove native exit isolation or ROM placement.

@@ -1,0 +1,1096 @@
+{
+  "schemaVersion": 1,
+  "classification": "PrimaryTransferFormEvidenceSpecification_NoImplementation",
+  "exactBase": "f29b224022d23570ceb13b124122114495f7afa3",
+  "preparationStatus": "FinalPrimaryReviewed_PreimplementationDocumentarySpecification",
+  "sourceDocument": {
+    "id": "IM1991",
+    "manufacturer": "OKI",
+    "title": "MSM66201 Instruction Manual",
+    "edition": "FirstEdition_September1991",
+    "sha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+    "publicationPolicy": "DocumentFactsAndPageReferencesOnly_NoPDFOrOEMBytes",
+    "actualCurrentFullPageReviewer": "RootAgent",
+    "subagentVisualReviewClaim": false,
+    "physicalOneBasedPagesFullyReviewed": [
+      1,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      11,
+      14,
+      15,
+      16,
+      17,
+      18,
+      21,
+      22,
+      25,
+      26,
+      27,
+      28,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      48,
+      55,
+      56,
+      81,
+      115,
+      116,
+      117,
+      178,
+      179,
+      180,
+      191,
+      192,
+      193,
+      230,
+      231,
+      232,
+      233,
+      234,
+      235,
+      236,
+      255,
+      256,
+      257,
+      258,
+      259,
+      260,
+      261,
+      262,
+      263,
+      264,
+      265,
+      266
+    ],
+    "reviewedCompletePages": 60,
+    "wholePDFReviewed": false,
+    "renderedButNotReviewedPhysicalPages": [
+      250,
+      251,
+      252,
+      253,
+      254
+    ],
+    "generalCoordinatePolicy": "ExactIndividualPhysicalIndexPrintedRelations_NoGlobalOffset",
+    "additionalCompletePageReview": {
+      "originalLedgerCompletePages": 60,
+      "additionalCompletePages": 2,
+      "additionalPhysicalOneBasedPages": [
+        57,
+        58
+      ],
+      "combinedCompletePages": 62,
+      "addendumSha256": "fb31f5efa104a06731db93528a400ebe65415a203c4d482b8f484dcc5fb00631",
+      "extraPagesAreClassification3_3AndADC3_5_NotGeneralFlagsLegend": true
+    }
+  },
+  "applicability": {
+    "core": "nX-8/200",
+    "namedStandardArchitecture": "MSM66201",
+    "MSM66207ArchitectureContext": "InheritedM2awConditionalNamedStandardArchitecture",
+    "customerASICIdentity": "NotEstablished",
+    "runtimeImplementationApplicability": "NotEstablished",
+    "unknownPeripheralNoninterference": "NotEstablished",
+    "SFMeaningStorage": "InheritedPrimaryConflictUnresolved",
+    "targetCompilerABI": "NotEstablished",
+    "namedCore": "nX-8/200",
+    "devices": [
+      "MSM66201",
+      "MSM66207"
+    ],
+    "programAndDataSpacesDistinct": true,
+    "standardMSM66201InternalROMBytes": 16384,
+    "standardMSM66207InternalROMBytes": 32768,
+    "continuation5596And55C5OutsideStandard66201InternalROM": true,
+    "physicalECUProgramMapping": "NotEstablished",
+    "programFetchAndExternalBusRequirements": "Required_UnknownActualMapping_NoGlobalPeripheralNoninterferenceProof",
+    "sourceArchitectureScope": "NamedStandardCoreFunctionalArchitecturalWritesOnly_NotAllPeripheralStates"
+  },
+  "candidates": [
+    {
+      "id": "SJ-address",
+      "mnemonic": "SJ",
+      "mechanism": "UnconditionalRelativeProgramJump",
+      "page": {
+        "printed": "3-140",
+        "pdfPageIndex": 192,
+        "pdfPhysicalPageNumber": 193,
+        "userProvidedPDFNumber": 192,
+        "userProvidedNumberConvention": "MatchedZeroBasedIndexForThisSpecificPage"
+      },
+      "observedLength": 2,
+      "primaryReview": "RootPersonalFullDetailAndIndependentSummaryGeneralHardwareCorroboration",
+      "encodingStructure": {
+        "classification": "DocumentaryStructureOnly_NotEncodedInstruction",
+        "cells": [
+          "FixedOperationHeader_VisuallyReviewed",
+          "SignedDisplacement8"
+        ],
+        "actualOpcodePayload": null,
+        "actualEncodedBytes": 0
+      },
+      "documentedPCSemantics": "AddressFromSignedRelativeDisplacementToNextInstruction",
+      "mathematicalRule": "target-(origin+2)",
+      "signedRange": [
+        -128,
+        127
+      ],
+      "functionalDATAOperandReads": "NoneInReviewedFunction",
+      "DATAWrites": "NoneInReviewedFunction",
+      "SSPWrites": "NoneInReviewedFunction",
+      "returnFrame": "NoneInReviewedFunction",
+      "flagsTable": {
+        "ZF": "NoChangeListed",
+        "CF": "NoChangeListed",
+        "HC": "NoChangeListed",
+        "DD": "NoChangeListed"
+      },
+      "DDRequirement": "NoIncomingDDRestrictionListedInReviewedRows",
+      "A_AL_AH": "NoWriterInReviewedFunction_ScopedInferenceNotGlobalProof",
+      "LRB_SCB_Pointing": "NoWriterInReviewedFunction_ScopedInferenceNotGlobalProof",
+      "SF": "NoAssignmentInReviewedFunction_MeaningStorageUnknown",
+      "programFetchExcludedFromFunctionalDATAReads": true,
+      "editorialConflictRefs": [
+        "SJ_SCAL_Wording"
+      ],
+      "encoder": "NotImplemented",
+      "decoder": "NotImplemented",
+      "actualTargetExecution": "NotObserved",
+      "nativeExitIsolation": "NotEstablished",
+      "documentedFunction": "PC receives program address",
+      "flagsWrittenListed": [],
+      "DDAffectingCell": "Blank",
+      "functionalDATAOperandReadsListed": [],
+      "RAMWritesListed": [],
+      "SSPWritesListed": [],
+      "SFAssignmentsListed": [],
+      "contextPreservationScope": "NoArchitecturalWriterInReviewedPCOnlyFunction_ScopedInference_NotGlobalRuntimeProof",
+      "corroboration": [
+        "Printed3-210 Table3-34 PCprime expressly next SJ plus2, length2, blank ZF/CF/HC/DD",
+        "Printed1-7 PC replacement instruction classification",
+        "Printed1-17 stack-access classes exclude J/SJ"
+      ],
+      "sourceEvidenceStatus": "PrimaryFormEncodingStructurePCAndFlagFactsEstablishedWithinNamedStandardCore",
+      "sideEffectMatrix": {
+        "PC": "DocumentedProgramTargetReplacement",
+        "functionalDATAOperandReads": 0,
+        "DATAWrites": 0,
+        "flagsWritten": [],
+        "DDEffect": "NoWriteListed",
+        "incomingDDConstraint": "NoneListed",
+        "A_AL_AH": "NoWriterInReviewedPCOnlyFunction_ScopedArchitecturalInference",
+        "LRB": "NoWriterInReviewedPCOnlyFunction",
+        "SCB_PointingRegisters": "NoWriterInReviewedPCOnlyFunction",
+        "SSP": "NoWriter_NoCallReturnFrameEffectInReviewedFunction",
+        "SF": "NoAssignmentListed_NativeMeaningAndStorageStillUnknown",
+        "externalMemoryRequirements": {
+          "programOperandAndInstructionFetch": "Required_NotAFunctionalDATAOperandRead",
+          "standardMSM66201InternalROMBytes": 16384,
+          "standardMSM66207InternalROMBytes": 32768,
+          "bothContinuationTargetsOutsideStandard66201InternalROM": true,
+          "standard66201ExternalProgramMappingForTheseTargets": "Required_NotEstablishedForActualECU",
+          "standard66207SizeIsNotActualECUMapProof": true,
+          "customerASICIdentity": "NotEstablished",
+          "physicalECUProgramMapping": "NotEstablished",
+          "globalBusOrPeripheralNoninterference": "NotEstablished"
+        },
+        "allPeripheralStatesPreserved": "NotEstablished"
+      },
+      "propertyEvidenceRefs": {
+        "PC": [
+          "IM1991_Detail3-140",
+          "IM1991_Table3-34"
+        ],
+        "length": [
+          "IM1991_Detail3-140",
+          "IM1991_Table3-34"
+        ],
+        "flagsAndDD": [
+          "IM1991_Detail3-140",
+          "IM1991_Table3-34",
+          "IM1991_FlagsTableObservations",
+          "IM1991_DDControl25-28"
+        ],
+        "noFunctionalDATAOperandRead": [
+          "IM1991_Detail3-140",
+          "IM1991_ProgramDataAddressing1-7"
+        ],
+        "noStackOrSSPWriter": [
+          "IM1991_Detail3-140",
+          "IM1991_StackAccessClasses1-17"
+        ],
+        "registerNoninterferenceInference": [
+          "IM1991_Detail3-140",
+          "HW1998_RegisterLayout9-10"
+        ],
+        "noGlobalPeripheralProof": [
+          "HW1998_AddressSpacesExternalProgramMemory"
+        ]
+      }
+    },
+    {
+      "id": "J-address",
+      "mnemonic": "J",
+      "mechanism": "UnconditionalDirectProgramAddressJump",
+      "page": {
+        "printed": "3-62",
+        "pdfPageIndex": 115,
+        "pdfPhysicalPageNumber": 116,
+        "userProvidedPDFNumber": 115,
+        "userProvidedNumberConvention": "MatchedZeroBasedIndexForThisSpecificPage"
+      },
+      "observedLength": 3,
+      "primaryReview": "RootPersonalFullDetailAndIndependentSummaryGeneralHardwareCorroboration",
+      "encodingStructure": {
+        "classification": "DocumentaryStructureOnly_NotEncodedInstruction",
+        "cells": [
+          "FixedOperationHeader_VisuallyReviewed",
+          "AddressLow8",
+          "AddressHigh8"
+        ],
+        "actualOpcodePayload": null,
+        "actualEncodedBytes": 0,
+        "addressOperandOrder": "Lower8ThenUpper8"
+      },
+      "documentedPCSemantics": "PCReceivesImmediate16BitProgramAddress",
+      "targetRange": [
+        0,
+        65535
+      ],
+      "functionalDATAOperandReads": "NoneInReviewedFunction_CodeTargetNotDATAWord",
+      "DATAWrites": "NoneInReviewedFunction",
+      "SSPWrites": "NoneInReviewedFunction",
+      "returnFrame": "NoneInReviewedFunction",
+      "flagsTable": {
+        "ZF": "NoChangeListed",
+        "CF": "NoChangeListed",
+        "HC": "NoChangeListed",
+        "DD": "NoChangeListed"
+      },
+      "DDRequirement": "NoIncomingDDRestrictionListedInReviewedRows",
+      "A_AL_AH": "NoWriterInReviewedFunction_ScopedInferenceNotGlobalProof",
+      "LRB_SCB_Pointing": "NoWriterInReviewedFunction_ScopedInferenceNotGlobalProof",
+      "SF": "NoAssignmentInReviewedFunction_MeaningStorageUnknown",
+      "programFetchExcludedFromFunctionalDATAReads": true,
+      "encoder": "NotImplemented",
+      "decoder": "NotImplemented",
+      "actualTargetExecution": "NotObserved",
+      "nativeExitIsolation": "NotEstablished",
+      "documentedFunction": "PC receives immediate program address16",
+      "flagsWrittenListed": [],
+      "DDAffectingCell": "Blank",
+      "functionalDATAOperandReadsListed": [],
+      "RAMWritesListed": [],
+      "SSPWritesListed": [],
+      "SFAssignmentsListed": [],
+      "contextPreservationScope": "NoArchitecturalWriterInReviewedPCOnlyFunction_ScopedInference_NotGlobalRuntimeProof",
+      "corroboration": [
+        "Printed3-210 Table3-34 PCaddress16 length3 blank flags",
+        "Printed1-7 distinct program fetch and explicit DATA addressing",
+        "Printed1-17 stack access classes exclude J/SJ"
+      ],
+      "sourceEvidenceStatus": "PrimaryFormEncodingStructurePCAndFlagFactsEstablishedWithinNamedStandardCore",
+      "sideEffectMatrix": {
+        "PC": "DocumentedProgramTargetReplacement",
+        "functionalDATAOperandReads": 0,
+        "DATAWrites": 0,
+        "flagsWritten": [],
+        "DDEffect": "NoWriteListed",
+        "incomingDDConstraint": "NoneListed",
+        "A_AL_AH": "NoWriterInReviewedPCOnlyFunction_ScopedArchitecturalInference",
+        "LRB": "NoWriterInReviewedPCOnlyFunction",
+        "SCB_PointingRegisters": "NoWriterInReviewedPCOnlyFunction",
+        "SSP": "NoWriter_NoCallReturnFrameEffectInReviewedFunction",
+        "SF": "NoAssignmentListed_NativeMeaningAndStorageStillUnknown",
+        "externalMemoryRequirements": {
+          "programOperandAndInstructionFetch": "Required_NotAFunctionalDATAOperandRead",
+          "standardMSM66201InternalROMBytes": 16384,
+          "standardMSM66207InternalROMBytes": 32768,
+          "bothContinuationTargetsOutsideStandard66201InternalROM": true,
+          "standard66201ExternalProgramMappingForTheseTargets": "Required_NotEstablishedForActualECU",
+          "standard66207SizeIsNotActualECUMapProof": true,
+          "customerASICIdentity": "NotEstablished",
+          "physicalECUProgramMapping": "NotEstablished",
+          "globalBusOrPeripheralNoninterference": "NotEstablished"
+        },
+        "allPeripheralStatesPreserved": "NotEstablished"
+      },
+      "propertyEvidenceRefs": {
+        "PC": [
+          "IM1991_Detail3-62",
+          "IM1991_Table3-34"
+        ],
+        "length": [
+          "IM1991_Detail3-62",
+          "IM1991_Table3-34"
+        ],
+        "flagsAndDD": [
+          "IM1991_Detail3-62",
+          "IM1991_Table3-34",
+          "IM1991_FlagsTableObservations",
+          "IM1991_DDControl25-28"
+        ],
+        "noFunctionalDATAOperandRead": [
+          "IM1991_Detail3-62",
+          "IM1991_ProgramDataAddressing1-7"
+        ],
+        "noStackOrSSPWriter": [
+          "IM1991_Detail3-62",
+          "IM1991_StackAccessClasses1-17"
+        ],
+        "registerNoninterferenceInference": [
+          "IM1991_Detail3-62",
+          "HW1998_RegisterLayout9-10"
+        ],
+        "noGlobalPeripheralProof": [
+          "HW1998_AddressSpacesExternalProgramMemory"
+        ]
+      }
+    },
+    {
+      "id": "J-obj",
+      "mnemonic": "J",
+      "mechanism": "IndirectObjectWordJump",
+      "page": {
+        "printed": "3-63",
+        "pdfPageIndex": 116,
+        "pdfPhysicalPageNumber": 117,
+        "userProvidedPDFNumber": 116,
+        "userProvidedNumberConvention": "MatchedZeroBasedIndexForThisSpecificPage"
+      },
+      "observedLengths": [
+        2,
+        3,
+        4
+      ],
+      "primaryReview": "RootPersonalFullDetailSummaryAddressingModeAndHardwareReview",
+      "documentedPCSemantics": "PCReceives16BitAddressingObjectContents_NotCodeOperandTarget",
+      "addressingModes": [
+        {
+          "mode": "erN",
+          "length": 2,
+          "destinationSource": "RegisterObjectWordValue",
+          "additionalRamDereference": false,
+          "selector": "LRBSelectedLocalBank",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "DP",
+          "length": 2,
+          "destinationSource": "RegisterObjectWordValue",
+          "additionalRamDereference": false,
+          "selector": "SCBSelectedPointingBank",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "X1",
+          "length": 2,
+          "destinationSource": "RegisterObjectWordValue",
+          "additionalRamDereference": false,
+          "selector": "SCBSelectedPointingBank",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "X2",
+          "length": 2,
+          "destinationSource": "RegisterObjectWordValue",
+          "additionalRamDereference": false,
+          "selector": "SCBSelectedPointingBank",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "USP",
+          "length": 2,
+          "destinationSource": "RegisterObjectWordValue",
+          "additionalRamDereference": false,
+          "selector": "SCBSelectedPointingBank",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "SSP",
+          "length": 2,
+          "destinationSource": "RegisterObjectWordValue",
+          "additionalRamDereference": false,
+          "selector": "MemoryMappedControlRegister",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "LRB",
+          "length": 2,
+          "destinationSource": "RegisterObjectWordValue",
+          "additionalRamDereference": false,
+          "selector": "MemoryMappedControlRegister",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "offN8",
+          "length": 3,
+          "destinationSource": "CurrentPageRAMWordValue",
+          "additionalRamDereference": true,
+          "selector": "LRBCurrentPage",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "N8",
+          "length": 3,
+          "destinationSource": "ZeroPageRAMOrSFRWordValue",
+          "additionalRamDereference": true,
+          "selector": "ZeroPage_NotLRB",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "indirectDP",
+          "length": 2,
+          "destinationSource": "RAMWordAtDP",
+          "additionalRamDereference": true,
+          "selector": "SCBSelectedDP",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "displacedUSP",
+          "length": 3,
+          "destinationSource": "RAMWordAtUSPPlusSigned8",
+          "additionalRamDereference": true,
+          "selector": "SCBSelectedUSP",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "indexedX1N16",
+          "length": 4,
+          "destinationSource": "RAMWordAtX1PlusUnsigned16",
+          "additionalRamDereference": true,
+          "selector": "SCBSelectedX1",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        },
+        {
+          "mode": "indexedX2N16",
+          "length": 4,
+          "destinationSource": "RAMWordAtX2PlusUnsigned16",
+          "additionalRamDereference": true,
+          "selector": "SCBSelectedX2",
+          "pointerOwner": "NotEstablished",
+          "pointerSetupWritesAuthorized": false,
+          "newFunctionalObjectReadDependencyAuthorized": false,
+          "aliasProof": "NotEstablished",
+          "liveRegisterAndSelectorPreservationRequired": true,
+          "sourceRefs": [
+            "IM1991_Detail3-63",
+            "IM1991_Table3-34_3-35",
+            "IM1991_AddressingModes2-1..7",
+            "HW1998_AddressingTaxonomy13-16"
+          ]
+        }
+      ],
+      "functionalOperandRead": "DocumentedRegisterObjectWordOrRAMWordReadPerMode_NotImmediateProgramCodeTarget",
+      "pointerOwner": "NotEstablished",
+      "pointerValueInitialized": false,
+      "pointerSetupWritesAuthorized": false,
+      "extraFunctionalMemoryAccessAuthorized": false,
+      "aliasAndLiveRegisterProof": "NotEstablished",
+      "flagsTable": {
+        "ZF": "NoChangeListed",
+        "CF": "NoChangeListed",
+        "HC": "NoChangeListed",
+        "DD": "NoChangeListed"
+      },
+      "SF": "NoNativeSFStorageOrGlobalPreservationProof",
+      "editorialConflictRefs": [
+        "JObj_TitleDescription_Wording"
+      ],
+      "architectureClassification": "IndirectJumpArchitectureDocumented",
+      "equivalentReplacement": "NotAuthorized",
+      "encoder": "NotImplemented",
+      "decoder": "NotImplemented",
+      "actualTargetExecution": "NotObserved",
+      "nativeExitIsolation": "NotEstablished",
+      "documentedFunction": "PC receives word contents of addressing object",
+      "wordRule": "EvenAlignedLittleEndian_SystemDATAWordRule_NoNewAccessAdmission",
+      "flagsWrittenListed": [],
+      "DDAffectingCell": "Blank",
+      "DDRequirement": "NoIncomingDDRestrictionListedInReviewedRows",
+      "RAMWritesListed": [],
+      "SSPMutationListed": [],
+      "corroboration": [
+        "Printed3-210/211 Table3-34/35 word-object rows and2/3/4 lengths",
+        "Printed2-1..7 register/current-page/indirect selector distinctions",
+        "Hardware13..16 addressing taxonomy"
+      ],
+      "sourceEvidenceStatus": "PrimaryObjectWordFormAndAddressingModesDocumented_NoReplacementAdmission",
+      "sideEffectMatrix": {
+        "PC": "FromAddressingObjectWordValue_NotImmediateProgramTarget",
+        "functionalObjectReads": "Required_UnverifiedContinuationPointerOwner",
+        "additionalRAMDereference": "PerModeExactlyAsPrimaryModeFacts_NotEveryRegisterMode",
+        "RAMWrites": 0,
+        "flagsWritten": [],
+        "DDAffectingCell": "Blank",
+        "SSPMutation": "NoneListed_SSPModeReadsSSPValueNotReturnFrame",
+        "A_AL_AH_LRB_SCB_Pointing": "PreservationRequiresModeSpecificOwnerAliasAndLivenessProof",
+        "SF": "NoNativeMeaningStorageOrGlobalPreservationProof",
+        "pointerInitialization": "NotAuthorized",
+        "externalMemoryRequirements": {
+          "programOperandAndInstructionFetch": "Required_NotAFunctionalDATAOperandRead",
+          "standardMSM66201InternalROMBytes": 16384,
+          "standardMSM66207InternalROMBytes": 32768,
+          "bothContinuationTargetsOutsideStandard66201InternalROM": true,
+          "standard66201ExternalProgramMappingForTheseTargets": "Required_NotEstablishedForActualECU",
+          "standard66207SizeIsNotActualECUMapProof": true,
+          "customerASICIdentity": "NotEstablished",
+          "physicalECUProgramMapping": "NotEstablished",
+          "globalBusOrPeripheralNoninterference": "NotEstablished"
+        },
+        "equivalentReplacement": "NotAuthorized"
+      },
+      "encodingStructure": {
+        "classification": "DocumentedVariableObjectRowsOnly_NoEncodedInstruction",
+        "lengths": [
+          2,
+          3,
+          4
+        ],
+        "perModeLengthsSource": "IndependentPrimaryDetailAndTable3-34_3-35",
+        "actualOpcodePayload": null,
+        "actualEncodedBytes": 0
+      }
+    }
+  ],
+  "primaryEditorialConflicts": [
+    {
+      "id": "SJ_SCAL_Wording",
+      "locations": [
+        "Detail3-140 PCprime line mentions SCAL",
+        "Detail3-140 note uses call/callable"
+      ],
+      "unambiguousIndependentEvidence": [
+        "SJ heading",
+        "PC-only function",
+        "NextSJ description",
+        "2cell code row and signed range/examples",
+        "Table3-34 nextSJ+2 and2byte row"
+      ],
+      "conflictingWordsUsedAsPassPremise": false,
+      "callStackSemanticsImported": false
+    },
+    {
+      "id": "JObj_TitleDescription_Wording",
+      "locations": [
+        "Detail3-63 right title labels Direct Jump",
+        "Description says indirect and object-word source"
+      ],
+      "unambiguousMechanismEvidence": [
+        "PC<-obj16 function",
+        "Addressing-object RAM/register value description",
+        "Table3-34/35 PCfrombracketedobject"
+      ],
+      "titleTerminologyNotSilentlyRewritten": true,
+      "immediateTargetAdmissionFromHeading": false
+    },
+    {
+      "id": "SummaryReferenceDiscrepancies",
+      "observations": [
+        "Table3-34 SJ page column141 versus actual detail printed140",
+        "Table3-36 RT page column126 versus actual detail printed125"
+      ],
+      "exactPhysicalAndPrintedPagesRecorded": true,
+      "referenceDiscrepancyNotSemanticRepair": true
+    }
+  ],
+  "prohibitedSubstitutions": [
+    {
+      "identity": "CAL",
+      "reason": "StackReturnFrameAndSFObligations_NotJumpEquivalent",
+      "newPrimaryReview": "RootPrimaryFactsReviewedWithinScope",
+      "facts": {
+        "physical": 81,
+        "printed": "3-29",
+        "stackWrite": "NextPC at oldSSP",
+        "SSPDelta": -2,
+        "SFNotation": "Clear",
+        "notJumpEquivalent": true
+      }
+    },
+    {
+      "identity": "SCAL",
+      "reason": "StackReturnFrameAndSFObligations_NotSJ",
+      "newPrimaryReview": "RootPrimaryFactsReviewedWithinScope",
+      "facts": {
+        "physical": 191,
+        "printed": "3-138",
+        "stackWrite": "NextPC at oldSSP",
+        "SSPDelta": -2,
+        "SFNotation": "Clear",
+        "notSJ": true
+      }
+    },
+    {
+      "identity": "RT",
+      "reason": "ExistingReturnFrameRequired_NotContinuationJump",
+      "newPrimaryReview": "RootPrimaryFactsReviewedWithinScope",
+      "facts": {
+        "physical": 178,
+        "printed": "3-125",
+        "SSPDelta": 2,
+        "PCSource": "ExistingStackWord",
+        "SFNotation": "Clear",
+        "callFrameAt556F": "NotEstablished"
+      }
+    },
+    {
+      "identity": "RTI",
+      "reason": "InterruptContextFrameRestoration_NotContinuationJump",
+      "newPrimaryReview": "RootPrimaryFactsReviewedWithinScope",
+      "facts": {
+        "physical": 179,
+        "printed": "3-126",
+        "SSPDelta": 8,
+        "restoreOrder": [
+          "PSW",
+          "LRB",
+          "A",
+          "PC"
+        ],
+        "interruptFrameAt556F": "NotEstablished"
+      }
+    },
+    {
+      "identity": "BRK",
+      "reason": "TrapOrDifferentControlState_NotEquivalentContinuation",
+      "newPrimaryReview": "RootPrimaryFactsReviewedWithinScope",
+      "facts": {
+        "physical": 266,
+        "printed": "3-213",
+        "function": "SystemReset and PC from vector0002_NotContinuation"
+      }
+    },
+    {
+      "identity": "HALT",
+      "reason": "StopsControl_NotRejoinsContinuation",
+      "newPrimaryReview": "RootPrimaryFactsReviewedWithinScope",
+      "facts": {
+        "hardwarePage": 1,
+        "classification": "StandbyModes_NotContinuationJump"
+      }
+    },
+    {
+      "identity": "AnalyticalSTOP",
+      "reason": "NotAnInstruction",
+      "newPrimaryReview": "RootPrimaryFactsReviewedWithinScope",
+      "facts": {
+        "notInstruction": true
+      }
+    },
+    {
+      "identity": "ConditionalAlwaysTrue",
+      "reason": "InventedPredicateOrExtraFunctionalFlagTest_NotEquivalent",
+      "newPrimaryReview": "RootPrimaryFactsReviewedWithinScope",
+      "facts": {
+        "reason": "ExtraPredicateDependency_NotAuthorized"
+      }
+    }
+  ],
+  "evidenceLevels": [
+    "PrimaryFormDocumented",
+    "PrimaryEncodingStructureEstablished",
+    "PrimaryPCSemanticsEstablished",
+    "PrimaryFlagEffectsEstablishedWithinScope",
+    "ContextNoninterferenceRequirementsSpecified",
+    "SyntheticReachabilityChecksPlanned_NotRunBeforeAnalyzer",
+    "EncoderNotImplemented",
+    "DecoderNotImplemented",
+    "ActualTargetExecutionNotObserved",
+    "NativeExitIsolationNotEstablished"
+  ],
+  "recommendation": {
+    "PreferredMinimalTransferForm": "J-address",
+    "additionalFutureArchitecturalFormCount": 1,
+    "bothContinuationsCoveredDocumentarily": true,
+    "decisionStatus": "ArchitecturalResearchRecommendationOnly",
+    "routeA": "SJOptionalOnly_OriginDependentRelativeReach",
+    "routeB": "PreferredDirectJ16BitTarget_NoFunctionalDATAOperandDependency",
+    "routeC": "IndirectJNotAcceptedWithoutPointerOwnerAliasAndReadProof",
+    "doesNotAuthorizeNewFormId": true,
+    "doesNotAuthorizeEncoder": true,
+    "doesNotAuthorizeRuntime": true,
+    "rootPrimaryRecommendation": "J-address_OneFutureArchitecturalFormForBothExits_SJOptionalNotMandatory"
+  },
+  "permissions": {
+    "documentaryPrimaryReview": true,
+    "syntheticIntegerReachability": true,
+    "symbolicContinuationObligations": true,
+    "encoderExtension": false,
+    "decoderExtension": false,
+    "newFormId": false,
+    "opcodeByteGeneration": false,
+    "instructionStreamGeneration": false,
+    "CPUExecution": false,
+    "actualROMExecution": false,
+    "assemblySource": false,
+    "targetObject": false,
+    "HEX": false,
+    "FirmwareBIN": false,
+    "ROMPatch": false,
+    "nativeTrampoline": false,
+    "targetPrologueEpilogue": false,
+    "linkerPlacement": false,
+    "runtimeAdmission": false,
+    "GUI": false,
+    "hardware": false,
+    "fullboot": false
+  },
+  "counts": {
+    "actualROMExecutions": 0,
+    "ASM662Executions": 0,
+    "MAC66KExecutions": 0,
+    "encoderCallsNewTransferForms": 0,
+    "decoderCallsNewTransferForms": 0,
+    "opcodeBytesGenerated": 0,
+    "newInstructionStreams": 0,
+    "newFormIds": 0,
+    "targetAssembly": 0,
+    "targetObjects": 0,
+    "targetHEX": 0,
+    "FirmwareBIN": 0,
+    "manufacturerInquiriesSent": 0
+  },
+  "primaryReviewBinding": {
+    "id": "RootPersonalCompletePageReview",
+    "sha256": "54c65b0651c39038481ad91617db5241d3da8f821a89a33021e8ae574671f7f5",
+    "bytes": 29453,
+    "reviewClassification": "NamedStandardCorePrimaryFactsOnly_NoTargetExecution",
+    "subagentVisualReviewClaim": false
+  },
+  "supplementalSources": [
+    {
+      "id": "HW1998",
+      "manufacturer": "OKI",
+      "document": "E2E1027-27-Y4_MSM66201_MSM66207_Hardware",
+      "edition": "January1998",
+      "bytes": 589158,
+      "sha256": "247913724eb291e20c869d42ba40363268fba415ab787b7c843e2a094533f0fe",
+      "physicalOneBasedPagesFullyReviewed": [
+        1,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "rootPersonalFullPageReview": true,
+      "customerASICIdentityEstablished": false
+    }
+  ],
+  "primaryPageReferences": [
+    {
+      "id": "IM1991_Detail3-62",
+      "printed": "3-62",
+      "physicalOneBased": 116,
+      "zeroBasedIndex": 115,
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_Detail3-63",
+      "printed": "3-63",
+      "physicalOneBased": 117,
+      "zeroBasedIndex": 116,
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_Detail3-140",
+      "printed": "3-140",
+      "physicalOneBased": 193,
+      "zeroBasedIndex": 192,
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_Table3-34",
+      "printed": "3-210",
+      "physicalOneBased": 263,
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_Table3-35",
+      "printed": "3-211",
+      "physicalOneBased": 264,
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_Table3-36",
+      "printed": "3-212",
+      "physicalOneBased": 265,
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_Table3-37_BRK",
+      "printed": "3-213",
+      "physicalOneBased": 266,
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_ProgramDataAddressing1-7",
+      "printed": "1-7",
+      "physicalOneBased": 11,
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_StackAccessClasses1-17",
+      "printed": "1-17",
+      "physicalOneBased": 21,
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_AddressingModes2-1..7",
+      "printed": [
+        "2-1",
+        "2-2",
+        "2-3",
+        "2-4",
+        "2-5",
+        "2-6",
+        "2-7"
+      ],
+      "reviewedPhysicalPages": [
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "perPageCoordinateMapping": "NotInferredFromRanges_PrintedFactCoverageAndReviewedPhysicalSetAreSeparate",
+      "sourceId": "IM1991"
+    },
+    {
+      "id": "IM1991_FlagsTableObservations",
+      "sourceId": "IM1991",
+      "physicalOneBased": [
+        116,
+        117,
+        193,
+        263
+      ],
+      "printed": [
+        "3-62",
+        "3-63",
+        "3-140",
+        "3-210"
+      ],
+      "scope": "ActualReviewedJumpDetailAndSummaryFlagCells_NoChangeListedOnly_NoGeneralFlagsLegendClaim"
+    },
+    {
+      "id": "IM1991_DDControl25-28",
+      "sourceId": "IM1991",
+      "reviewedPhysicalPages": [
+        25,
+        26,
+        27,
+        28
+      ],
+      "scope": "ReviewedDDControlAndBlankAffectingDDJumpCells_NoNewDDWriter"
+    },
+    {
+      "id": "IM1991_Table3-34_3-35",
+      "sourceId": "IM1991",
+      "physicalOneBased": [
+        263,
+        264
+      ],
+      "printed": [
+        "3-210",
+        "3-211"
+      ],
+      "memberRefs": [
+        "IM1991_Table3-34",
+        "IM1991_Table3-35"
+      ],
+      "scope": "ObjectJumpModesAndExact2_3_4Lengths_DocumentaryOnly"
+    },
+    {
+      "id": "HW1998_RegisterLayout9-10",
+      "sourceId": "HW1998",
+      "physicalOneBased": [
+        9,
+        10
+      ],
+      "scope": "NamedStandardRegisterPSW_PC_LRB_SSP_PointingBankLayout_NotCustomerASICIdentity"
+    },
+    {
+      "id": "HW1998_AddressingTaxonomy13-16",
+      "sourceId": "HW1998",
+      "physicalOneBased": [
+        13,
+        14,
+        15,
+        16
+      ],
+      "scope": "NamedStandardRegister_Page_Indirect_OffsetAddressingTaxonomy_NoAccessAdmission"
+    },
+    {
+      "id": "HW1998_AddressSpacesExternalProgramMemory",
+      "sourceId": "HW1998",
+      "physicalOneBased": [
+        1,
+        8,
+        13
+      ],
+      "scope": "CoverNamedCoreIndependent64KSpacesAnd16KiB_32KiBSizes_PinPSENProgramFetch_EAExternalCode_RDWRDataBus_IndependentProgramDataSpaces_NoActualECUMappingOrResetWDTClaim"
+    }
+  ],
+  "externalMemoryRequirements": {
+    "programOperandAndInstructionFetch": "Required_NotAFunctionalDATAOperandRead",
+    "standardMSM66201InternalROMBytes": 16384,
+    "standardMSM66207InternalROMBytes": 32768,
+    "bothContinuationTargetsOutsideStandard66201InternalROM": true,
+    "standard66201ExternalProgramMappingForTheseTargets": "Required_NotEstablishedForActualECU",
+    "standard66207SizeIsNotActualECUMapProof": true,
+    "customerASICIdentity": "NotEstablished",
+    "physicalECUProgramMapping": "NotEstablished",
+    "globalBusOrPeripheralNoninterference": "NotEstablished"
+  },
+  "primaryReferenceAddendumBinding": {
+    "id": "RootPreimplementationPrimaryReferenceIntegrityCorrection",
+    "file": "private/reports/m2bf/primary-review/root-primary-reference-addendum.json",
+    "bytes": 3879,
+    "sha256": "fb31f5efa104a06731db93528a400ebe65415a203c4d482b8f484dcc5fb00631",
+    "originalPrimaryLedgerUnchanged": true,
+    "onlyReferenceDefinitionsAttributionAndIDsCorrected": true,
+    "newAnalyzerAbsentAtCorrection": true,
+    "numericalOrAPIExpectationsChanged": false
+  }
+}

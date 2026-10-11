@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2bf adds [external continuation and transfer-form evidence](docs/M2BF_WORD0196_EXTERNAL_CONTINUATION_EVIDENCE.md):
+historical5596/55C5 exit obligations, primary direct/relative/indirect jump distinctions
+and invented reach/context checks. Direct J is only a future architectural recommendation;
+no bytes, new forms, safe native rejoin or firmware authority are produced.
+
 M2be adds [invented-only layout feasibility](docs/M2BE_WORD0196_LAYOUT_FEASIBILITY.md):
 45 instruction-length bytes, internal fallthrough/rel8/NoWrap checks and retained
 static context. Dense geometry exposes a terminal fallthrough hazard;
