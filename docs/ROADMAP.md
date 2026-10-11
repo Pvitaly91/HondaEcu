@@ -1,5 +1,10 @@
 # Roadmap
 
+M2bg verifies an [isolated independent direct-J codec](M2BG_INDEPENDENT_DIRECT_J_CODEC.md).
+All16-bit targets/DD0/1, exact3cells and atomic errors; compatibility is not execution.
+Old15 forms/18-site contracts unchanged; native exit/rejoin/integration unestablished.
+STOP after delivery: no M2bh/full lowering/stream/placement/ROM/firmware/GUI/hardware.
+
 M2bf specifies [external continuations and primary transfer-form evidence](M2BF_WORD0196_EXTERNAL_CONTINUATION_EVIDENCE.md).
 SJ relative reach, direct J16-bit targets, indirect-pointer blockers and terminal hazards
 are checked without emission. Native exit isolation/downstream rejoin remain unverified.

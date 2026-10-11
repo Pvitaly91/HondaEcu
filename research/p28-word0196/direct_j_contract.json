@@ -1,0 +1,671 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2bg",
+  "exactBase": "3c76b6a54ac1e298470e1452a433090f34c49e1c",
+  "scope": "IsolatedSingleInventedDirectJInstructionInMemoryOnly",
+  "classification": "PrimaryManualDerivedIndependentImplementation",
+  "normative": {
+    "primary": {
+      "manual": "Oki_66201_Instruction_Manual.pdf",
+      "edition": "September1991",
+      "manualSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "detail": {
+        "physicalPDFPage": 116,
+        "zeroBasedPDFIndex": 115,
+        "printedPage": "3-62"
+      },
+      "corroboration": {
+        "physicalPDFPage": 263,
+        "zeroBasedPDFIndex": 262,
+        "printedPage": "3-210",
+        "table": "3-34"
+      },
+      "fixedHeaderHex": "03",
+      "length": 3,
+      "codeCellOrder": [
+        "Fixed03",
+        "TargetLow8",
+        "TargetHigh8"
+      ],
+      "targetAddressSpace": "PROGRAM",
+      "headerEstablishedByFreshFullPageReviewBeforeImplementation": true
+    },
+    "api": {
+      "encoder": "encode_direct_j(DirectJEncodeRequest)",
+      "decoder": "decode_direct_j(DirectJDecodeRequest)"
+    },
+    "publicTypes": {
+      "ProgramTarget16": [
+        "value"
+      ],
+      "DirectJEncodeRequest": [
+        "target",
+        "origin_pc",
+        "incoming_dd"
+      ],
+      "DirectJDecodeRequest": [
+        "encoded_bytes",
+        "origin_pc",
+        "incoming_dd"
+      ],
+      "EncodedDirectJ": [
+        "target",
+        "origin_pc",
+        "incoming_dd",
+        "encoded_bytes",
+        "form",
+        "length",
+        "end_exclusive",
+        "pc_effect",
+        "dd_effect",
+        "noninterference_scope",
+        "classification"
+      ],
+      "DecodedDirectJ": [
+        "target",
+        "origin_pc",
+        "incoming_dd",
+        "form",
+        "length",
+        "end_exclusive",
+        "pc_effect",
+        "dd_effect",
+        "noninterference_scope",
+        "classification"
+      ],
+      "DirectJEncodeError": [
+        "code"
+      ],
+      "DirectJDecodeError": [
+        "code"
+      ]
+    },
+    "enumClasses": {
+      "form": "DirectJForm",
+      "encoderError": "EncodeErrorCode",
+      "decoderError": "DecodeErrorCode"
+    },
+    "form": {
+      "enumClass": "DirectJForm",
+      "member": "J_ADDRESS",
+      "value": "j-address",
+      "length": 3,
+      "operand": "ProgramTarget16",
+      "programTargetRange": [
+        0,
+        65535
+      ],
+      "fixedHeaderHex": "03",
+      "headerProof": "PersonallyReadPrimary116CodeCell1BeforeImplementation",
+      "operandOrder": [
+        "Low8",
+        "High8"
+      ],
+      "incomingDD": [
+        0,
+        1
+      ],
+      "originRange": [
+        0,
+        65535
+      ],
+      "extent": "origin+3<=65536",
+      "endExclusive": "AnalyticalIntegerMayEqual65536_NotSequentialPC16OrFallthroughPermission",
+      "signedRel8Restriction": false
+    },
+    "metadata": {
+      "pc_effect": "DocumentedPCReplacement",
+      "dd_effect": "DocumentedDDPreservedWhenExecuted",
+      "noninterference_scope": "ManufacturerFunctionAndFlagTablesOnly_NoRuntimeEvidence",
+      "encoderClassification": "SyntheticDirectJEncodingOnly",
+      "decoderClassification": "SyntheticDirectJDecodingOnly"
+    },
+    "typePolicy": "FrozenSlotsDataclasses_ExactTypesOnly_NoCoercion_RequestMissingSlotsRefused_TargetExactProgramTarget16WithExactIntValue",
+    "encodeValidationOrder": [
+      "ExactDirectJEncodeRequestAndAllThreeSlots_RequestShape",
+      "ExactProgramTarget16AndValueSlotAndExactInt_TargetTypeInvalid",
+      "Target0To65535_TargetOutOfRange",
+      "ExactIntDD0Or1_IncomingDDInvalid",
+      "ExactIntOrigin0To65535_OriginInvalid",
+      "OriginPlus3AtMost65536_OriginSpanOutsideProfile",
+      "OnlyThenConstructThreeImmutableBytesAndResult"
+    ],
+    "decodeValidationOrder": [
+      "ExactDirectJDecodeRequestAndAllThreeSlots_RequestShape",
+      "ExactBytesType_EncodedBytesInvalid",
+      "Length0_EncodedLengthInvalid_Length1Or2_TruncatedEncoding_LengthGreater3_TrailingBytes",
+      "ExactIntDD0Or1_IncomingDDInvalid",
+      "ExactIntOrigin0To65535_OriginInvalid",
+      "OriginPlus3AtMost65536_OriginSpanOutsideProfile",
+      "ExactPrimaryHeader03_UnsupportedEncoding",
+      "OnlyThenReconstructTargetAndImmutableResult"
+    ],
+    "encodeErrorCodes": [
+      "RequestShape",
+      "TargetTypeInvalid",
+      "TargetOutOfRange",
+      "IncomingDDInvalid",
+      "OriginInvalid",
+      "OriginSpanOutsideProfile"
+    ],
+    "decodeErrorCodes": [
+      "RequestShape",
+      "EncodedBytesInvalid",
+      "EncodedLengthInvalid",
+      "TruncatedEncoding",
+      "TrailingBytes",
+      "IncomingDDInvalid",
+      "OriginInvalid",
+      "OriginSpanOutsideProfile",
+      "UnsupportedEncoding"
+    ],
+    "outputPolicy": "ErrorsOnlyEnumCode_NoPartialBytesOrTarget_NoCPUStackRAMState_NoRuntimeAuthority",
+    "inputPolicies": {
+      "typedTarget": "ExactProgramTarget16_ExactIntValue0To65535_NoDataAddressOrImmediateSubstitution",
+      "DD": "ExactInt0Or1_BothAccepted_EncodingDecodingDoNotExecuteOrChangeDD",
+      "origin": "ExactInt0To65535_FFFDMaximumCompleteOrigin_NoWrapRepair",
+      "span": "origin+3<=65536_EndExclusiveAnalyticalNotNativeSequentialPC",
+      "oddProgramTargets": "Accepted_NotDATAWordAlignmentPolicy",
+      "physicalMappingFilter": "None_FullEncodedProgramAddressDomainIsNotMappedECUAvailability",
+      "bytes": "DecoderExactImmutableBytesExactly3_NoSlicePaddingCoercionOrIgnoredTrailing",
+      "unsupported": "UnsupportedEncodingWithinIsolatedDirectJProfile_NotGlobalISAIllegality",
+      "relative": "NotRelative_NoRel8Restriction",
+      "atomicity": "FullValidationBeforeAnySuccessBytesTargetOrMetadata",
+      "mutation": "ChangedOperandOctetsMayEncodeOtherValidTargets_NoBlanketRefusal"
+    },
+    "documentaryNoninterference": {
+      "scope": "ManufacturerFunctionAndFlagTablesOnly_NoRuntimeEvidence",
+      "operation": "PCReplacement",
+      "incomingDD": [
+        0,
+        1
+      ],
+      "listedFlagWrites": [],
+      "functionalDATAOperandReadsListed": false,
+      "RAMWriterListed": false,
+      "SSPStackFrameWriterListed": false,
+      "programInstructionOperandFetch": "OccursAsPROGRAMFetch_NotFunctionalDATAOperandRead",
+      "otherArchitecturalWriters": "NoneListedInReviewedDirectJFunction_NotGlobalASICProof",
+      "nativeSFMeaningStorageWidth": "NotEstablished",
+      "ASICApplicability": "NotEstablished",
+      "externalProgramMapping": "NotEstablished",
+      "globalBusInterruptPeripheralNoninterference": "NotEstablished"
+    },
+    "sourceIndependence": {
+      "implementationInputs": [
+        "FreshManufacturerFunctionalAndEncodingFacts",
+        "OwnSeparateTypedValidation",
+        "IndependentPreimplementationPrimaryLiterals"
+      ],
+      "encoderDecoderSharedInputs": "PublicImmutableTypesOnly_NoSharedOpcodeOrEmissionTables",
+      "oracleImportsCodec": false,
+      "decoderImportsEncoder": false,
+      "encoderImportsDecoder": false,
+      "excludedInputs": [
+        "ASM662",
+        "DocGeneratedOpcodeTable",
+        "RustFULL_OPCODES",
+        "CSharpExecutor",
+        "EncoderOutput",
+        "DecoderOutput"
+      ],
+      "priorThirdPartyExposureDisclosed": true,
+      "legalCleanRoomCertification": false,
+      "thirdPartyRightsGrant": false
+    },
+    "proofDirections": {
+      "A": "PrimarySpecificationToEncoderAgainstIndependentExpectedThreeBytes",
+      "B": "IndependentPrimaryThreeBytesToDecoderAgainstIndependentTypedTargetAndMetadata",
+      "C1": "TypedEncodeDecodeCompatibilityOnly",
+      "C2": "IndependentBytesDecodeEncodeExactByteCompatibilityOnly",
+      "roundTripsAloneEstablishISA": false
+    },
+    "plannedCoverage": {
+      "targets": 65536,
+      "DD": [
+        0,
+        1
+      ],
+      "origins": [
+        0,
+        4096,
+        65533
+      ],
+      "uniqueMainContexts": 393216,
+      "literalLabels": 24,
+      "literalLabelsOverlapMainDomain": 24,
+      "literalContextsAdditionalToMain": 0,
+      "countsPerActualRunNotCumulative": true,
+      "operandMutationAcceptance": "ValidChangedLowHighAndSwapRecognizedAsNewTarget",
+      "negativeDomain": "ShapesExactTypesSlotsRangesDDOriginsSpanLengthsAll255OtherHeadersAndValidationPrecedence"
+    },
+    "preservedOldResearch": {
+      "old15FormEnumUnchanged": true,
+      "old15Forms": 15,
+      "old18SiteInventory": 18,
+      "oldInstructionLengthSum": 45,
+      "oldBlocks": [
+        16,
+        23,
+        6
+      ],
+      "oldEdges": 21,
+      "oldLogicalPaths": [
+        10,
+        12,
+        13,
+        15
+      ],
+      "historical13StepNativeWitnesses": 0,
+      "oldM2beNativeExitIsolation": "NotEstablished",
+      "oldM2bfActualDownstreamRejoin": "NotEstablished",
+      "nativeFragmentGenerated": false,
+      "programLayoutOrGapReservation": false,
+      "continuationPCsAreNotWritable": true
+    },
+    "permissions": {
+      "singleInstructionInMemory": true,
+      "instructionStreams": false,
+      "CPUExecution": false,
+      "actualROM": false,
+      "persistentMachineCodeFiles": false,
+      "assemblyObjectsFirmware": false,
+      "productionAdmission": false
+    },
+    "operations": {
+      "CPUExecutions": 0,
+      "actualROMExecutions": 0,
+      "ASM662Executions": 0,
+      "MAC66KExecutions": 0,
+      "persistentMachineCodeFiles": 0,
+      "instructionStreams": 0,
+      "targetAssemblyFiles": 0,
+      "targetObjects": 0,
+      "targetHEX": 0,
+      "FirmwareBIN": 0,
+      "ROMPatches": 0,
+      "nativeTraceJournals": 0,
+      "externalInquiries": "NotSent",
+      "GUIHardwareFullBoot": "NotRun"
+    },
+    "unresolvedBoundaries": {
+      "nativeExitIsolation": "NotEstablished",
+      "actualDownstreamRejoin": "NotEstablished",
+      "full18SiteMachineCodeEquivalence": "NotEstablished",
+      "targetCodeGeneration": "NotReady",
+      "firmwareIntegration": "NotEstablished",
+      "compilerABI": "NotEstablished",
+      "codePlacement": "NotEstablished",
+      "customerASICIdentityRevision": "NotEstablished",
+      "SF": "NotEstablished",
+      "stackSafety": "NotEstablished",
+      "nativeOwner019B2": "NotEstablished",
+      "recoveredECUScheduler": "NotEstablished",
+      "WDT3C": "Unresolved",
+      "JGTC8": "PrimaryConflictUnresolved",
+      "CAL2689_RT5C80": "NotRun",
+      "SSP_ADC": "Blocked",
+      "DATA019BFrontier": "Unchanged",
+      "M2ah": "STOPBefore5722",
+      "IRQ": "NotInjected",
+      "timerEvolution": "NotModeled",
+      "readiness": "PcInspectionOnly_NotFlashReady"
+    },
+    "historicalRunner": {
+      "version": "0.43.0",
+      "protocol": 1,
+      "semanticAccountingIdentities": 38
+    },
+    "excludedInterfaces": [
+      "GenericAssembler",
+      "GeneralDisassembler",
+      "TextMnemonics",
+      "BatchOrStreams",
+      "LabelsSymbols",
+      "RelocationLinking",
+      "Old18SiteEmission",
+      "ROMInput",
+      "ROMPlacement",
+      "NativeStubTrampoline",
+      "CPUExecution",
+      "SyntheticStackRAMSnapshot",
+      "FirmwareExport",
+      "ProductionAdmission",
+      "GUI",
+      "Hardware"
+    ],
+    "validatorMeaning": {
+      "closedMetadataAndCurrentSourceIdentityOnly": true,
+      "sourceASTGuard": "TrustedSourceDefenseInDepth_NotArbitraryPythonSandbox",
+      "attackFixturesParsedOnlyNeverExecuted": true,
+      "doesNotImportOrRunCodecsToManufactureExpectedResults": true,
+      "requiresSeparateFreshByteSuite": true,
+      "observedReferencesAreHistoricalSourceBoundReceiptsNotSelfAttestation": true
+    },
+    "historicalResults": {
+      "M2bf": "ExternalContinuationObligationsAndTransferFormEvidenceEstablished",
+      "M2be": "SyntheticLayoutBranchFeasibilityEstablished",
+      "M2bd": "TypedIRToFormMappingAndDataflowObligationsEstablished",
+      "M2bc": "Independent15FormDecodeEncodeCompatibilityVerified",
+      "M2bb": "Independent15FormSyntheticEncodingVerified",
+      "M2ba": "IndependentRouteSpecified_HistoricalEncoderNotImplemented",
+      "M2az": "ASM662ComponentRightsBlocked",
+      "M2ay": "ASM662BuildEncodingBlocked",
+      "M2ax": "MAC66KAcquisitionBlocked",
+      "M2aw": "TargetArchitectureContextEstablished",
+      "M2av": "BoundedSourceEquivalenceEstablished",
+      "M2au": "INTAccountingComplete",
+      "M2at": "DEC_DP_HCFixComplete",
+      "M2an": "SLLBSemanticFixComplete",
+      "M2t": "JGT233ABlocked",
+      "StrictM2i": "Blocked",
+      "physicalFuelTimeDegrees": "Unavailable",
+      "physicalRPMAvailable": false,
+      "ASM662_WDT_C8Inquiries": "NotSent"
+    }
+  },
+  "upstreamBindings": [
+    {
+      "file": "research/p28-word0196/continuation_transfer_analysis.py",
+      "bytes": 78628,
+      "sha256": "86eb302ae13138aef5a64b192e5d4b63982afa1e4bb3e9c4b3d71b9f927c355c"
+    },
+    {
+      "file": "research/p28-word0196/continuation_transfer_oracle.py",
+      "bytes": 12784,
+      "sha256": "5c250c75ee7d950e766cf747381efc125545b192a5c7d7b0e8b01a1c6b3909fb"
+    },
+    {
+      "file": "research/p28-word0196/continuation_transfer_tests.py",
+      "bytes": 19256,
+      "sha256": "e47b4e34bf2ee42e5e5f7c118becb9dffb71864e1a57030a9aedd2fbb83b833d"
+    },
+    {
+      "file": "research/p28-word0196/external_continuation_contract.json",
+      "bytes": 58097,
+      "sha256": "bce975c6427e0ab9294af8227933f0b2553efa13a47b89383f53fc4ac6138660"
+    },
+    {
+      "file": "research/p28-word0196/independent_decode_encode_contract.json",
+      "bytes": 17800,
+      "sha256": "547a09d9cd60dc6e2543870a5a5d0ee228e1051c28748fc53a526208355f5f2d"
+    },
+    {
+      "file": "research/p28-word0196/independent_decoder_primary_oracle.py",
+      "bytes": 12745,
+      "sha256": "9154ceac6709d8ad93fa71ab77f5b1e5c601dbaa812d60d4e3681b08f4b8e1df"
+    },
+    {
+      "file": "research/p28-word0196/independent_decoder_tests.py",
+      "bytes": 19933,
+      "sha256": "cdc5d43ee866dba4fb619fc6169e2ec5e869d4050f98137bb67e62ca0a2bdb64"
+    },
+    {
+      "file": "research/p28-word0196/independent_decoder.py",
+      "bytes": 11036,
+      "sha256": "e91c862d07d102c67ffa471603744c87eaee6d940fd27305e524afc91b946404"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder_contract.json",
+      "bytes": 12182,
+      "sha256": "414e5326cec42538ea6b64aa12a810c9d548c8b755b61a4f5c285b60c1837d47"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder_design.json",
+      "bytes": 21765,
+      "sha256": "9403279ed7570f1cb36280954a0f3249d41de2d64ae767b840649b066c625be9"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder_oracle.py",
+      "bytes": 7092,
+      "sha256": "6575f802c0703da087f1f06fdff095dcf4c4b948b7fe59e8fb35972210cb6361"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder_tests.py",
+      "bytes": 18429,
+      "sha256": "76ca001260dbf07b0c5ad99f72e156732b940756af2c177e2b97311acba3b62c"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder.py",
+      "bytes": 9868,
+      "sha256": "603092893afbdb3d69cbcd43585ff6fc9886c45919920f432ec4b2905d830879"
+    },
+    {
+      "file": "research/p28-word0196/layout_feasibility_analysis.py",
+      "bytes": 40569,
+      "sha256": "840320c5eed83d2a393dd3d1f4c8b90cb0aa7608c5c2ba721384265e79d151db"
+    },
+    {
+      "file": "research/p28-word0196/layout_feasibility_contract.json",
+      "bytes": 66622,
+      "sha256": "9d1baf1e4914fa1b611924ff48b75854e9fc7d2e06e6e05542c56c14e18abb2f"
+    },
+    {
+      "file": "research/p28-word0196/layout_feasibility_oracle.py",
+      "bytes": 10843,
+      "sha256": "be17e854a1b474b3800b09d74219ba097fc48bd2a2a53db93752169c3da06394"
+    },
+    {
+      "file": "research/p28-word0196/layout_feasibility_tests.py",
+      "bytes": 26061,
+      "sha256": "55377f7bd6c6c0ad1b5c29e7cc66eeb32aa63a3db8d1b849318c98326d74cd5e"
+    },
+    {
+      "file": "research/p28-word0196/target_abi_contract.json",
+      "bytes": 40753,
+      "sha256": "1e8b20872693c0a7dcfbcfc867b85c55c3a759eef616651d6760c08b9dd5af66"
+    },
+    {
+      "file": "research/p28-word0196/transfer_form_evidence.json",
+      "bytes": 37225,
+      "sha256": "f4279b5c86cc78be18f641e0638ea58892329f0b8903db28a8b6b77d69d34194"
+    },
+    {
+      "file": "research/p28-word0196/typed_lowering_analysis.py",
+      "bytes": 31589,
+      "sha256": "bd0ad1ee186cb76922926a957c21bacafc601e77200ff3bdcdc09fd866143bc5"
+    },
+    {
+      "file": "research/p28-word0196/typed_lowering_contract.json",
+      "bytes": 44984,
+      "sha256": "6f62c23e99f72e7df51a0117b7c5ff600d892f2a8d3e4c4231a383e1d96c6bf4"
+    },
+    {
+      "file": "research/p28-word0196/typed_lowering_oracle.py",
+      "bytes": 12601,
+      "sha256": "2e7b613813e81cf54ea6ee17c378344800022454f8d0074af15ecec586a77e4a"
+    },
+    {
+      "file": "research/p28-word0196/typed_lowering_tests.py",
+      "bytes": 29917,
+      "sha256": "1e46516c85b1d0b0593b67e59943b7b2d459725a073f29f23d385f59f73d7c6a"
+    },
+    {
+      "file": "research/p28-word0196/validate_external_continuation_contract.py",
+      "bytes": 76985,
+      "sha256": "6dfd2a85c6fa5187e4bb2649d8b96db2b61ffe584f0b9b7b4124fc058550da7e"
+    },
+    {
+      "file": "research/p28-word0196/validate_layout_feasibility_contract.py",
+      "bytes": 48319,
+      "sha256": "e6656112d6272adeac3f382ee672a4ddd3b01fe645dcab356444b0cefd6d51ea"
+    },
+    {
+      "file": "research/p28-word0196/word0196_equivalent.c",
+      "bytes": 8507,
+      "sha256": "4b189d4ed3e97e0d197f6c558755cf056a89c1dc7122653c5c557e7ab62d76d3"
+    },
+    {
+      "file": "research/p28-word0196/word0196_equivalent.h",
+      "bytes": 2390,
+      "sha256": "df8da1511708fb29cb747981a959544e549a67a9a982e15586b5c12ce8826f0e"
+    },
+    {
+      "file": "research/p28-word0196/word0196_ir.json",
+      "bytes": 32188,
+      "sha256": "4fdbd6b7dbdd8f48d5a43e123ca93a33a003c22556a0c40b5296d5f409e085c4"
+    },
+    {
+      "file": "src/HondaEcu.Core/P28Word0196AlternateModel.cs",
+      "bytes": 3464,
+      "sha256": "ac3162dfc6255e25ac24d7430531243f7856090ce55bab8b46e20d07f06fd74f"
+    }
+  ],
+  "preparationBindings": [
+    {
+      "file": "private/reports/m2bg/api-specification-before-implementation.json",
+      "bytes": 4448,
+      "sha256": "1bb87ecb8215fda026feb772242ec5add78201b04140984719b919894f3b0273"
+    },
+    {
+      "file": "private/reports/m2bg/api-enum-names-addendum-before-implementation.json",
+      "bytes": 433,
+      "sha256": "d41322581d265bc81116126485032eec903fb6129a27cc09443b9d407c0b5dcc"
+    },
+    {
+      "file": "private/reports/m2bg/primary-vectors/primary-literals-sealed.json",
+      "bytes": 13233,
+      "sha256": "199aefc355011e9ee2ebd47901e728cff4b62e93995c121ab66629021b11da05"
+    },
+    {
+      "file": "private/reports/m2bg/primary-vectors/independent-primary-review.json",
+      "bytes": 5053,
+      "sha256": "7d2d39318ab7d3b9db45bcb97f9947ef232c1ff41118a433228d021ba537b5e5"
+    }
+  ],
+  "phaseEvidence": {
+    "stage": "ObservedIndependentDirectJSyntheticEncodingDecodingCompatibilityAndSourceReviewPassed",
+    "observedSyntheticCounts": {
+      "decoderCalls": 800330,
+      "encoderCalls": 786570,
+      "immutabilityChecks": 1746,
+      "mainUniqueContexts": 393216,
+      "negativeDecoderCalls": 3162,
+      "negativeDecoderLabels": 1581,
+      "negativeEncoderCalls": 90,
+      "negativeEncoderLabels": 45,
+      "operandMutationAttempts": 12312,
+      "operandMutationDecoderCalls": 10688,
+      "positiveLabels": 393240,
+      "primaryDecodeEncodeComparisons": 393240,
+      "primaryDecoderComparisons": 393240,
+      "primaryEncoderComparisons": 393240,
+      "primaryLiteralCases": 24,
+      "successfulDecodedResults": 797168,
+      "successfulEncodedOctets": 2359440,
+      "successfulEncodedSequences": 786480,
+      "typedEncodeDecodeComparisons": 393240
+    },
+    "observedProofAccounting": {
+      "uniquePositiveContexts": 393216,
+      "literalLabelsOverlapMainDomain": 24,
+      "uniqueAcceptedMutationInputs": 10688,
+      "uniqueNegativeEncoderDescriptors": 45,
+      "uniqueNegativeDecoderDescriptors": 1581,
+      "observedEncodeErrorCodes": [
+        "IncomingDDInvalid",
+        "OriginInvalid",
+        "OriginSpanOutsideProfile",
+        "RequestShape",
+        "TargetOutOfRange",
+        "TargetTypeInvalid"
+      ],
+      "observedDecodeErrorCodes": [
+        "EncodedBytesInvalid",
+        "EncodedLengthInvalid",
+        "IncomingDDInvalid",
+        "OriginInvalid",
+        "OriginSpanOutsideProfile",
+        "RequestShape",
+        "TrailingBytes",
+        "TruncatedEncoding",
+        "UnsupportedEncoding"
+      ],
+      "spoofedFieldReads": 0,
+      "failed": 0,
+      "skipped": 0,
+      "firstMismatch": null,
+      "primaryProofDirections": [
+        "A_IndependentBytesToEncoder",
+        "B_IndependentBytesToDecoder"
+      ],
+      "roundTripDirections": "CompatibilityOnly_NotIndependentISAProof",
+      "countsPerOneObservedRunNotCumulative": true
+    },
+    "perFormEvidenceStatuses": [
+      "PrimaryEncodingSpecified",
+      "IndependentEncoderImplemented",
+      "SyntheticBytesMatchPrimary",
+      "PrimaryDecodingSpecified",
+      "IndependentDecoderImplemented",
+      "PrimarySyntheticBytesCorrectlyDecoded",
+      "EncodeDecodeCompatibilityPassed",
+      "DecodeEncodeCompatibilityPassed",
+      "NegativeBoundaryTestsPassed",
+      "IndependentReviewPassed",
+      "ActualTargetExecutionNotObserved"
+    ],
+    "implementationSourceBindings": [
+      {
+        "file": "research/p28-word0196/direct_j_types.py",
+        "bytes": 3021,
+        "sha256": "f11877a07340b88a7c222acec250767524778955a96235a6dd147207fa99467b"
+      },
+      {
+        "file": "research/p28-word0196/direct_j_encoder.py",
+        "bytes": 1926,
+        "sha256": "1149ba3fcc142fa1fb78677ddd14b8c4bbab1ee333ef926aaffe22839d7f6f60"
+      },
+      {
+        "file": "research/p28-word0196/direct_j_decoder.py",
+        "bytes": 2006,
+        "sha256": "32738de208889d288856feda6f030c78b08d5cf3cf7ca0154120b32fc788c3a4"
+      },
+      {
+        "file": "research/p28-word0196/direct_j_primary_oracle.py",
+        "bytes": 4051,
+        "sha256": "91793837663e8d0341ce0d4e224fc97e256c549409807ea9b43e8d9266f55f39"
+      },
+      {
+        "file": "research/p28-word0196/direct_j_tests.py",
+        "bytes": 18346,
+        "sha256": "c5a3cbb6f10b9cafaf342a0ed5b5bd86921f58fcfa9af1f469f1b741f6cc8d7c"
+      }
+    ],
+    "actualTestReceipt": {
+      "file": "private/reports/m2bg/first-suite-actual.json",
+      "bytes": 5102,
+      "sha256": "551385616d468d7be602de2eee4ab8931eab2d559dcc6166bac9bba710597150"
+    },
+    "actualTestRawOutput": {
+      "file": "private/reports/m2bg/first-suite.actual.raw.log",
+      "bytes": 1738,
+      "sha256": "8fd29c9388cebfc91bbbbe0e4986df8923700b2547dfd098fd6cc8db409a35d2"
+    },
+    "preimplementationTestExpectation": {
+      "file": "private/reports/m2bg/oracle-preparation/test-expectations-sealed.json",
+      "bytes": 2850,
+      "sha256": "484d922966cbabbe7a6ff14c4cffe3c58153c0acb9b8c2e80292f23f7016642d"
+    },
+    "independentReviewReceipt": {
+      "file": "private/reports/m2bg/contract-audit/independent-static-source-review.json",
+      "bytes": 3086,
+      "sha256": "d4876207de2021be1b06010f9f23ed1fca2d447b89a4e29485ad450e8fc567a6"
+    },
+    "preimplementationReviewReceipt": {
+      "file": "private/reports/m2bg/contract-audit/independent-preimplementation-review-seal.json",
+      "bytes": 1335,
+      "sha256": "013ea571aecb5b25fce667f5f07e779e41823decf1af22adf96536a71b4b9a92"
+    },
+    "historyMetadataSupersession": {
+      "file": "private/reports/m2bg/contract-audit/history-metadata-v2-supersession.json",
+      "bytes": 1243,
+      "sha256": "1bc0aab4e5fb6b1a05def5a87b785b93b9b726d6e48978cbc82b407f6401be7f"
+    },
+    "actualTargetExecutionObserved": false,
+    "fullNativeProgramEquivalenceEstablished": false,
+    "nativeExitIsolation": "NotEstablished",
+    "actualDownstreamRejoin": "NotEstablished",
+    "referencesMeaning": "ReviewedActualPrivateReceiptsBoundToCurrentFiveSources_NotJSONSelfAttestation_FreshSuiteSeparatelyRequired"
+  }
+}

@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2bg adds an [independent one-form direct-J codec](docs/M2BG_INDEPENDENT_DIRECT_J_CODEC.md):
+primary03/low/high cells, all65536 PROGRAM targets in bothDD contexts and separate
+encode/decode primary proof plus compatibility. Only single3-byte synthetic
+instructions in memory; old15 forms/production unchanged, no program or firmware.
+
 M2bf adds [external continuation and transfer-form evidence](docs/M2BF_WORD0196_EXTERNAL_CONTINUATION_EVIDENCE.md):
 historical5596/55C5 exit obligations, primary direct/relative/indirect jump distinctions
 and invented reach/context checks. Direct J is only a future architectural recommendation;
