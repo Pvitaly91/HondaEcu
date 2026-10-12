@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2bh adds a [reviewed static two-J composition](docs/M2BH_WORD0196_STATIC_TWO_J_COMPOSITION.md):
+18 unchanged logical sites plus two abstract transfer slots, 20 nodes/23 edges,
+51+gap mathematical extent and preserved static DD/flag/ordered-memory obligations.
+No composite machine code, CPU execution, native exit proof or ROM placement.
+
 M2bg adds an [independent one-form direct-J codec](docs/M2BG_INDEPENDENT_DIRECT_J_CODEC.md):
 primary03/low/high cells, all65536 PROGRAM targets in bothDD contexts and separate
 encode/decode primary proof plus compatibility. Only single3-byte synthetic

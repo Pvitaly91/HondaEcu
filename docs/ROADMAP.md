@@ -1,5 +1,11 @@
 # Roadmap
 
+M2bh verifies [invented-only static two-J composition](M2BH_WORD0196_STATIC_TWO_J_COMPOSITION.md).
+Original18 sites remain separate; two abstract PROGRAM transfers specify internal
+terminal isolation without native execution or program emission. NEXT proposal only:
+separately authorized invented-only composite emission eligibility/evidence review.
+STOP after delivery: no M2bi, emission, assembly, placement, ROM, GUI or hardware.
+
 M2bg verifies an [isolated independent direct-J codec](M2BG_INDEPENDENT_DIRECT_J_CODEC.md).
 All16-bit targets/DD0/1, exact3cells and atomic errors; compatibility is not execution.
 Old15 forms/18-site contracts unchanged; native exit/rejoin/integration unestablished.
