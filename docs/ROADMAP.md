@@ -1,5 +1,10 @@
 # Roadmap
 
+M2bi defines [typed synthetic emission eligibility](M2BI_COMPOSITE_EMISSION_ELIGIBILITY.md)
+for unchanged18 sites plus two separate direct-J slots, invented base1000/gap0 only.
+NEXT proposal only: separately authorized primary-verified atomic synthetic emission.
+STOP after delivery: no M2bj, composite bytes, assembly, ROM placement, GUI or hardware.
+
 M2bh verifies [invented-only static two-J composition](M2BH_WORD0196_STATIC_TWO_J_COMPOSITION.md).
 Original18 sites remain separate; two abstract PROGRAM transfers specify internal
 terminal isolation without native execution or program emission. NEXT proposal only:

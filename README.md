@@ -1,5 +1,10 @@
 # HondaEcu
 
+M2bi adds [synthetic composite emission eligibility](docs/M2BI_COMPOSITE_EMISSION_ELIGIBILITY.md):
+20 static typed descriptors, separate unchanged 18-site/direct-J codec routes,
+and a closed invented base1000/gap0 future-verification/atomicity contract.
+No composite bytes, encoding calls for the plan, CPU execution or runtime permission.
+
 M2bh adds a [reviewed static two-J composition](docs/M2BH_WORD0196_STATIC_TWO_J_COMPOSITION.md):
 18 unchanged logical sites plus two abstract transfer slots, 20 nodes/23 edges,
 51+gap mathematical extent and preserved static DD/flag/ordered-memory obligations.
