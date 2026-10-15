@@ -1,0 +1,1498 @@
+{
+  "schema_version": 1,
+  "classification": "PublicSafeProjectionOfIndependentSealedPreResultExpectations",
+  "oracle_seals": [
+    "648f51b702f801208a8579d6e08610958658920c3c0fd7269b4769ecbccbc6a8",
+    "4e4e00dbc4f3fa418dd2be689db56470c00f069af57284f3d66d716c3d9a76a5",
+    "ad4430946823bded91ee1a08e152a70e3b9a8cd24106e61d6e8aca1a1d9687b1"
+  ],
+  "manual_sha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+  "common_entry": {
+    "pc": "1000",
+    "a": "A581",
+    "al": "81",
+    "ah": "A5",
+    "psw": "ECCB",
+    "cf": 1,
+    "zf": 1,
+    "hc": 1,
+    "dd": 0,
+    "otherPsw": "0CCB",
+    "lrb": "0021",
+    "scb": 3,
+    "ssp": "37A1",
+    "halted": false,
+    "pointingBanks": [
+      {
+        "X1": "1001",
+        "X2": "1002",
+        "DP": "1003",
+        "USP": "1004"
+      },
+      {
+        "X1": "2001",
+        "X2": "2002",
+        "DP": "2003",
+        "USP": "2004"
+      },
+      {
+        "X1": "3001",
+        "X2": "3002",
+        "DP": "3003",
+        "USP": "3004"
+      },
+      {
+        "X1": "4001",
+        "X2": "4002",
+        "DP": "4003",
+        "USP": "4004"
+      },
+      {
+        "X1": "5001",
+        "X2": "5002",
+        "DP": "5003",
+        "USP": "5004"
+      },
+      {
+        "X1": "6001",
+        "X2": "6002",
+        "DP": "6003",
+        "USP": "6004"
+      },
+      {
+        "X1": "7001",
+        "X2": "7002",
+        "DP": "7003",
+        "USP": "7004"
+      },
+      {
+        "X1": "8001",
+        "X2": "8002",
+        "DP": "8003",
+        "USP": "8004"
+      }
+    ],
+    "localAliases": {
+      "r": [
+        "3C",
+        "7E",
+        "12",
+        "34",
+        "56",
+        "78",
+        "9A",
+        "BC"
+      ],
+      "er": [
+        "7E3C",
+        "3412",
+        "7856",
+        "BC9A"
+      ]
+    },
+    "sf": {
+      "status": "SFMeaningStorageNotEstablished",
+      "value": null,
+      "meaning": null,
+      "storage": null,
+      "widthBits": null
+    }
+  },
+  "common_data": {
+    "0108": "3C",
+    "0109": "7E",
+    "010A": "12",
+    "010B": "34",
+    "010C": "56",
+    "010D": "78",
+    "010E": "9A",
+    "010F": "BC",
+    "0117": "A6",
+    "0124": "20",
+    "0128": "5D",
+    "012A": "80",
+    "018E": "40",
+    "018F": "81",
+    "0196": "34",
+    "0197": "12"
+  },
+  "main_cases": [
+    {
+      "id": "lb-page-nonzero",
+      "form": "lb-a-page",
+      "pdfPages": [
+        124
+      ],
+      "bytesHex": [
+        "F4",
+        "17"
+      ],
+      "length": 2,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A5A6",
+        "psw": "ACCB",
+        "reads": [
+          [
+            "0117",
+            8,
+            "A6",
+            [
+              "A6"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "sllb-a-preserve-zf",
+      "form": "sllb-a",
+      "pdfPages": [
+        197
+      ],
+      "bytesHex": [
+        "53"
+      ],
+      "length": 1,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1001",
+        "a": "A502",
+        "psw": "ECCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "rolb-page-through-carry",
+      "form": "rolb-page",
+      "pdfPages": [
+        173
+      ],
+      "bytesHex": [
+        "C4",
+        "8E",
+        "B7"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "6CCB",
+        "reads": [
+          [
+            "018E",
+            8,
+            "40",
+            [
+              "40"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "018E",
+            "40",
+            "81",
+            1,
+            "RMW",
+            false
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "lb-r0-nonzero",
+      "form": "lb-a-r0",
+      "pdfPages": [
+        124
+      ],
+      "bytesHex": [
+        "78"
+      ],
+      "length": 1,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1001",
+        "a": "A53C",
+        "psw": "ACCB",
+        "reads": [
+          [
+            "0108",
+            8,
+            "3C",
+            [
+              "3C"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "andb-a-page-nonzero",
+      "form": "andb-a-page",
+      "pdfPages": [
+        76
+      ],
+      "bytesHex": [
+        "D7",
+        "17"
+      ],
+      "length": 2,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A580",
+        "psw": "ACCB",
+        "reads": [
+          [
+            "0117",
+            8,
+            "A6",
+            [
+              "A6"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "cmp-page-borrow",
+      "form": "cmp-page-imm16",
+      "pdfPages": [
+        90
+      ],
+      "bytesHex": [
+        "B4",
+        "96",
+        "C0",
+        "35",
+        "12"
+      ],
+      "length": 5,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1005",
+        "a": "A581",
+        "psw": "ACCB",
+        "reads": [
+          [
+            "0196",
+            16,
+            "1234",
+            [
+              "34",
+              "12"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "jlt-carry-taken",
+      "form": "jlt-rel8",
+      "pdfPages": [
+        120,
+        121
+      ],
+      "bytesHex": [
+        "CA",
+        "FE"
+      ],
+      "length": 2,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1000",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": true,
+        "external": false
+      }
+    },
+    {
+      "id": "movb-r1-high-er0",
+      "form": "movb-r1-page",
+      "pdfPages": [
+        153
+      ],
+      "bytesHex": [
+        "C4",
+        "17",
+        "49"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "0117",
+            8,
+            "A6",
+            [
+              "A6"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "0109",
+            "7E",
+            "A6",
+            1,
+            "LocalRegisterStore",
+            false
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "andb-page-a-nonzero",
+      "form": "andb-page-a",
+      "pdfPages": [
+        77
+      ],
+      "bytesHex": [
+        "C4",
+        "17",
+        "D1"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "ACCB",
+        "reads": [
+          [
+            "0117",
+            8,
+            "A6",
+            [
+              "A6"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "0117",
+            "A6",
+            "80",
+            1,
+            "RMW",
+            false
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "jbs-bit7-taken",
+      "form": "jbs-page-bit7",
+      "pdfPages": [
+        119
+      ],
+      "bytesHex": [
+        "EF",
+        "2A",
+        "FD"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1000",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "012A",
+            8,
+            "80",
+            [
+              "80"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": true,
+        "external": false
+      }
+    },
+    {
+      "id": "jbs-bit5-taken",
+      "form": "jbs-page-bit5",
+      "pdfPages": [
+        119
+      ],
+      "bytesHex": [
+        "ED",
+        "24",
+        "FD"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1000",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "0124",
+            8,
+            "20",
+            [
+              "20"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": true,
+        "external": false
+      }
+    },
+    {
+      "id": "orb-page-imm-nonzero",
+      "form": "orb-page-imm8",
+      "pdfPages": [
+        163
+      ],
+      "bytesHex": [
+        "C4",
+        "2A",
+        "E0",
+        "04"
+      ],
+      "length": 4,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1004",
+        "a": "A581",
+        "psw": "ACCB",
+        "reads": [
+          [
+            "012A",
+            8,
+            "80",
+            [
+              "80"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "012A",
+            "80",
+            "84",
+            1,
+            "RMW",
+            false
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "orb-a-imm-nonzero",
+      "form": "orb-a-imm8",
+      "pdfPages": [
+        160
+      ],
+      "bytesHex": [
+        "E6",
+        "12"
+      ],
+      "length": 2,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A593",
+        "psw": "ACCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "lb-imm-zero-dd1",
+      "form": "lb-a-imm8",
+      "pdfPages": [
+        124
+      ],
+      "bytesHex": [
+        "77",
+        "00"
+      ],
+      "length": 2,
+      "entryOverride": {
+        "psw": "FCCB"
+      },
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A500",
+        "psw": "ECCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "stb-same-value-fresh-write",
+      "form": "stb-a-page",
+      "pdfPages": [
+        208
+      ],
+      "bytesHex": [
+        "D4",
+        "8F"
+      ],
+      "length": 2,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [],
+        "writes": [
+          [
+            "018F",
+            "81",
+            "81",
+            1,
+            "Store",
+            true
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "direct-j-55c5",
+      "form": "j-address",
+      "pdfPages": [
+        116
+      ],
+      "bytesHex": [
+        "03",
+        "C5",
+        "55"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "55C5",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": true
+      }
+    }
+  ],
+  "control_cases": [
+    {
+      "id": "lb-page-zero-dd1",
+      "form": "lb-a-page",
+      "bytesHex": [
+        "F4",
+        "17"
+      ],
+      "length": 2,
+      "entryOverride": {
+        "psw": "FCCB"
+      },
+      "dataOverride": {
+        "0117": "00"
+      },
+      "expected": {
+        "pc": "1002",
+        "a": "A500",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "0117",
+            8,
+            "00",
+            [
+              "00"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "lb-r0-zero-dd1",
+      "form": "lb-a-r0",
+      "bytesHex": [
+        "78"
+      ],
+      "length": 1,
+      "entryOverride": {
+        "psw": "FCCB"
+      },
+      "dataOverride": {
+        "0108": "00"
+      },
+      "expected": {
+        "pc": "1001",
+        "a": "A500",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "0108",
+            8,
+            "00",
+            [
+              "00"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "sllb-zero-result-zf-retained-clear",
+      "form": "sllb-a",
+      "bytesHex": [
+        "53"
+      ],
+      "length": 1,
+      "entryOverride": {
+        "a": "A580",
+        "psw": "ACCB"
+      },
+      "dataOverride": {},
+      "expected": {
+        "pc": "1001",
+        "a": "A500",
+        "psw": "ACCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "sllb-clears-carry",
+      "form": "sllb-a",
+      "bytesHex": [
+        "53"
+      ],
+      "length": 1,
+      "entryOverride": {
+        "a": "A501"
+      },
+      "dataOverride": {},
+      "expected": {
+        "pc": "1001",
+        "a": "A502",
+        "psw": "6CCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "rolb-no-incoming-carry",
+      "form": "rolb-page",
+      "bytesHex": [
+        "C4",
+        "8E",
+        "B7"
+      ],
+      "length": 3,
+      "entryOverride": {
+        "psw": "6CCB"
+      },
+      "dataOverride": {},
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "6CCB",
+        "reads": [
+          [
+            "018E",
+            8,
+            "40",
+            [
+              "40"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "018E",
+            "40",
+            "80",
+            1,
+            "RMW",
+            false
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "rolb-zero-result-preserves-zf-clear",
+      "form": "rolb-page",
+      "bytesHex": [
+        "C4",
+        "8E",
+        "B7"
+      ],
+      "length": 3,
+      "entryOverride": {
+        "psw": "2CCB"
+      },
+      "dataOverride": {
+        "018E": "80"
+      },
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "ACCB",
+        "reads": [
+          [
+            "018E",
+            8,
+            "80",
+            [
+              "80"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "018E",
+            "80",
+            "00",
+            1,
+            "RMW",
+            false
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "rolb-same-value-fresh-write",
+      "form": "rolb-page",
+      "bytesHex": [
+        "C4",
+        "8E",
+        "B7"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {
+        "018E": "FF"
+      },
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "018E",
+            8,
+            "FF",
+            [
+              "FF"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "018E",
+            "FF",
+            "FF",
+            1,
+            "RMW",
+            true
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "andb-a-page-zero-sets-zf",
+      "form": "andb-a-page",
+      "bytesHex": [
+        "D7",
+        "17"
+      ],
+      "length": 2,
+      "entryOverride": {
+        "psw": "ACCB"
+      },
+      "dataOverride": {
+        "0117": "7E"
+      },
+      "expected": {
+        "pc": "1002",
+        "a": "A500",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "0117",
+            8,
+            "7E",
+            [
+              "7E"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "cmp-page-equal",
+      "form": "cmp-page-imm16",
+      "bytesHex": [
+        "B4",
+        "96",
+        "C0",
+        "34",
+        "12"
+      ],
+      "length": 5,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1005",
+        "a": "A581",
+        "psw": "6CCB",
+        "reads": [
+          [
+            "0196",
+            16,
+            "1234",
+            [
+              "34",
+              "12"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "cmp-page-greater",
+      "form": "cmp-page-imm16",
+      "bytesHex": [
+        "B4",
+        "96",
+        "C0",
+        "33",
+        "12"
+      ],
+      "length": 5,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1005",
+        "a": "A581",
+        "psw": "2CCB",
+        "reads": [
+          [
+            "0196",
+            16,
+            "1234",
+            [
+              "34",
+              "12"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "jlt-zf-set-carry-clear-dd1",
+      "form": "jlt-rel8",
+      "bytesHex": [
+        "CA",
+        "FE"
+      ],
+      "length": 2,
+      "entryOverride": {
+        "psw": "7CCB"
+      },
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A581",
+        "psw": "7CCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": false,
+        "external": false
+      }
+    },
+    {
+      "id": "movb-same-value-fresh-write",
+      "form": "movb-r1-page",
+      "bytesHex": [
+        "C4",
+        "17",
+        "49"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {
+        "0109": "A6"
+      },
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "0117",
+            8,
+            "A6",
+            [
+              "A6"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "0109",
+            "A6",
+            "A6",
+            1,
+            "LocalRegisterStore",
+            true
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "andb-page-a-zero-sets-zf",
+      "form": "andb-page-a",
+      "bytesHex": [
+        "C4",
+        "17",
+        "D1"
+      ],
+      "length": 3,
+      "entryOverride": {
+        "psw": "ACCB"
+      },
+      "dataOverride": {
+        "0117": "7E"
+      },
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "0117",
+            8,
+            "7E",
+            [
+              "7E"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "0117",
+            "7E",
+            "00",
+            1,
+            "RMW",
+            false
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "andb-page-a-same-value-fresh-write",
+      "form": "andb-page-a",
+      "bytesHex": [
+        "C4",
+        "17",
+        "D1"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {
+        "0117": "81"
+      },
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "ACCB",
+        "reads": [
+          [
+            "0117",
+            8,
+            "81",
+            [
+              "81"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "0117",
+            "81",
+            "81",
+            1,
+            "RMW",
+            true
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "jbs-bit7-clear",
+      "form": "jbs-page-bit7",
+      "bytesHex": [
+        "EF",
+        "2A",
+        "FD"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {
+        "012A": "7F"
+      },
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "012A",
+            8,
+            "7F",
+            [
+              "7F"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": false,
+        "external": false
+      }
+    },
+    {
+      "id": "jbs-bit5-clear",
+      "form": "jbs-page-bit5",
+      "bytesHex": [
+        "ED",
+        "24",
+        "FD"
+      ],
+      "length": 3,
+      "entryOverride": {},
+      "dataOverride": {
+        "0124": "DF"
+      },
+      "expected": {
+        "pc": "1003",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "0124",
+            8,
+            "DF",
+            [
+              "DF"
+            ]
+          ]
+        ],
+        "writes": [],
+        "branchTaken": false,
+        "external": false
+      }
+    },
+    {
+      "id": "orb-page-zero-sets-zf-same-write",
+      "form": "orb-page-imm8",
+      "bytesHex": [
+        "C4",
+        "2A",
+        "E0",
+        "00"
+      ],
+      "length": 4,
+      "entryOverride": {
+        "psw": "ACCB"
+      },
+      "dataOverride": {
+        "012A": "00"
+      },
+      "expected": {
+        "pc": "1004",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [
+          [
+            "012A",
+            8,
+            "00",
+            [
+              "00"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "012A",
+            "00",
+            "00",
+            1,
+            "RMW",
+            true
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "orb-page-nonzero-same-write",
+      "form": "orb-page-imm8",
+      "bytesHex": [
+        "C4",
+        "2A",
+        "E0",
+        "00"
+      ],
+      "length": 4,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1004",
+        "a": "A581",
+        "psw": "ACCB",
+        "reads": [
+          [
+            "012A",
+            8,
+            "80",
+            [
+              "80"
+            ]
+          ]
+        ],
+        "writes": [
+          [
+            "012A",
+            "80",
+            "80",
+            1,
+            "RMW",
+            true
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "orb-a-zero-sets-zf",
+      "form": "orb-a-imm8",
+      "bytesHex": [
+        "E6",
+        "00"
+      ],
+      "length": 2,
+      "entryOverride": {
+        "a": "A500",
+        "psw": "ACCB"
+      },
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A500",
+        "psw": "ECCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "orb-a-clear-zf",
+      "form": "orb-a-imm8",
+      "bytesHex": [
+        "E6",
+        "04"
+      ],
+      "length": 2,
+      "entryOverride": {
+        "a": "A500"
+      },
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A504",
+        "psw": "ACCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "lb-imm-nonzero-dd1",
+      "form": "lb-a-imm8",
+      "bytesHex": [
+        "77",
+        "5A"
+      ],
+      "length": 2,
+      "entryOverride": {
+        "psw": "FCCB"
+      },
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A55A",
+        "psw": "ACCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "stb-different-byte",
+      "form": "stb-a-page",
+      "bytesHex": [
+        "D4",
+        "17"
+      ],
+      "length": 2,
+      "entryOverride": {},
+      "dataOverride": {},
+      "expected": {
+        "pc": "1002",
+        "a": "A581",
+        "psw": "ECCB",
+        "reads": [],
+        "writes": [
+          [
+            "0117",
+            "A6",
+            "81",
+            1,
+            "Store",
+            false
+          ]
+        ],
+        "branchTaken": null,
+        "external": false
+      }
+    },
+    {
+      "id": "direct-j-5596-dd1",
+      "form": "j-address",
+      "bytesHex": [
+        "03",
+        "96",
+        "55"
+      ],
+      "length": 3,
+      "entryOverride": {
+        "psw": "FCCB"
+      },
+      "dataOverride": {},
+      "expected": {
+        "pc": "5596",
+        "a": "A581",
+        "psw": "FCCB",
+        "reads": [],
+        "writes": [],
+        "branchTaken": null,
+        "external": true
+      }
+    }
+  ],
+  "dd_cases": [
+    {
+      "id": "dd1-lb-page",
+      "baseCase": "lb-page-nonzero",
+      "beforePsw": "FCCB",
+      "afterPsw": "ACCB"
+    },
+    {
+      "id": "dd1-rolb-page",
+      "baseCase": "rolb-page-through-carry",
+      "beforePsw": "FCCB",
+      "afterPsw": "7CCB"
+    },
+    {
+      "id": "dd1-lb-r0",
+      "baseCase": "lb-r0-nonzero",
+      "beforePsw": "FCCB",
+      "afterPsw": "ACCB"
+    },
+    {
+      "id": "dd1-cmp-page",
+      "baseCase": "cmp-page-borrow",
+      "beforePsw": "FCCB",
+      "afterPsw": "BCCB"
+    },
+    {
+      "id": "dd1-jlt",
+      "baseCase": "jlt-carry-taken",
+      "beforePsw": "FCCB",
+      "afterPsw": "FCCB"
+    },
+    {
+      "id": "dd1-movb-r1",
+      "baseCase": "movb-r1-high-er0",
+      "beforePsw": "FCCB",
+      "afterPsw": "FCCB"
+    },
+    {
+      "id": "dd1-andb-page-a",
+      "baseCase": "andb-page-a-nonzero",
+      "beforePsw": "FCCB",
+      "afterPsw": "BCCB"
+    },
+    {
+      "id": "dd1-jbs7",
+      "baseCase": "jbs-bit7-taken",
+      "beforePsw": "FCCB",
+      "afterPsw": "FCCB"
+    },
+    {
+      "id": "dd1-jbs5",
+      "baseCase": "jbs-bit5-taken",
+      "beforePsw": "FCCB",
+      "afterPsw": "FCCB"
+    },
+    {
+      "id": "dd1-orb-page",
+      "baseCase": "orb-page-imm-nonzero",
+      "beforePsw": "FCCB",
+      "afterPsw": "BCCB"
+    },
+    {
+      "id": "dd0-lb-imm",
+      "baseCase": "lb-imm-zero-dd1",
+      "beforePsw": "ECCB",
+      "afterPsw": "ECCB"
+    },
+    {
+      "id": "dd1-j-address",
+      "baseCase": "direct-j-55c5",
+      "beforePsw": "FCCB",
+      "afterPsw": "FCCB"
+    }
+  ],
+  "dd_refusals": [
+    {
+      "baseCase": "sllb-a-preserve-zf",
+      "beforePsw": "FCCB",
+      "expect": "ExplicitAdmissionRefusalBeforeRuntimeMutation"
+    },
+    {
+      "baseCase": "andb-a-page-nonzero",
+      "beforePsw": "FCCB",
+      "expect": "ExplicitAdmissionRefusalBeforeRuntimeMutation"
+    },
+    {
+      "baseCase": "orb-a-imm-nonzero",
+      "beforePsw": "FCCB",
+      "expect": "ExplicitAdmissionRefusalBeforeRuntimeMutation"
+    },
+    {
+      "baseCase": "stb-same-value-fresh-write",
+      "beforePsw": "FCCB",
+      "expect": "ExplicitAdmissionRefusalBeforeRuntimeMutation"
+    }
+  ],
+  "total_positive_contexts": 51,
+  "internal_sf_variants": [
+    false,
+    true
+  ],
+  "total_positive_instances": 102,
+  "psw_inputs": 65536,
+  "microprogram_maximum_total_length": 6,
+  "guards_hex": [
+    "A5",
+    "5A"
+  ],
+  "psw_expected_relation": "(input & F000) | (input & 0337) | 0CC8",
+  "representable_low12": 128,
+  "incompatible_low12": 3968,
+  "representable_full_psw": 2048,
+  "incompatible_full_psw": 63488
+}

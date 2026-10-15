@@ -207,6 +207,12 @@ jobs:
           python -B research/p28-word0196/validate_synthetic_adapter_feasibility_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: M2bm research-only Rust adapter capabilities (invented microprobes; no composite execution)
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_synthetic_rust_adapter_contract.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 
