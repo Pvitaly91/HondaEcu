@@ -187,6 +187,14 @@ jobs:
           python -B research/p28-word0196/composite_emission_eligibility_tests.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: M2bj atomic in-memory synthetic composite primary and decode verification
+        shell: pwsh
+        run: |
+          python --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/validate_synthetic_composite_contract.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 

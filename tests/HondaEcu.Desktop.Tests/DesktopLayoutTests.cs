@@ -1,11 +1,14 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Markup;
 using System.Windows.Media;
+using System.Xml.Linq;
 using HondaEcu.Desktop.Controls;
 using HondaEcu.Desktop.ViewModels;
 
@@ -23,8 +26,11 @@ public sealed class DesktopLayoutTests
             try
             {
                 stage = "creating application";
-                var application = new App { ShutdownMode = ShutdownMode.OnExplicitShutdown };
-                application.InitializeComponent();
+                // App.OnStartup launches an interactive window when the first
+                // nested dispatcher frame runs. Use a real WPF Application with
+                // the exact production resources, not the interactive launcher.
+                var application = new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
+                application.Resources = LoadApplicationResources();
                 stage = "creating window";
                 var window = new MainWindow();
                 var viewModel = Assert.IsType<MainViewModel>(window.DataContext);
@@ -105,6 +111,8 @@ public sealed class DesktopLayoutTests
                 RunRpmPreview();
                 viewModel.SelectedRpmCandidate = viewModel.RpmCandidates.Single(candidate => candidate.RawValue == 247);
                 Assert.True(viewModel.HasRpmPlot);
+                Assert.Same(window, Assert.Single(application.Windows.Cast<Window>()));
+                Assert.False(window.IsVisible);
                 foreach (var scale in new[] { 1.0, 1.25, 1.5 })
                 {
                     stage = $"measuring viewport {scale}";
@@ -152,7 +160,16 @@ public sealed class DesktopLayoutTests
                 // does not show a window or substitute for a real GUI smoke test.
                 window.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.ApplicationIdle, new Action(() => { }));
                 stage = "shutting down application";
+                var exited = false;
+                application.Exit += (_, _) => exited = true;
                 application.Shutdown();
+                // This test owns the dispatcher; Application.Run was never
+                // called, so Application.Shutdown does not shut it down for us.
+                window.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.ApplicationIdle, new Action(() => { }));
+                Assert.True(exited);
+                Assert.Empty(application.Windows.Cast<Window>());
+                window.Dispatcher.InvokeShutdown();
+                Assert.True(window.Dispatcher.HasShutdownFinished);
                 stage = "finished";
 
                 void RunRpmPreview()
@@ -197,6 +214,16 @@ public sealed class DesktopLayoutTests
         thread.Start();
         Assert.True(thread.Join(TimeSpan.FromSeconds(30)), $"STA layout measurement did not finish: {stage}.");
         if (failure is not null) ExceptionDispatchInfo.Capture(failure).Throw();
+    }
+
+    private static ResourceDictionary LoadApplicationResources()
+    {
+        var markup = XDocument.Load(Path.Combine(AppContext.BaseDirectory, "test-resources", "app.xaml"));
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var resources = Assert.Single(markup.Root!.Elements(presentation + "Application.Resources"));
+        var dictionary = new XElement(presentation + "ResourceDictionary",
+            new XAttribute(XNamespace.Xmlns + "x", "http://schemas.microsoft.com/winfx/2006/xaml"), resources.Nodes());
+        return Assert.IsType<ResourceDictionary>(XamlReader.Parse(dictionary.ToString()));
     }
 
     private static IEnumerable<T> Descendants<T>(DependencyObject parent) where T : DependencyObject

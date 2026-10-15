@@ -15,5 +15,6 @@
     <Using Include="Xunit" />
     <ProjectReference Include="../../src/HondaEcu.Desktop/HondaEcu.Desktop.csproj" />
     <Content Include="../../definitions/p28/p28-304.experimental.json" Link="test-resources/p28-304.experimental.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../src/HondaEcu.Desktop/App.xaml" Link="test-resources/app.xaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

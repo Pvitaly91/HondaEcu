@@ -159,44 +159,112 @@ public static class P28RpmPlanner
         return new(producer, compact, Freeze(used.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal)));
     }
 
-    private sealed record Atom(int LowerTickDivisor, int UpperTickDivisor, bool Point, bool Resolved,
+    private readonly record struct Atom(int LowerTickDivisor, int UpperTickDivisor, bool Point, bool Resolved,
         byte MinimumCode, byte MaximumCode, IReadOnlyList<string> UsedAssumptions);
 
     private static IReadOnlyList<Atom> BuildNormalAtoms(P28RpmQuery query, CancellationToken cancellationToken)
     {
         var atoms = new List<Atom>((2 * MaximumNormalIdealTicks) - 1);
+        // Invocation-local scratch and immutable assumption labels. The producer
+        // copies the six samples synchronously; neither scratch nor its detailed
+        // result escapes into an atom or a public forward report.
+        var values = new ushort[6];
+        var input = new P28ProducerInput(0, "rpm-conservative-normal-envelope", 0, values, 0, 0, 0,
+            query.Slot.Context, query.Slot.PriorState ? 1 << query.Slot.Pair : 0, true);
+        var permitEr1 = query.PermittedAssumptions.Contains(P28ProducerModel.AddEr1Assumption);
+        var permitEr3 = query.PermittedAssumptions.Contains(AddEr3Assumption);
+        IReadOnlyList<string> noAssumptions = Array.Empty<string>();
+        var er1Assumptions = Freeze(new[] { P28ProducerModel.AddEr1Assumption });
+        var er3Assumptions = Freeze(new[] { AddEr3Assumption });
+        var bothAssumptions = Freeze(new[] { P28ProducerModel.AddEr1Assumption, AddEr3Assumption });
+        Atom? nextPoint = null;
         for (var ticks = MaximumNormalIdealTicks; ticks >= 1; ticks--)
         {
             if ((ticks & 255) == 0) { cancellationToken.ThrowIfCancellationRequested(); }
-            atoms.Add(Build(ticks, ticks, point: true));
-            if (ticks > 1) { atoms.Add(Build(ticks - 1, ticks, point: false)); }
+            var point = nextPoint ?? Build(ticks, ticks, point: true);
+            atoms.Add(point);
+            if (ticks > 1)
+            {
+                nextPoint = Build(ticks - 1, ticks - 1, point: true);
+                atoms.Add(Build(ticks - 1, ticks, point: false, nextPoint, point));
+            }
         }
         return atoms;
 
-        Atom Build(int floor, int ceiling, bool point)
+        Atom Build(int floor, int ceiling, bool point, Atom? lowerPoint = null, Atom? upperPoint = null)
         {
             var minimum = byte.MaxValue;
             byte maximum = 0;
             var resolved = true;
-            var used = new HashSet<string>(StringComparer.Ordinal);
+            byte usedMask = 0;
+            HashSet<string>? otherAssumptions = null;
             // On this positive, non-alternative domain every permutation has equal
             // unit coefficients and no early zero exit. Seven high-count representatives
             // therefore cover the 64 ordered vectors; this is not a phase probability.
             for (var high = 0; high <= (point ? 0 : 6); high++)
             {
-                var values = Enumerable.Range(0, 6).Select(index => (ushort)(index < high ? ceiling : floor)).ToArray();
-                var evaluation = EvaluateSamples(query, values);
-                foreach (var assumption in evaluation.UsedAssumptions) { used.Add(assumption); }
-                if (!evaluation.Producer.Resolved || evaluation.Producer.Disposition != P28ProducerDisposition.NewValue ||
-                    evaluation.Compact is not { Resolved: true, Code: not null } compact)
+                // The two endpoint vectors are exactly six copies of the
+                // adjacent singleton value. Reuse only within this query call;
+                // all seven representatives still contribute to the envelope.
+                if (!point && high is 0 or 6)
+                {
+                    var endpoint = (high == 0 ? lowerPoint : upperPoint)!.Value;
+                    IncludeAssumptions(endpoint.UsedAssumptions, ref usedMask, ref otherAssumptions);
+                    if (!endpoint.Resolved) { resolved = false; continue; }
+                    minimum = Math.Min(minimum, endpoint.MinimumCode);
+                    maximum = Math.Max(maximum, endpoint.MaximumCode);
+                    continue;
+                }
+                for (var index = 0; index < values.Length; index++)
+                {
+                    values[index] = (ushort)(index < high ? ceiling : floor);
+                }
+                var producer = P28ProducerModel.Evaluate(input, permitEr1);
+                IncludeAssumptions(producer.UsedAssumptions, ref usedMask, ref otherAssumptions);
+                P28CompactResult? compact = null;
+                if (producer.Resolved)
+                {
+                    compact = P28CompactModel.Evaluate(producer.T, producer.S);
+                    if (!compact.Value.Resolved && permitEr3)
+                    {
+                        var hypothesis = P28CompactModel.EvaluateHypothesis(producer.T, producer.S);
+                        compact = new(hypothesis.Code, hypothesis.ExtraBit, hypothesis.Branch, true);
+                        usedMask |= 2;
+                    }
+                }
+                if (!producer.Resolved || producer.Disposition != P28ProducerDisposition.NewValue ||
+                    compact is not { Resolved: true, Code: not null } resolvedCompact)
                 {
                     resolved = false;
                     continue;
                 }
-                minimum = Math.Min(minimum, compact.Code.Value);
-                maximum = Math.Max(maximum, compact.Code.Value);
+                minimum = Math.Min(minimum, resolvedCompact.Code.Value);
+                maximum = Math.Max(maximum, resolvedCompact.Code.Value);
             }
-            return new(ceiling, floor, point, resolved, minimum, maximum, Freeze(used.Order(StringComparer.Ordinal)));
+            var used = usedMask switch
+            {
+                0 => noAssumptions,
+                1 => er1Assumptions,
+                2 => er3Assumptions,
+                _ => bothAssumptions,
+            };
+            // Preserve any future additional model label rather than silently
+            // dropping it. Current G/F models use only the two reviewed labels.
+            if (otherAssumptions is not null)
+            {
+                used = Freeze(used.Concat(otherAssumptions).Order(StringComparer.Ordinal));
+            }
+            return new(ceiling, floor, point, resolved, minimum, maximum, used);
+        }
+    }
+
+    private static void IncludeAssumptions(IReadOnlyList<string> assumptions, ref byte mask, ref HashSet<string>? other)
+    {
+        foreach (var assumption in assumptions)
+        {
+            if (assumption == P28ProducerModel.AddEr1Assumption) { mask |= 1; }
+            else if (assumption == AddEr3Assumption) { mask |= 2; }
+            else { (other ??= new(StringComparer.Ordinal)).Add(assumption); }
         }
     }
 

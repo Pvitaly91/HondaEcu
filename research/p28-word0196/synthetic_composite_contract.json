@@ -1,0 +1,1299 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2bj",
+  "exactBase": "7585bfc164929c19fa044664c4d8173244a426fa",
+  "upstreamBindings": [
+    {
+      "file": "research/p28-word0196/continuation_transfer_analysis.py",
+      "bytes": 78628,
+      "sha256": "86eb302ae13138aef5a64b192e5d4b63982afa1e4bb3e9c4b3d71b9f927c355c"
+    },
+    {
+      "file": "research/p28-word0196/continuation_transfer_oracle.py",
+      "bytes": 12784,
+      "sha256": "5c250c75ee7d950e766cf747381efc125545b192a5c7d7b0e8b01a1c6b3909fb"
+    },
+    {
+      "file": "research/p28-word0196/continuation_transfer_tests.py",
+      "bytes": 19256,
+      "sha256": "e47b4e34bf2ee42e5e5f7c118becb9dffb71864e1a57030a9aedd2fbb83b833d"
+    },
+    {
+      "file": "research/p28-word0196/direct_j_contract.json",
+      "bytes": 23868,
+      "sha256": "1be70eb96f4c75c8f42729f2b41aacc2f43b4923c3db0aacccd1b5bc2a2a8c35"
+    },
+    {
+      "file": "research/p28-word0196/direct_j_decoder.py",
+      "bytes": 2006,
+      "sha256": "32738de208889d288856feda6f030c78b08d5cf3cf7ca0154120b32fc788c3a4"
+    },
+    {
+      "file": "research/p28-word0196/direct_j_encoder.py",
+      "bytes": 1926,
+      "sha256": "1149ba3fcc142fa1fb78677ddd14b8c4bbab1ee333ef926aaffe22839d7f6f60"
+    },
+    {
+      "file": "research/p28-word0196/direct_j_primary_oracle.py",
+      "bytes": 4051,
+      "sha256": "91793837663e8d0341ce0d4e224fc97e256c549409807ea9b43e8d9266f55f39"
+    },
+    {
+      "file": "research/p28-word0196/direct_j_tests.py",
+      "bytes": 18346,
+      "sha256": "c5a3cbb6f10b9cafaf342a0ed5b5bd86921f58fcfa9af1f469f1b741f6cc8d7c"
+    },
+    {
+      "file": "research/p28-word0196/direct_j_types.py",
+      "bytes": 3021,
+      "sha256": "f11877a07340b88a7c222acec250767524778955a96235a6dd147207fa99467b"
+    },
+    {
+      "file": "research/p28-word0196/external_continuation_contract.json",
+      "bytes": 58097,
+      "sha256": "bce975c6427e0ab9294af8227933f0b2553efa13a47b89383f53fc4ac6138660"
+    },
+    {
+      "file": "research/p28-word0196/independent_decode_encode_contract.json",
+      "bytes": 17800,
+      "sha256": "547a09d9cd60dc6e2543870a5a5d0ee228e1051c28748fc53a526208355f5f2d"
+    },
+    {
+      "file": "research/p28-word0196/independent_decoder_primary_oracle.py",
+      "bytes": 12745,
+      "sha256": "9154ceac6709d8ad93fa71ab77f5b1e5c601dbaa812d60d4e3681b08f4b8e1df"
+    },
+    {
+      "file": "research/p28-word0196/independent_decoder_tests.py",
+      "bytes": 19933,
+      "sha256": "cdc5d43ee866dba4fb619fc6169e2ec5e869d4050f98137bb67e62ca0a2bdb64"
+    },
+    {
+      "file": "research/p28-word0196/independent_decoder.py",
+      "bytes": 11036,
+      "sha256": "e91c862d07d102c67ffa471603744c87eaee6d940fd27305e524afc91b946404"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder_contract.json",
+      "bytes": 12182,
+      "sha256": "414e5326cec42538ea6b64aa12a810c9d548c8b755b61a4f5c285b60c1837d47"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder_design.json",
+      "bytes": 21765,
+      "sha256": "9403279ed7570f1cb36280954a0f3249d41de2d64ae767b840649b066c625be9"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder_oracle.py",
+      "bytes": 7092,
+      "sha256": "6575f802c0703da087f1f06fdff095dcf4c4b948b7fe59e8fb35972210cb6361"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder_tests.py",
+      "bytes": 18429,
+      "sha256": "76ca001260dbf07b0c5ad99f72e156732b940756af2c177e2b97311acba3b62c"
+    },
+    {
+      "file": "research/p28-word0196/independent_encoder.py",
+      "bytes": 9868,
+      "sha256": "603092893afbdb3d69cbcd43585ff6fc9886c45919920f432ec4b2905d830879"
+    },
+    {
+      "file": "research/p28-word0196/layout_feasibility_analysis.py",
+      "bytes": 40569,
+      "sha256": "840320c5eed83d2a393dd3d1f4c8b90cb0aa7608c5c2ba721384265e79d151db"
+    },
+    {
+      "file": "research/p28-word0196/layout_feasibility_contract.json",
+      "bytes": 66622,
+      "sha256": "9d1baf1e4914fa1b611924ff48b75854e9fc7d2e06e6e05542c56c14e18abb2f"
+    },
+    {
+      "file": "research/p28-word0196/layout_feasibility_oracle.py",
+      "bytes": 10843,
+      "sha256": "be17e854a1b474b3800b09d74219ba097fc48bd2a2a53db93752169c3da06394"
+    },
+    {
+      "file": "research/p28-word0196/layout_feasibility_tests.py",
+      "bytes": 26061,
+      "sha256": "55377f7bd6c6c0ad1b5c29e7cc66eeb32aa63a3db8d1b849318c98326d74cd5e"
+    },
+    {
+      "file": "research/p28-word0196/target_abi_contract.json",
+      "bytes": 40753,
+      "sha256": "1e8b20872693c0a7dcfbcfc867b85c55c3a759eef616651d6760c08b9dd5af66"
+    },
+    {
+      "file": "research/p28-word0196/transfer_form_evidence.json",
+      "bytes": 37225,
+      "sha256": "f4279b5c86cc78be18f641e0638ea58892329f0b8903db28a8b6b77d69d34194"
+    },
+    {
+      "file": "research/p28-word0196/typed_lowering_analysis.py",
+      "bytes": 31589,
+      "sha256": "bd0ad1ee186cb76922926a957c21bacafc601e77200ff3bdcdc09fd866143bc5"
+    },
+    {
+      "file": "research/p28-word0196/typed_lowering_contract.json",
+      "bytes": 44984,
+      "sha256": "6f62c23e99f72e7df51a0117b7c5ff600d892f2a8d3e4c4231a383e1d96c6bf4"
+    },
+    {
+      "file": "research/p28-word0196/typed_lowering_oracle.py",
+      "bytes": 12601,
+      "sha256": "2e7b613813e81cf54ea6ee17c378344800022454f8d0074af15ecec586a77e4a"
+    },
+    {
+      "file": "research/p28-word0196/typed_lowering_tests.py",
+      "bytes": 29917,
+      "sha256": "1e46516c85b1d0b0593b67e59943b7b2d459725a073f29f23d385f59f73d7c6a"
+    },
+    {
+      "file": "research/p28-word0196/validate_direct_j_contract.py",
+      "bytes": 37218,
+      "sha256": "207b658479da79f911e317df8a71402370e7336f3ddcaa7f65a28de6efad8e85"
+    },
+    {
+      "file": "research/p28-word0196/validate_external_continuation_contract.py",
+      "bytes": 76985,
+      "sha256": "6dfd2a85c6fa5187e4bb2649d8b96db2b61ffe584f0b9b7b4124fc058550da7e"
+    },
+    {
+      "file": "research/p28-word0196/validate_layout_feasibility_contract.py",
+      "bytes": 48319,
+      "sha256": "e6656112d6272adeac3f382ee672a4ddd3b01fe645dcab356444b0cefd6d51ea"
+    },
+    {
+      "file": "research/p28-word0196/word0196_equivalent.c",
+      "bytes": 8507,
+      "sha256": "4b189d4ed3e97e0d197f6c558755cf056a89c1dc7122653c5c557e7ab62d76d3"
+    },
+    {
+      "file": "research/p28-word0196/word0196_equivalent.h",
+      "bytes": 2390,
+      "sha256": "df8da1511708fb29cb747981a959544e549a67a9a982e15586b5c12ce8826f0e"
+    },
+    {
+      "file": "research/p28-word0196/word0196_ir.json",
+      "bytes": 32188,
+      "sha256": "4fdbd6b7dbdd8f48d5a43e123ca93a33a003c22556a0c40b5296d5f409e085c4"
+    },
+    {
+      "file": "src/HondaEcu.Core/P28Word0196AlternateModel.cs",
+      "bytes": 3464,
+      "sha256": "ac3162dfc6255e25ac24d7430531243f7856090ce55bab8b46e20d07f06fd74f"
+    },
+    {
+      "file": "research/p28-word0196/static_composition_contract.json",
+      "bytes": 106872,
+      "sha256": "3c3b0448e0bc2c232663fd9607b9d576a074238c7c823de50eafd6dcc2da2eb3"
+    },
+    {
+      "file": "research/p28-word0196/static_composition_analysis.py",
+      "bytes": 130811,
+      "sha256": "338f08abc06e27dffb2e64246cadcd8119727a05e448a5099cf9f539f3181547"
+    },
+    {
+      "file": "research/p28-word0196/static_composition_oracle.py",
+      "bytes": 22613,
+      "sha256": "bde29d3150c9f9d6918435f08fc1edf051869f523c7c0e4dc6f0b52f24244462"
+    },
+    {
+      "file": "research/p28-word0196/static_composition_tests.py",
+      "bytes": 28389,
+      "sha256": "3cbddb0b82b4a851317a8fdc9c51a8e96bffc526fcfde846181e863d5c9391ce"
+    },
+    {
+      "file": "research/p28-word0196/validate_static_composition_contract.py",
+      "bytes": 121642,
+      "sha256": "f04d149e15658aca6c9d2fcdd633916703fb412f9a1995dc2adf0f22366cd915"
+    },
+    {
+      "file": "research/p28-word0196/composite_emission_eligibility_contract.json",
+      "bytes": 83058,
+      "sha256": "bf274d3c2dc33b02b333bb9af335b22b30e0ddb81102715af3d6c11e621afece"
+    },
+    {
+      "file": "research/p28-word0196/composite_emission_eligibility_analysis.py",
+      "bytes": 76150,
+      "sha256": "67f0a444a8e6c79ad71b648610ff7e34fce985190aa56511676dfafee649d713"
+    },
+    {
+      "file": "research/p28-word0196/composite_emission_eligibility_oracle.py",
+      "bytes": 28776,
+      "sha256": "6e6dfda1f1ebfc3b7f4ccf181dd7e17437454a7d481a354616ee40c5ec073857"
+    },
+    {
+      "file": "research/p28-word0196/composite_emission_eligibility_tests.py",
+      "bytes": 36105,
+      "sha256": "a348a4560954dabc1fe1455b6d47180211f47c88f73538bcc7e2bd74865fd67e"
+    },
+    {
+      "file": "research/p28-word0196/validate_composite_emission_eligibility_contract.py",
+      "bytes": 33484,
+      "sha256": "70531ba86e395aefd9aee71b5a2e2e2f2f11cc225db84095d477816773da2e17"
+    }
+  ],
+  "primaryEvidence": {
+    "manualSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+    "oracleSha256": "b3aecd90e3ef159b9aeec04ec6a46324a245bdcfb23a5ef80ad8d3d11b921c47",
+    "referenceSha256": "91ffb46922def91764f5d4da166ef2cfc9834ed0effcc051d3f97246fa147ab1",
+    "sealedFixtureSha256": "2d042717180777b7a3e43d72d27b5af127539c0f09c67aeed72c94a62dc08311",
+    "expectedDerivedBeforeEmitterImplementation": true,
+    "independence": "PrimaryManualAndPriorSealedFacts_NoOperationalCodecs",
+    "fullStreamSerialized": false
+  },
+  "safety": {
+    "scope": "word0196SoftwareAlternate18PlusTwoDirectJ",
+    "requestKeys": [
+      "exactBase",
+      "scope",
+      "syntheticBase",
+      "gap",
+      "initialDD"
+    ],
+    "syntheticBase": 4096,
+    "gap": 0,
+    "scalarDD": [
+      0,
+      1
+    ],
+    "length": 51,
+    "nodes": 20,
+    "routeA": 18,
+    "routeB": 2,
+    "internalTargets": [
+      [
+        21885,
+        4138
+      ],
+      [
+        21893,
+        4131
+      ],
+      [
+        21896,
+        4131
+      ]
+    ],
+    "externalTargets": [
+      [
+        "DirectJ_NotBelow",
+        21910
+      ],
+      [
+        "DirectJ_Below",
+        21957
+      ]
+    ],
+    "edges": 23,
+    "edgeCounts": [
+      18,
+      3,
+      2
+    ],
+    "paths": [
+      11,
+      13,
+      14,
+      16
+    ],
+    "originalPaths": [
+      10,
+      12,
+      13,
+      15
+    ],
+    "orderedWrites": [
+      3,
+      3,
+      3,
+      5
+    ],
+    "classification": "SyntheticCompositeMachineCodeOnly",
+    "output": "ImmutableInMemoryOnly_NoRaw51ByteLoggingOrPersistence",
+    "atomicity": "AllChecksBeforeSinglePublication_NoPartialErrorPayload",
+    "decoder": "Exact20BoundarySlices_CoverAll51Octets_PrimaryProofSeparate",
+    "effectProof": "StaticObligationsOnly_NotExecutedRAMJournal"
+  },
+  "stages": [
+    "Identity",
+    "Request",
+    "Preflight",
+    "Plan",
+    "TypedRequests",
+    "Encoding",
+    "Primary",
+    "Assembly",
+    "Decoding",
+    "Structure",
+    "FinalLength",
+    "FinalMetadata",
+    "Publication"
+  ],
+  "errorCodes": [
+    "SourceIdentity",
+    "RequestShape",
+    "EligibilityRejected",
+    "InventoryMismatch",
+    "NodeOrderMismatch",
+    "TypedOperandMismatch",
+    "CodecRouteMismatch",
+    "CodecError",
+    "EncodedLengthMismatch",
+    "CompositeLengthMismatch",
+    "InstructionBoundaryMismatch",
+    "PrimaryByteMismatch",
+    "IndependentDecodeError",
+    "DecodedFormMismatch",
+    "DecodedOperandMismatch",
+    "DecodedTargetMismatch",
+    "DDContextMismatch",
+    "BranchTargetMismatch",
+    "CFGInvariantViolation",
+    "ContextObligationMismatch",
+    "OrderedEffectMismatch",
+    "AtomicityViolation",
+    "UnexpectedOutput",
+    "PermissionViolation",
+    "InternalInvariant"
+  ],
+  "nodeInventory": [
+    {
+      "nodeId": 21871,
+      "form": "lb-a-page",
+      "origin": 4096,
+      "length": 2,
+      "target": null,
+      "primaryPdfPage": 124,
+      "expectedInstructionSha256": "2fb9a3be06b9d0e01aac6401f4251a1481ec4db6798213d07e1abf5dd3050cd7"
+    },
+    {
+      "nodeId": 21873,
+      "form": "sllb-a",
+      "origin": 4098,
+      "length": 1,
+      "target": null,
+      "primaryPdfPage": 197,
+      "expectedInstructionSha256": "8de0b3c47f112c59745f717a626932264c422a7563954872e237b223af4ad643"
+    },
+    {
+      "nodeId": 21874,
+      "form": "rolb-page",
+      "origin": 4099,
+      "length": 3,
+      "target": null,
+      "primaryPdfPage": 173,
+      "expectedInstructionSha256": "88734ad0662f15e5568f8f3ac3bd14c726206e545d0f447c68b504b041af4f39"
+    },
+    {
+      "nodeId": 21877,
+      "form": "lb-a-r0",
+      "origin": 4102,
+      "length": 1,
+      "target": null,
+      "primaryPdfPage": 124,
+      "expectedInstructionSha256": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881"
+    },
+    {
+      "nodeId": 21878,
+      "form": "andb-a-page",
+      "origin": 4103,
+      "length": 2,
+      "target": null,
+      "primaryPdfPage": 76,
+      "expectedInstructionSha256": "db2777df864b8283b61e828bc467292164d1a22a50da25827bc0259a5aecd0c6"
+    },
+    {
+      "nodeId": 21880,
+      "form": "cmp-page-imm16",
+      "origin": 4105,
+      "length": 5,
+      "target": null,
+      "primaryPdfPage": 90,
+      "expectedInstructionSha256": "9b911663ac63eeef361e5f7b4b57a0ab8725ea6e3b7573a09e4895c34d2b39ed"
+    },
+    {
+      "nodeId": 21885,
+      "form": "jlt-rel8",
+      "origin": 4110,
+      "length": 2,
+      "target": 4138,
+      "primaryPdfPage": 120,
+      "expectedInstructionSha256": "ca4bcba45756119b3d41ce5cbed19f01c125ed11a1bd1f91374c59cb317c7518"
+    },
+    {
+      "nodeId": 21887,
+      "form": "movb-r1-page",
+      "origin": 4112,
+      "length": 3,
+      "target": null,
+      "primaryPdfPage": 153,
+      "expectedInstructionSha256": "96dede2adfc95bb51a399074166f22503b59049e01283127e24cab6f9c5c0c0d"
+    },
+    {
+      "nodeId": 21890,
+      "form": "andb-page-a",
+      "origin": 4115,
+      "length": 3,
+      "target": null,
+      "primaryPdfPage": 77,
+      "expectedInstructionSha256": "bb541fc9c86cab303162d3b4d9632d98fc021849a07e12f56bad0cdc64b1f7eb"
+    },
+    {
+      "nodeId": 21893,
+      "form": "jbs-page-bit7",
+      "origin": 4118,
+      "length": 3,
+      "target": 4131,
+      "primaryPdfPage": 119,
+      "expectedInstructionSha256": "aaf508303faf9bba7564735e2c52ddd38a0d570d44edd69b19a92a20c46aff8f"
+    },
+    {
+      "nodeId": 21896,
+      "form": "jbs-page-bit5",
+      "origin": 4121,
+      "length": 3,
+      "target": 4131,
+      "primaryPdfPage": 119,
+      "expectedInstructionSha256": "a6cb3b0ffbb3440b2c05da3d0349fef7d2a0ff2b224ff042ed28b18af6a948e1"
+    },
+    {
+      "nodeId": 21899,
+      "form": "andb-page-a",
+      "origin": 4124,
+      "length": 3,
+      "target": null,
+      "primaryPdfPage": 77,
+      "expectedInstructionSha256": "30a88f3babcfda6cfad45d39adc89c6e6f42d408abd35fb4478d212593bd0097"
+    },
+    {
+      "nodeId": 21902,
+      "form": "orb-page-imm8",
+      "origin": 4127,
+      "length": 4,
+      "target": null,
+      "primaryPdfPage": 163,
+      "expectedInstructionSha256": "a0ef9f5e269c9f049b4b54f314586ccd56ab7ea81610625d09c9343fd5e746fa"
+    },
+    {
+      "nodeId": 21906,
+      "form": "lb-a-page",
+      "origin": 4131,
+      "length": 2,
+      "target": null,
+      "primaryPdfPage": 124,
+      "expectedInstructionSha256": "a52bee651e655b990fa349aff6267df2084aec1e0715648b40da61b919581d17"
+    },
+    {
+      "nodeId": 21908,
+      "form": "orb-a-imm8",
+      "origin": 4133,
+      "length": 2,
+      "target": null,
+      "primaryPdfPage": 160,
+      "expectedInstructionSha256": "386bd458957227791abd70eb54451da35a62ca8e9940fc13fe8777f06249c068"
+    },
+    {
+      "nodeId": "DirectJ_NotBelow",
+      "form": "j-address",
+      "origin": 4135,
+      "length": 3,
+      "target": 21910,
+      "primaryPdfPage": 116,
+      "expectedInstructionSha256": "a594fe8170ccac59b560378a40fe4215e30073dbfb15f9793a3accfc98d89e90"
+    },
+    {
+      "nodeId": 21951,
+      "form": "lb-a-imm8",
+      "origin": 4138,
+      "length": 2,
+      "target": null,
+      "primaryPdfPage": 124,
+      "expectedInstructionSha256": "b5ad6776ee23e9215a80d05ddc42e734b5ac95cc5a62d2db68f751551a9dcbf6"
+    },
+    {
+      "nodeId": 21953,
+      "form": "stb-a-page",
+      "origin": 4140,
+      "length": 2,
+      "target": null,
+      "primaryPdfPage": 208,
+      "expectedInstructionSha256": "fd0561fb3ba1c558e0e77886b270e165e94ede50decb4dfee3355eaba87df585"
+    },
+    {
+      "nodeId": 21955,
+      "form": "stb-a-page",
+      "origin": 4142,
+      "length": 2,
+      "target": null,
+      "primaryPdfPage": 208,
+      "expectedInstructionSha256": "671ff37eb2ba0eae5b163d992e420efe1af78d9b71affe532306ee2e2281429c"
+    },
+    {
+      "nodeId": "DirectJ_Below",
+      "form": "j-address",
+      "origin": 4144,
+      "length": 3,
+      "target": 21957,
+      "primaryPdfPage": 116,
+      "expectedInstructionSha256": "ee5c1a331fb33f49d44f6645c4d0081d2ee28ed2cb0de3734f4fefb7469fb758"
+    }
+  ],
+  "sourceBindings": [
+    {
+      "file": "synthetic_composite_emitter.py",
+      "bytes": 29531,
+      "sha256": "499b250bfe0fd1267fc448eda4375661f81499ca806a8c52ac139c132cda09fc"
+    },
+    {
+      "file": "synthetic_composite_primary_oracle.py",
+      "bytes": 5802,
+      "sha256": "b3aecd90e3ef159b9aeec04ec6a46324a245bdcfb23a5ef80ad8d3d11b921c47"
+    },
+    {
+      "file": "synthetic_composite_tests.py",
+      "bytes": 24099,
+      "sha256": "ceb2ce45da04ea4c1b4c15bf8d290db41f5d0feec7db438d202609e5f71182a1"
+    }
+  ],
+  "contextAndEffects": {
+    "classification": "ExactStaticInheritedObligations_NotRuntimeEquivalence",
+    "context": {
+      "classification": "StaticObligationRetentionOnly_NotRuntimeAssemblyEquivalence",
+      "initialDD": [
+        0,
+        1
+      ],
+      "DD0AfterLogical556F": true,
+      "carryDependencies": [
+        {
+          "producerLogicalSiteId": 21873,
+          "consumerLogicalSiteId": 21874
+        },
+        {
+          "producerLogicalSiteId": 21880,
+          "consumerLogicalSiteId": 21885
+        }
+      ],
+      "preserved": [
+        "HC",
+        "OtherPSW",
+        "AH",
+        "SCB",
+        "LRB",
+        "X1",
+        "X2",
+        "DP",
+        "USP",
+        "SSP",
+        "localr0",
+        "localr2..r7",
+        "DATA0124",
+        "DATA0128",
+        "DATA0196",
+        "DATA0197",
+        "SFUninterpreted"
+      ],
+      "terminalDD": 0,
+      "terminalZF": 0,
+      "terminalCF": {
+        "NotBelow": 0,
+        "Below": 1
+      },
+      "requiredLRB": 33,
+      "currentPage": 256,
+      "localBank": [
+        264,
+        271
+      ],
+      "word0196": {
+        "address": 406,
+        "highByteAddress": 407,
+        "widthBits": 16,
+        "byteOrder": "LittleEndian",
+        "evenAddressed": true,
+        "codeOwnedImmediate": 192,
+        "hostRebasingAllowed": false
+      },
+      "potentialWordAliases": [
+        [
+          278,
+          279
+        ],
+        [
+          292,
+          293
+        ],
+        [
+          296,
+          297
+        ],
+        [
+          298,
+          299
+        ],
+        [
+          398,
+          399
+        ],
+        [
+          406,
+          407
+        ]
+      ],
+      "unknownStackAliases": "PossibleRegistersRAMSFR_NotGloballyExcluded",
+      "nativeStackSafety": "NotEstablished",
+      "nativeSFMeaningStorage": "PrimaryConflictUnresolved",
+      "sameValueWrites": "RetainFreshOrdinal",
+      "orderedWriteCounts": [
+        3,
+        3,
+        3,
+        5
+      ],
+      "firstGateTrueMustNotRead": 292,
+      "historicalPath13NativeWitnesses": 0,
+      "adaptersProloguesFlagWritersAllowed": false
+    },
+    "provenance": {
+      "data0196": "Native05EBWriterGeneration;Historical54FAAnd5578ReadSameGeneration",
+      "data0117": "RetainedOnceInitialThenNativeWriteHistory",
+      "data018e": "InitialScratchThenNative5572History",
+      "data018f": "InitialScratchThenBranchSpecificNativeWriteHistory",
+      "data012a": "RetainedNeighborBits;Bit0WriteOnly558E",
+      "data0124": "UpstreamNativeOwnership",
+      "data0128bit2": "OnceInitialMaskedHistory;NoScopedAccess",
+      "transition05ed54f5": "ExplicitHarnessSchedule",
+      "nativeOwnerAcceptedFromHost": false,
+      "secondMachineHandoff": false,
+      "reseedAt556f": false,
+      "syntheticSSPFrame": false,
+      "extraEventSource": false,
+      "physicalMeaning": "Unknown",
+      "currentWord0196PhysicalRole": "Unknown",
+      "historicalCompletedObservations": 42,
+      "historicalSnapshots": 552,
+      "historicalOrderedWrites": 170,
+      "historicalNativePath13Witnesses": 0
+    },
+    "nativeBoundary": {
+      "entry": "NativeBasicBlockEntry",
+      "nativeCFunctionEntry": "NotEstablished",
+      "calFrameAt556f": "NotEstablished",
+      "ordinaryReturnAllowed": false,
+      "stopBoundariesAreRT": false,
+      "preserved": [
+        "AH",
+        "HC",
+        "OtherPSW",
+        "SCB",
+        "LRB",
+        "X1",
+        "X2",
+        "DP",
+        "USP",
+        "SSP",
+        "SFHostReplay",
+        "localr0",
+        "localr2..r7",
+        "DATA0124",
+        "DATA0128",
+        "DATA0196",
+        "DATA0197",
+        "UnrepresentedNativeStateRequiresFutureProof"
+      ],
+      "exitOutputs": [
+        "A_AL_AH",
+        "PSW",
+        "LRB",
+        "SCB",
+        "PointingRegisterBanks",
+        "SSP",
+        "RelevantRAM",
+        "OrderedWrites",
+        "BranchSelectedContinuation"
+      ],
+      "adapter": "NotImplemented",
+      "prologueEpilogueAllowed": false,
+      "pushPopAllowed": false,
+      "sf": "PrimaryConflictUnresolved;NoNativeBooleanInterpretation",
+      "stackSafety": "NotEstablished",
+      "codePlacement": "NotEstablished",
+      "widerContinuationLiveness": "NotEstablished"
+    },
+    "continuations": [
+      {
+        "id": "NotBelow",
+        "originalTargetPC": 21910,
+        "identityClassification": "OriginalHistoricalContinuationPC_NotWritableROMPlacement",
+        "lastLogicalSiteId": 21908,
+        "pathIds": [
+          "B",
+          "C",
+          "D"
+        ],
+        "requiredFinalState": {
+          "AL": {
+            "kind": "FinalMemoryOrImmediate",
+            "address": 399,
+            "immediate": 240
+          },
+          "AH": "IncomingAH",
+          "CF": 0,
+          "ZF": 0,
+          "DD": 0,
+          "HC": "IncomingHC",
+          "OtherPSW": "IncomingOtherPSW",
+          "LRB": 33,
+          "SCB": "IncomingPSWLowThreeBits",
+          "SSP": "IncomingSSP",
+          "pointingRegisters": "RetainAllSelectedAndUnselectedBanks",
+          "SF": "NoNewWriter_SFMeaningStorageNotEstablished"
+        },
+        "requiredPathEffects": [
+          {
+            "pathId": "B",
+            "originalInstructionCount": 12,
+            "historicalCoverage": "HistoricalNativeValidated",
+            "orderedReads": [
+              {
+                "pc": 21871,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21874,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21877,
+                "address": 264,
+                "widthBits": 8,
+                "mode": "LocalRegister",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21878,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21880,
+                "address": 406,
+                "widthBits": 16,
+                "mode": "CurrentPage",
+                "byteOrder": "LittleEndian"
+              },
+              {
+                "pc": 21887,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21890,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21893,
+                "address": 298,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21906,
+                "address": 399,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              }
+            ],
+            "orderedWrites": [
+              {
+                "pc": 21874,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "ReadModifyWriteRotateThroughCarry",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21887,
+                "address": 265,
+                "widthBits": 8,
+                "mode": "LocalRegister",
+                "byteOrder": "Byte",
+                "operation": "CopyByte",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21890,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "ReadModifyWriteAnd",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              }
+            ],
+            "mustNotRead": [
+              292
+            ]
+          },
+          {
+            "pathId": "C",
+            "originalInstructionCount": 13,
+            "historicalCoverage": "StaticPrimaryAndInventedCoverage",
+            "orderedReads": [
+              {
+                "pc": 21871,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21874,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21877,
+                "address": 264,
+                "widthBits": 8,
+                "mode": "LocalRegister",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21878,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21880,
+                "address": 406,
+                "widthBits": 16,
+                "mode": "CurrentPage",
+                "byteOrder": "LittleEndian"
+              },
+              {
+                "pc": 21887,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21890,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21893,
+                "address": 298,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21896,
+                "address": 292,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21906,
+                "address": 399,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              }
+            ],
+            "orderedWrites": [
+              {
+                "pc": 21874,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "ReadModifyWriteRotateThroughCarry",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21887,
+                "address": 265,
+                "widthBits": 8,
+                "mode": "LocalRegister",
+                "byteOrder": "Byte",
+                "operation": "CopyByte",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21890,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "ReadModifyWriteAnd",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              }
+            ],
+            "mustNotRead": []
+          },
+          {
+            "pathId": "D",
+            "originalInstructionCount": 15,
+            "historicalCoverage": "HistoricalNativeValidated",
+            "orderedReads": [
+              {
+                "pc": 21871,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21874,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21877,
+                "address": 264,
+                "widthBits": 8,
+                "mode": "LocalRegister",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21878,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21880,
+                "address": 406,
+                "widthBits": 16,
+                "mode": "CurrentPage",
+                "byteOrder": "LittleEndian"
+              },
+              {
+                "pc": 21887,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21890,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21893,
+                "address": 298,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21896,
+                "address": 292,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21899,
+                "address": 399,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21902,
+                "address": 298,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21906,
+                "address": 399,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              }
+            ],
+            "orderedWrites": [
+              {
+                "pc": 21874,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "ReadModifyWriteRotateThroughCarry",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21887,
+                "address": 265,
+                "widthBits": 8,
+                "mode": "LocalRegister",
+                "byteOrder": "Byte",
+                "operation": "CopyByte",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21890,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "ReadModifyWriteAnd",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21899,
+                "address": 399,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "ReadModifyWriteAnd",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21902,
+                "address": 298,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "ReadModifyWriteOr",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              }
+            ],
+            "mustNotRead": []
+          }
+        ],
+        "stopMarker": "AnalyticalSTOPBefore_NotRT_NotExecutedOpcode",
+        "nativeExitIsolation": "NotEstablished",
+        "actualDownstreamRejoin": "NotEstablished"
+      },
+      {
+        "id": "Below",
+        "originalTargetPC": 21957,
+        "identityClassification": "OriginalHistoricalContinuationPC_NotWritableROMPlacement",
+        "lastLogicalSiteId": 21955,
+        "pathIds": [
+          "A"
+        ],
+        "requiredFinalState": {
+          "AL": {
+            "kind": "ConstantByte",
+            "value": 15
+          },
+          "AH": "IncomingAH",
+          "CF": 1,
+          "ZF": 0,
+          "DD": 0,
+          "HC": "IncomingHC",
+          "OtherPSW": "IncomingOtherPSW",
+          "LRB": 33,
+          "SCB": "IncomingPSWLowThreeBits",
+          "SSP": "IncomingSSP",
+          "pointingRegisters": "RetainAllSelectedAndUnselectedBanks",
+          "SF": "NoNewWriter_SFMeaningStorageNotEstablished"
+        },
+        "requiredPathEffects": [
+          {
+            "pathId": "A",
+            "originalInstructionCount": 10,
+            "historicalCoverage": "HistoricalNativeValidated",
+            "orderedReads": [
+              {
+                "pc": 21871,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21874,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21877,
+                "address": 264,
+                "widthBits": 8,
+                "mode": "LocalRegister",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21878,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte"
+              },
+              {
+                "pc": 21880,
+                "address": 406,
+                "widthBits": 16,
+                "mode": "CurrentPage",
+                "byteOrder": "LittleEndian"
+              }
+            ],
+            "orderedWrites": [
+              {
+                "pc": 21874,
+                "address": 398,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "ReadModifyWriteRotateThroughCarry",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21953,
+                "address": 279,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "StoreByte",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              },
+              {
+                "pc": 21955,
+                "address": 399,
+                "widthBits": 8,
+                "mode": "CurrentPage",
+                "byteOrder": "Byte",
+                "operation": "StoreByte",
+                "ordered": true,
+                "sameValueWrite": "RetainFreshOrdinal"
+              }
+            ],
+            "mustNotRead": []
+          }
+        ],
+        "stopMarker": "AnalyticalSTOPBefore_NotRT_NotExecutedOpcode",
+        "nativeExitIsolation": "NotEstablished",
+        "actualDownstreamRejoin": "NotEstablished"
+      }
+    ],
+    "sourceContractSha256": "3c3b0448e0bc2c232663fd9607b9d576a074238c7c823de50eafd6dcc2da2eb3"
+  },
+  "runtimeExclusions": {
+    "ActualTargetExecution": "NotObserved",
+    "NativeExitIsolation": "NotEstablished",
+    "ActualDownstreamRejoin": "NotEstablished",
+    "PhysicalROMPlacement": "NotEstablished",
+    "TargetProgramEquivalence": "NotEstablished",
+    "FirmwareIntegration": "NotEstablished",
+    "FirmwareReady": false,
+    "actualROMExecutions": 0,
+    "CPUExecutions": 0,
+    "targetAssemblyFiles": 0,
+    "targetObjects": 0,
+    "targetHEX": 0,
+    "FirmwareBIN": 0,
+    "GUIHardwareFullBoot": "NotRun",
+    "inquiries": "NotSent"
+  },
+  "historicalPreservation": {
+    "M2bh": "StaticCompositionContractEstablished",
+    "M2be": "SyntheticLayoutBranchFeasibilityEstablished",
+    "M2bf": "ExternalContinuationEvidenceEstablished",
+    "m2bd": "TypedLoweringObligationsEstablished",
+    "m2bc": "DecodeEncodeCompatibilityVerified",
+    "m2bb": "IndependentEncoderVerified",
+    "m2ba": "IndependentRouteSpecified",
+    "m2az": "HistoricalSourceRightsBlocked",
+    "m2ay": "ASM662BuildEncodingBlocked",
+    "m2ax": "MAC66KAcquisitionBlocked",
+    "m2aw": "ArchitectureContextEstablished",
+    "m2av": "BoundedSourceEquivalenceEstablished",
+    "m2au": "INTAccountingComplete",
+    "m2at": "DECDPHCFixComplete",
+    "m2an": "SLLBFixComplete",
+    "WDT3C": "ResearchBlocked",
+    "JGT_C8": "PrimaryConflictUnresolved",
+    "m2aqCAL2689_RT5C80": "NotRun",
+    "m2ap": "SSPADCBlocked",
+    "m2ao": "DATA019BFrontierUnchanged",
+    "m2ah": "STOPBefore5722",
+    "DATA019B2RuntimeOwner": "NotEstablished",
+    "m2t": "JGT233ABlockedUnresolved",
+    "StrictM2i": "Blocked",
+    "IRQ": "NotInjected",
+    "TimerEvolution": "NotModeled",
+    "RecoveredECUScheduler": "NotEstablished",
+    "TargetCompilerABI": "NotEstablished",
+    "TargetIntegration": "NotEstablished",
+    "Readiness": "PcInspectionOnly_NotFlashReady",
+    "PhysicalFuelTimeDegrees": "Unavailable",
+    "GUIHardwareFullboot": "NotRun",
+    "ASM662_WDT_C8Inquiries": "NotSent",
+    "m2bf": "ExternalContinuationObligationsAndTransferFormEvidenceEstablished",
+    "m2bg": "IndependentDirectJSyntheticEncodeDecodeVerified",
+    "historicalPath13NativeWitnesses": 0,
+    "runnerVersion": "0.43.0",
+    "protocol": 1,
+    "semanticAccountingIdentities": 38,
+    "M2bhFinalReportSha256": "c4eaf93fe0512ebf2fc0f025fe8eb276056b8b90d5f9cdf11c6a240b51d9fc4e",
+    "M2bhFinalAttestationSha256": "c37df2cf6e19828abe9d5644199e6db402e3616e8234ddf21440f77aad8ead83"
+  },
+  "negativeGates": [
+    "SemanticInputMutations",
+    "ActualByteMutations",
+    "DecoderMetadataMutations",
+    "AtomicFailureInjections",
+    "NoIOOrPartialOutputs",
+    "ExactScalarDDAndCrossVariantIdentity",
+    "SourcePolicyAST",
+    "EditableContractRefusals"
+  ],
+  "evidenceClassification": "SourceBoundActualEncoderPrimaryDecoderAndAtomicTestsRequired_NotMetadataVerdict"
+}

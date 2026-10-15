@@ -1,5 +1,9 @@
 # HondaEcu
 
+M2bj adds [atomic synthetic composite encoding](docs/M2BJ_ATOMIC_SYNTHETIC_51BYTE_EMISSION.md):
+51 bytes in memory only,20 independent primary/decode boundaries, separate DD0/DD1
+and atomic refusals. No CPU/ROM execution, persistent target object or ECU permission.
+
 M2bi adds [synthetic composite emission eligibility](docs/M2BI_COMPOSITE_EMISSION_ELIGIBILITY.md):
 20 static typed descriptors, separate unchanged 18-site/direct-J codec routes,
 and a closed invented base1000/gap0 future-verification/atomicity contract.

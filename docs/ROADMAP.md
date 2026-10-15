@@ -1,5 +1,11 @@
 # Roadmap
 
+M2bj verifies [atomic51-byte synthetic encoding](M2BJ_ATOMIC_SYNTHETIC_51BYTE_EMISSION.md)
+in memory only, with independent primary/decode/CFG/DD and failure-injection checks.
+NEXT proposal only: separately authorized bounded synthetic equivalence proof protocol.
+STOP after delivery: no M2bk, CPU/ROM execution, native handoff, placement or firmware.
+Earlier milestone entries retain their historical, milestone-local verdicts and STOPs.
+
 M2bi defines [typed synthetic emission eligibility](M2BI_COMPOSITE_EMISSION_ELIGIBILITY.md)
 for unchanged18 sites plus two separate direct-J slots, invented base1000/gap0 only.
 NEXT proposal only: separately authorized primary-verified atomic synthetic emission.
