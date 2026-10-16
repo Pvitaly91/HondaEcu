@@ -1,0 +1,373 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2bn",
+  "exactBase": "b9e580f7cd554dd44676a5829444ece265bb517c",
+  "branch": "codex/p28-word0196-bounded-synthetic-composite-m2bn",
+  "classification": "ExecutableResearchOnlyObligations_ActualCompilationExecutionComparisonRequired",
+  "compositeSha256": "91ffb46922def91764f5d4da166ef2cfc9834ed0effcc051d3f97246fa147ab1",
+  "programBase": 4096,
+  "programEndExclusive": 4147,
+  "programBytes": 51,
+  "nodes": 20,
+  "forms": 16,
+  "instructionBudget": 16,
+  "expectedBaseCases": 2735,
+  "expectedExecutions": 5470,
+  "expectedPositiveRetirements": 73784,
+  "psw": {
+    "route": "A_ExplicitRepresentableCanonicalRustScope",
+    "mask": 3272,
+    "required": 3272,
+    "low12": {
+      "representable": 128,
+      "incompatible": 3968
+    },
+    "full": {
+      "representable": 2048,
+      "incompatible": 63488
+    },
+    "incompatibleError": "NotRepresentableByCurrentCanonicalRustCpu",
+    "normalization": false,
+    "historicalLosslessOracleUnchanged": true
+  },
+  "paths": {
+    "A": {
+      "instructions": 11,
+      "reads": 5,
+      "writes": 3,
+      "terminalPc": 21957
+    },
+    "B": {
+      "instructions": 13,
+      "reads": 9,
+      "writes": 3,
+      "terminalPc": 21910,
+      "read0124": false
+    },
+    "C": {
+      "instructions": 14,
+      "reads": 10,
+      "writes": 3,
+      "terminalPc": 21910
+    },
+    "D": {
+      "instructions": 16,
+      "reads": 12,
+      "writes": 5,
+      "terminalPc": 21910
+    }
+  },
+  "architecture": {
+    "cpuInstancesPerPositiveCase": 1,
+    "dataInitializations": 1,
+    "functionalPhases": 1,
+    "continuousState": true,
+    "reseedBetweenSteps": false,
+    "actualProductionCpu": true,
+    "actualProductionDecoder": true,
+    "productionBus": false,
+    "productionExecStep": false,
+    "productionRunner": false,
+    "effectCopySource": "research/p28-word0196/rust-synthetic-adapter/src/executor.rs",
+    "effectCopySourceSha256": "a1bb8e708177598259087d53774f72fa656ca36e67ac7f16f532ca1baa2d10c3",
+    "exactBothFunctionBodiesRequired": true
+  },
+  "projection": {
+    "architecturalFields": "complete entry/terminal and every step snapshot; all32 pointing words and aliases",
+    "classification": "PublicSafeFullDeclaredSemanticProjection_NoRawProgramPayload",
+    "comparison": "strict recursive exact types/keys/order; first mismatch, no normalization",
+    "counters": "all retirement/lifecycle/internalSF counters; cycles synthetic only, no physical-time claim",
+    "dataFields": "complete before/after inventoried bytes, ordered logical/raw/seed/diagnostic journals",
+    "physicalSf": "Unknown; paired internal field experiments only",
+    "platformExclusions": [],
+    "programFields": "all actual access addresses/order/purpose/serviced/refusal/extent association; no byte values",
+    "programTopologyExpectationSource": "SeparateFrozenDecoderSourceInstrumentationModel_NotStateSemantics",
+    "stateExpectationSource": "FrozenM2bkReferenceCase_M2avC11IR_M2bdPrimaryDataflow",
+    "syntheticCycles": "unchanged decoder source accounting:2*length plus1 for directJ plus4 for taken conditional branch",
+    "programByteValuesPersisted": false
+  },
+  "stop": {
+    "oneActualRetiredDirectJ": true,
+    "beforeExternalFetch": true,
+    "lifecycleGuard": true,
+    "programObserverGuard": true,
+    "padding": false,
+    "fallbackZero": false
+  },
+  "exclusions": {
+    "actualRomExecutions": 0,
+    "nativeDownstreamExecutions": 0,
+    "targetObjects": 0,
+    "targetHEX": 0,
+    "FirmwareBIN": 0,
+    "FirmwareReady": false,
+    "ProductionBusExecIntegrationNotEstablished": true,
+    "SFMeaningStorageNotEstablished": true,
+    "ActualDownstreamRejoinNotEstablished": true,
+    "PhysicalROMPlacementNotEstablished": true,
+    "TargetProgramEquivalenceNotEstablished": true,
+    "FirmwareIntegrationNotEstablished": true
+  },
+  "sourceBindings": [
+    {
+      "path": "docs/M2BM_WORD0196_RUST_SYNTHETIC_ADAPTER.md",
+      "bytes": 10370,
+      "sha256": "f093db1d25fe34859ff446323ad86be1cd4cc8b6b68c323c4621f87c585b0127"
+    },
+    {
+      "path": "docs/M2BN_WORD0196_BOUNDED_SYNTHETIC_COMPOSITE_EXECUTION.md",
+      "bytes": 6795,
+      "sha256": "08e1f6f5ff6db040ab352ca22a14c5744b531196c454e61beb30b73ee8c45826"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/Cargo.lock",
+      "bytes": 2548,
+      "sha256": "882f183e51787e91f0bbad092b4f94d2191aa9a208be728ee95999c4c68d464e"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/Cargo.toml",
+      "bytes": 326,
+      "sha256": "d045517a1598b7a0c644730be4a72b1c519b432343dd598c75edb07650703e58"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/admission.rs",
+      "bytes": 12833,
+      "sha256": "c7c02ec02dc9586124a5f0dea975837a1cd670d0b32c7ae0ae4aedb5b05ffdd2"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/component_tests.rs",
+      "bytes": 41644,
+      "sha256": "928809541e62b5e490c039245eb5550ad92f33065208aee7eda68a30ff876f95"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/data.rs",
+      "bytes": 15337,
+      "sha256": "06991c9218cf136633696b481965a9fb49e49ffb60defffe874fd1690d00ad99"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/entry.rs",
+      "bytes": 5545,
+      "sha256": "b4454e3153f12fd56674a9975cdae69f61550425c5eca00ffd9ba0409811baab"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/executor.rs",
+      "bytes": 12529,
+      "sha256": "a1bb8e708177598259087d53774f72fa656ca36e67ac7f16f532ca1baa2d10c3"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/exit.rs",
+      "bytes": 3550,
+      "sha256": "fce20b52dcaae0ee796ee3cd62919063368cb681d93174d11ff041b1b1df5ccd"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/fetch.rs",
+      "bytes": 6207,
+      "sha256": "8ac8306f10befeca29d9ddcb563e7f97b7318a2f5043cdac0a63175be7940cc4"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/lib.rs",
+      "bytes": 2855,
+      "sha256": "432769eb1a5b0b3c04564897f5199cdff952ace5a109c96747b61f67dda0bcee"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/program.rs",
+      "bytes": 7967,
+      "sha256": "6e3e813f7a7c137ca0e3976646029988411776d71703b3dee38ed239aa108762"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/psw.rs",
+      "bytes": 1815,
+      "sha256": "d136a86d01b70fdb22f717065f42777b153e417bcab41bcd28d30b9b0192d2a9"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/sf.rs",
+      "bytes": 2830,
+      "sha256": "cbf7b43179ab77aeeb42eb362dfbb7e69233145a604120af4182d67fc8aea431"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/sha256.rs",
+      "bytes": 3489,
+      "sha256": "485d601d50bddceebad0e11297704cbfea21050f12a1e22b45e2b359cced8a0a"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/src/source.rs",
+      "bytes": 2212,
+      "sha256": "7581e1203929090a69a4e57231076b63e6400b4fba608589bb5e1326c5698d66"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/tests/fixtures/microprobe_expectations.json",
+      "bytes": 27620,
+      "sha256": "7535b5edc203b759d8049a5905328695e0591a7cb7d874519d3f73a8646db343"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-adapter/tests/independent_expectations.rs",
+      "bytes": 27831,
+      "sha256": "3c455e63407163688c74479c1200ef100876f859e2fcf1f6a993e815cc2b3a80"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/Cargo.lock",
+      "bytes": 2721,
+      "sha256": "b29bf4853478fae1f9ed71eadb2694f8a62349088e76e435199479c2f538f693"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/Cargo.toml",
+      "bytes": 454,
+      "sha256": "9674f31f0338e8baf1e021a9d87ba539d9189a5f4a157aca57f607cbcd58bd66"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/src/component_checks.rs",
+      "bytes": 14392,
+      "sha256": "ec85a43d89299151002d889e83551046a67331e8d89cb86bbd0aa5a97c935184"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/src/effects.rs",
+      "bytes": 4702,
+      "sha256": "30dbfc8c2047031fc3784caad6f5ae1ac80c9e6e979db019bde139907cae76ff"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/src/execution.rs",
+      "bytes": 10349,
+      "sha256": "cc4771f01e0b4ffa5f8446b6714a308928c3bc9fab2fb642dec090c91cdcc288"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/src/lib.rs",
+      "bytes": 1774,
+      "sha256": "df124715eb1255441a388ed6c0acfaec7cba9a062116ad5c3d225d482cc27baa"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/src/lifecycle.rs",
+      "bytes": 5399,
+      "sha256": "e31a852e8d4660893e4f62f0625849a760e9f90fee799f9f825f33b5ed6886a1"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/src/main.rs",
+      "bytes": 8991,
+      "sha256": "d65c574211c114655659c4322f747c7712a4ce7490921b819463f4a10d3c17ca"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/src/observer.rs",
+      "bytes": 9067,
+      "sha256": "5fd5ec96eaa226efc00fcf5cc78f4e0ba480401cddb0fe75de9bfcf533a15b59"
+    },
+    {
+      "path": "research/p28-word0196/rust-synthetic-composite/src/program.rs",
+      "bytes": 8752,
+      "sha256": "4233ecf7b9ff9bb2807361ab931a8f42f362b8044f0dfd2709ece8bdff7bde22"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_adapter_feasibility_contract.json",
+      "bytes": 66645,
+      "sha256": "8aaacbbcccbbdd4b139e64d7b88a6395360a3a241b8e9a625cfa13172c358278"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_adapter_feasibility_oracle.py",
+      "bytes": 50712,
+      "sha256": "4414f6de4fe705f4b097a00c7aed3fac951d5951f050589f3276b21e4c406268"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_composite_emitter.py",
+      "bytes": 29531,
+      "sha256": "499b250bfe0fd1267fc448eda4375661f81499ca806a8c52ac139c132cda09fc"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_composite_execution_corpus.py",
+      "bytes": 9725,
+      "sha256": "984880103f60c214cc45c6a058ac5bf5aa2c8fa04add7c2131f70fa1f447318d"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_composite_execution_oracle_tests.py",
+      "bytes": 8264,
+      "sha256": "9257e50edcd4580ddac8017f3e5aef53d9283a261d4188dd6e520eb9ba70af44"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_composite_execution_oracle.py",
+      "bytes": 24252,
+      "sha256": "bfd5bbdd1baa2b1bca04b8d29086b448a9cea6d796195a88aac0ae54786fe54d"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_composite_primary_oracle.py",
+      "bytes": 5802,
+      "sha256": "b3aecd90e3ef159b9aeec04ec6a46324a245bdcfb23a5ef80ad8d3d11b921c47"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_composite_tests.py",
+      "bytes": 24099,
+      "sha256": "ceb2ce45da04ea4c1b4c15bf8d290db41f5d0feec7db438d202609e5f71182a1"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_execution_protocol_contract.json",
+      "bytes": 50599,
+      "sha256": "f89226773936ee999f6038a91ab74cf1d17ed699120c6d6a75b17ff851214cb9"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_execution_protocol_oracle.py",
+      "bytes": 22900,
+      "sha256": "6448541d61e1bdfad9578c73f34260f45271dfb2df0247cfe2fc9072f8e9c4ba"
+    },
+    {
+      "path": "research/p28-word0196/synthetic_rust_adapter_contract.json",
+      "bytes": 48899,
+      "sha256": "f674afde4b4d7a9b09ba64c1d789bb4d358ddd4d92baea1e0017ebe7e5a7142a"
+    },
+    {
+      "path": "research/p28-word0196/typed_lowering_contract.json",
+      "bytes": 44984,
+      "sha256": "6f62c23e99f72e7df51a0117b7c5ff600d892f2a8d3e4c4231a383e1d96c6bf4"
+    },
+    {
+      "path": "research/p28-word0196/validate_synthetic_composite_contract.py",
+      "bytes": 17392,
+      "sha256": "fa53b2ea9bcb55a0d11fc5b15c8f6483b9b7b20a7d16752cf10f75c15f80f783"
+    },
+    {
+      "path": "research/p28-word0196/validate_synthetic_composite_execution.py",
+      "bytes": 29868,
+      "sha256": "7aa4732cd73d9fdd44b096bc18173f311ee0aed9aea95be4ba1f0afdc2fcc81c"
+    },
+    {
+      "path": "research/p28-word0196/validate_synthetic_rust_adapter_contract.py",
+      "bytes": 70016,
+      "sha256": "862ca1ebf765f45df05a714178be6afa4c1c1a616efdc3b8cb212ec89560ce3d"
+    },
+    {
+      "path": "research/p28-word0196/word0196_equivalent.c",
+      "bytes": 8507,
+      "sha256": "4b189d4ed3e97e0d197f6c558755cf056a89c1dc7122653c5c557e7ab62d76d3"
+    },
+    {
+      "path": "research/p28-word0196/word0196_equivalent.h",
+      "bytes": 2390,
+      "sha256": "df8da1511708fb29cb747981a959544e549a67a9a982e15586b5c12ce8826f0e"
+    },
+    {
+      "path": "research/p28-word0196/word0196_host_driver.c",
+      "bytes": 6468,
+      "sha256": "7693a6c0b950be411cdb7ef6b50f5e41b618a39013e8943da6f3146e4aada2ae"
+    },
+    {
+      "path": "research/p28-word0196/word0196_ir.json",
+      "bytes": 32188,
+      "sha256": "4fdbd6b7dbdd8f48d5a43e123ca93a33a003c22556a0c40b5296d5f409e085c4"
+    },
+    {
+      "path": "rust/p28-slice-runner/src/cpu.rs",
+      "bytes": 5281,
+      "sha256": "b12a0b3388a7d34201888a0a6f948263dcf1c7bebca1801056e176d871184d3b"
+    },
+    {
+      "path": "rust/p28-slice-runner/src/decoder.rs",
+      "bytes": 9735,
+      "sha256": "1120cc37cee9ec23f1f596c72ff8dd5bf372204495d2b5e00cc044dfe2ea3aa4"
+    },
+    {
+      "path": "rust/p28-slice-runner/src/full_decoder.rs",
+      "bytes": 240468,
+      "sha256": "77697d4b0e3c90372326156bf1a8544486d07f4aa8f93c67cf9e5f2af6c7eff1"
+    },
+    {
+      "path": "rust/p28-slice-runner/src/operand.rs",
+      "bytes": 7079,
+      "sha256": "c3e7b418b81b4fa0becfa2ec2be741a4b0929994831ebb89e829698d289bb48f"
+    }
+  ]
+}

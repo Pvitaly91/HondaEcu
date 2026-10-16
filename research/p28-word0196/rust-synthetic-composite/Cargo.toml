@@ -1,0 +1,19 @@
+[package]
+name = "p28-research-synthetic-composite"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85.1"
+publish = false
+
+[[bin]]
+name = "m2bn-composite"
+path = "src/main.rs"
+
+[dependencies]
+p28-research-synthetic-adapter = { path = "../rust-synthetic-adapter" }
+p28-slice-runner = { path = "../../../rust/p28-slice-runner" }
+serde = { version = "=1.0.219", features = ["derive"] }
+serde_json = "=1.0.140"
+
+[profile.release]
+overflow-checks = true

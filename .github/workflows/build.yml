@@ -213,6 +213,26 @@ jobs:
           python -B research/p28-word0196/validate_synthetic_rust_adapter_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
+      - name: M2bn bounded synthetic composite execution (research-only representable PSW)
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_synthetic_composite_execution.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Get-Content .tmp/m2bn-public-evidence/build.stderr.log
+          Get-Content .tmp/m2bn-public-evidence/tests.stdout.log
+          Get-Content .tmp/m2bn-public-evidence/tests.stderr.log
+
+      - name: Preserve M2bn public-safe canonical semantic evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: M2bn-canonical-${{ matrix.os }}
+          path: |
+            .tmp/m2bn-public-evidence/canonical.jsonl.gz
+            .tmp/m2bn-public-evidence/summary.json
+            .tmp/m2bn-public-evidence/pre-runtime-freeze.json
+          if-no-files-found: error
+          retention-days: 3
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 
