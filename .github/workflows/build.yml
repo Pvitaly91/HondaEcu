@@ -233,6 +233,23 @@ jobs:
           if-no-files-found: error
           retention-days: 3
 
+      - name: M2bo real production exec single-step differential verification (research only)
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_production_exec_parity.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Preserve M2bo public-safe canonical semantic evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: M2bo-canonical-${{ matrix.os }}
+          path: |
+            .tmp/m2bo-public-evidence/canonical.jsonl.gz
+            .tmp/m2bo-public-evidence/summary.json
+            .tmp/m2bo-public-evidence/pre-runtime-freeze.json
+          if-no-files-found: error
+          retention-days: 3
+
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
 
