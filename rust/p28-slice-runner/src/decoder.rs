@@ -211,7 +211,27 @@ fn index() -> &'static Index {
 /// Decode one instruction. `fetch(i)` supplies the byte at offset `i` from the
 /// instruction start. `dd` is the current word/byte mode.
 pub fn decode(dd: bool, fetch: impl Fn(usize) -> u8) -> Option<Decoded> {
-    let first = fetch(0);
+    match decode_kernel::<std::convert::Infallible>(dd, |offset| Ok(fetch(offset))) {
+        Ok(decoded) => decoded,
+        Err(never) => match never {},
+    }
+}
+
+/// One shared matching kernel: strict callbacks propagate the first typed
+/// failure at the exact callback; legacy callbacks are provably infallible.
+#[cfg(feature = "p28-word0196-audit")]
+pub(crate) fn decode_checked<E>(
+    dd: bool,
+    fetch: impl FnMut(usize) -> Result<u8, E>,
+) -> Result<Option<Decoded>, E> {
+    decode_kernel(dd, fetch)
+}
+
+fn decode_kernel<E>(
+    dd: bool,
+    mut fetch: impl FnMut(usize) -> Result<u8, E>,
+) -> Result<Option<Decoded>, E> {
+    let first = fetch(0)?;
     let idx = index();
 
     'pattern: for &pi in &idx.by_first[first as usize] {
@@ -226,7 +246,7 @@ pub fn decode(dd: bool, fetch: impl Fn(usize) -> u8) -> Option<Decoded> {
 
         let mut f = Fields::default();
         for (off, tok) in p.bytes_pat.iter().enumerate() {
-            let b = fetch(off);
+            let b = fetch(off)?;
             if let Some(expect) = hex_byte(tok) {
                 if b != expect {
                     continue 'pattern;
@@ -249,7 +269,7 @@ pub fn decode(dd: bool, fetch: impl Fn(usize) -> u8) -> Option<Decoded> {
             }
         }
 
-        return Some(Decoded {
+        return Ok(Some(Decoded {
             index: pi as usize,
             mnemonic: p.mnemonic,
             len: p.bytes_pat.len(),
@@ -261,8 +281,8 @@ pub fn decode(dd: bool, fetch: impl Fn(usize) -> u8) -> Option<Decoded> {
             },
             cycles: exact_form_int_cycles(p, table()[pi as usize].as_ref())
                 .unwrap_or_else(|| int_cycles(p.mnemonic, p.bytes_pat.len())),
-        });
+        }));
     }
 
-    None
+    Ok(None)
 }

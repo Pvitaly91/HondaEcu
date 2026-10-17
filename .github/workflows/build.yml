@@ -19,6 +19,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up .NET 8
         uses: actions/setup-dotnet@v4
@@ -38,6 +40,22 @@ jobs:
 
       - name: Set up pinned Rust toolchain
         run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
+
+      - name: HistoricalPinnedBaselineQA exact M2bo checkout
+        uses: actions/checkout@v4
+        with:
+          ref: 1ceec589ee8586727fb16a39fd15875444d6feab
+          path: .tmp/m2bp-legacy-1ceec589
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: M2bp independent default and opt-in freezes before CPU observations
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/default_mode_compatibility.py --baseline-root .tmp/m2bp-legacy-1ceec589 --active-root . --output-dir .tmp/m2bp-public-evidence/default --target-dir .tmp/m2bp-default-target --freeze-only
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/validate_production_optin_capabilities.py --historical-root .tmp/m2bp-legacy-1ceec589 --output-dir .tmp/m2bp-public-evidence/optin --target-dir .tmp/m2bp-optin-target --freeze-only
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Rust build and instruction tests (synthetic only)
         shell: pwsh
@@ -73,10 +91,12 @@ jobs:
 
       - name: M2av host C11 and independent differential tests (invented only)
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: ./research/p28-word0196/run-host-tests.ps1 -RunTag ci
 
       - name: M2aw target ABI contract and invented-only regressions
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_target_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -85,6 +105,7 @@ jobs:
 
       - name: M2ax toolchain provenance and invented-only regressions
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_toolchain_provenance.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -93,6 +114,7 @@ jobs:
 
       - name: M2ay ASM662 source policy and invented-only safety regressions
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_asm662_source.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -101,6 +123,7 @@ jobs:
 
       - name: M2az ASM662 original release provenance and invented-only regressions
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_asm662_original_release.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -109,6 +132,7 @@ jobs:
 
       - name: M2ba Doc contribution provenance and invented-only regressions
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_doc_contribution.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -117,6 +141,7 @@ jobs:
 
       - name: M2ba independent encoder design and invented-only regressions
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_independent_encoder_design.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -125,6 +150,7 @@ jobs:
 
       - name: M2bb independent typed encoder and primary-vector regressions
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_independent_encoder_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -133,6 +159,7 @@ jobs:
 
       - name: M2bc independent decoder and bidirectional primary-vector compatibility
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_independent_decode_encode_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -141,6 +168,7 @@ jobs:
 
       - name: M2bd typed lowering contract and static dataflow obligations
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_typed_lowering_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -149,6 +177,7 @@ jobs:
 
       - name: M2be invented-only layout geometry and branch feasibility
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_layout_feasibility_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -157,6 +186,7 @@ jobs:
 
       - name: M2bf external continuation and primary transfer-form evidence
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_external_continuation_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -165,6 +195,7 @@ jobs:
 
       - name: M2bg independent direct-J primary encoding and bidirectional codec checks
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_direct_j_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -173,6 +204,7 @@ jobs:
 
       - name: M2bh invented-only static two-J composition and independent mathematical checks
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_static_composition_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -181,6 +213,7 @@ jobs:
 
       - name: M2bi typed composite emission eligibility (static only, no emission)
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_composite_emission_eligibility_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -189,6 +222,7 @@ jobs:
 
       - name: M2bj atomic in-memory synthetic composite primary and decode verification
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python --version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -197,24 +231,28 @@ jobs:
 
       - name: M2bk bounded synthetic execution protocol (static only; no CPU execution)
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_synthetic_execution_protocol.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: M2bl synthetic adapter feasibility (mathematical only; no CPU execution)
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_synthetic_adapter_feasibility_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: M2bm research-only Rust adapter capabilities (invented microprobes; no composite execution)
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_synthetic_rust_adapter_contract.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: M2bn bounded synthetic composite execution (research-only representable PSW)
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_synthetic_composite_execution.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -227,14 +265,15 @@ jobs:
         with:
           name: M2bn-canonical-${{ matrix.os }}
           path: |
-            .tmp/m2bn-public-evidence/canonical.jsonl.gz
-            .tmp/m2bn-public-evidence/summary.json
-            .tmp/m2bn-public-evidence/pre-runtime-freeze.json
+            .tmp/m2bp-legacy-1ceec589/.tmp/m2bn-public-evidence/canonical.jsonl.gz
+            .tmp/m2bp-legacy-1ceec589/.tmp/m2bn-public-evidence/summary.json
+            .tmp/m2bp-legacy-1ceec589/.tmp/m2bn-public-evidence/pre-runtime-freeze.json
           if-no-files-found: error
           retention-days: 3
 
       - name: M2bo real production exec single-step differential verification (research only)
         shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
         run: |
           python -B research/p28-word0196/validate_production_exec_parity.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -244,9 +283,35 @@ jobs:
         with:
           name: M2bo-canonical-${{ matrix.os }}
           path: |
-            .tmp/m2bo-public-evidence/canonical.jsonl.gz
-            .tmp/m2bo-public-evidence/summary.json
-            .tmp/m2bo-public-evidence/pre-runtime-freeze.json
+            .tmp/m2bp-legacy-1ceec589/.tmp/m2bo-public-evidence/canonical.jsonl.gz
+            .tmp/m2bp-legacy-1ceec589/.tmp/m2bo-public-evidence/summary.json
+            .tmp/m2bp-legacy-1ceec589/.tmp/m2bo-public-evidence/pre-runtime-freeze.json
+          if-no-files-found: error
+          retention-days: 3
+
+      - name: M2bp ActiveTreeDefaultModeQA actual base-vs-active differential
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/default_mode_compatibility.py --baseline-root .tmp/m2bp-legacy-1ceec589 --active-root . --output-dir .tmp/m2bp-public-evidence/default --target-dir .tmp/m2bp-default-target --execute-freeze
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2bp ActiveTreeOptInCapabilityQA actual production audit feature
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_production_optin_capabilities.py --historical-root .tmp/m2bp-legacy-1ceec589 --output-dir .tmp/m2bp-public-evidence/optin --target-dir .tmp/m2bp-optin-target --execute-freeze
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Preserve M2bp public-safe default and opt-in canonical evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: M2bp-canonical-${{ matrix.os }}
+          path: |
+            .tmp/m2bp-public-evidence/default/canonical.jsonl.gz
+            .tmp/m2bp-public-evidence/default/summary.json
+            .tmp/m2bp-public-evidence/default/pre-runtime-freeze.json
+            .tmp/m2bp-public-evidence/optin/canonical.jsonl.gz
+            .tmp/m2bp-public-evidence/optin/summary.json
+            .tmp/m2bp-public-evidence/optin/pre-runtime-freeze.json
           if-no-files-found: error
           retention-days: 3
 

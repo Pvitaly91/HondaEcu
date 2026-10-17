@@ -1,5 +1,14 @@
 //! Bounded seeded byte execution. No engine simulation or compact-code formula.
 
+#[cfg(feature = "p28-word0196-audit")]
+pub mod audit;
+#[cfg(feature = "p28-word0196-audit")]
+mod audit_bus;
+#[cfg(feature = "p28-word0196-audit")]
+mod audit_sha256;
+#[cfg(all(test, feature = "p28-word0196-audit"))]
+mod audit_tests;
+
 pub mod acquisition;
 pub mod below_second_p2;
 #[cfg(test)]

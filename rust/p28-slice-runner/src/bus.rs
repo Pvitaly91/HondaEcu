@@ -245,6 +245,8 @@ impl std::fmt::Display for AccessFault {
 }
 
 pub struct Bus {
+    #[cfg(feature = "p28-word0196-audit")]
+    pub(crate) audit: Option<crate::audit_bus::AuditBus>,
     rom: Vec<u8>,
     ram: [u8; RAM_SIZE],
     fault: RefCell<Option<AccessFault>>,
@@ -285,9 +287,121 @@ pub struct Bus {
     retained_selector: bool,
 }
 
+#[cfg(feature = "p28-word0196-audit")]
+impl Bus {
+    pub(crate) fn audit_fault(&self, error: crate::audit::AuditError) -> crate::audit::AuditError {
+        let error = self.audit.as_ref().expect("audited Bus").latch_fault(error);
+        let address = error
+            .address
+            .and_then(|address| u32::try_from(address).ok())
+            .unwrap_or(u32::MAX);
+        self.record_fault("audit", address, "opt-in refusal");
+        error
+    }
+    /// Checked callback used by the same Bus that serves real DATA operations.
+    pub(crate) fn audit_program_read(
+        &self,
+        address: i64,
+        purpose: &str,
+    ) -> crate::audit::Result<u8> {
+        self.audit
+            .as_ref()
+            .expect("audited Bus")
+            .program_read(address, purpose)
+            .map_err(|error| self.audit_fault(error))
+    }
+    pub(crate) fn audit_snapshot_ram(&self) -> Vec<u8> {
+        self.audit.as_ref().expect("audited Bus").diagnostic_ram();
+        self.ram[0x80..0x1000].to_vec()
+    }
+    // Old/new metadata is obtained directly at the actual service boundary.
+    // It is not represented as an extra functional DATA read.
+    fn audit_old_value(&self, address: u16, width: u8) -> Option<u16> {
+        let low = *self.ram.get(usize::from(address))?;
+        match width {
+            8 => Some(u16::from(low)),
+            16 => Some(u16::from_le_bytes([
+                low,
+                *self.ram.get(usize::from(address) + 1)?,
+            ])),
+            _ => None,
+        }
+    }
+    pub(crate) fn audit_begin_data(
+        &self,
+        address: u16,
+        width: u8,
+        write: bool,
+        value: Option<u16>,
+    ) -> crate::audit::Result<Option<crate::audit_bus::DataToken>> {
+        let Some(audit) = &self.audit else {
+            return Ok(None);
+        };
+        audit
+            .begin_data(
+                address,
+                width,
+                write,
+                value,
+                if write {
+                    self.audit_old_value(address, width)
+                } else {
+                    None
+                },
+            )
+            .map(Some)
+            .map_err(|error| self.audit_fault(error))
+    }
+    pub(crate) fn audit_end_data(
+        &self,
+        token: Option<crate::audit_bus::DataToken>,
+        value: Option<u16>,
+    ) {
+        if let Some(token) = token {
+            self.audit
+                .as_ref()
+                .expect("audited Bus")
+                .end_data(token, value);
+        }
+    }
+    fn audit_begin_raw(
+        &self,
+        address: u16,
+        write: bool,
+        value: Option<u8>,
+    ) -> crate::audit::Result<Option<crate::audit_bus::RawToken>> {
+        let Some(audit) = &self.audit else {
+            return Ok(None);
+        };
+        audit
+            .begin_raw(
+                address,
+                write,
+                value,
+                if write {
+                    self.ram.get(usize::from(address)).copied()
+                } else {
+                    None
+                },
+            )
+            .map(Some)
+            .map_err(|error| self.audit_fault(error))
+    }
+    fn audit_end_raw(&self, token: Option<crate::audit_bus::RawToken>, value: u8) {
+        if let Some(token) = token {
+            self.audit
+                .as_ref()
+                .expect("audited Bus")
+                .end_raw(token, value);
+        }
+    }
+}
+
 impl Bus {
     pub fn new(rom: Vec<u8>, scratch: u8) -> Self {
         Self {
+            #[cfg(feature = "p28-word0196-audit")]
+            audit: None,
             rom,
             ram: [scratch; RAM_SIZE],
             fault: RefCell::new(None),
@@ -324,6 +438,10 @@ impl Bus {
     }
 
     pub fn record_fault(&self, space: &'static str, address: u32, operation: &'static str) {
+        #[cfg(feature = "p28-word0196-audit")]
+        if let Some(audit) = &self.audit {
+            audit.production_fault(space, address, operation);
+        }
         let mut fault = self.fault.borrow_mut();
         if fault.is_none() {
             *fault = Some(AccessFault {
@@ -591,13 +709,40 @@ impl Bus {
             .all(|a| (*a as u32) >= range[0] && (*a as u32) < range[1])
     }
     pub fn rom_len(&self) -> usize {
+        #[cfg(feature = "p28-word0196-audit")]
+        if let Some(audit) = &self.audit {
+            return audit.report().program_end_exclusive as usize;
+        }
         self.rom.len()
     }
     pub fn peek_code_u8(&self, address: usize) -> Option<u8> {
+        #[cfg(feature = "p28-word0196-audit")]
+        if self.audit.is_some() {
+            let address = match i64::try_from(address) {
+                Ok(address) => address,
+                Err(_) => {
+                    self.audit_fault(crate::audit::AuditError::new(
+                        "ProgramAddressOverflow",
+                        None,
+                        "usize PROGRAM inspection",
+                    ));
+                    return None;
+                }
+            };
+            return self
+                .audit_program_read(address, "DiagnosticProgramProbe")
+                .ok();
+        }
         self.rom.get(address).copied()
     }
 
     pub fn fetch_code_u8(&self, address: u16) -> u8 {
+        #[cfg(feature = "p28-word0196-audit")]
+        if self.audit.is_some() {
+            return self
+                .audit_program_read(i64::from(address), "LegacyInstructionFetch")
+                .unwrap_or(0);
+        }
         match self.rom.get(address as usize) {
             Some(byte) => *byte,
             None => {
@@ -608,6 +753,12 @@ impl Bus {
     }
 
     pub fn read_code_u8(&self, address: u16) -> u8 {
+        #[cfg(feature = "p28-word0196-audit")]
+        if self.audit.is_some() {
+            return self
+                .audit_program_read(i64::from(address), "ProgramOperandRead")
+                .unwrap_or(0);
+        }
         if self
             .program_data_ranges
             .as_ref()
@@ -646,6 +797,28 @@ impl Bus {
     // CPU aliases 0..7 are handled only by exec's coherent state API. Other
     // SFRs 8..7F are deliberately unmodeled and fail, never masquerading as RAM.
     pub fn read_data_u8(&mut self, address: u16) -> u8 {
+        #[cfg(feature = "p28-word0196-audit")]
+        let logical = match self.audit_begin_data(address, 8, false, None) {
+            Ok(token) => token,
+            Err(_) => return 0,
+        };
+        #[cfg(feature = "p28-word0196-audit")]
+        let raw = match self.audit_begin_raw(address, false, None) {
+            Ok(token) => token,
+            Err(_) => {
+                self.audit_end_data(logical, None);
+                return 0;
+            }
+        };
+        let value = self.read_data_u8_impl(address);
+        #[cfg(feature = "p28-word0196-audit")]
+        {
+            self.audit_end_raw(raw, value);
+            self.audit_end_data(logical, Some(u16::from(value)));
+        }
+        value
+    }
+    fn read_data_u8_impl(&mut self, address: u16) -> u8 {
         if !self.check_data_access(address, "read") {
             return 0;
         }
@@ -721,6 +894,17 @@ impl Bus {
         value
     }
     pub fn read_data_u16(&mut self, address: u16) -> u16 {
+        #[cfg(feature = "p28-word0196-audit")]
+        let token = match self.audit_begin_data(address, 16, false, None) {
+            Ok(token) => token,
+            Err(_) => return 0,
+        };
+        let value = self.read_data_u16_impl(address);
+        #[cfg(feature = "p28-word0196-audit")]
+        self.audit_end_data(token, Some(value));
+        value
+    }
+    fn read_data_u16_impl(&mut self, address: u16) -> u16 {
         if address == 0x1A
             && self.adaptive_ie.is_some()
             && self.check_data_access(address, "read")
@@ -774,6 +958,27 @@ impl Bus {
         value
     }
     pub fn write_data_u8(&mut self, address: u16, value: u8) {
+        #[cfg(feature = "p28-word0196-audit")]
+        let logical = match self.audit_begin_data(address, 8, true, Some(u16::from(value))) {
+            Ok(token) => token,
+            Err(_) => return,
+        };
+        #[cfg(feature = "p28-word0196-audit")]
+        let raw = match self.audit_begin_raw(address, true, Some(value)) {
+            Ok(token) => token,
+            Err(_) => {
+                self.audit_end_data(logical, None);
+                return;
+            }
+        };
+        self.write_data_u8_impl(address, value);
+        #[cfg(feature = "p28-word0196-audit")]
+        {
+            self.audit_end_raw(raw, value);
+            self.audit_end_data(logical, Some(u16::from(value)));
+        }
+    }
+    fn write_data_u8_impl(&mut self, address: u16, value: u8) {
         if !self.check_data_access(address, "write") {
             return;
         }
@@ -835,6 +1040,16 @@ impl Bus {
         }
     }
     pub fn write_data_u16(&mut self, address: u16, value: u16) {
+        #[cfg(feature = "p28-word0196-audit")]
+        let token = match self.audit_begin_data(address, 16, true, Some(value)) {
+            Ok(token) => token,
+            Err(_) => return,
+        };
+        self.write_data_u16_impl(address, value);
+        #[cfg(feature = "p28-word0196-audit")]
+        self.audit_end_data(token, Some(value));
+    }
+    fn write_data_u16_impl(&mut self, address: u16, value: u16) {
         if self.retained_selector && u32::from(address) <= 0x13C && u32::from(address) + 2 > 0x13C {
             self.record_fault("data", address as u32, "selector-word-overlap");
             return;

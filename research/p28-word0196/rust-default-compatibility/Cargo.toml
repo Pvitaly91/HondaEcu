@@ -1,0 +1,19 @@
+[package]
+name = "p28-research-default-compatibility"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.85.1"
+publish = false
+
+[[bin]]
+name = "m2bp-default-compatibility"
+path = "src/main.rs"
+
+[dependencies]
+p28-slice-runner = { path = "../../../rust/p28-slice-runner", default-features = false }
+p28-research-production-exec-parity = { path = "../rust-production-exec-parity", default-features = false }
+serde = { version = "=1.0.219", features = ["derive"] }
+serde_json = "=1.0.140"
+
+[profile.release]
+overflow-checks = true

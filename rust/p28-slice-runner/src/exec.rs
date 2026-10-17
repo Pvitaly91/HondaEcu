@@ -23,6 +23,17 @@ use crate::operand::{table, Arg, Mem, Parsed, Reg};
 /// One coherent data-space API for CPU SFR aliases, register-bank operands,
 /// instruction memory accesses and caller seeding. No RAM shadow of 0..7 exists.
 pub fn read_data_u8(cpu: &Cpu, bus: &mut Bus, address: u16) -> u8 {
+    #[cfg(feature = "p28-word0196-audit")]
+    let token = match bus.audit_begin_data(address, 8, false, None) {
+        Ok(token) => token,
+        Err(_) => return 0,
+    };
+    let value = read_data_u8_impl(cpu, bus, address);
+    #[cfg(feature = "p28-word0196-audit")]
+    bus.audit_end_data(token, Some(u16::from(value)));
+    value
+}
+fn read_data_u8_impl(cpu: &Cpu, bus: &mut Bus, address: u16) -> u8 {
     if !bus.check_data_access(address, "read") {
         return 0;
     }
@@ -41,6 +52,17 @@ pub fn read_data_u8(cpu: &Cpu, bus: &mut Bus, address: u16) -> u8 {
 }
 
 pub fn read_data_u16(cpu: &Cpu, bus: &mut Bus, address: u16) -> u16 {
+    #[cfg(feature = "p28-word0196-audit")]
+    let token = match bus.audit_begin_data(address, 16, false, None) {
+        Ok(token) => token,
+        Err(_) => return 0,
+    };
+    let value = read_data_u16_impl(cpu, bus, address);
+    #[cfg(feature = "p28-word0196-audit")]
+    bus.audit_end_data(token, Some(value));
+    value
+}
+fn read_data_u16_impl(cpu: &Cpu, bus: &mut Bus, address: u16) -> u16 {
     // Preserve architectural width before the bus can observe a scoped SFR.
     // CPU aliases remain coherent; ordinary data words use the same bus API.
     if address > 7 {
@@ -57,6 +79,16 @@ pub fn read_data_u16(cpu: &Cpu, bus: &mut Bus, address: u16) -> u16 {
 }
 
 pub fn write_data_u8(cpu: &mut Cpu, bus: &mut Bus, address: u16, value: u8) {
+    #[cfg(feature = "p28-word0196-audit")]
+    let token = match bus.audit_begin_data(address, 8, true, Some(u16::from(value))) {
+        Ok(token) => token,
+        Err(_) => return,
+    };
+    write_data_u8_impl(cpu, bus, address, value);
+    #[cfg(feature = "p28-word0196-audit")]
+    bus.audit_end_data(token, Some(u16::from(value)));
+}
+fn write_data_u8_impl(cpu: &mut Cpu, bus: &mut Bus, address: u16, value: u8) {
     if !bus.check_data_access(address, "write") {
         return;
     }
@@ -80,6 +112,16 @@ pub fn write_data_u8(cpu: &mut Cpu, bus: &mut Bus, address: u16, value: u8) {
 }
 
 pub fn write_data_u16(cpu: &mut Cpu, bus: &mut Bus, address: u16, value: u16) {
+    #[cfg(feature = "p28-word0196-audit")]
+    let token = match bus.audit_begin_data(address, 16, true, Some(value)) {
+        Ok(token) => token,
+        Err(_) => return,
+    };
+    write_data_u16_impl(cpu, bus, address, value);
+    #[cfg(feature = "p28-word0196-audit")]
+    bus.audit_end_data(token, Some(value));
+}
+fn write_data_u16_impl(cpu: &mut Cpu, bus: &mut Bus, address: u16, value: u16) {
     if address > 7 {
         bus.write_data_u16(address, value);
         return;
@@ -964,6 +1006,17 @@ pub fn step(cpu: &mut Cpu, bus: &mut Bus) -> Result<Decoded, ExecError> {
         return Err(ExecError::MemoryAccess(fault));
     }
 
+    execute_decoded(cpu, bus, pc, d)
+}
+
+// This is the single existing post-decode production implementation. Strict
+// opt-in execution and the unchanged legacy entry point share this body.
+pub(crate) fn execute_decoded(
+    cpu: &mut Cpu,
+    bus: &mut Bus,
+    pc: u16,
+    d: Decoded,
+) -> Result<Decoded, ExecError> {
     // PC advances past the instruction before execution, so rel8 targets and
     // pushed return addresses are relative to the *next* instruction.
     cpu.pc = pc + d.len as u16;
