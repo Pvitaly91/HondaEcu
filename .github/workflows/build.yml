@@ -89,6 +89,13 @@ jobs:
       - name: Test .NET and real Rust process end-to-end (synthetic only)
         run: dotnet test HondaEcu.sln --configuration Release --no-build
 
+      - name: Build exact historical Core for M2av oracle
+        shell: pwsh
+        working-directory: .tmp/m2bp-legacy-1ceec589
+        run: |
+          dotnet build src/HondaEcu.Core/HondaEcu.Core.csproj --configuration Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: M2av host C11 and independent differential tests (invented only)
         shell: pwsh
         working-directory: .tmp/m2bp-legacy-1ceec589
