@@ -1,0 +1,296 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2bq",
+  "classification": "ResearchOnlySpecification_NotRuntimeAuthorityOrAcceptance",
+  "exactBase": "ecc32ea7b65020075f8403a4d4c81cdce4d0f0ad",
+  "exactM2bo": "1ceec589ee8586727fb16a39fd15875444d6feab",
+  "branch": "codex/p28-word0196-full-production-composite-m2bq",
+  "sourceManifest": {
+    "path": "research/p28-word0196/production_composite_source_manifest.json",
+    "bytes": 328126,
+    "sha256": "73b61f79dbd6ee9b2fac22b186ccc249b0a9fb65b45c166068b9e5177d6200b4"
+  },
+  "program": {
+    "source": "ActualUnchangedM2bjEmitter_InMemoryOnly",
+    "base": 4096,
+    "endExclusive": 4147,
+    "length": 51,
+    "nodes": 20,
+    "forms": 16,
+    "sha256": "91ffb46922def91764f5d4da166ef2cfc9834ed0effcc051d3f97246fa147ab1",
+    "bothDdActualContentHashRequired": true,
+    "dd0Dd1BytesEqual": true,
+    "immutableAfterAdmission": true,
+    "persistentOrPublicFullPayloadAllowed": false,
+    "ephemeralInMemoryStdinSerializationAllowed": true,
+    "arbitraryStreamOrFileLoaderAllowed": false
+  },
+  "execution": {
+    "mode": "ClosedM2bjComposite",
+    "defaultOffFeature": "p28-word0196-audit",
+    "mechanism": [
+      "ProductionCpu",
+      "ProductionBus",
+      "ProductionDecodeChecked",
+      "SharedProductionExecuteDecoded"
+    ],
+    "oneCpuPerCase": true,
+    "oneBusPerCase": true,
+    "oneDataInitializationPerCase": true,
+    "oneFunctionalTransitionPerCase": true,
+    "reseedBetweenStepsAllowed": false,
+    "expectedStateAssignmentAllowed": false,
+    "maximumRetirements": 16,
+    "budgetCheckedBeforeDecoder": true,
+    "actualSuccessorCheckedBeforeNextFetch": true,
+    "terminalDirectJCount": 1,
+    "terminalPcs": [
+      21910,
+      21957
+    ],
+    "externalFetchAllowed": false,
+    "postTerminalApiRefusalRequired": true,
+    "partialFaultStateMustBeRetained": true,
+    "partialFaultEffectsClaimedAtomic": false
+  },
+  "paths": [
+    {
+      "path": "A",
+      "predicate": "word0196<00C0",
+      "retirements": 11,
+      "logicalReads": 5,
+      "logicalWrites": 3,
+      "terminalPc": 21957
+    },
+    {
+      "path": "B",
+      "predicate": "word0196>=00C0;012A.7=1",
+      "retirements": 13,
+      "logicalReads": 9,
+      "logicalWrites": 3,
+      "terminalPc": 21910
+    },
+    {
+      "path": "C",
+      "predicate": "word0196>=00C0;012A.7=0;0124.5=1",
+      "retirements": 14,
+      "logicalReads": 10,
+      "logicalWrites": 3,
+      "terminalPc": 21910
+    },
+    {
+      "path": "D",
+      "predicate": "word0196>=00C0;012A.7=0;0124.5=0",
+      "retirements": 16,
+      "logicalReads": 12,
+      "logicalWrites": 5,
+      "terminalPc": 21910
+    }
+  ],
+  "dataPolicy": {
+    "source": "ValidatedInitialSnapshot_DerivedPath_ActualPcFormWidthDirection",
+    "callerPermissionProfileAllowed": false,
+    "allPathsRightsUnionAllowed": false,
+    "word0196ReadOnlyLittleEndian16": true,
+    "immediate00C0IsDataRead": false,
+    "pathBSuppresses0124Read": true,
+    "pathDOnly012AWrite": true,
+    "rmwNeedsServicedSameInstructionRead": true,
+    "seedOrPriorStepReadSatisfiesRmw": false,
+    "sameValueWritesMustBeRecorded": true,
+    "globalOrdinalsMustAccumulate": true,
+    "perStepProgramLogicalRawHalfOpenSpans": true,
+    "previousProgramMetadataImmutable": true
+  },
+  "independentExpectations": {
+    "freezeBeforeAnyNewCompositeCpu": true,
+    "authorities": [
+      "ImmutableM2bkManufacturerReference",
+      "ImmutableM2bnOracle",
+      "M2avC11AndIR",
+      "M2bdDataflow"
+    ],
+    "newActualOutputMayDefineExpected": false,
+    "programTopologyAuthoritySeparateFromInstructionSemantics": true,
+    "fullRawReportsCompared": true,
+    "sharedArchitecturalProjectionCompared": true,
+    "completeCapturedRamBytes": 3968,
+    "losslessRamCodec": "SparseA5ExactInverse_NoArchitecturalFieldsExcluded",
+    "crossPlatformComparison": "EveryDecompressedCanonicalByte_LocalUbuntuWindows",
+    "shaOnlyComparisonSufficient": false
+  },
+  "coverageRequirementsNotActualResults": {
+    "initialSmokeExecutionsSeparate": 4,
+    "positiveCases": 5470,
+    "internalSfPairs": 2735,
+    "positiveRetirements": 73784,
+    "positiveLogicalReads": 49112,
+    "positiveLogicalWrites": 19162,
+    "pswAdmissionOnlyInputs": 65536,
+    "representablePsw": 2048,
+    "incompatiblePsw": 63488,
+    "pswPredicate": "(fullPSW&0x0CC8)==0x0CC8",
+    "nativeSfMeaningEstablished": false,
+    "allEightScbAnd32PointingWordsRetained": true,
+    "negativeCanonicalRecords": 33,
+    "executableBoundaryRecords": 2,
+    "negativeMetadataOnlyRecords": 2,
+    "componentUnitGuardTests": 13,
+    "pureCodecAndComparatorTests": 32,
+    "meaningfulComparatorMutations": 17,
+    "negativeOrSmokeCountersIncludedIn5470": false
+  },
+  "compatibilityRequirements": {
+    "historicalM2boExactCheckout": "1ceec589ee8586727fb16a39fd15875444d6feab",
+    "pinnedM2bpExactCheckout": "ecc32ea7b65020075f8403a4d4c81cdce4d0f0ad",
+    "defaultCanonicalRecords": 493,
+    "oneStepCanonicalRecords": 583,
+    "oneStepMicrosteps": 468,
+    "legacyBudgetAboveOneStillSealsAfterOne": true,
+    "allCompleteOneStepRecordsCompared": true,
+    "onlyUnequalOneStepMetadata": "TwoCompleteHeadersWithExactTwoAuditSourceIdentityTransitions",
+    "unequalVersionHeadersRetainedInFull": true,
+    "architecturalOrObservationFieldsExcluded": [],
+    "originalThreeExactXmlRepresentationsOnly": true,
+    "wholeProductionExecFileUnchanged": true,
+    "wholeDesktopJobUnchanged": true
+  },
+  "separateEvidenceClaims": [
+    "ProductionInstructionSemanticsShared",
+    "LegacyDefaultBehaviorUnchanged",
+    "M2bpSingleStepBehaviorUnchanged",
+    "M2bqCompositeBehaviorVerified"
+  ],
+  "deliveryRequirements": {
+    "fullSequentialQa": true,
+    "rustJobs": 1,
+    "desktopTimeoutSeconds": 30,
+    "optionBExtended": false,
+    "requiredTestsSkipped": 0,
+    "ciExactFinalShaJobs": 3,
+    "fullProtectedSha256BeforeAndAfter": true,
+    "unauthorizedProtectedDifferences": 0,
+    "privacyRequired": true,
+    "evidenceSealBeforeLastFinalReport": true
+  },
+  "authorityExclusions": [
+    "OriginalROM",
+    "NativeDownstreamRejoin",
+    "PhysicalSFResolution",
+    "PhysicalROMPlacement",
+    "TargetProgramEquivalence",
+    "FirmwareIntegration",
+    "Hardware",
+    "GUI",
+    "M2br"
+  ],
+  "originalRomExecutionsAllowed": 0,
+  "nativeDownstreamExecutionsAllowed": 0,
+  "targetBinObjectHexFirmwareBinAllowed": 0,
+  "firmwareReady": false,
+  "jsonMayPromoteEvidenceStatus": false,
+  "runtimeProtocol": {
+    "compiledHeaderPaths": [
+      "rust/p28-slice-runner/src/cpu.rs",
+      "rust/p28-slice-runner/src/bus.rs",
+      "rust/p28-slice-runner/src/decoder.rs",
+      "rust/p28-slice-runner/src/full_decoder.rs",
+      "rust/p28-slice-runner/src/exec.rs",
+      "rust/p28-slice-runner/src/audit.rs",
+      "rust/p28-slice-runner/src/audit_bus.rs",
+      "rust/p28-slice-runner/src/audit_composite.rs",
+      "rust/p28-slice-runner/src/audit_composite_tests.rs",
+      "rust/p28-slice-runner/src/audit_sha256.rs",
+      "rust/p28-slice-runner/src/audit_tests.rs",
+      "rust/p28-slice-runner/src/lib.rs",
+      "rust/p28-slice-runner/src/operand.rs",
+      "rust/p28-slice-runner/src/runner.rs",
+      "rust/p28-slice-runner/src/protocol.rs",
+      "rust/p28-slice-runner/src/main.rs",
+      "rust/p28-slice-runner/Cargo.toml",
+      "rust/p28-slice-runner/Cargo.lock",
+      "research/p28-word0196/rust-production-composite/Cargo.toml",
+      "research/p28-word0196/rust-production-composite/Cargo.lock",
+      "research/p28-word0196/rust-production-composite/src/main.rs",
+      "research/p28-word0196/rust-production-composite/src/capabilities.rs",
+      "research/p28-word0196/rust-production-composite/closed_inputs.json",
+      "research/p28-word0196/rust-synthetic-adapter/src/sha256.rs"
+    ],
+    "closedInputs": {
+      "path": "research/p28-word0196/rust-production-composite/closed_inputs.json",
+      "bytes": 5862821,
+      "sha256": "5664d624bd298efca8bb40ee24e6eb46639c2b6f81016bd905dbe360437dac72"
+    },
+    "losslessProjection": {
+      "codec": "M2bqLosslessJsonAndRamSparseA5V1",
+      "droppedFields": [],
+      "platformExclusions": [],
+      "ramRange": [
+        128,
+        4096
+      ],
+      "ramFill": 165,
+      "ramEncoding": "AllActualBytesAsSortedNonFillOffsets_ExactInverseRequired",
+      "jsonEncoding": "SortedKeys_Ascii_IntegerBooleanNullExact_NoFloat",
+      "programPayload": "NotPartOfObservationSchema_NoByteValuesOrPersistentProgram"
+    },
+    "programTopology": {
+      "classification": "ExpectedProductionProgramCallbackTopology_NotInstructionSemantics",
+      "acquisition": "UnchangedProductionStrictDecoderCandidateOrder_ThenExactSelectedExtent",
+      "association": "OnlyCurrentStepDecoderProbeSpan_PreviousEventsImmutable",
+      "ordinalBase": 0,
+      "spans": "GlobalHalfOpenEventIndexRanges",
+      "forbidden": [
+        "SyntheticCallbackInsertedInActualJournal",
+        "FetchAfterTerminalJ",
+        "ProgramPayloadSerialization",
+        "PostMismatchFieldExclusion"
+      ]
+    },
+    "negativeProtocol": {
+      "version": 1,
+      "runtimeNegativeRecords": 33,
+      "metadataOnlyAdmissionRecords": 2,
+      "closedSessionRecords": 12,
+      "positive5470CasesChanged": 0,
+      "separateNegativeCompletedRoutes": {
+        "A": 1,
+        "D": 1
+      },
+      "separateNegativeSuccessfulRetirements": 28,
+      "negativeCpuInstances": 16,
+      "negativeBusInstances": 12,
+      "cpuCountMeaning": "ActualProductionCpuValueConstructions_IncludingFourRefusedBeforeBusConstructors",
+      "busCountMeaning": "ActualProductionBusInstances_OnlyInsideAcceptedSessionConstructors",
+      "negativeStepCalls": 33,
+      "negativeSharedExecutionCalls": 28,
+      "componentUnitGuardFunctions": [
+        "composite_closed_inventory_and_all_four_path_boundaries_are_exact",
+        "composite_closed_node_refuses_mid_instruction_wrong_dd_and_wrong_path",
+        "composite_closed_successor_requires_actual_j_and_prevents_second_j",
+        "composite_seed_inventory_aliases_and_derived_paths_are_closed",
+        "composite_opaque_non_emitter_payload_is_never_admitted",
+        "composite_per_instruction_rights_refuse_index_form_path_width_and_direction",
+        "composite_rmw_requires_current_instruction_read_not_prior_seed_or_failed_event",
+        "composite_current_step_selection_never_reassociates_prior_program_events",
+        "composite_budget_guard_faults_before_any_new_program_or_data_attempt",
+        "composite_legacy_budget16_still_seals_after_one_retirement",
+        "composite_retirement_continues_only_closed_successor_then_seals_actual_j",
+        "composite_retirement_rejects_non_j_exit_or_wrong_external_authority",
+        "composite_host_api_escape_refusals_are_sticky_and_never_service_data"
+      ],
+      "componentGuardsAreNotCompositeRuntimeExecutions": true,
+      "allActualNegativeFieldsRetained": true,
+      "canonicalFieldsExcluded": [],
+      "permissionDenials": "PublicCompositeHostDataCallsRefusedBeforeProductionBus_NotFabricatedFunctionalEvents",
+      "inaccessibleStateMutations": "ActualComponentGuardsOrComparatorMutations_NotPublicRuntimeInjection",
+      "originalRomExecutions": 0,
+      "firmwareReady": false
+    },
+    "executableBoundaryRecords": 2,
+    "canonicalRecords": {
+      "positiveIncludingFourSmokes": 5478,
+      "negativeIncludingHeader": 36
+    }
+  }
+}

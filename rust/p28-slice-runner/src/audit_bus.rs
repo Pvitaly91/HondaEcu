@@ -1,9 +1,18 @@
 //! Opt-in state owned by the production Bus. No instruction semantics live here.
+use crate::audit::composite::{
+    ClosedState, CompositeNodeIdentity, CompositeReport, CompositeStepOutcome, COMPOSITE_SHA256,
+    INVENTORY,
+};
 use crate::audit::{
     Access, AuditError, AuditReport, DataAdmissionRefusal, DataEvent, DiagnosticEvent, Permissions,
     ProgramEvent, ProgramSegment, RawDataEvent, Result,
 };
+use crate::audit::{Snapshot, StepOutcome};
 use std::cell::RefCell;
+
+#[cfg(test)]
+#[path = "audit_composite_tests.rs"]
+mod composite_tests;
 
 #[derive(Clone, Copy)]
 pub(crate) struct DataToken {
@@ -22,6 +31,10 @@ struct State {
     instruction: Option<usize>,
     selected_len: Option<usize>,
     selected_reads: usize,
+    program_start: usize,
+    data_start: usize,
+    raw_start: usize,
+    composite: Option<ClosedState>,
     program: Vec<ProgramEvent>,
     data: Vec<DataEvent>,
     raw: Vec<RawDataEvent>,
@@ -64,6 +77,10 @@ impl AuditBus {
                 instruction: None,
                 selected_len: None,
                 selected_reads: 0,
+                program_start: 0,
+                data_start: 0,
+                raw_start: 0,
+                composite: None,
                 program: vec![],
                 data: vec![],
                 raw: vec![],
@@ -84,6 +101,146 @@ impl AuditBus {
                 fault: None,
             }),
         }
+    }
+    pub(crate) fn install_closed(&self, closed: ClosedState) -> Result<()> {
+        let mut state = self.state.borrow_mut();
+        let result = (|| {
+            Self::readiness(&state)?;
+            let mut expected = INVENTORY.to_vec();
+            expected.extend(0x80..0xc0);
+            expected.sort_unstable();
+            let mut actual = state.seeded.clone();
+            actual.sort_unstable();
+            if state.phase != "Setup"
+                || state.composite.is_some()
+                || state.pending_seed.is_some()
+                || state.active_data.is_some()
+                || self.segment.base != 0x1000
+                || self.segment.end != 0x1033
+                || self.segment.digest != COMPOSITE_SHA256
+                || actual != expected
+                || state.step_calls != 0
+                || state.execution_calls != 0
+                || state.retirements != 0
+            {
+                return Err(AuditError::new(
+                    "InvalidCompositeInstallation",
+                    None,
+                    "closed segment and exactly one complete DATA initialization before Functional",
+                ));
+            }
+            state.composite = Some(closed);
+            Ok(())
+        })();
+        result.map_err(|error| Self::latch(&mut state, error))
+    }
+    pub(crate) fn require_closed(&self) -> Result<()> {
+        if self.state.borrow().composite.is_none() {
+            return Err(AuditError::new(
+                "WrongCompositeApi",
+                None,
+                "explicit closed constructor required",
+            ));
+        }
+        Ok(())
+    }
+    pub(crate) fn admit_legacy_step(&self) -> Result<()> {
+        let closed_mode = self.state.borrow().composite.is_some();
+        if closed_mode {
+            return Err(self.reject_step_attempt(AuditError::new(
+                "WrongCompositeApi",
+                None,
+                "caller-selected one-step API cannot enter a closed composite",
+            )));
+        }
+        Ok(())
+    }
+    pub(crate) fn reject_step_attempt(&self, error: AuditError) -> AuditError {
+        let mut state = self.state.borrow_mut();
+        state.step_calls += 1;
+        Self::latch(&mut state, error)
+    }
+    pub(crate) fn closed_node(&self, pc: u16, dd: bool) -> Result<CompositeNodeIdentity> {
+        let state = self.state.borrow();
+        Self::readiness(&state)?;
+        state
+            .composite
+            .as_ref()
+            .ok_or_else(|| {
+                AuditError::new(
+                    "WrongCompositeApi",
+                    None,
+                    "explicit closed constructor required",
+                )
+            })?
+            .node(pc, dd, state.retirements)
+    }
+    pub(crate) fn record_closed_step(
+        &self,
+        node: CompositeNodeIdentity,
+        before: Snapshot,
+        after: Snapshot,
+        outcome: StepOutcome,
+    ) -> Result<CompositeStepOutcome> {
+        let mut state = self.state.borrow_mut();
+        let record = CompositeStepOutcome {
+            index: state.retirements,
+            node_identity: node.node_identity,
+            form: node.form,
+            before,
+            after,
+            outcome,
+            program_span: [state.program_start, state.program.len()],
+            logical_span: [state.data_start, state.data.len()],
+            raw_span: [state.raw_start, state.raw.len()],
+        };
+        let retired = state.retirements;
+        let closed = state.composite.as_mut().ok_or_else(|| {
+            AuditError::new(
+                "WrongCompositeApi",
+                None,
+                "closed record requires explicit mode",
+            )
+        })?;
+        if closed.steps.len() as u64 + 1 != retired {
+            return Err(Self::latch(
+                &mut state,
+                AuditError::new(
+                    "CompositeRecordOrderMismatch",
+                    None,
+                    "one actual successful record per retirement",
+                ),
+            ));
+        }
+        closed.steps.push(record.clone());
+        Ok(record)
+    }
+    pub(crate) fn closed_report(&self, current: Snapshot) -> Result<CompositeReport> {
+        let audit = self.report();
+        let state = self.state.borrow();
+        let closed = state.composite.as_ref().ok_or_else(|| {
+            AuditError::new(
+                "WrongCompositeApi",
+                None,
+                "closed report requires explicit mode",
+            )
+        })?;
+        Ok(CompositeReport {
+            mode: "ClosedM2bjComposite".into(),
+            program_node_count: closed.nodes.len(),
+            path: closed.path,
+            entry: closed.entry.clone(),
+            current,
+            steps: closed.steps.clone(),
+            direct_j_count: closed.direct_j_count,
+            completed: state.sealed
+                && state.fault.is_none()
+                && closed.direct_j_count == 1
+                && state.external_exit == Some(closed.path.terminal())
+                && state.retirements as usize == closed.path.pcs().len()
+                && closed.steps.len() as u64 == state.retirements,
+            audit,
+        })
     }
     fn latch(state: &mut State, error: AuditError) -> AuditError {
         if state.fault.is_none() {
@@ -182,6 +339,12 @@ impl AuditBus {
                     "explicit capability DATA call",
                 ));
             }
+            if state.composite.is_some() {
+                return Err(AuditError::new(
+                    "CompositeCapabilityDataDenied", Some(i64::from(address)),
+                    "closed DATA access must arise only from the actual selected production instruction",
+                ));
+            }
             if !matches!(width, 8 | 16)
                 || write && (value.is_none() || width == 8 && value.is_some_and(|v| v > 255))
             {
@@ -249,6 +412,9 @@ impl AuditBus {
                     "no fetch before checked entry",
                 ));
             }
+            state.program_start = state.program.len();
+            state.data_start = state.data.len();
+            state.raw_start = state.raw.len();
             state.phase = "Executing";
             state.pc = Some(pc);
             state.current_pc = pc;
@@ -289,7 +455,9 @@ impl AuditBus {
         let result = (|| {
             Self::readiness(&state)?;
             match purpose {
-                "DiagnosticProgramProbe" if matches!(state.phase, "Setup" | "Functional") => {}
+                "DiagnosticProgramProbe"
+                    if state.composite.is_none()
+                        && matches!(state.phase, "Setup" | "Functional") => {}
                 "DecoderProbe" if state.phase == "Executing" && state.selected_len.is_none() => {}
                 "ArchitecturalSelectedFetch"
                     if state.phase == "Executing"
@@ -337,7 +505,12 @@ impl AuditBus {
                 ));
             }
             state.selected_len = Some(len);
-            for event in &mut state.program {
+            let start = if state.composite.is_some() {
+                state.program_start
+            } else {
+                0
+            };
+            for event in &mut state.program[start..] {
                 if event.acquired_purpose == "DecoderProbe" {
                     event.selected_length = Some(len);
                     event.selection_association = Some(
@@ -377,6 +550,29 @@ impl AuditBus {
                     Some(i64::from(pc)),
                     "all selected fetches and the real execution must complete",
                 ));
+            }
+            if let Some(closed) = state.composite.as_ref() {
+                let origin = state.pc.expect("selected execution origin");
+                let terminal = closed.successor(origin, pc, state.retirements)?;
+                if external != terminal.then_some(pc) {
+                    return Err(AuditError::new(
+                        "CompositeExternalTransferMismatch", Some(i64::from(pc)),
+                        "terminal authority requires the actual selected direct J and exact external target",
+                    ));
+                }
+                state.retirements += 1;
+                if terminal {
+                    state.composite.as_mut().expect("closed").direct_j_count += 1;
+                    state.sealed = true;
+                    state.phase = "Sealed";
+                    state.external_exit = external;
+                    state.terminal_reason = Some("ActualDirectJCompleted".into());
+                } else {
+                    state.phase = "Functional";
+                    state.external_exit = None;
+                    state.terminal_reason = None;
+                }
+                return Ok(());
             }
             state.retirements += 1;
             state.sealed = true;
@@ -428,6 +624,35 @@ impl AuditBus {
                     "functional DATA lifecycle",
                 ));
             }
+            let closed_rmw = if let Some(closed) = &state.composite {
+                if state.phase != "Executing" {
+                    return Err(AuditError::new(
+                        "CompositeDataOutsideInstruction",
+                        Some(i64::from(address)),
+                        "no host DATA access between closed steps",
+                    ));
+                }
+                Some(closed.data_right(
+                    state.pc.ok_or_else(|| {
+                        AuditError::new(
+                            "CompositeDataOutsideInstruction",
+                            None,
+                            "actual instruction PC missing",
+                        )
+                    })?,
+                    state.instruction.ok_or_else(|| {
+                        AuditError::new(
+                            "CompositeDataOutsideInstruction",
+                            None,
+                            "actual selected instruction missing",
+                        )
+                    })?,
+                    access,
+                    write,
+                )?)
+            } else {
+                None
+            };
             if write {
                 let right = self
                     .permissions
@@ -441,8 +666,14 @@ impl AuditBus {
                             "independent exact logical width/address write right",
                         )
                     })?;
-                if right.rmw_required
-                    && !state.data.iter().any(|event| {
+                let rmw_required = closed_rmw.unwrap_or(right.rmw_required);
+                let start = if state.composite.is_some() {
+                    state.data_start
+                } else {
+                    0
+                };
+                if rmw_required
+                    && !state.data[start..].iter().any(|event| {
                         event.phase == "Functional"
                             && event.pc == state.pc
                             && event.instruction_index == state.instruction

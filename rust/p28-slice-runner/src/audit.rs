@@ -2,6 +2,13 @@
 use crate::{audit_bus::AuditBus, bus::Bus, cpu::Cpu, decoder::Fields, exec};
 use serde::{Deserialize, Serialize};
 
+#[path = "audit_composite.rs"]
+pub(crate) mod composite;
+pub use composite::{
+    ClosedCompositeProgram, CompositeEmissionMetadata, CompositeForm, CompositeNodeIdentity,
+    CompositeOperand, CompositePath, CompositeReport, CompositeSeeds, CompositeStepOutcome,
+};
+
 pub type Result<T> = std::result::Result<T, AuditError>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -481,6 +488,15 @@ impl Session {
             .map_or(Ok(()), Err)
     }
     pub fn step(&mut self, expected: &InstructionIdentity) -> Result<StepOutcome> {
+        self.bus
+            .audit
+            .as_ref()
+            .expect("installed")
+            .admit_legacy_step()?;
+        self.checked_step(expected)
+    }
+    // One checked instruction implementation shared by both explicit audit modes.
+    fn checked_step(&mut self, expected: &InstructionIdentity) -> Result<StepOutcome> {
         let pc = self.cpu.pc;
         let dd_before = self.cpu.dd;
         self.bus.audit.as_ref().expect("installed").begin_step(pc)?;
