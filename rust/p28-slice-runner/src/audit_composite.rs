@@ -396,7 +396,7 @@ impl ClosedCompositeProgram {
             })
             .collect()
     }
-    fn segment_copy(&self) -> ProgramSegment {
+    pub(crate) fn segment_copy(&self) -> ProgramSegment {
         ProgramSegment {
             base: self.segment.base,
             end: self.segment.end,
@@ -493,6 +493,12 @@ pub struct CompositeSeeds {
     path: CompositePath,
 }
 impl CompositeSeeds {
+    pub(crate) fn transfer_data(&self) -> &BTreeMap<u16, u8> {
+        &self.data
+    }
+    pub(crate) fn transfer_pointing(&self) -> &[[u16; 4]; 8] {
+        &self.pointing
+    }
     pub fn new(
         data: BTreeMap<u16, u8>,
         pointing_banks: [[u16; 4]; 8],
@@ -535,7 +541,7 @@ impl CompositeSeeds {
     pub fn path(&self) -> CompositePath {
         self.path
     }
-    fn permissions(&self) -> Result<Permissions> {
+    pub(crate) fn permissions(&self) -> Result<Permissions> {
         let read = |address, width| Access { address, width };
         let write = |address, rmw_required| WriteAccess {
             access: read(address, 8),

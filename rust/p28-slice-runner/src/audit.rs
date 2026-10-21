@@ -9,6 +9,14 @@ pub use composite::{
     CompositeOperand, CompositePath, CompositeReport, CompositeSeeds, CompositeStepOutcome,
 };
 
+#[path = "audit_transfer.rs"]
+pub(crate) mod transfer;
+pub use transfer::{
+    ClosedSyntheticTransferProgram, TransferCommitRecord, TransferJournalBoundary,
+    TransferProgramMetadata, TransferRecord, TransferReport, TransferSegmentClaim,
+    TransferSegmentId, TransferStage, TransferStepRecord, TransferTicket,
+};
+
 pub type Result<T> = std::result::Result<T, AuditError>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
