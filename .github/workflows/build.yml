@@ -24,8 +24,10 @@ jobs:
       GIT_CONFIG_VALUE_0: "false"
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Historical M2br QA on exact 2657bb8 source
+        uses: actions/checkout@v4
         with:
+          ref: 2657bb8ae3add410e693d988bac7ccf5cece7f50
           fetch-depth: 0
 
       - name: Set up .NET 8
@@ -527,6 +529,26 @@ jobs:
 
       - name: Verify formatting
         run: dotnet format HondaEcu.sln --verify-no-changes --no-restore
+
+      - name: Switch same checkout to active M2bs source after all historical gates
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          clean: false
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Active M2bs source integrity and unchanged production input guard
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/original_rom_boundary/source_guard.py --expected-head "${{ github.sha }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Active M2bs public synthetic boundary and negative regressions
+        shell: pwsh
+        run: |
+          python -B -m unittest discover -s research/p28-word0196/original_rom_boundary -p '*_tests.py'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   desktop-windows:
     runs-on: windows-latest

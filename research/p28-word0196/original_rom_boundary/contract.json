@@ -1,0 +1,1012 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2bs",
+  "classification": "IndependentStaticExpectedBoundaryObligations_NotRuntimeEvidence",
+  "entryPc": 21871,
+  "stopBeforePcs": [
+    21910,
+    21957
+  ],
+  "algorithmPcs": [
+    21871,
+    21873,
+    21874,
+    21877,
+    21878,
+    21880,
+    21885,
+    21887,
+    21890,
+    21893,
+    21896,
+    21899,
+    21902,
+    21906,
+    21908,
+    21951,
+    21953,
+    21955
+  ],
+  "sourceBindings": [
+    {
+      "path": "research/p28-word0196/word0196_ir.json",
+      "bytes": 32188,
+      "sha256": "4fdbd6b7dbdd8f48d5a43e123ca93a33a003c22556a0c40b5296d5f409e085c4"
+    },
+    {
+      "path": "research/p28-word0196/continuation_transfer_analysis.py",
+      "bytes": 78628,
+      "sha256": "86eb302ae13138aef5a64b192e5d4b63982afa1e4bb3e9c4b3d71b9f927c355c"
+    }
+  ],
+  "manufacturerSource": {
+    "id": "IM1991",
+    "edition": "September1991",
+    "sha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+    "classification": "NamedMSM66201InstructionSemantics_NotCustomerAsicOwnership"
+  },
+  "instructionExtents": [
+    {
+      "pc": 1515,
+      "formId": "st-a-page",
+      "length": 2,
+      "allowedIncomingDd": [
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "EvenPageOffset8",
+          "value": 150
+        }
+      ],
+      "successors": [
+        1517
+      ],
+      "dataReads": [],
+      "dataWrites": [
+        {
+          "address": 406,
+          "widthBits": 16
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsSelectionRead": [
+        "DD"
+      ]
+    },
+    {
+      "pc": 21749,
+      "formId": "jbr-page-bit2",
+      "length": 3,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "PageBit2",
+          "offset": 40,
+          "bit": 2
+        },
+        {
+          "kind": "TargetPC16",
+          "value": 21811
+        }
+      ],
+      "successors": [
+        21811,
+        21752
+      ],
+      "dataReads": [
+        {
+          "address": 296,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21752,
+      "formId": "movb-r0-imm8",
+      "length": 2,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "Register0",
+          "value": 0
+        },
+        {
+          "kind": "Immediate8",
+          "value": 255
+        }
+      ],
+      "successors": [
+        21754
+      ],
+      "dataReads": [],
+      "dataWrites": [
+        {
+          "address": 264,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21754,
+      "formId": "l-a-page",
+      "length": 2,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "EvenPageOffset8",
+          "value": 150
+        }
+      ],
+      "successors": [
+        21756
+      ],
+      "dataReads": [
+        {
+          "address": 406,
+          "widthBits": 16
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF",
+        "DD"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21756,
+      "formId": "st-a-er1",
+      "length": 1,
+      "allowedIncomingDd": [
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "RegisterPair1",
+          "value": 1
+        }
+      ],
+      "successors": [
+        21757
+      ],
+      "dataReads": [],
+      "dataWrites": [
+        {
+          "address": 266,
+          "widthBits": 16
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsSelectionRead": [
+        "DD"
+      ]
+    },
+    {
+      "pc": 21757,
+      "formId": "cmpb-page-imm8",
+      "length": 4,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "PageOffset8",
+          "value": 23
+        },
+        {
+          "kind": "Immediate8",
+          "value": 15
+        }
+      ],
+      "successors": [
+        21761
+      ],
+      "dataReads": [
+        {
+          "address": 279,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "CF",
+        "ZF"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21761,
+      "formId": "jne-rel8",
+      "length": 2,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "TargetPC16",
+          "value": 21871
+        }
+      ],
+      "successors": [
+        21871,
+        21763
+      ],
+      "dataReads": [],
+      "dataWrites": [],
+      "flagsRead": [
+        "ZF"
+      ],
+      "flagsWritten": [],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21871,
+      "formId": "lb-a-page",
+      "length": 2,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "PageOffset8",
+          "value": 142
+        }
+      ],
+      "successors": [
+        21873
+      ],
+      "dataReads": [
+        {
+          "address": 398,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF",
+        "DD"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21873,
+      "formId": "sllb-a",
+      "length": 1,
+      "allowedIncomingDd": [
+        0
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        }
+      ],
+      "successors": [
+        21874
+      ],
+      "dataReads": [],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "CF"
+      ],
+      "flagsSelectionRead": [
+        "DD"
+      ]
+    },
+    {
+      "pc": 21874,
+      "formId": "rolb-page",
+      "length": 3,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "PageOffset8",
+          "value": 142
+        }
+      ],
+      "successors": [
+        21877
+      ],
+      "dataReads": [
+        {
+          "address": 398,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [
+        {
+          "address": 398,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [
+        "CF"
+      ],
+      "flagsWritten": [
+        "CF"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21877,
+      "formId": "lb-a-r0",
+      "length": 1,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "Register0",
+          "value": 0
+        }
+      ],
+      "successors": [
+        21878
+      ],
+      "dataReads": [
+        {
+          "address": 264,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF",
+        "DD"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21878,
+      "formId": "andb-a-page",
+      "length": 2,
+      "allowedIncomingDd": [
+        0
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "PageOffset8",
+          "value": 142
+        }
+      ],
+      "successors": [
+        21880
+      ],
+      "dataReads": [
+        {
+          "address": 398,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsSelectionRead": [
+        "DD"
+      ]
+    },
+    {
+      "pc": 21880,
+      "formId": "cmp-page-imm16",
+      "length": 5,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "EvenPageOffset8",
+          "value": 150
+        },
+        {
+          "kind": "Immediate16",
+          "value": 192
+        }
+      ],
+      "successors": [
+        21885
+      ],
+      "dataReads": [
+        {
+          "address": 406,
+          "widthBits": 16
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "CF",
+        "ZF"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21885,
+      "formId": "jlt-rel8",
+      "length": 2,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "TargetPC16",
+          "value": 21951
+        }
+      ],
+      "successors": [
+        21951,
+        21887
+      ],
+      "dataReads": [],
+      "dataWrites": [],
+      "flagsRead": [
+        "CF"
+      ],
+      "flagsWritten": [],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21887,
+      "formId": "movb-r1-page",
+      "length": 3,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "Register1",
+          "value": 1
+        },
+        {
+          "kind": "PageOffset8",
+          "value": 23
+        }
+      ],
+      "successors": [
+        21890
+      ],
+      "dataReads": [
+        {
+          "address": 279,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [
+        {
+          "address": 265,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21890,
+      "formId": "andb-page-a",
+      "length": 3,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "PageOffset8",
+          "value": 23
+        },
+        {
+          "kind": "AccumulatorA"
+        }
+      ],
+      "successors": [
+        21893
+      ],
+      "dataReads": [
+        {
+          "address": 279,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [
+        {
+          "address": 279,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21893,
+      "formId": "jbs-page-bit7",
+      "length": 3,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "PageBit7",
+          "offset": 42,
+          "bit": 7
+        },
+        {
+          "kind": "TargetPC16",
+          "value": 21906
+        }
+      ],
+      "successors": [
+        21906,
+        21896
+      ],
+      "dataReads": [
+        {
+          "address": 298,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21896,
+      "formId": "jbs-page-bit5",
+      "length": 3,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "PageBit5",
+          "offset": 36,
+          "bit": 5
+        },
+        {
+          "kind": "TargetPC16",
+          "value": 21906
+        }
+      ],
+      "successors": [
+        21906,
+        21899
+      ],
+      "dataReads": [
+        {
+          "address": 292,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21899,
+      "formId": "andb-page-a",
+      "length": 3,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "PageOffset8",
+          "value": 143
+        },
+        {
+          "kind": "AccumulatorA"
+        }
+      ],
+      "successors": [
+        21902
+      ],
+      "dataReads": [
+        {
+          "address": 399,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [
+        {
+          "address": 399,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21902,
+      "formId": "orb-page-imm8",
+      "length": 4,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "PageOffset8",
+          "value": 42
+        },
+        {
+          "kind": "Immediate8",
+          "value": 1
+        }
+      ],
+      "successors": [
+        21906
+      ],
+      "dataReads": [
+        {
+          "address": 298,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [
+        {
+          "address": 298,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21906,
+      "formId": "lb-a-page",
+      "length": 2,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "PageOffset8",
+          "value": 143
+        }
+      ],
+      "successors": [
+        21908
+      ],
+      "dataReads": [
+        {
+          "address": 399,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF",
+        "DD"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21908,
+      "formId": "orb-a-imm8",
+      "length": 2,
+      "allowedIncomingDd": [
+        0
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "Immediate8",
+          "value": 240
+        }
+      ],
+      "successors": [
+        21910
+      ],
+      "dataReads": [],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsSelectionRead": [
+        "DD"
+      ]
+    },
+    {
+      "pc": 21910,
+      "formId": "andb-zero-a",
+      "length": 3,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "ZeroPageOffset8",
+          "value": 36
+        },
+        {
+          "kind": "AccumulatorA"
+        }
+      ],
+      "successors": [
+        21913
+      ],
+      "dataReads": [
+        {
+          "address": 36,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [
+        {
+          "address": 36,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21951,
+      "formId": "lb-a-imm8",
+      "length": 2,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "Immediate8",
+          "value": 15
+        }
+      ],
+      "successors": [
+        21953
+      ],
+      "dataReads": [],
+      "dataWrites": [],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF",
+        "DD"
+      ],
+      "flagsSelectionRead": []
+    },
+    {
+      "pc": 21953,
+      "formId": "stb-a-page",
+      "length": 2,
+      "allowedIncomingDd": [
+        0
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "PageOffset8",
+          "value": 23
+        }
+      ],
+      "successors": [
+        21955
+      ],
+      "dataReads": [],
+      "dataWrites": [
+        {
+          "address": 279,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsSelectionRead": [
+        "DD"
+      ]
+    },
+    {
+      "pc": 21955,
+      "formId": "stb-a-page",
+      "length": 2,
+      "allowedIncomingDd": [
+        0
+      ],
+      "typedOperands": [
+        {
+          "kind": "AccumulatorA"
+        },
+        {
+          "kind": "PageOffset8",
+          "value": 143
+        }
+      ],
+      "successors": [
+        21957
+      ],
+      "dataReads": [],
+      "dataWrites": [
+        {
+          "address": 399,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [],
+      "flagsSelectionRead": [
+        "DD"
+      ]
+    },
+    {
+      "pc": 21957,
+      "formId": "orb-zero-a",
+      "length": 3,
+      "allowedIncomingDd": [
+        0,
+        1
+      ],
+      "typedOperands": [
+        {
+          "kind": "ZeroPageOffset8",
+          "value": 36
+        },
+        {
+          "kind": "AccumulatorA"
+        }
+      ],
+      "successors": [
+        21960
+      ],
+      "dataReads": [
+        {
+          "address": 36,
+          "widthBits": 8
+        }
+      ],
+      "dataWrites": [
+        {
+          "address": 36,
+          "widthBits": 8
+        }
+      ],
+      "flagsRead": [],
+      "flagsWritten": [
+        "ZF"
+      ],
+      "flagsSelectionRead": []
+    }
+  ],
+  "paths": {
+    "A": [
+      21871,
+      21873,
+      21874,
+      21877,
+      21878,
+      21880,
+      21885,
+      21951,
+      21953,
+      21955
+    ],
+    "B": [
+      21871,
+      21873,
+      21874,
+      21877,
+      21878,
+      21880,
+      21885,
+      21887,
+      21890,
+      21893,
+      21906,
+      21908
+    ],
+    "C": [
+      21871,
+      21873,
+      21874,
+      21877,
+      21878,
+      21880,
+      21885,
+      21887,
+      21890,
+      21893,
+      21896,
+      21906,
+      21908
+    ],
+    "D": [
+      21871,
+      21873,
+      21874,
+      21877,
+      21878,
+      21880,
+      21885,
+      21887,
+      21890,
+      21893,
+      21896,
+      21899,
+      21902,
+      21906,
+      21908
+    ]
+  }
+}
