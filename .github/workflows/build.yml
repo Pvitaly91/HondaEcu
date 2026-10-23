@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  build-and-test:
+  historical-pinned-qa:
     strategy:
       fail-fast: false
       matrix:
@@ -550,18 +550,183 @@ jobs:
           python -B -m unittest discover -s research/p28-word0196/original_rom_boundary -p '*_tests.py'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Switch same checkout to active M2bt source after pinned M2bs gates
+  build-and-test:
+    needs: historical-pinned-qa
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_BUILD_JOBS: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: core.autocrlf
+      GIT_CONFIG_VALUE_0: "false"
+
+    steps:
+      - name: Checkout exact immutable M2bt runtime source for a fresh active job
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: 7de605aae82a873ed5b3fc6ef8604c6549ff8f6c
           clean: false
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Verify closed CI-only delivery orchestration and immutable runtime source
+        shell: python
+        env:
+          M2BT_DELIVERY_SHA: ${{ github.sha }}
+        run: |
+          import hashlib
+          import json
+          import os
+          import re
+          import subprocess
+
+          RUNTIME_SHA = "7de605aae82a873ed5b3fc6ef8604c6549ff8f6c"
+          RUNTIME_FINGERPRINT = "2fbbfe1f3820c51d1ff3e042f91b5ba8cf00d2fcd138a266fc49823aa9ab7a9a"
+          SHA_EXPRESSION = "$" + "{{ github.sha }}"
+          WORKFLOW = ".github/workflows/build.yml"
+          DESKTOP = "\n  desktop-windows:\n"
+          OLD_ACTIVE_NAME = "Switch same checkout to active M2bt source after pinned M2bs gates"
+          NEW_ACTIVE_NAME = "Checkout exact immutable M2bt runtime source for a fresh active job"
+          PROOF_NAME = "Verify closed CI-only delivery orchestration and immutable runtime source"
+          GUARD_NAME = "Active M2bt closed source integrity and reviewed opt-in Rust delta"
+          RUST_NAME = "Active Rust default old-audit and M2bt opt-in feature regression suites"
+          TOOLCHAIN = "\n" + "\n".join((
+              "      - name: Set up pinned Rust toolchain for isolated active M2bt QA",
+              "        run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt",
+              ""))
+          FETCH = "\n" + "\n".join((
+              "      - name: Fetch exact locked registry dependencies for the fresh active M2bt job",
+              "        shell: pwsh",
+              "        run: |",
+              "          cargo +1.85.1 fetch --locked --manifest-path rust/p28-slice-runner/Cargo.toml",
+              "          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }",
+              ""))
+
+          def require(condition, reason):
+              if condition is not True:
+                  raise ValueError(reason)
+
+          def step(name):
+              return "\n      - name: " + name + "\n"
+
+          def validate_workflow(original_text, current_text):
+              require(type(original_text) is str and type(current_text) is str,
+                      "WorkflowTextRequired")
+              require("\r" not in original_text and "\r" not in current_text,
+                      "RawLfWorkflowRequired")
+              require(original_text.count(DESKTOP) == current_text.count(DESKTOP) == 1,
+                      "ClosedDesktopJobRequired")
+              old_before, old_desktop = original_text.split(DESKTOP, 1)
+              require(old_before.count(step(OLD_ACTIVE_NAME)) == 1,
+                      "OneFrozenActiveBlockRequired")
+              historical, active_tail = old_before.split(step(OLD_ACTIVE_NAME), 1)
+              require(historical.count("  build-and-test:\n") == 1,
+                      "OneFrozenMatrixJobRequired")
+              old_job = historical.split("  build-and-test:\n", 1)[1]
+              require(old_job.count("    steps:\n") == 1, "FrozenMatrixHeaderRequired")
+              matrix_header = old_job.split("    steps:\n", 1)[0]
+              adapted = step(NEW_ACTIVE_NAME) + active_tail
+              require(adapted.count("          ref: " + SHA_EXPRESSION + "\n") == 1
+                      and adapted.count('--expected-head "' + SHA_EXPRESSION + '"') == 1,
+                      "OneFrozenRuntimeCheckoutAndHeadRequired")
+              adapted = adapted.replace("          ref: " + SHA_EXPRESSION + "\n",
+                                        "          ref: " + RUNTIME_SHA + "\n", 1)
+              adapted = adapted.replace('--expected-head "' + SHA_EXPRESSION + '"',
+                                        '--expected-head "' + RUNTIME_SHA + '"', 1)
+              require(adapted.count(step(RUST_NAME)) == 1, "OneFrozenRustGateRequired")
+              adapted = adapted.replace(step(RUST_NAME), TOOLCHAIN + FETCH + step(RUST_NAME), 1)
+              expected = historical.replace("  build-and-test:\n",
+                                            "  historical-pinned-qa:\n", 1)
+              expected += ("\n  build-and-test:\n    needs: historical-pinned-qa\n"
+                           + matrix_header + "    steps:\n" + adapted.removeprefix("\n")
+                           + DESKTOP + old_desktop)
+              proof_start = step(PROOF_NAME)
+              proof_end = step(GUARD_NAME)
+              require(current_text.count(proof_start) == 1, "OneClosedProofStepRequired")
+              start = current_text.index(proof_start)
+              end = current_text.index(proof_end, start + len(proof_start))
+              proof = current_text[start:end]
+              proof_header = proof_start + "\n".join((
+                  "        shell: python",
+                  "        env:",
+                  "          M2BT_DELIVERY_SHA: " + SHA_EXPRESSION,
+                  "        run: |", ""))
+              require(proof.startswith(proof_header) and len(proof.encode("utf-8")) <= 24576,
+                      "BoundedForegroundProofWithoutConditionalWeakeningRequired")
+              require(all(not line or line.startswith("          ")
+                          for line in proof[len(proof_header):].splitlines()),
+                      "ProofMustContainOnlyItsPythonRunBody")
+              without_proof = current_text[:start] + current_text[end:]
+              require(without_proof == expected,
+                      "HistoricalDesktopActiveCommandsOrClosedJobTopologyChanged")
+              return {"historicalCommandBodiesByteExact": True,
+                      "historicalPinsUnchanged": True, "desktopJobByteExact": True,
+                      "activeCommandBodiesByteExactExceptPinnedCheckoutAndExpectedHead": True,
+                      "historicalMatrixJob": "historical-pinned-qa",
+                      "activeMatrixJob": "build-and-test",
+                      "activeNeedsBothHistoricalMatrixJobsSuccess": True,
+                      "requiredActualJobCount": 5, "conditionalGateWeakening": False,
+                      "addedForegroundSteps": [PROOF_NAME,
+                          "Set up pinned Rust toolchain for isolated active M2bt QA",
+                          "Fetch exact locked registry dependencies for the fresh active M2bt job"]}
+
+          def git(*arguments):
+              result = subprocess.run(["git", *arguments], check=True, stdout=subprocess.PIPE,
+                                      stderr=subprocess.PIPE, timeout=30)
+              require(len(result.stdout) <= 2097152, "BoundedGitMetadataRequired")
+              return result.stdout
+
+          def raw_tree(commit):
+              rows = {}
+              for record in git("ls-tree", "-r", "-z", "--full-tree", commit).split(b"\0"):
+                  if not record:
+                      continue
+                  entry, path = record.split(b"\t", 1)
+                  require(path not in rows, "DuplicateGitTreePath")
+                  rows[path] = tuple(entry.split(b" "))
+              return rows
+
+          def main():
+              delivery = os.environ.get("M2BT_DELIVERY_SHA", "")
+              require(re.fullmatch(r"[0-9a-f]{40}", delivery) is not None
+                      and delivery == os.environ.get("GITHUB_SHA") and delivery != RUNTIME_SHA,
+                      "ExplicitDistinctDeliveryWorkflowShaRequired")
+              require(git("rev-parse", "HEAD").decode("ascii").strip() == RUNTIME_SHA,
+                      "ExactImmutableRuntimeCheckoutRequired")
+              require(git("rev-list", "--parents", "-n", "1", delivery).decode("ascii").split()
+                      == [delivery, RUNTIME_SHA], "OneWorkflowOnlyChildCommitRequired")
+              before, after = raw_tree(RUNTIME_SHA), raw_tree(delivery)
+              require(set(before) == set(after), "NoSourceAdditionOrDeletionPermitted")
+              changed = [path for path in sorted(before) if before[path] != after[path]]
+              require(changed == [WORKFLOW.encode("ascii")], "OnlyDeliveryWorkflowMayChange")
+              require(before[changed[0]][:2] == after[changed[0]][:2] == (b"100644", b"blob"),
+                      "WorkflowModeOrObjectTypeChanged")
+              original = git("show", RUNTIME_SHA + ":" + WORKFLOW)
+              current = git("show", delivery + ":" + WORKFLOW)
+              projection = validate_workflow(original.decode("utf-8"), current.decode("utf-8"))
+              print(json.dumps({"schemaVersion": 1,
+                  "classification": "CiOnlyWorkflowDeliveryJoin_NotNewRuntimeSourceFingerprint",
+                  "passed": True, "deliveryWorkflowSha": delivery,
+                  "deliveryWorkflowSha256": hashlib.sha256(current).hexdigest(),
+                  "runtimeSourceSha": RUNTIME_SHA,
+                  "runtimeSourceFingerprintSha256": RUNTIME_FINGERPRINT,
+                  "runtimeFingerprintClaim": "PinnedIdentity_IndependentlyCheckedByNextSourceGuard",
+                  "allNonWorkflowGitTreeEntriesByteIdentical": True,
+                  "cargoTargetOwnerShaIsDeliveryWorkflowSha_NotRuntimeSourceSha": True,
+                  "projection": projection, "cpuExecutions": 0,
+                  "privateEvidenceAccesses": 0, "firmwareReady": False}, sort_keys=True))
+
+          if __name__ == "__main__":
+              main()
+
       - name: Active M2bt closed source integrity and reviewed opt-in Rust delta
         shell: pwsh
         run: |
-          $taskJoin = python -B research/p28-word0196/original_rom_execution/source_guard.py --expected-head "${{ github.sha }}"
+          $taskJoin = python -B research/p28-word0196/original_rom_execution/source_guard.py --expected-head "7de605aae82a873ed5b3fc6ef8604c6549ff8f6c"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           New-Item -ItemType Directory -Force -Path .tmp/m2bt-public-evidence | Out-Null
           [IO.File]::WriteAllText((Join-Path $PWD '.tmp/m2bt-public-evidence/sourcejoin.json'), ($taskJoin -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
@@ -570,6 +735,15 @@ jobs:
         shell: pwsh
         run: |
           python -B -m unittest discover -s research/p28-word0196/original_rom_execution -t research/p28-word0196 -p '*_tests.py'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Set up pinned Rust toolchain for isolated active M2bt QA
+        run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
+
+      - name: Fetch exact locked registry dependencies for the fresh active M2bt job
+        shell: pwsh
+        run: |
+          cargo +1.85.1 fetch --locked --manifest-path rust/p28-slice-runner/Cargo.toml
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Active Rust default old-audit and M2bt opt-in feature regression suites
