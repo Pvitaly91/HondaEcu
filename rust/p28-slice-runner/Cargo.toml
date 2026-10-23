@@ -8,6 +8,12 @@ publish = false
 [features]
 default = []
 p28-word0196-audit = []
+p28-word0196-original-rom = ["p28-word0196-audit"]
+
+[[bin]]
+name = "m2bt-original-rom"
+path = "src/bin/m2bt_original_rom.rs"
+required-features = ["p28-word0196-original-rom"]
 
 [dependencies]
 serde = { version = "=1.0.219", features = ["derive"] }

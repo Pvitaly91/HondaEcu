@@ -533,7 +533,7 @@ jobs:
       - name: Switch same checkout to active M2bs source after all historical gates
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.sha }}
+          ref: 4196153c6bcda3da5b164db752a8be4011c4e598
           clean: false
           fetch-depth: 0
           persist-credentials: false
@@ -541,7 +541,7 @@ jobs:
       - name: Active M2bs source integrity and unchanged production input guard
         shell: pwsh
         run: |
-          python -B research/p28-word0196/original_rom_boundary/source_guard.py --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/original_rom_boundary/source_guard.py --expected-head "4196153c6bcda3da5b164db752a8be4011c4e598"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Active M2bs public synthetic boundary and negative regressions
@@ -549,6 +549,88 @@ jobs:
         run: |
           python -B -m unittest discover -s research/p28-word0196/original_rom_boundary -p '*_tests.py'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Switch same checkout to active M2bt source after pinned M2bs gates
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          clean: false
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Active M2bt closed source integrity and reviewed opt-in Rust delta
+        shell: pwsh
+        run: |
+          $taskJoin = python -B research/p28-word0196/original_rom_execution/source_guard.py --expected-head "${{ github.sha }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          New-Item -ItemType Directory -Force -Path .tmp/m2bt-public-evidence | Out-Null
+          [IO.File]::WriteAllText((Join-Path $PWD '.tmp/m2bt-public-evidence/sourcejoin.json'), ($taskJoin -join "`n") + "`n", [Text.UTF8Encoding]::new($false))
+
+      - name: Active M2bt public synthetic admission oracle permissions and resume regressions
+        shell: pwsh
+        run: |
+          python -B -m unittest discover -s research/p28-word0196/original_rom_execution -t research/p28-word0196 -p '*_tests.py'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Active Rust default old-audit and M2bt opt-in feature regression suites
+        shell: pwsh
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/.tmp/m2bt-owned/cargo-target
+        run: |
+          python -B research/p28-word0196/original_rom_execution/source_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2bt-owned/cargo-target --no-default-features
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/original_rom_execution/source_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2bt-owned/cargo-target --no-default-features --features p28-word0196-audit
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/original_rom_execution/source_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2bt-owned/cargo-target --no-default-features --features p28-word0196-original-rom
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 fmt --check --manifest-path rust/p28-slice-runner/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build active required-feature M2bt public research runner
+        shell: pwsh
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/.tmp/m2bt-owned/cargo-target
+        run: |
+          python -B research/p28-word0196/original_rom_execution/source_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 build --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2bt-owned/cargo-target --no-default-features --features p28-word0196-original-rom --bin m2bt-original-rom
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Active M2bt public invented production execution and deterministic canonical evidence
+        shell: pwsh
+        run: |
+          $taskRunner = '.tmp/m2bt-owned/cargo-target/release/m2bt-original-rom'
+          if ($IsWindows) { $taskRunner += '.exe' }
+          python -B research/p28-word0196/validate_original_rom_execution.py --public --output .tmp/m2bt-public-evidence --runner $taskRunner
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify closed M2bt public canonical artifact membership
+        shell: pwsh
+        run: |
+          $taskRequired = @('canonical.jsonl.gz', 'summary.json', 'pre-runtime-freeze.json', 'sourcejoin.json')
+          $taskActual = @(Get-ChildItem -LiteralPath .tmp/m2bt-public-evidence -Force)
+          if ($taskActual.Count -ne $taskRequired.Count) { throw 'Unexpected M2bt public artifact membership.' }
+          foreach ($taskName in $taskRequired) {
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2bt-public-evidence' $taskName) -PathType Leaf)) { throw ('Missing M2bt public evidence: ' + $taskName) }
+          }
+
+      - name: Preserve M2bt public invented canonical evidence only
+        uses: actions/upload-artifact@v4
+        with:
+          name: M2bt-public-canonical-${{ matrix.os }}
+          path: |
+            .tmp/m2bt-public-evidence/canonical.jsonl.gz
+            .tmp/m2bt-public-evidence/summary.json
+            .tmp/m2bt-public-evidence/pre-runtime-freeze.json
+            .tmp/m2bt-public-evidence/sourcejoin.json
+          if-no-files-found: error
+          retention-days: 3
 
   desktop-windows:
     runs-on: windows-latest

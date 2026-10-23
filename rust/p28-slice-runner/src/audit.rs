@@ -17,6 +17,15 @@ pub use transfer::{
     TransferSegmentId, TransferStage, TransferStepRecord, TransferTicket,
 };
 
+#[cfg(feature = "p28-word0196-original-rom")]
+#[path = "audit_original_rom.rs"]
+pub(crate) mod original_rom;
+#[cfg(feature = "p28-word0196-original-rom")]
+pub use original_rom::{
+    ClosedOriginalRomProgram, OriginalRomReport, OriginalRomSeeds, OriginalRomSourceBinding,
+    OriginalRomStep, ORIGINAL_ROM_BASE_COMMIT, ORIGINAL_ROM_CONTRACT_SHA256,
+};
+
 pub type Result<T> = std::result::Result<T, AuditError>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

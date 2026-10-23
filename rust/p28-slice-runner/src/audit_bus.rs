@@ -3,6 +3,8 @@ use crate::audit::composite::{
     ClosedState, CompositeNodeIdentity, CompositeReport, CompositeStepOutcome, COMPOSITE_SHA256,
     INVENTORY,
 };
+#[cfg(feature = "p28-word0196-original-rom")]
+use crate::audit::original_rom::{OriginalNode, OriginalRomReport, OriginalRomStep, OriginalState};
 use crate::audit::transfer::{
     self, Pending, TransferCommitRecord, TransferCounters, TransferJournalBoundary, TransferRecord,
     TransferRefusal, TransferReport, TransferRetirement, TransferStage, TransferState,
@@ -46,6 +48,8 @@ struct State {
     raw_start: usize,
     composite: Option<ClosedState>,
     transfer: Option<TransferState>,
+    #[cfg(feature = "p28-word0196-original-rom")]
+    original: Option<OriginalState>,
     program: Vec<ProgramEvent>,
     data: Vec<DataEvent>,
     raw: Vec<RawDataEvent>,
@@ -65,12 +69,165 @@ struct State {
     external_exit: Option<u16>,
     fault: Option<AuditError>,
 }
+impl State {
+    fn original_active(&self) -> bool {
+        #[cfg(feature = "p28-word0196-original-rom")]
+        {
+            self.original.is_some()
+        }
+        #[cfg(not(feature = "p28-word0196-original-rom"))]
+        {
+            false
+        }
+    }
+}
 pub(crate) struct AuditBus {
     segment: ProgramSegment,
     permissions: Permissions,
     state: RefCell<State>,
 }
 impl AuditBus {
+    #[cfg(feature = "p28-word0196-original-rom")]
+    pub(crate) fn install_original(&self, original: OriginalState) -> Result<()> {
+        let mut state = self.state.borrow_mut();
+        let result = (|| {
+            Self::readiness(&state)?;
+            let mut expected = original.inventory.clone();
+            expected.extend(0x80..0xc0);
+            expected.sort_unstable();
+            let mut actual = state.seeded.clone();
+            actual.sort_unstable();
+            if state.phase != "Setup"
+                || state.composite.is_some()
+                || state.transfer.is_some()
+                || state.original_active()
+                || state.pending_seed.is_some()
+                || state.active_data.is_some()
+                || actual != expected
+                || !state.program.is_empty()
+                || state.step_calls != 0
+                || state.execution_calls != 0
+                || state.retirements != 0
+                || state.data.len() != 48
+                || state.raw.len() != 80
+                || state.data.iter().any(|e| e.phase != "Seed" || !e.serviced)
+                || state.raw.iter().any(|e| !e.serviced)
+                || original.pcs.first().copied() != Some(state.entry_pc)
+                || usize::from(state.budget) != original.pcs.len()
+            {
+                return Err(AuditError::new("OriginalInstallationRejected",None,
+                    "one complete DATA initialization and one immutable source before any execution"));
+            }
+            state.original = Some(original);
+            Ok(())
+        })();
+        result.map_err(|error| Self::latch(&mut state, error))
+    }
+    #[cfg(feature = "p28-word0196-original-rom")]
+    pub(crate) fn require_original(&self) -> Result<()> {
+        if self.state.borrow().original.is_none() {
+            return Err(AuditError::new(
+                "WrongOriginalApi",
+                None,
+                "explicit original constructor required",
+            ));
+        }
+        Ok(())
+    }
+    #[cfg(feature = "p28-word0196-original-rom")]
+    pub(crate) fn original_node(&self, pc: u16, dd: bool) -> Result<OriginalNode> {
+        let state = self.state.borrow();
+        Self::readiness(&state)?;
+        state
+            .original
+            .as_ref()
+            .ok_or_else(|| {
+                AuditError::new(
+                    "WrongOriginalApi",
+                    None,
+                    "explicit original constructor required",
+                )
+            })?
+            .node(pc, dd, state.retirements)
+    }
+    #[cfg(feature = "p28-word0196-original-rom")]
+    pub(crate) fn record_original_step(
+        &self,
+        before: Snapshot,
+        after: Snapshot,
+        full_psw_before: u16,
+        full_psw_after: u16,
+        outcome: StepOutcome,
+    ) -> Result<OriginalRomStep> {
+        let mut state = self.state.borrow_mut();
+        let result = (|| {
+            if let Some(error) = state.fault.as_ref() {
+                return Err(error.clone());
+            }
+            let record = OriginalRomStep {
+                index: state.retirements,
+                node_identity: format!("ClosedSite_{:04X}", outcome.pc_before),
+                full_psw_before,
+                full_psw_after,
+                before,
+                after,
+                outcome,
+                program_span: [state.program_start, state.program.len()],
+                logical_span: [state.data_start, state.data.len()],
+                raw_span: [state.raw_start, state.raw.len()],
+            };
+            let retired = state.retirements;
+            let original = state
+                .original
+                .as_mut()
+                .ok_or_else(|| AuditError::new("WrongOriginalApi", None, "closed actual record"))?;
+            if original.steps.len() as u64 + 1 != retired
+                || !record.outcome.retired
+                || record.after.cpu.instructions != retired
+            {
+                return Err(AuditError::new(
+                    "OriginalRecordOrderMismatch",
+                    None,
+                    "one real record per successful retirement",
+                ));
+            }
+            original.steps.push(record.clone());
+            Ok(record)
+        })();
+        result.map_err(|error| Self::latch(&mut state, error))
+    }
+    #[cfg(feature = "p28-word0196-original-rom")]
+    pub(crate) fn original_report(
+        &self,
+        current: Snapshot,
+        full_psw: u16,
+    ) -> Result<OriginalRomReport> {
+        let audit = self.report();
+        let state = self.state.borrow();
+        let original = state
+            .original
+            .as_ref()
+            .ok_or_else(|| AuditError::new("WrongOriginalApi", None, "closed actual report"))?;
+        let completed = state.sealed
+            && state.fault.is_none()
+            && state.terminal_reason.as_deref() == Some("OriginalStopBeforeReached")
+            && current.cpu.pc == original.terminal
+            && state.retirements as usize == original.pcs.len()
+            && original.steps.len() as u64 == state.retirements;
+        Ok(OriginalRomReport {
+            classification: original.classification.clone(),
+            source_binding: original.source_binding.clone(),
+            program_node_count: original.nodes.len(),
+            path: original.path,
+            entry: original.entry.clone(),
+            current,
+            full_psw,
+            steps: original.steps.clone(),
+            completed,
+            stop_before_pc: completed.then_some(original.terminal),
+            audit,
+        })
+    }
     pub(crate) fn new(
         segment: ProgramSegment,
         permissions: Permissions,
@@ -93,6 +250,8 @@ impl AuditBus {
                 raw_start: 0,
                 composite: None,
                 transfer: None,
+                #[cfg(feature = "p28-word0196-original-rom")]
+                original: None,
                 program: vec![],
                 data: vec![],
                 raw: vec![],
@@ -126,6 +285,7 @@ impl AuditBus {
             if state.phase != "Setup"
                 || state.composite.is_some()
                 || state.transfer.is_some()
+                || state.original_active()
                 || state.pending_seed.is_some()
                 || state.active_data.is_some()
                 || self.segment.base != 0x1000
@@ -169,6 +329,7 @@ impl AuditBus {
             if state.phase != "Setup"
                 || state.composite.is_some()
                 || state.transfer.is_some()
+                || state.original_active()
                 || state.pending_seed.is_some()
                 || state.active_data.is_some()
                 || self.segment.base != 0x0ff0
@@ -605,6 +766,13 @@ impl AuditBus {
         })
     }
     pub(crate) fn admit_legacy_step(&self) -> Result<()> {
+        if self.state.borrow().original_active() {
+            return Err(self.reject_step_attempt(AuditError::new(
+                "WrongOriginalApi",
+                None,
+                "caller-selected identities cannot enter a closed original session",
+            )));
+        }
         if self.state.borrow().transfer.is_some() {
             return Err(self.reject_step_attempt(AuditError::new(
                 "WrongTransferApi",
@@ -819,6 +987,10 @@ impl AuditBus {
             if state.transfer.is_some() {
                 return Err(AuditError::new("TransferCapabilityDataDenied", Some(i64::from(address)), "only actual stage instructions may access DATA"));
             }
+            if state.original_active() {
+                return Err(AuditError::new("OriginalCapabilityDataDenied", Some(i64::from(address)),
+                    "only the actual closed instruction may access DATA; no host mutation/read between retirements"));
+            }
             if state.composite.is_some() {
                 return Err(AuditError::new(
                     "CompositeCapabilityDataDenied", Some(i64::from(address)),
@@ -953,6 +1125,7 @@ impl AuditBus {
                 "DiagnosticProgramProbe"
                     if state.composite.is_none()
                         && state.transfer.is_none()
+                        && !state.original_active()
                         && matches!(state.phase, "Setup" | "Functional") => {}
                 "DecoderProbe" if state.phase == "Executing" && state.selected_len.is_none() => {}
                 "ArchitecturalSelectedFetch"
@@ -1005,11 +1178,13 @@ impl AuditBus {
                 ));
             }
             state.selected_len = Some(len);
-            let start = if state.composite.is_some() || state.transfer.is_some() {
-                state.program_start
-            } else {
-                0
-            };
+            let start =
+                if state.composite.is_some() || state.transfer.is_some() || state.original_active()
+                {
+                    state.program_start
+                } else {
+                    0
+                };
             for event in &mut state.program[start..] {
                 if event.acquired_purpose == "DecoderProbe" {
                     event.selected_length = Some(len);
@@ -1050,6 +1225,35 @@ impl AuditBus {
                     Some(i64::from(pc)),
                     "all selected fetches and the real execution must complete",
                 ));
+            }
+            #[cfg(feature = "p28-word0196-original-rom")]
+            if let Some(original) = state.original.as_ref() {
+                let terminal = original.successor(
+                    state.pc.expect("actual origin"),
+                    pc,
+                    state.retirements,
+                    state.instruction.ok_or_else(|| {
+                        AuditError::new("OriginalInstructionMissing", None, "actual selected form")
+                    })?,
+                )?;
+                if external.is_some() {
+                    return Err(AuditError::new(
+                        "OriginalUnexpectedDirectJ",
+                        Some(i64::from(pc)),
+                        "terminal fallthrough is not synthetic direct-J authority",
+                    ));
+                }
+                state.retirements += 1;
+                state.external_exit = None;
+                if terminal {
+                    state.sealed = true;
+                    state.phase = "Sealed";
+                    state.terminal_reason = Some("OriginalStopBeforeReached".into());
+                } else {
+                    state.phase = "Functional";
+                    state.terminal_reason = None;
+                }
+                return Ok(());
             }
             if state.transfer.is_some() {
                 let origin = state.pc.expect("actual selected source PC");
@@ -1222,6 +1426,26 @@ impl AuditBus {
             } else {
                 None
             };
+            #[cfg(feature = "p28-word0196-original-rom")]
+            let closed_rmw = if let Some(original) = state.original.as_ref() {
+                if state.phase != "Executing" {
+                    return Err(AuditError::new(
+                        "OriginalDataOutsideInstruction",
+                        Some(i64::from(address)),
+                        "no host DATA access between original instructions",
+                    ));
+                }
+                Some(original.data_right(
+                    state.pc.expect("actual PC"),
+                    state.instruction.ok_or_else(|| {
+                        AuditError::new("OriginalInstructionMissing", None, "actual selected form")
+                    })?,
+                    access,
+                    write,
+                )?)
+            } else {
+                closed_rmw
+            };
             if write {
                 let permissions = state
                     .transfer
@@ -1239,7 +1463,10 @@ impl AuditBus {
                         )
                     })?;
                 let rmw_required = closed_rmw.unwrap_or(right.rmw_required);
-                let start = if state.composite.is_some() || state.transfer.is_some() {
+                let start = if state.composite.is_some()
+                    || state.transfer.is_some()
+                    || state.original_active()
+                {
                     state.data_start
                 } else {
                     0
