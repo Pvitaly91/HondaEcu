@@ -27,7 +27,7 @@ def source_join(salt="invented"):
 class VerifyTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="m2bt-host-invented-")
-        self.root = Path(self.temporary.name)
+        self.root = Path(self.temporary.name).resolve()
         self.runner = self.root / "invented-runner.fixture"
         self.runner.write_bytes(b"Not an executable; mocked observations only.\n")
         self.output = self.root / "public-results"
