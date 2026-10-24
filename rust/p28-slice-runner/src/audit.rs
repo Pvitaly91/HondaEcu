@@ -26,6 +26,15 @@ pub use original_rom::{
     OriginalRomStep, ORIGINAL_ROM_BASE_COMMIT, ORIGINAL_ROM_CONTRACT_SHA256,
 };
 
+#[cfg(feature = "p28-word0196-entry-continuity")]
+#[path = "audit_entry_continuity.rs"]
+mod entry_continuity;
+#[cfg(feature = "p28-word0196-entry-continuity")]
+pub use entry_continuity::{
+    ClosedEntryContinuityProgram, EntryContinuityPath, EntryContinuityReport, EntryContinuitySeeds,
+    EntryContinuitySession,
+};
+
 pub type Result<T> = std::result::Result<T, AuditError>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -388,6 +397,39 @@ pub struct Session {
     bus: Bus,
 }
 impl Session {
+    // Only the closed M2bu wrapper can construct this token. No public caller
+    // can supply a maximum, a PC stream, or widen the legacy1..16 constructor.
+    #[cfg(feature = "p28-word0196-entry-continuity")]
+    fn new_entry_continuity_admitted(
+        segment: ProgramSegment,
+        cpu: Cpu,
+        full_psw: u16,
+        permissions: Permissions,
+        admission: entry_continuity::EntryBudget,
+    ) -> Result<Self> {
+        validate_psw(full_psw)?;
+        let permissions = Permissions::new(permissions.reads.clone(), permissions.writes.clone())?
+            .restrict_raw(
+                permissions.raw_reads.clone(),
+                permissions.raw_writes.clone(),
+            )?;
+        let budget = admission.retirements();
+        if cpu.psw_u16() != full_psw
+            || cpu.psw_other & !0x0337 != 0
+            || cpu.halted
+            || u32::from(cpu.pc) != segment.base
+            || !matches!(budget, 1 | 6 | 16 | 18 | 19 | 21)
+        {
+            return Err(AuditError::new(
+                "InvalidEntryContinuityState",
+                Some(i64::from(cpu.pc)),
+                "coherent canonical technical entry and sealed closed-path retirement token",
+            ));
+        }
+        let mut bus = Bus::new(Vec::new(), 0xa5);
+        bus.audit = Some(AuditBus::new(segment, permissions, cpu.pc, budget));
+        Ok(Self { cpu, bus })
+    }
     pub fn new(
         segment: ProgramSegment,
         cpu: Cpu,

@@ -184,6 +184,12 @@ impl ClosedOriginalRomProgram {
     pub fn program_sha256(&self) -> &str {
         &self.segment.digest
     }
+    // Additive, crate-internal metadata reuse only. Existing admission,
+    // constructors, execution and public fixture remain unchanged.
+    #[cfg(feature = "p28-word0196-entry-continuity")]
+    pub(super) fn closed_metadata(&self) -> (Vec<OriginalNode>, Vec<u16>) {
+        (self.nodes.clone(), self.layout.inventory())
+    }
     pub fn classification(&self) -> &'static str {
         if self.source_binding.is_some() {
             "OriginalRomBytes_TechnicalSeededExecution"

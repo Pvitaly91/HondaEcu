@@ -9,11 +9,17 @@ publish = false
 default = []
 p28-word0196-audit = []
 p28-word0196-original-rom = ["p28-word0196-audit"]
+p28-word0196-entry-continuity = ["p28-word0196-original-rom"]
 
 [[bin]]
 name = "m2bt-original-rom"
 path = "src/bin/m2bt_original_rom.rs"
 required-features = ["p28-word0196-original-rom"]
+
+[[bin]]
+name = "m2bu-entry-continuity"
+path = "src/bin/m2bu_entry_continuity.rs"
+required-features = ["p28-word0196-entry-continuity"]
 
 [dependencies]
 serde = { version = "=1.0.219", features = ["derive"] }

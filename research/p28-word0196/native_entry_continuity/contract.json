@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2bu",
+  "baseCommit": "7eb26571d8ee1f849efe5ffa619b0201008b267c",
+  "classification": "ClosedEntryContinuityRequirements_NotRuntimeEvidence",
+  "sourceBindings": [
+    {"path": "docs/M2Y_WORD0196_CONSUMER_HANDOFF.md", "bytes": 8295, "sha256": "4df6ed9227027a8723eeacf27a4c44bf6be647c3d939c135f54c31cd4c904f09"},
+    {"path": "research/p28-word0196/original_rom_boundary/contract.json", "bytes": 17557, "sha256": "b8a1a482dfa8f48f310db89d291014d1f4ebf83f51022cf7f70fb1dea0c1da30"},
+    {"path": "research/p28-word0196/original_rom_boundary/decode.py", "bytes": 13934, "sha256": "ad7079c1894488834fa85d3f24b483e530440853eade244ff54556a3b442ad58"},
+    {"path": "research/p28-word0196/original_rom_execution/contract.json", "bytes": 5497, "sha256": "b2ef4234d6a7866f95fdc292faff307a2c8fb3dbe15f43120f837a6aa3a32e9a"},
+    {"path": "research/p28-word0196/original_rom_execution/corpus.py", "bytes": 17843, "sha256": "3c9b374d37b79db548eed5bdb7bd3a10417f527da123d6d664f302704a5d1180"},
+    {"path": "research/p28-word0196/original_rom_execution/oracle.py", "bytes": 26779, "sha256": "166d18ebd1f5c5fb165a8628e750c18c0a4a90dbc8b536cfc70999c6cba0d804"},
+    {"path": "research/p28-word0196/word0196_ir.json", "bytes": 32188, "sha256": "4fdbd6b7dbdd8f48d5a43e123ca93a33a003c22556a0c40b5296d5f409e085c4"},
+    {"path": "research/p28-word0196/word0196_equivalent.c", "bytes": 8507, "sha256": "4b189d4ed3e97e0d197f6c558755cf056a89c1dc7122653c5c557e7ab62d76d3"}
+  ],
+  "manufacturer": {
+    "source": "MSM66201 Instruction Manual September1991",
+    "sha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+    "predecessorPages": ["3-64", "3-99", "3-69", "3-154", "3-42", "3-66/3-67"],
+    "productionOpcodeTableIsPrimaryAuthority": false
+  },
+  "program": {
+    "entryPc": 21749,
+    "segmentEndExclusive": 21957,
+    "segmentBytes": 208,
+    "closedInstructionSites": 24,
+    "selectedInstructionBytes": 59,
+    "originalPcsRelocated": false,
+    "oneImmutableSourcePerCase": true,
+    "executionPermissionFromClosedCfgOnly": true,
+    "terminalInstructionRetirements": 0,
+    "p2FunctionalReads": 0,
+    "p2FunctionalWrites": 0
+  },
+  "predecessor": {
+    "pcs": [21749, 21752, 21754, 21756, 21757, 21761],
+    "lengths": [3, 2, 2, 1, 4, 2],
+    "positiveGateBitValue": 1,
+    "positiveByte0117MustNotEqual": 15,
+    "jbrAlternateStopBefore": 21811,
+    "jneAlternateStopBefore": 21763,
+    "jneTakenDestination": 21871,
+    "jneSignedDisplacement": 108,
+    "wordLoadOverwritesAH": true,
+    "wordStoreLocalAddress": 266,
+    "wordStoreWidthBits": 16,
+    "r0WrittenValue": 255,
+    "r0ReadBySuffix": true,
+    "er1ReadBySuffix": false,
+    "er1RetainedAsLiveOut": true,
+    "prefixLogicalReads": 3,
+    "prefixLogicalWrites": 2,
+    "prefixRawWriteBytes": 3
+  },
+  "paths": {
+    "A": {"retirements": 16, "logicalReads": 8, "logicalWrites": 5, "rawWriteBytes": 6, "stopBeforePc": 21957},
+    "B": {"retirements": 18, "logicalReads": 12, "logicalWrites": 5, "rawWriteBytes": 6, "stopBeforePc": 21910},
+    "C": {"retirements": 19, "logicalReads": 13, "logicalWrites": 5, "rawWriteBytes": 6, "stopBeforePc": 21910},
+    "D": {"retirements": 21, "logicalReads": 15, "logicalWrites": 7, "rawWriteBytes": 8, "stopBeforePc": 21910}
+  },
+  "branchControls": {
+    "JbrAlternate": {"retirements": 1, "logicalReads": 1, "logicalWrites": 0, "stopBeforePc": 21811, "positiveCompleted": false},
+    "JneAlternate": {"retirements": 6, "logicalReads": 3, "logicalWrites": 2, "stopBeforePc": 21763, "positiveCompleted": false}
+  },
+  "entry": {
+    "lrb": 33,
+    "fullRepresentablePswPredicateUnchanged": true,
+    "incomingDd": [false, true],
+    "hcOtherPswScbRetained": true,
+    "selectedAndUnselectedPointingBanks": 8,
+    "physicalSf": "Unknown",
+    "hostSfExperiments": [false, true],
+    "oneCpuAndBusPerCase": true,
+    "hostPcSetAfterEntry": false,
+    "midExecutionReseed": false,
+    "secondMachineStateTransfer": false,
+    "nativeStackFrameClaimed": false
+  },
+  "corpus": {
+    "privatePositiveCases": 32,
+    "publicPositiveCases": 32,
+    "perPathCases": {"A": 8, "B": 8, "C": 8, "D": 8},
+    "retirementsPerPositiveCorpus": 592,
+    "predecessorRetirementsPerPositiveCorpus": 192,
+    "requiredWordBoundaries": [0, 191, 192, 193, 255, 256, 65535],
+    "sameValueWritesRetained": true,
+    "positiveBelow0117StoreCanBeSameValue": false,
+    "boundaryControlsCountedAsPositive": false
+  },
+  "publicFixture": {
+    "entryPc": 25088,
+    "segmentEndExclusive": 25296,
+    "segmentBytes": 208,
+    "gateByteAddress": 304,
+    "algorithmEntryPc": 25210,
+    "independentlyInventedTypedEncoding": true,
+    "privateSourceBinding": null,
+    "originalRomExecutionClaimed": false
+  },
+  "provenance": {
+    "technicalMode": "OriginalRomBytes_TechnicalCallerToExitExecution",
+    "current05ebProducerExecuted": false,
+    "data0196InputOwner": "TechnicalInitialSeedPair_NoNativeGenerationOwner",
+    "historical05eb54fa5578Relationship": "SeparateQualifiedPriorObservation_NotCurrentMachineOwnership",
+    "pathCHistoricalNativeWitness": false,
+    "nativeSchedulerEstablished": false,
+    "physicalExecutionClaimed": false
+  },
+  "comparison": {
+    "oracleUsesActualRuntimeOutput": false,
+    "completeExpectedFrozenBeforeRuntime": true,
+    "fullIntermediateStateAndPsw": true,
+    "allProgramLogicalAndRawDataEvents": true,
+    "orderedSameValueWritesRetained": true,
+    "wordWritesAreOneLogicalAndTwoRawEvents": true,
+    "canonicalFieldExclusions": [],
+    "firstMismatchBlocksAcceptance": true,
+    "retirementCountsArePhysicalTime": false
+  },
+  "delivery": {
+    "cargoFeature": "p28-word0196-entry-continuity",
+    "dependsOnExistingOriginalRomAudit": true,
+    "featureDefaultOff": true,
+    "maximumBudget": 21,
+    "legacyMaximumBudget": 16,
+    "legacyAdmissionsUnchanged": true,
+    "cargoTarget": ".tmp/m2bu-owned/cargo-target",
+    "requiredCiGuarantees": ["Ubuntu", "Windows", "Desktop", "HistoricalPinnedQa"],
+    "fullDecompressedCanonicalByteEquality": true,
+    "historicalPreservationExceptionCount": 1,
+    "newUnauthorizedProtectedDifferencesAllowed": 0,
+    "strictHistoricalPreservationPass": false,
+    "contractCreatesRuntimeOrDeliveryAuthority": false
+  },
+  "unresolved": [
+    "ActualHardwareEcuExecutionNotObserved",
+    "RecoveredFullEcuSchedulerNotEstablished",
+    "PhysicalSFNotEstablished",
+    "NativeStackSafetyNotEstablished",
+    "PeripheralStateOwnershipNotEstablished",
+    "ActualNativeDownstreamRejoinNotEstablished",
+    "SafeROMPlacementNotEstablished",
+    "TargetProgramEquivalenceNotEstablished",
+    "FirmwareIntegrationNotEstablished"
+  ],
+  "firmwareReady": false
+}
