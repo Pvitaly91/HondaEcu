@@ -714,19 +714,20 @@ jobs:
       CARGO_TARGET_DIR: ${{ github.workspace }}/.tmp/m2bu-owned/cargo-target
 
     steps:
-      - name: Checkout exact active M2bu source
+      - name: Checkout pinned accepted M2bu source
         uses: actions/checkout@v4
         with:
+          ref: df55bc5d86f85906813a8241608dac542ab4c302
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up pinned M2bu Rust toolchain
         run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
 
-      - name: Verify active M2bu closed source and seven-job CI projection
+      - name: Verify pinned M2bu source and its unchanged seven-job CI projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/native_entry_continuity/source_guard.py --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/native_entry_continuity/source_guard.py --expected-head "df55bc5d86f85906813a8241608dac542ab4c302"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: M2bu independent oracle admission source and resume regressions
@@ -807,6 +808,101 @@ jobs:
             .tmp/m2bu-public-evidence/boundaries/summary.json
             .tmp/m2bu-public-evidence/boundaries/pre-runtime-freeze.json
             .tmp/m2bu-public-evidence/boundaries/sourcejoin.json
+          if-no-files-found: error
+          retention-days: 14
+
+  native-p2-handoff:
+    needs: native-entry-continuity
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_BUILD_JOBS: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: core.autocrlf
+      GIT_CONFIG_VALUE_0: "false"
+      CARGO_TARGET_DIR: ${{ github.workspace }}/.tmp/m2bv-owned/cargo-target
+
+    steps:
+      - name: Checkout exact active M2bv source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up pinned M2bv Rust toolchain
+        run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
+
+      - name: Verify active M2bv closed source and nine-job CI projection
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/native_p2_handoff/source_guard.py --expected-head "${{ github.sha }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2bv independent P2 oracle ownership admission and resume regressions
+        shell: pwsh
+        run: |
+          python -B -m unittest discover -s research/p28-word0196/native_p2_handoff -t research/p28-word0196 -p '*_tests.py'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Fetch exact locked M2bv dependencies
+        shell: pwsh
+        run: |
+          cargo +1.85.1 fetch --locked --manifest-path rust/p28-slice-runner/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2bv current-source default-off and complete old-plus-P2 Rust regressions
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/native_p2_handoff/build_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2bv-owned/cargo-target --no-default-features
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/native_p2_handoff/build_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2bv-owned/cargo-target --no-default-features --features p28-word0196-p2-handoff
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 fmt --check --manifest-path rust/p28-slice-runner/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build required-feature M2bv P2 runner in owned target
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/native_p2_handoff/build_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 build --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2bv-owned/cargo-target --no-default-features --features p28-word0196-p2-handoff --bin m2bv-p2-handoff
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2bv actual public continuous predecessor algorithm and one-P2 execution
+        shell: pwsh
+        run: |
+          $taskRunner = '.tmp/m2bv-owned/cargo-target/release/m2bv-p2-handoff'
+          if ($IsWindows) { $taskRunner += '.exe' }
+          python -B research/p28-word0196/validate_native_p2_handoff.py --public --output .tmp/m2bv-public-evidence --runner $taskRunner
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify closed M2bv public artifact membership
+        shell: pwsh
+        run: |
+          $taskRequired = @('canonical.jsonl.gz', 'summary.json', 'pre-runtime-freeze.json', 'sourcejoin.json')
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2bv-public-evidence' -Force)
+          if ($taskActual.Count -ne 4) { throw 'Unexpected M2bv artifact membership.' }
+          foreach ($taskName in $taskRequired) {
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2bv-public-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2bv artifact member.' }
+          }
+
+      - name: Preserve only public invented M2bv canonical evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: M2bv-public-canonical-${{ matrix.os }}
+          path: |
+            .tmp/m2bv-public-evidence/canonical.jsonl.gz
+            .tmp/m2bv-public-evidence/summary.json
+            .tmp/m2bv-public-evidence/pre-runtime-freeze.json
+            .tmp/m2bv-public-evidence/sourcejoin.json
           if-no-files-found: error
           retention-days: 14
 

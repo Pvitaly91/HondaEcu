@@ -317,6 +317,18 @@ impl Bus {
     // Old/new metadata is obtained directly at the actual service boundary.
     // It is not represented as an extra functional DATA read.
     fn audit_old_value(&self, address: u16, width: u8) -> Option<u16> {
+        #[cfg(feature = "p28-word0196-p2-handoff")]
+        if address == 0x24
+            && width == 8
+            && self
+                .audit
+                .as_ref()
+                .is_some_and(|audit| audit.p2_handoff_active())
+        {
+            // Actual peripheral storage, never scratch RAM0024. This is
+            // diagnostic metadata at service admission, not a functional read.
+            return self.p2_output_latch.map(u16::from);
+        }
         let low = *self.ram.get(usize::from(address))?;
         match width {
             8 => Some(u16::from(low)),
@@ -379,7 +391,7 @@ impl Bus {
                 write,
                 value,
                 if write {
-                    self.ram.get(usize::from(address)).copied()
+                    self.audit_old_value(address, 8).map(|value| value as u8)
                 } else {
                     None
                 },

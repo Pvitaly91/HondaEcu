@@ -1,0 +1,400 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2bv",
+  "classification": "P2OwnershipRequirementDeclaration_NotExecutionEvidence",
+  "exactBase": "df55bc5d86f85906813a8241608dac542ab4c302",
+  "branch": "codex/p28-word0196-p2-ownership-handoff-m2bv",
+  "sourceBindings": [
+    {
+      "path": "docs/M2AA_P2_OUTPUT_LATCH_HANDOFF.md",
+      "bytes": 8442,
+      "sha256": "14459918ab1b863e00dcc36ff32fd6b2cf53d3cb74ae60248364700a5c85c096"
+    },
+    {
+      "path": "docs/M2AB_POST_P2_CONTROL_HANDOFF.md",
+      "bytes": 8471,
+      "sha256": "53d0ab78eebb0650ff29feef648d7970ba6f6b4c640494c5641dc71bc4093e7f"
+    },
+    {
+      "path": "docs/M2AC_BELOW_SECOND_P2_HANDOFF.md",
+      "bytes": 8181,
+      "sha256": "40ca68cf13a4ecbfe030a7960e9db8b89ad49b1fa9e80fdd99209e326d029006"
+    },
+    {
+      "path": "docs/M2BF_WORD0196_EXTERNAL_CONTINUATION_EVIDENCE.md",
+      "bytes": 17414,
+      "sha256": "8fef10e3e1c0d46438985530d92524b8a9b45b5715abb1b5563a78967d9a996d"
+    },
+    {
+      "path": "docs/M2BS_ORIGINAL_ROM_BOUNDARY_NATIVE_CONTEXT.md",
+      "bytes": 14412,
+      "sha256": "fc507f02e225a8fa23f14f97b68672277aa60bbf2ad3a60c766434ef12a10a96"
+    },
+    {
+      "path": "docs/M2BT_WORD0196_BOUNDED_ORIGINAL_ROM_EXECUTION.md",
+      "bytes": 13199,
+      "sha256": "8fd4defafc6da539b0fd51f60df2b0e0a59bd7e67e72e044d0f674b5d5f8d84f"
+    },
+    {
+      "path": "docs/M2BU_NATIVE_ENTRY_CONTINUITY.md",
+      "bytes": 10808,
+      "sha256": "9f41342e73aaf7170ca7d252e43b682aa12f65ae33340b5ae87829c53fceb04a"
+    },
+    {
+      "path": "docs/M2AW_NX8_200_TARGET_ABI_CONTRACT.md",
+      "bytes": 18935,
+      "sha256": "122bbb14adcd5718dc3fbb3fefb19dee74a9228099278802254ef6c7d59f8174"
+    }
+  ],
+  "primaryAuthorities": [
+    {
+      "id": "OKI-MSM66201-ISA-1991",
+      "title": "MSM66201 Instruction Manual, first edition September 1991",
+      "sha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "printedPages": [
+        "3-25",
+        "3-108"
+      ],
+      "preservedRendererPagesOneBased": [
+        77,
+        161
+      ],
+      "scope": "ANDB obj,A and ORB obj,A only; actual printed labels control; no assumed global page offset"
+    },
+    {
+      "id": "OKI-MSM66201-207-PERIPHERAL",
+      "title": "Manufacturer MSM66201/207 user/peripheral scans",
+      "packageTitle": "66207usersmanual_incomplete.zip",
+      "sha256": "f061cb5bcbd1804699fb60b543c425646fbb15b939c9bc51b24edbb4da4c6ddf",
+      "printedPages": [
+        12,
+        13,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71
+      ],
+      "sections": [
+        "2.3",
+        "5.2 Table5-2",
+        "5.5",
+        "Fig5-8",
+        "Table5-3"
+      ],
+      "scope": "Named standard MSM66201/207 documentation; customer ECU ASIC/revision and board wiring not established"
+    }
+  ],
+  "ownershipStatusVocabulary": [
+    "StaticStartupWriterIdentified",
+    "StartupExecutionObserved",
+    "CurrentP2ValueOwned",
+    "TechnicalP2Snapshot",
+    "PhysicalPortModeEstablished",
+    "Unknown"
+  ],
+  "modePrecondition": {
+    "classification": "ReviewedPrimaryOutputModePrecondition",
+    "historicalM2aaName": "ReviewedStartupPrecondition",
+    "p2ioCanonical": 255,
+    "p2sfCanonical": 7,
+    "p2sfImplementedMask": 248,
+    "p2sfNonexistentReadOneMask": 7,
+    "implementedAlternativeBitsMustBeZero": true,
+    "direction": "AllEightBitsOutput",
+    "primaryReadSource": "PortDataRegister_NotPins",
+    "rmwReadRule": "ReadSourceDependsOnDirectionAndMux;LatchReadOnlyUnderThisPrecondition",
+    "modelScope": "FixedReviewedTechnicalPrecondition_NotExecutedConfigurationRegisters",
+    "noExternalPinTransitions": true,
+    "noExternalHardwareBusEffects": true,
+    "noDynamicModeSwitching": true,
+    "noImplicitStartupExecution": true
+  },
+  "provenanceMatrix": [
+    {
+      "id": "P2_DATA",
+      "address": 36,
+      "widthBits": 8,
+      "storage": "PeripheralOutputDataRegister_NotOrdinaryRam",
+      "directWriterPcs": [
+        85,
+        209,
+        273,
+        1892,
+        2895,
+        9646,
+        16963,
+        21910,
+        21957,
+        22146,
+        23536,
+        23742
+      ],
+      "directWriterCount": 12,
+      "directReaderPcs": [
+        209,
+        273,
+        1876,
+        1892,
+        2895,
+        10093,
+        16963,
+        21910,
+        21957,
+        22146,
+        23536,
+        23717,
+        23742
+      ],
+      "directReaderCount": 13,
+      "rmwPcs": [
+        209,
+        273,
+        1892,
+        2895,
+        16963,
+        21910,
+        21957,
+        22146,
+        23536,
+        23742
+      ],
+      "pureReadPcs": [
+        1876,
+        10093,
+        23717
+      ],
+      "immediateStorePcs": [
+        85,
+        9646
+      ],
+      "reset": {
+        "value": null,
+        "status": "Undefined"
+      },
+      "startup": {
+        "writerPc": 9646,
+        "documentaryValue": 31,
+        "classification": "StaticStartupWriterIdentified",
+        "executionInCurrentSelectedSession": "NotObserved"
+      },
+      "currentNativeValueOwner": "NotEstablished",
+      "initialTechnicalSource": "TechnicalArchitecturalP2LatchSnapshot_NoNativeWriterGeneration",
+      "physicalPortMode": "NotEstablished",
+      "interveningWrites": "OtherDirectSitesAndUnresolvedAliasesPreventGlobalCurrentOwnerClaim",
+      "aliasRequirements": [
+        "Word0024OrOdd0025OverlapsP2AndP2IO",
+        "PointerBankCurrentPageIndexedIndirectStackAliasesRemainConditional"
+      ]
+    },
+    {
+      "id": "P2IO",
+      "address": 37,
+      "widthBits": 8,
+      "storage": "PeripheralDirectionConfiguration_NotAnAdmittedWritableModel",
+      "directWriterPcs": [
+        9650
+      ],
+      "directReaderPcs": [
+        16239
+      ],
+      "reset": {
+        "value": 0,
+        "status": "InputDirection_NotOutput"
+      },
+      "startup": {
+        "writerPc": 9650,
+        "documentaryValue": 255,
+        "alProducerPc": 9632,
+        "classification": "StaticStartupWriterIdentified",
+        "executionInCurrentSelectedSession": "NotObserved"
+      },
+      "currentNativeValueOwner": "NotEstablished",
+      "technicalPreconditionValue": 255,
+      "physicalPortMode": "NotEstablished",
+      "interveningWrites": "NoAdditionalListedDirectWriter;UnresolvedAliasesAndControlFlowPreventGlobalExclusivity",
+      "aliasRequirements": [
+        "Word0024OrOdd0025IncludesP2IO",
+        "OffPageFormsRequireCorrectCurrentPageContext"
+      ]
+    },
+    {
+      "id": "P2SF",
+      "address": 38,
+      "widthBits": 8,
+      "implementedBits": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "nonexistentBits": [
+        0,
+        1,
+        2
+      ],
+      "nonexistentReadValue": 7,
+      "storage": "PeripheralSecondaryFunctionConfiguration_NotAnAdmittedWritableModel",
+      "directWriterPcs": [
+        9652
+      ],
+      "directReaderPcs": [
+        16245
+      ],
+      "reset": {
+        "value": 7,
+        "status": "ImplementedAlternativeBitsClear_LowThreeNonexistentReadOne"
+      },
+      "startup": {
+        "writerPc": 9652,
+        "documentaryImplementedValue": 0,
+        "classification": "StaticStartupWriterIdentified",
+        "executionInCurrentSelectedSession": "NotObserved"
+      },
+      "currentNativeValueOwner": "NotEstablished",
+      "technicalPreconditionCanonicalRead": 7,
+      "physicalPortMode": "NotEstablished",
+      "interveningWrites": "NoAdditionalListedDirectWriter;UnresolvedAliasesAndControlFlowPreventGlobalExclusivity",
+      "aliasRequirements": [
+        "Word0026OrOdd0027OverlapsP2SFAndNeighbor",
+        "DP0026At3CE2IsReviewedCountArgumentWithX1_02CB_NotEstablishedP2SFStore",
+        "OffPageFormsRequireCorrectCurrentPageContext"
+      ]
+    }
+  ],
+  "staticInventoryScope": {
+    "listedInstructionsHistoricallyByteChecked": 11499,
+    "directP2DataIoSfReferenceCount": 19,
+    "conservativeIndirectIndexedStackCandidateCount": 725,
+    "lowPointerLeadCount": 25,
+    "wholeRomWriterUniquenessEstablished": false,
+    "arbitraryAliasesEliminated": false,
+    "startupExecutionEstablished": false
+  },
+  "historicalObservations": {
+    "milestone": "M2aa",
+    "classification": "QualifiedHistoricalSourceCpuObservations_NotPhysicalEcuOrCurrentM2bvMachine",
+    "events": 69,
+    "originalEvents": 63,
+    "inMemoryChildEvents": 6,
+    "executedP2Rmw": 42,
+    "and5596": 33,
+    "or55C5": 9,
+    "quartetDerivedStrict": 39,
+    "gateControls": 3,
+    "sameValueWrites": 15,
+    "retainedNativeReads": 15,
+    "transferHistoricalGenerationIdsIntoCurrentMachine": false,
+    "newM2bvExecutionsRepresented": 0
+  },
+  "requiredExecution": {
+    "currentRuntime": "NotRun",
+    "privateProgramStart": 21749,
+    "privateProgramEndExclusive": 21960,
+    "privateProgramBytes": 211,
+    "retainedM2buSelectedNodes": 24,
+    "additionalP2Nodes": 2,
+    "exactPathBudgets": {
+      "A": 17,
+      "B": 19,
+      "C": 20,
+      "D": 22
+    },
+    "p2WriterPcs": {
+      "A": 21957,
+      "B": 21910,
+      "C": 21910,
+      "D": 21910
+    },
+    "stopBeforePcs": {
+      "A": 21960,
+      "B": 21913,
+      "C": 21913,
+      "D": 21913
+    },
+    "oneProductionCpuBusPerCase": true,
+    "originalProgramImmutable": true,
+    "initialLatchOnlyBeforeFirstFunctionalInstruction": true,
+    "initialLatchRequiredCoverage": [
+      0,
+      255,
+      165
+    ],
+    "noHostWritesAfterEntry": true,
+    "noHostPcJump": true,
+    "noMidExecutionReseed": true,
+    "exactlyOneP2Rmw": true,
+    "byteAddress0024OnlyAtChosenTerminalPc": true,
+    "closeCapabilityImmediatelyAfterRmw": true,
+    "noP2IoSfAccess": true,
+    "noWordP2Access": true,
+    "noAdjacentSfrAccess": true,
+    "noSecondP2Instruction": true,
+    "noTrnsitTcon0Retirement": true
+  },
+  "independentEffectRules": {
+    "source": "ALDerivedByIndependentPredecessorAndM2avModel_NotActualRustOutput",
+    "and": "oldP2 & independentlyDerivedAL",
+    "or": "oldP2 | independentlyDerivedAL",
+    "resultWidthBits": 8,
+    "zf": "ResultByteEqualsZero",
+    "preserve": [
+      "A",
+      "AL",
+      "AH",
+      "CF",
+      "HC",
+      "DD",
+      "OtherPSW",
+      "LRB",
+      "SCB",
+      "SSP",
+      "PointingBanks",
+      "UnwrittenData"
+    ],
+    "ddIndependent": true
+  },
+  "journalRules": {
+    "functionalOrder": [
+      "P2ReadOld",
+      "P2WriteNew"
+    ],
+    "peripheralStorageSeparateFromRam": true,
+    "programFetchesSeparateFromDataReads": true,
+    "diagnosticReadbackNotFunctionalEvidence": true,
+    "oneSemanticWriteMayHaveMultipleJournalRepresentations": true,
+    "sameValueWriteCreatesFreshGeneration": true,
+    "initialSnapshotCreatesNoNativeGeneration": true,
+    "generationScope": "CurrentCaseMachineAndActualWriterPcAndDeclaredWriteOrdinal;NeverHistoricalIdTransfer"
+  },
+  "requiredOwnershipFields": {
+    "P2InitialSource": "TechnicalArchitecturalSnapshot",
+    "P2InitialNativeOwner": "NotEstablished",
+    "P2RmwWriter": "ActualProductionInstruction_OnlyAfterObservedExecution",
+    "P2RmwWriterPC": "0x5596_or_0x55C5",
+    "P2FinalGeneration": "VerifiedWithinTechnicalSession_OnlyAfterIndependentComparison",
+    "PhysicalP2Owner": "NotEstablished",
+    "PhysicalOutputEffect": "NotObserved"
+  },
+  "preservedUnknowns": [
+    "NativeP2InitialOwnershipNotEstablished",
+    "CurrentNativeP2OwnerNotEstablished",
+    "ActualHardwareEcuExecutionNotObserved",
+    "RecoveredFullEcuSchedulerNotEstablished",
+    "PhysicalSFNotEstablished",
+    "NativeStackSafetyNotEstablished",
+    "CurrentNativeP2InitialOwnerNotEstablished",
+    "PhysicalP2ElectricalEffectNotEstablished",
+    "PhysicalP2RoleAndPolarityNotEstablished",
+    "DownstreamTRNSITAndTCON0NotExecutedInM2bv",
+    "ActualNativeDownstreamRejoinNotEstablished",
+    "SafeROMPlacementNotEstablished",
+    "TargetProgramEquivalenceNotEstablished",
+    "FirmwareIntegrationNotEstablished"
+  ],
+  "actualExecutionReceipt": false,
+  "admissionAuthorityGrantedByThisJson": false,
+  "firmwareReady": false
+}

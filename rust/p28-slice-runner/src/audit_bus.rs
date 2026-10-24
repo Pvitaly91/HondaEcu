@@ -35,6 +35,15 @@ pub(crate) struct DataToken {
 pub(crate) struct RawToken {
     index: usize,
 }
+#[cfg(feature = "p28-word0196-p2-handoff")]
+#[derive(Clone)]
+pub(crate) struct P2AuditState {
+    pub(crate) pc: u16,
+    pub(crate) index: usize,
+    pub(crate) read_ordinal: Option<u64>,
+    pub(crate) write_ordinal: Option<u64>,
+    pub(crate) retired: bool,
+}
 struct State {
     entry_pc: u16,
     current_pc: u16,
@@ -50,6 +59,8 @@ struct State {
     transfer: Option<TransferState>,
     #[cfg(feature = "p28-word0196-original-rom")]
     original: Option<OriginalState>,
+    #[cfg(feature = "p28-word0196-p2-handoff")]
+    p2_handoff: Option<P2AuditState>,
     program: Vec<ProgramEvent>,
     data: Vec<DataEvent>,
     raw: Vec<RawDataEvent>,
@@ -87,6 +98,92 @@ pub(crate) struct AuditBus {
     state: RefCell<State>,
 }
 impl AuditBus {
+    #[cfg(feature = "p28-word0196-p2-handoff")]
+    pub(crate) fn install_p2_handoff(&self, pc: u16, index: usize) -> Result<()> {
+        let mut state = self.state.borrow_mut();
+        let result = (|| {
+            Self::readiness(&state)?;
+            let original = state.original.as_ref().ok_or_else(|| {
+                AuditError::new(
+                    "P2ClosedOriginalRequired",
+                    None,
+                    "one closed original source",
+                )
+            })?;
+            if state.phase != "Setup"
+                || state.p2_handoff.is_some()
+                || !matches!(
+                    (pc, index),
+                    (0x5596, 350) | (0x55c5, 1647) | (0x64a1, 350) | (0x64d0, 1647)
+                )
+                || !matches!(state.budget, 17 | 19 | 20 | 22)
+                || original.nodes.len() != 26
+                || original.pcs.last() != Some(&pc)
+                || original.terminal != pc + 3
+                || state.step_calls != 0
+                || state.execution_calls != 0
+                || state.retirements != 0
+            {
+                return Err(AuditError::new(
+                    "P2CapabilityInstallationRejected",
+                    Some(i64::from(pc)),
+                    "new closed26-site admission before the first functional instruction only",
+                ));
+            }
+            state.p2_handoff = Some(P2AuditState {
+                pc,
+                index,
+                read_ordinal: None,
+                write_ordinal: None,
+                retired: false,
+            });
+            Ok(())
+        })();
+        result.map_err(|error| Self::latch(&mut state, error))
+    }
+    #[cfg(feature = "p28-word0196-p2-handoff")]
+    pub(crate) fn p2_handoff_active(&self) -> bool {
+        self.state.borrow().p2_handoff.is_some()
+    }
+    #[cfg(feature = "p28-word0196-p2-handoff")]
+    pub(crate) fn p2_handoff_selected(&self, pc: u16, index: usize) -> bool {
+        let state = self.state.borrow();
+        state.phase == "Executing"
+            && state.p2_handoff.as_ref().is_some_and(|p| {
+                p.pc == pc && p.index == index && p.write_ordinal.is_none() && !p.retired
+            })
+    }
+    #[cfg(feature = "p28-word0196-p2-handoff")]
+    pub(crate) fn p2_handoff_state(&self) -> Option<P2AuditState> {
+        self.state.borrow().p2_handoff.clone()
+    }
+    #[cfg(feature = "p28-word0196-p2-handoff")]
+    fn p2_logical_right(state: &State, address: u16, width: u8, write: bool) -> Result<bool> {
+        let Some(p2) = &state.p2_handoff else {
+            return Ok(false);
+        };
+        if address >= 0x80 {
+            return Ok(false);
+        }
+        if address != 0x24
+            || width != 8
+            || state.phase != "Executing"
+            || state.pc != Some(p2.pc)
+            || state.instruction != Some(p2.index)
+            || state.retirements + 1 != u64::from(state.budget)
+            || p2.retired
+            || p2.write_ordinal.is_some()
+            || (write && p2.read_ordinal.is_none())
+            || (!write && p2.read_ordinal.is_some())
+        {
+            return Err(AuditError::new(
+                "P2OneShotPermissionDenied",
+                Some(i64::from(address)),
+                "one byte read-before-write at the actual last closed P2 instruction only",
+            ));
+        }
+        Ok(true)
+    }
     #[cfg(feature = "p28-word0196-original-rom")]
     pub(crate) fn install_original(&self, original: OriginalState) -> Result<()> {
         let mut state = self.state.borrow_mut();
@@ -252,6 +349,8 @@ impl AuditBus {
                 transfer: None,
                 #[cfg(feature = "p28-word0196-original-rom")]
                 original: None,
+                #[cfg(feature = "p28-word0196-p2-handoff")]
+                p2_handoff: None,
                 program: vec![],
                 data: vec![],
                 raw: vec![],
@@ -1243,6 +1342,29 @@ impl AuditBus {
                         "terminal fallthrough is not synthetic direct-J authority",
                     ));
                 }
+                #[cfg(feature = "p28-word0196-p2-handoff")]
+                {
+                    let origin = state.pc.expect("actual origin");
+                    if let Some(p2) = state.p2_handoff.as_mut() {
+                        if terminal {
+                            if origin != p2.pc
+                                || p2.read_ordinal.is_none()
+                                || p2.write_ordinal.is_none()
+                                || p2.retired
+                            {
+                                return Err(AuditError::new("P2RetirementIncomplete",Some(i64::from(origin)),
+                                    "actual terminal P2 read/write must precede exactly one retirement"));
+                            }
+                            p2.retired = true;
+                        } else if origin == p2.pc || p2.write_ordinal.is_some() {
+                            return Err(AuditError::new(
+                                "P2PrematureOrRepeatedRetirement",
+                                Some(i64::from(origin)),
+                                "the P2 instruction is the only final extra retirement",
+                            ));
+                        }
+                    }
+                }
                 state.retirements += 1;
                 state.external_exit = None;
                 if terminal {
@@ -1446,6 +1568,12 @@ impl AuditBus {
             } else {
                 closed_rmw
             };
+            #[cfg(feature = "p28-word0196-p2-handoff")]
+            if Self::p2_logical_right(&state, address, width, write)? {
+                // Independent one-shot peripheral capability. Do not turn
+                // SFR0024 into a member of the generic RAM permission lists.
+                return Ok(());
+            }
             if write {
                 let permissions = state
                     .transfer
@@ -1564,6 +1692,19 @@ impl AuditBus {
                 event.same_value = Some(event.old_value == value);
             }
         }
+        #[cfg(feature = "p28-word0196-p2-handoff")]
+        {
+            let event = &state.data[token.index];
+            let observed = (event.address == 0x24 && event.serviced)
+                .then(|| (event.operation == "Write", event.ordinal));
+            if let (Some(p2), Some((write, ordinal))) = (state.p2_handoff.as_mut(), observed) {
+                if write {
+                    p2.write_ordinal = Some(ordinal);
+                } else {
+                    p2.read_ordinal = Some(ordinal);
+                }
+            }
+        }
         state.active_data = None;
         state.pending_seed = None;
     }
@@ -1598,7 +1739,13 @@ impl AuditBus {
                     "actual constituent address and direction",
                 ));
             }
-            let allowed = if state.phase == "Setup" {
+            #[cfg(feature = "p28-word0196-p2-handoff")]
+            let p2_allowed = Self::p2_logical_right(&state, address, parent.width, write)?;
+            #[cfg(not(feature = "p28-word0196-p2-handoff"))]
+            let p2_allowed = false;
+            let allowed = if p2_allowed {
+                true
+            } else if state.phase == "Setup" {
                 state.pending_seed.is_some_and(|seed| {
                     seed.addresses().is_ok_and(|bytes| bytes.contains(&address))
                 })

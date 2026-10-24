@@ -236,6 +236,20 @@ impl ClosedEntryContinuityProgram {
             digest: self.segment.digest.clone(),
         }
     }
+    // Additive metadata reuse by the separately sealed M2bv admission. This
+    // creates no CPU/Bus and does not extend this program's accepted paths.
+    #[cfg(feature = "p28-word0196-p2-handoff")]
+    pub(super) fn p2_extension_metadata(
+        &self,
+        path: EntryContinuityPath,
+    ) -> (ProgramSegment, Vec<OriginalNode>, Vec<u16>, Vec<u16>) {
+        (
+            self.segment_copy(),
+            self.nodes.clone(),
+            self.inventory.clone(),
+            self.path_pcs(path),
+        )
+    }
 }
 
 fn predecessor_nodes(mapping: Mapping) -> Vec<OriginalNode> {

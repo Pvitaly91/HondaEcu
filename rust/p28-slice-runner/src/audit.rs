@@ -35,6 +35,15 @@ pub use entry_continuity::{
     EntryContinuitySession,
 };
 
+#[cfg(feature = "p28-word0196-p2-handoff")]
+#[path = "audit_p2_handoff.rs"]
+pub(crate) mod p2_handoff;
+#[cfg(feature = "p28-word0196-p2-handoff")]
+pub use p2_handoff::{
+    ClosedP2HandoffProgram, P2HandoffPath, P2HandoffReport, P2HandoffSeeds, P2HandoffSession,
+    P2Snapshot,
+};
+
 pub type Result<T> = std::result::Result<T, AuditError>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -397,6 +406,37 @@ pub struct Session {
     bus: Bus,
 }
 impl Session {
+    #[cfg(feature = "p28-word0196-p2-handoff")]
+    fn new_p2_handoff_admitted(
+        segment: ProgramSegment,
+        cpu: Cpu,
+        full_psw: u16,
+        permissions: Permissions,
+        admission: p2_handoff::P2Budget,
+    ) -> Result<Self> {
+        validate_psw(full_psw)?;
+        let permissions = Permissions::new(permissions.reads.clone(), permissions.writes.clone())?
+            .restrict_raw(
+                permissions.raw_reads.clone(),
+                permissions.raw_writes.clone(),
+            )?;
+        let budget = admission.retirements();
+        if cpu.psw_u16() != full_psw
+            || cpu.psw_other & !0x0337 != 0
+            || cpu.halted
+            || u32::from(cpu.pc) != segment.base
+            || !matches!(budget, 17 | 19 | 20 | 22)
+        {
+            return Err(AuditError::new(
+                "InvalidP2HandoffEntryState",
+                Some(i64::from(cpu.pc)),
+                "canonical technical entry and sealed exact P2 route budget",
+            ));
+        }
+        let mut bus = Bus::new(Vec::new(), 0xa5);
+        bus.audit = Some(AuditBus::new(segment, permissions, cpu.pc, budget));
+        Ok(Self { cpu, bus })
+    }
     // Only the closed M2bu wrapper can construct this token. No public caller
     // can supply a maximum, a PC stream, or widen the legacy1..16 constructor.
     #[cfg(feature = "p28-word0196-entry-continuity")]
@@ -629,6 +669,23 @@ impl Session {
                 .expect("installed")
                 .set_instruction(decoded.index);
             self.bus.audit.as_ref().expect("installed").before_execute();
+            #[cfg(feature = "p28-word0196-p2-handoff")]
+            if self
+                .bus
+                .audit
+                .as_ref()
+                .expect("installed")
+                .p2_handoff_active()
+            {
+                self.bus.set_native_pc(pc);
+                let enabled = self
+                    .bus
+                    .audit
+                    .as_ref()
+                    .expect("installed")
+                    .p2_handoff_selected(pc, decoded.index);
+                self.bus.set_p2_access_pc(enabled.then_some(pc));
+            }
             let actual = exec::execute_decoded(&mut self.cpu, &mut self.bus, pc, decoded).map_err(
                 |error| {
                     self.bus
@@ -690,6 +747,18 @@ impl Session {
                 external_exit: external,
             })
         })();
+        #[cfg(feature = "p28-word0196-p2-handoff")]
+        if self
+            .bus
+            .audit
+            .as_ref()
+            .expect("installed")
+            .p2_handoff_active()
+        {
+            // Includes decoder/Exec/fault exits; a capability never leaks to
+            // a second instruction or host access after the checked step.
+            self.bus.set_p2_access_pc(None);
+        }
         self.bus
             .audit
             .as_ref()
