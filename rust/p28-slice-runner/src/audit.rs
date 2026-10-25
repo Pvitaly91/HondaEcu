@@ -44,6 +44,15 @@ pub use p2_handoff::{
     P2Snapshot,
 };
 
+#[cfg(feature = "p28-word0196-post-p2-control")]
+#[path = "audit_post_p2_control.rs"]
+pub(crate) mod post_p2_control;
+#[cfg(feature = "p28-word0196-post-p2-control")]
+pub use post_p2_control::{
+    ClosedPostP2ControlProgram, ControlSnapshot, PostP2ControlPath, PostP2ControlSeeds,
+    PostP2ControlSession,
+};
+
 pub type Result<T> = std::result::Result<T, AuditError>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -437,6 +446,37 @@ impl Session {
         bus.audit = Some(AuditBus::new(segment, permissions, cpu.pc, budget));
         Ok(Self { cpu, bus })
     }
+    #[cfg(feature = "p28-word0196-post-p2-control")]
+    fn new_post_p2_control_admitted(
+        segment: ProgramSegment,
+        cpu: Cpu,
+        full_psw: u16,
+        permissions: Permissions,
+        admission: post_p2_control::PostP2Budget,
+    ) -> Result<Self> {
+        validate_psw(full_psw)?;
+        let permissions = Permissions::new(permissions.reads.clone(), permissions.writes.clone())?
+            .restrict_raw(
+                permissions.raw_reads.clone(),
+                permissions.raw_writes.clone(),
+            )?;
+        let budget = admission.retirements();
+        if cpu.psw_u16() != full_psw
+            || cpu.psw_other & !0x0337 != 0
+            || cpu.halted
+            || u32::from(cpu.pc) != segment.base
+            || !matches!(budget, 20 | 21 | 23)
+        {
+            return Err(AuditError::new(
+                "InvalidPostP2EntryState",
+                Some(i64::from(cpu.pc)),
+                "sealed21/20/21/23 path budget; unchanged canonical technical entry",
+            ));
+        }
+        let mut bus = Bus::new(Vec::new(), 0xa5);
+        bus.audit = Some(AuditBus::new(segment, permissions, cpu.pc, budget));
+        Ok(Self { cpu, bus })
+    }
     // Only the closed M2bu wrapper can construct this token. No public caller
     // can supply a maximum, a PC stream, or widen the legacy1..16 constructor.
     #[cfg(feature = "p28-word0196-entry-continuity")]
@@ -686,6 +726,23 @@ impl Session {
                     .p2_handoff_selected(pc, decoded.index);
                 self.bus.set_p2_access_pc(enabled.then_some(pc));
             }
+            #[cfg(feature = "p28-word0196-post-p2-control")]
+            if self
+                .bus
+                .audit
+                .as_ref()
+                .expect("installed")
+                .post_p2_control_active()
+            {
+                self.bus.set_native_pc(pc);
+                let capability = self
+                    .bus
+                    .audit
+                    .as_ref()
+                    .expect("installed")
+                    .post_p2_control_selected(pc, decoded.index);
+                self.bus.set_control_access(capability);
+            }
             let actual = exec::execute_decoded(&mut self.cpu, &mut self.bus, pc, decoded).map_err(
                 |error| {
                     self.bus
@@ -758,6 +815,16 @@ impl Session {
             // Includes decoder/Exec/fault exits; a capability never leaks to
             // a second instruction or host access after the checked step.
             self.bus.set_p2_access_pc(None);
+        }
+        #[cfg(feature = "p28-word0196-post-p2-control")]
+        if self
+            .bus
+            .audit
+            .as_ref()
+            .expect("installed")
+            .post_p2_control_active()
+        {
+            self.bus.close_control_access();
         }
         self.bus
             .audit

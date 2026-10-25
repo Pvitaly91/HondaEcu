@@ -1,0 +1,258 @@
+{
+  "baseCommit": "b67ea436870fe591f6ae4daca307341806d6f8eb",
+  "classification": "ClosedPostP2ControlRequirements_NotExecutionEvidence",
+  "control": {
+    "alias006": "CpuAL_LogicalRead_NoRawRamAccess",
+    "electricalEffectClaimed": false,
+    "functionalP2IoSfAccesses": 0,
+    "irqDeliveryInjected": false,
+    "permissionsClosedAfterControlInstruction": true,
+    "sameValueWritesCreateGeneration": true,
+    "tcon0Address": 64,
+    "tcon0AllowedInitial": [
+      131,
+      135,
+      139,
+      143
+    ],
+    "tcon0NativeReads": 2,
+    "tcon0Operation": "SetBit2",
+    "tcon0Zf": "NotOldBit2",
+    "timerEvolutionModeled": false,
+    "trnsitAddress": 70,
+    "trnsitImplementedInitial": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "trnsitOperation": "AndFB",
+    "trnsitRead": "F0OrImplementedFlags",
+    "trnsitStoredResult": "OnlyImplementedLowNibble",
+    "trnsitZf": "WholeByteResultEqualsZero_AlwaysFalseInAdmittedDomain"
+  },
+  "corpus": {
+    "casesPerPathPerMode": 8,
+    "controlRetirementsPerMode": 56,
+    "functionalControlReadsPerMode": 40,
+    "functionalControlWritesPerMode": 32,
+    "priorRuntimeResultsCountedAsNew": false,
+    "privateCases": 32,
+    "publicCases": 32,
+    "retirementsPerMode": 680,
+    "sameValueControlWritesPerMode": 16,
+    "totalLocalPositiveRetirements": 1360
+  },
+  "cycleAccounting": {
+    "basis": "RetainedHistoricalFallbackTwoPerInstructionByte_ThreeByteForm",
+    "classification": "UserApprovedDiagnosticAccounting_NotManufacturerTimingEquivalence",
+    "controlInstructions": [
+      {
+        "manufacturerInt": 8,
+        "nativePC": 21913,
+        "softwareDiagnosticCounterDelta": 8
+      },
+      {
+        "manufacturerInt": 9,
+        "nativePC": 21960,
+        "softwareDiagnosticCounterDelta": 9
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 21963,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 21965,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 7,
+        "nativePC": 21967,
+        "softwareDiagnosticCounterDelta": 7
+      }
+    ],
+    "overallClassification": "DiagnosticCycleTimingEquivalenceNotEstablished",
+    "physicalTimeClaimed": false,
+    "primaryManualIntCycles": 7,
+    "semanticOrCanonicalFieldsOmitted": [],
+    "softwareDiagnosticCounterDelta": 6,
+    "timingEquivalenceEstablished": false
+  },
+  "delivery": {
+    "bothEnvironmentAndExplicitTargetDirRequired": true,
+    "cargoTarget": ".tmp/m2bw-owned/cargo-target",
+    "defaultOffFeature": "p28-word0196-post-p2-control",
+    "fullPublicCanonicalBytesComparedAcrossThreePlatforms": true,
+    "historicalProtectedRunnerPaths": 33,
+    "inheritedAuthorizedPreservationExceptions": 1,
+    "newUnauthorizedProtectedDifferencesRequired": 0,
+    "privateRomInCi": false,
+    "requiredBaseFeature": "p28-word0196-p2-handoff",
+    "requiredCiJobs": 11,
+    "strictHistoricalPreservationPass": false
+  },
+  "entry": {
+    "controlSnapshotProvenance": "TechnicalArchitecturalControlSnapshot_NoNativeWriterGeneration",
+    "historicalGenerationIdsTransferred": false,
+    "noHostPcJump": true,
+    "noMidExecutionReseed": true,
+    "noSnapshotImport": true,
+    "oneCpuBusPerCase": true,
+    "oneTechnicalPeripheralInitializationBeforeFirstInstruction": true,
+    "unownedRamAuthority": "ExplicitTechnicalBusCanary_NotNativeOwner",
+    "unownedRamInitial": 165
+  },
+  "firmwareReady": false,
+  "manufacturer": {
+    "instructionManualSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+    "peripheralPackageSha256": "f061cb5bcbd1804699fb60b543c425646fbb15b939c9bc51b24edbb4da4c6ddf",
+    "printedPages": {
+      "ANDB": "3-27",
+      "LB": "3-70",
+      "MB": "3-77",
+      "SB": "3-127",
+      "XORB": "3-175"
+    },
+    "semanticsAuthority": "PrimaryManualAndReviewedM2ab_NotProductionOutput"
+  },
+  "milestone": "M2bw",
+  "paths": {
+    "A": {
+      "budget": 21,
+      "controlInstructions": 4,
+      "controlPc": 21960,
+      "p2Pc": 21957,
+      "stopBeforePc": 21970
+    },
+    "B": {
+      "budget": 20,
+      "controlInstructions": 1,
+      "controlPc": 21913,
+      "p2Pc": 21910,
+      "stopBeforePc": 21917
+    },
+    "C": {
+      "budget": 21,
+      "controlInstructions": 1,
+      "controlPc": 21913,
+      "p2Pc": 21910,
+      "stopBeforePc": 21917
+    },
+    "D": {
+      "budget": 23,
+      "controlInstructions": 1,
+      "controlPc": 21913,
+      "p2Pc": 21910,
+      "stopBeforePc": 21917
+    }
+  },
+  "program": {
+    "entryPc": 21749,
+    "instructionNodes": 31,
+    "noArbitraryStepping": true,
+    "privateEndExclusive": 21970,
+    "privateSource": "VerifiedUnmodifiedOriginalImage_NoRelocationOrPadding",
+    "publicBase": 25600,
+    "publicEndExclusive": 25821,
+    "publicSource": "IndependentInventedCodeCells_NotOemByteCopy",
+    "segmentBytes": 221
+  },
+  "schemaVersion": 1,
+  "sourceBindings": [
+    {
+      "bytes": 6463,
+      "path": "research/p28-word0196/native_p2_handoff/contract.json",
+      "sha256": "87964bd798cc3d62571b01de26dc1febbf7f162d9ec42e92259f853d426fcf61"
+    },
+    {
+      "bytes": 3971,
+      "path": "research/p28-word0196/native_p2_handoff/corpus.py",
+      "sha256": "74f4ab1ac4c8d8bf9efb6ac589cf457f60d22e6bd05f0c0ecbdb3e239174526a"
+    },
+    {
+      "bytes": 17277,
+      "path": "research/p28-word0196/native_p2_handoff/oracle.py",
+      "sha256": "5d0722bb61c766c99e178995797e3d6f3d8f56cded86439a9f6fa91209d5800e"
+    },
+    {
+      "bytes": 2681,
+      "path": "research/p28-word0196/native_p2_handoff/admission.py",
+      "sha256": "91383ef322dd50fdc2008d30573ae28a0ca55534ec16ec8b4142a8045dbb8a46"
+    },
+    {
+      "bytes": 36198,
+      "path": "research/p28-word0196/native_p2_handoff/resume.py",
+      "sha256": "f9f9aeca8d1cc8013ca527c43d07104772537ac8a718539e6e17e5098bc3892e"
+    },
+    {
+      "bytes": 2433,
+      "path": "research/p28-word0196/native_p2_handoff/checkpoint.py",
+      "sha256": "06e0c153d56b3c36bf00b30fac71be37d1828728110fd201e4b876efd78ef671"
+    },
+    {
+      "bytes": 8471,
+      "path": "docs/M2AB_POST_P2_CONTROL_HANDOFF.md",
+      "sha256": "53d0ab78eebb0650ff29feef648d7970ba6f6b4c640494c5641dc71bc4093e7f"
+    },
+    {
+      "bytes": 8442,
+      "path": "docs/M2AA_P2_OUTPUT_LATCH_HANDOFF.md",
+      "sha256": "14459918ab1b863e00dcc36ff32fd6b2cf53d3cb74ae60248364700a5c85c096"
+    },
+    {
+      "bytes": 10808,
+      "path": "docs/M2BU_NATIVE_ENTRY_CONTINUITY.md",
+      "sha256": "9f41342e73aaf7170ca7d252e43b682aa12f65ae33340b5ae87829c53fceb04a"
+    },
+    {
+      "bytes": 13934,
+      "path": "research/p28-word0196/original_rom_boundary/decode.py",
+      "sha256": "ad7079c1894488834fa85d3f24b483e530440853eade244ff54556a3b442ad58"
+    },
+    {
+      "bytes": 6066,
+      "path": "rust/p28-slice-runner/src/post_p2_control.rs",
+      "sha256": "35ac4f0e7f14884eda04a127dd5afac4fdcf9834471249ad018cd347a1191deb"
+    }
+  ],
+  "trace": {
+    "allProgramDataControlFieldsCompared": true,
+    "canonicalFieldExclusions": [],
+    "logicalControlReadsIncludeTwoSbReads": true,
+    "nativeControlGenerationAfterActualWriteOnly": true,
+    "p2GenerationRetainedAcrossTail": true,
+    "perInstructionFullCpuPswCompared": true
+  },
+  "unresolved": [
+    "ActualHardwareEcuExecutionNotObserved",
+    "RecoveredFullEcuSchedulerNotEstablished",
+    "PhysicalSFNotEstablished",
+    "NativeStackSafetyNotEstablished",
+    "NativeP2InitialOwnershipNotEstablished",
+    "NativeTCON0InitialOwnershipNotEstablished",
+    "NativeTRNSITInitialOwnershipNotEstablished",
+    "TimerEvolutionNotModeled",
+    "IRQDeliveryNotInjected",
+    "PhysicalTimingEquivalenceNotEstablished",
+    "ElectricalOutputNotObserved",
+    "ActualNativeDownstreamRejoinNotEstablished",
+    "SafeROMPlacementNotEstablished",
+    "TargetProgramEquivalenceNotEstablished",
+    "FirmwareIntegrationNotEstablished",
+    "DiagnosticCycleTimingEquivalenceNotEstablished"
+  ]
+}

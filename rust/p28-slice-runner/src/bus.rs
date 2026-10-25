@@ -329,6 +329,22 @@ impl Bus {
             // diagnostic metadata at service admission, not a functional read.
             return self.p2_output_latch.map(u16::from);
         }
+        #[cfg(feature = "p28-word0196-post-p2-control")]
+        if width == 8
+            && self
+                .audit
+                .as_ref()
+                .is_some_and(|a| a.post_p2_control_active())
+        {
+            if let Some(values) = self.post_p2_control {
+                if address == 0x40 {
+                    return Some(u16::from(values[0]));
+                }
+                if address == 0x46 {
+                    return Some(u16::from(values[1] | 0xf0));
+                }
+            }
+        }
         let low = *self.ram.get(usize::from(address))?;
         match width {
             8 => Some(u16::from(low)),
@@ -491,6 +507,10 @@ impl Bus {
     pub(crate) fn set_control_access(&mut self, capability: Option<(u16, u16)>) {
         self.control_access = capability;
         self.control_accesses.clear();
+    }
+    #[cfg(feature = "p28-word0196-post-p2-control")]
+    pub(crate) fn close_control_access(&mut self) {
+        self.control_access = None;
     }
     pub(crate) fn control_accesses(&self) -> Vec<[u32; 5]> {
         self.control_accesses.clone()

@@ -11,6 +11,7 @@ p28-word0196-audit = []
 p28-word0196-original-rom = ["p28-word0196-audit"]
 p28-word0196-entry-continuity = ["p28-word0196-original-rom"]
 p28-word0196-p2-handoff = ["p28-word0196-entry-continuity"]
+p28-word0196-post-p2-control = ["p28-word0196-p2-handoff"]
 
 [[bin]]
 name = "m2bt-original-rom"
@@ -26,6 +27,11 @@ required-features = ["p28-word0196-entry-continuity"]
 name = "m2bv-p2-handoff"
 path = "src/bin/m2bv_p2_handoff.rs"
 required-features = ["p28-word0196-p2-handoff"]
+
+[[bin]]
+name = "m2bw-post-p2-control"
+path = "src/bin/m2bw_post_p2_control.rs"
+required-features = ["p28-word0196-post-p2-control"]
 
 [dependencies]
 serde = { version = "=1.0.219", features = ["derive"] }

@@ -43,6 +43,18 @@ pub(crate) struct P2AuditState {
     pub(crate) read_ordinal: Option<u64>,
     pub(crate) write_ordinal: Option<u64>,
     pub(crate) retired: bool,
+    pub(crate) retirement: u8,
+}
+#[cfg(feature = "p28-word0196-post-p2-control")]
+#[derive(Clone)]
+struct ControlAuditState {
+    pc: u16,
+    index: usize,
+    address: u16,
+    alias_pc: Option<u16>,
+    reads: Vec<u64>,
+    write: Option<u64>,
+    retired: bool,
 }
 struct State {
     entry_pc: u16,
@@ -61,6 +73,8 @@ struct State {
     original: Option<OriginalState>,
     #[cfg(feature = "p28-word0196-p2-handoff")]
     p2_handoff: Option<P2AuditState>,
+    #[cfg(feature = "p28-word0196-post-p2-control")]
+    post_control: Option<ControlAuditState>,
     program: Vec<ProgramEvent>,
     data: Vec<DataEvent>,
     raw: Vec<RawDataEvent>,
@@ -136,10 +150,121 @@ impl AuditBus {
                 read_ordinal: None,
                 write_ordinal: None,
                 retired: false,
+                retirement: state.budget,
             });
             Ok(())
         })();
         result.map_err(|error| Self::latch(&mut state, error))
+    }
+    #[cfg(feature = "p28-word0196-post-p2-control")]
+    pub(crate) fn install_post_p2_control(&self, p2_pc: u16, p2_index: usize) -> Result<()> {
+        let mut state = self.state.borrow_mut();
+        let result = (|| {
+            Self::readiness(&state)?;
+            let original = state.original.as_ref().ok_or_else(|| {
+                AuditError::new("PostP2OriginalRequired", None, "closed original source")
+            })?;
+            let below = matches!((p2_pc, p2_index), (0x55c5, 1647) | (0x64d0, 1647));
+            let not_below = matches!((p2_pc, p2_index), (0x5596, 350) | (0x64a1, 350));
+            let pc = p2_pc + 3;
+            let index = if below { 1994 } else { 382 };
+            let address = if below { 0x40 } else { 0x46 };
+            let tail = if below { 4 } else { 1 };
+            let alias_pc = below.then_some(pc + 7);
+            if state.phase != "Setup"
+                || state.p2_handoff.is_some()
+                || state.post_control.is_some()
+                || (!below && !not_below)
+                || original.nodes.len() != 31
+                || original.pcs.len() != usize::from(state.budget)
+                || !matches!(state.budget, 20 | 21 | 23)
+                || (below && state.budget != 21)
+                || original.pcs.get(usize::from(state.budget - tail - 1)) != Some(&p2_pc)
+                || original.pcs.last() != Some(&alias_pc.unwrap_or(pc))
+                || original.terminal != if below { pc + 10 } else { pc + 4 }
+                || state.step_calls != 0
+                || state.execution_calls != 0
+                || state.retirements != 0
+            {
+                return Err(AuditError::new(
+                    "PostP2CapabilityInstallationRejected",
+                    Some(i64::from(pc)),
+                    "closed31-node control suffix before first instruction",
+                ));
+            }
+            state.p2_handoff = Some(P2AuditState {
+                pc: p2_pc,
+                index: p2_index,
+                read_ordinal: None,
+                write_ordinal: None,
+                retired: false,
+                retirement: state.budget - tail,
+            });
+            state.post_control = Some(ControlAuditState {
+                pc,
+                index,
+                address,
+                alias_pc,
+                reads: vec![],
+                write: None,
+                retired: false,
+            });
+            Ok(())
+        })();
+        result.map_err(|e| Self::latch(&mut state, e))
+    }
+    #[cfg(feature = "p28-word0196-post-p2-control")]
+    pub(crate) fn post_p2_control_active(&self) -> bool {
+        self.state.borrow().post_control.is_some()
+    }
+    #[cfg(feature = "p28-word0196-post-p2-control")]
+    pub(crate) fn post_p2_control_selected(&self, pc: u16, index: usize) -> Option<(u16, u16)> {
+        let s = self.state.borrow();
+        let c = s.post_control.as_ref()?;
+        (s.phase == "Executing"
+            && c.pc == pc
+            && c.index == index
+            && !c.retired
+            && c.write.is_none())
+        .then_some((c.address, pc))
+    }
+    #[cfg(feature = "p28-word0196-post-p2-control")]
+    fn control_logical_right(s: &State, address: u16, width: u8, write: bool) -> Result<bool> {
+        let Some(c) = s.post_control.as_ref() else {
+            return Ok(false);
+        };
+        if address >= 0x80 || address == 0x24 {
+            return Ok(false);
+        }
+        if address == 6
+            && width == 8
+            && !write
+            && s.phase == "Executing"
+            && s.pc == c.alias_pc
+            && s.instruction == Some(894)
+            && c.retired
+        {
+            return Ok(true);
+        }
+        let expected_reads = if c.address == 0x40 { 2 } else { 1 };
+        if address != c.address
+            || width != 8
+            || s.phase != "Executing"
+            || s.pc != Some(c.pc)
+            || s.instruction != Some(c.index)
+            || c.retired
+            || c.write.is_some()
+            || !s.p2_handoff.as_ref().is_some_and(|p| p.retired)
+            || (write && c.reads.len() != expected_reads)
+            || (!write && c.reads.len() >= expected_reads)
+        {
+            return Err(AuditError::new(
+                "PostP2OneShotPermissionDenied",
+                Some(i64::from(address)),
+                "exact control form/PC/byte/read-before-write, or final AL alias read only",
+            ));
+        }
+        Ok(true)
     }
     #[cfg(feature = "p28-word0196-p2-handoff")]
     pub(crate) fn p2_handoff_active(&self) -> bool {
@@ -165,12 +290,16 @@ impl AuditBus {
         if address >= 0x80 {
             return Ok(false);
         }
+        #[cfg(feature = "p28-word0196-post-p2-control")]
+        if state.post_control.is_some() && address != 0x24 {
+            return Ok(false);
+        }
         if address != 0x24
             || width != 8
             || state.phase != "Executing"
             || state.pc != Some(p2.pc)
             || state.instruction != Some(p2.index)
-            || state.retirements + 1 != u64::from(state.budget)
+            || state.retirements + 1 != u64::from(p2.retirement)
             || p2.retired
             || p2.write_ordinal.is_some()
             || (write && p2.read_ordinal.is_none())
@@ -351,6 +480,8 @@ impl AuditBus {
                 original: None,
                 #[cfg(feature = "p28-word0196-p2-handoff")]
                 p2_handoff: None,
+                #[cfg(feature = "p28-word0196-post-p2-control")]
+                post_control: None,
                 program: vec![],
                 data: vec![],
                 raw: vec![],
@@ -1344,24 +1475,75 @@ impl AuditBus {
                 }
                 #[cfg(feature = "p28-word0196-p2-handoff")]
                 {
-                    let origin = state.pc.expect("actual origin");
-                    if let Some(p2) = state.p2_handoff.as_mut() {
-                        if terminal {
-                            if origin != p2.pc
-                                || p2.read_ordinal.is_none()
-                                || p2.write_ordinal.is_none()
-                                || p2.retired
-                            {
-                                return Err(AuditError::new("P2RetirementIncomplete",Some(i64::from(origin)),
-                                    "actual terminal P2 read/write must precede exactly one retirement"));
+                    #[cfg(feature = "p28-word0196-post-p2-control")]
+                    let post = state.post_control.is_some();
+                    #[cfg(not(feature = "p28-word0196-post-p2-control"))]
+                    let post = false;
+                    if post {
+                        let origin = state.pc.expect("actual origin");
+                        let p2_retired = {
+                            let p2 = state.p2_handoff.as_mut().expect("P2 admission");
+                            if origin == p2.pc {
+                                if p2.retired
+                                    || p2.read_ordinal.is_none()
+                                    || p2.write_ordinal.is_none()
+                                {
+                                    return Err(AuditError::new(
+                                        "P2RetirementIncomplete",
+                                        Some(i64::from(origin)),
+                                        "actual one-shot native P2 RMW",
+                                    ));
+                                }
+                                p2.retired = true;
                             }
-                            p2.retired = true;
-                        } else if origin == p2.pc || p2.write_ordinal.is_some() {
-                            return Err(AuditError::new(
-                                "P2PrematureOrRepeatedRetirement",
-                                Some(i64::from(origin)),
-                                "the P2 instruction is the only final extra retirement",
-                            ));
+                            p2.retired
+                        };
+                        #[cfg(feature = "p28-word0196-post-p2-control")]
+                        {
+                            let control = state.post_control.as_mut().expect("installed");
+                            if origin == control.pc {
+                                let expected_reads = if control.address == 0x40 { 2 } else { 1 };
+                                if !p2_retired
+                                    || control.retired
+                                    || control.reads.len() != expected_reads
+                                    || control.write.is_none()
+                                {
+                                    return Err(AuditError::new(
+                                        "PostP2ControlRetirementIncomplete",
+                                        Some(i64::from(origin)),
+                                        "actual ordered control reads/write after P2",
+                                    ));
+                                }
+                                control.retired = true;
+                            }
+                            if terminal && (!p2_retired || !control.retired) {
+                                return Err(AuditError::new(
+                                    "PostP2TerminalIncomplete",
+                                    Some(i64::from(origin)),
+                                    "P2 and control must retire before bounded stop",
+                                ));
+                            }
+                        }
+                    } else {
+                        let origin = state.pc.expect("actual origin");
+                        if let Some(p2) = state.p2_handoff.as_mut() {
+                            if terminal {
+                                if origin != p2.pc
+                                    || p2.read_ordinal.is_none()
+                                    || p2.write_ordinal.is_none()
+                                    || p2.retired
+                                {
+                                    return Err(AuditError::new("P2RetirementIncomplete",Some(i64::from(origin)),
+                                    "actual terminal P2 read/write must precede exactly one retirement"));
+                                }
+                                p2.retired = true;
+                            } else if origin == p2.pc || p2.write_ordinal.is_some() {
+                                return Err(AuditError::new(
+                                    "P2PrematureOrRepeatedRetirement",
+                                    Some(i64::from(origin)),
+                                    "the P2 instruction is the only final extra retirement",
+                                ));
+                            }
                         }
                     }
                 }
@@ -1574,6 +1756,10 @@ impl AuditBus {
                 // SFR0024 into a member of the generic RAM permission lists.
                 return Ok(());
             }
+            #[cfg(feature = "p28-word0196-post-p2-control")]
+            if Self::control_logical_right(&state, address, width, write)? {
+                return Ok(());
+            }
             if write {
                 let permissions = state
                     .transfer
@@ -1705,6 +1891,19 @@ impl AuditBus {
                 }
             }
         }
+        #[cfg(feature = "p28-word0196-post-p2-control")]
+        {
+            let event = &state.data[token.index];
+            let value = (event.serviced && matches!(event.address, 0x40 | 0x46))
+                .then(|| (event.operation == "Write", event.ordinal));
+            if let (Some(control), Some((write, ordinal))) = (state.post_control.as_mut(), value) {
+                if write {
+                    control.write = Some(ordinal);
+                } else {
+                    control.reads.push(ordinal);
+                }
+            }
+        }
         state.active_data = None;
         state.pending_seed = None;
     }
@@ -1743,7 +1942,12 @@ impl AuditBus {
             let p2_allowed = Self::p2_logical_right(&state, address, parent.width, write)?;
             #[cfg(not(feature = "p28-word0196-p2-handoff"))]
             let p2_allowed = false;
-            let allowed = if p2_allowed {
+            #[cfg(feature = "p28-word0196-post-p2-control")]
+            let control_allowed =
+                Self::control_logical_right(&state, address, parent.width, write)?;
+            #[cfg(not(feature = "p28-word0196-post-p2-control"))]
+            let control_allowed = false;
+            let allowed = if p2_allowed || control_allowed {
                 true
             } else if state.phase == "Setup" {
                 state.pending_seed.is_some_and(|seed| {

@@ -66,7 +66,7 @@ pub struct P2Snapshot {
     pub provenance: String,
 }
 impl P2Snapshot {
-    fn validate(&self) -> Result<()> {
+    pub(super) fn validate(&self) -> Result<()> {
         if self.p2io != 0xff
             || self.p2sf != 0x07
             || self.provenance != "TechnicalArchitecturalP2LatchSnapshot_NoNativeWriterGeneration"
@@ -79,10 +79,10 @@ impl P2Snapshot {
 }
 
 pub struct ClosedP2HandoffProgram {
-    segment: ProgramSegment,
+    pub(super) segment: ProgramSegment,
     prefix: ClosedEntryContinuityProgram,
-    native: bool,
-    source_binding: Option<OriginalRomSourceBinding>,
+    pub(super) native: bool,
+    pub(super) source_binding: Option<OriginalRomSourceBinding>,
 }
 impl ClosedP2HandoffProgram {
     pub fn admit_host_verified_segment(
@@ -147,17 +147,17 @@ impl ClosedP2HandoffProgram {
             "ExplicitInventedPublicP2HandoffFixture"
         }
     }
-    fn pc(&self, native: u16) -> u16 {
+    pub(super) fn pc(&self, native: u16) -> u16 {
         self.entry_pc() + (native - 0x54f5)
     }
-    fn p2_pc(&self, path: P2HandoffPath) -> u16 {
+    pub(super) fn p2_pc(&self, path: P2HandoffPath) -> u16 {
         self.pc(if path == P2HandoffPath::A {
             0x55c5
         } else {
             0x5596
         })
     }
-    fn parts(&self, path: P2HandoffPath) -> (Vec<OriginalNode>, Vec<u16>, Vec<u16>) {
+    pub(super) fn parts(&self, path: P2HandoffPath) -> (Vec<OriginalNode>, Vec<u16>, Vec<u16>) {
         let (_, mut nodes, inventory, mut pcs) = self.prefix.p2_extension_metadata(path.prefix());
         if !self.native {
             for node in &mut nodes {
@@ -203,7 +203,7 @@ impl ClosedP2HandoffProgram {
         assert_eq!(nodes.len(), 26);
         (nodes, inventory, pcs)
     }
-    fn segment_copy(&self) -> ProgramSegment {
+    pub(super) fn segment_copy(&self) -> ProgramSegment {
         ProgramSegment {
             base: self.segment.base,
             end: self.segment.end,
@@ -292,7 +292,7 @@ pub struct P2HandoffReport {
 }
 
 pub struct P2HandoffSession {
-    inner: Box<Session>,
+    pub(super) inner: Box<Session>,
     cpu_identity: usize,
     bus_identity: usize,
     last_actual: Snapshot,
@@ -346,13 +346,39 @@ impl P2HandoffSession {
             .collect();
         writes.sort_by_key(|w| w.access);
         writes.dedup_by_key(|w| w.access);
-        let mut inner = Session::new_p2_handoff_admitted(
+        let inner = Session::new_p2_handoff_admitted(
             program.segment_copy(),
             cpu,
             full_psw,
             Permissions::new(reads, writes)?,
             P2Budget::for_path(path),
         )?;
+        Self::from_admitted(
+            program,
+            inner,
+            seeds,
+            path,
+            snapshot,
+            nodes,
+            inventory,
+            pcs,
+            program.p2_pc(path) + 3,
+            None,
+        )
+    }
+    // Same M2bv setup: one admitted CPU/Bus; every seed precedes begin_functional.
+    pub(super) fn from_admitted(
+        program: &ClosedP2HandoffProgram,
+        mut inner: Session,
+        seeds: P2HandoffSeeds,
+        path: P2HandoffPath,
+        snapshot: P2Snapshot,
+        nodes: Vec<OriginalNode>,
+        inventory: Vec<u16>,
+        pcs: Vec<u16>,
+        terminal: u16,
+        control: Option<[u8; 2]>,
+    ) -> Result<Self> {
         for (address, value) in seeds.data {
             inner.seed_byte(address, value)?;
         }
@@ -378,19 +404,40 @@ impl P2HandoffSession {
                 nodes,
                 pcs,
                 inventory,
-                terminal: p2_pc + 3,
+                terminal,
                 path: path.algorithm_path(),
                 entry,
                 classification: program.classification().into(),
                 source_binding: program.source_binding.clone(),
                 steps: vec![],
             })?;
-        inner
-            .bus
-            .audit
-            .as_ref()
-            .expect("installed")
-            .install_p2_handoff(p2_pc, if path == P2HandoffPath::A { 1647 } else { 350 })?;
+        let p2_index = if path == P2HandoffPath::A { 1647 } else { 350 };
+        if let Some(values) = control {
+            inner
+                .bus
+                .initialize_post_p2_control(values[0], values[1])
+                .map_err(|e| AuditError::new("PostP2InitialSnapshotRejected", None, e))?;
+            #[cfg(feature = "p28-word0196-post-p2-control")]
+            inner
+                .bus
+                .audit
+                .as_ref()
+                .expect("installed")
+                .install_post_p2_control(p2_pc, p2_index)?;
+            #[cfg(not(feature = "p28-word0196-post-p2-control"))]
+            return Err(AuditError::new(
+                "PostP2FeatureRequired",
+                None,
+                "default OFF",
+            ));
+        } else {
+            inner
+                .bus
+                .audit
+                .as_ref()
+                .expect("installed")
+                .install_p2_handoff(p2_pc, p2_index)?;
+        }
         inner.begin_functional()?;
         let last_actual = inner.diagnostic_snapshot()?;
         let last_p2 = inner.bus.p2_output_latch().expect("once initialized");
@@ -560,7 +607,12 @@ impl P2HandoffSession {
             Some(P2Generation {
                 machine_id: 1,
                 writer_pc: self.p2_pc,
-                retired_instruction: report.steps.len() as u64,
+                retired_instruction: report
+                    .steps
+                    .iter()
+                    .find(|s| s.outcome.pc_before == self.p2_pc)
+                    .expect("actual P2 retirement")
+                    .index,
                 generation_ordinal: 1,
                 native_write_ordinal: event.native_write_ordinal.expect("actual write"),
                 logical_write_ordinal: event.write_ordinal.expect("actual write"),
@@ -595,7 +647,9 @@ impl P2HandoffSession {
             boundary_only: false,
             actual_handoff_observed: handoff,
             native_predecessor_retirements: count.min(6),
-            algorithm_retirements: count.saturating_sub(6 + p2_count),
+            algorithm_retirements: count
+                .min(u64::from(self.path.budget()))
+                .saturating_sub(6 + p2_count),
             p2_instruction_retirements: p2_count,
             stop_before_pc: report.stop_before_pc,
             audit: report.audit,
