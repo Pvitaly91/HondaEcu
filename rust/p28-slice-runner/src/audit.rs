@@ -53,6 +53,12 @@ pub use post_p2_control::{
     PostP2ControlSession,
 };
 
+#[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+#[path = "audit_below_second_p2.rs"]
+pub(crate) mod below_second_p2;
+#[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+pub use below_second_p2::{BelowSecondP2Seeds, BelowSecondP2Session, ClosedBelowSecondP2Program};
+
 pub type Result<T> = std::result::Result<T, AuditError>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -415,6 +421,38 @@ pub struct Session {
     bus: Bus,
 }
 impl Session {
+    #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+    fn new_below_second_p2_admitted(
+        segment: ProgramSegment,
+        cpu: Cpu,
+        full_psw: u16,
+        permissions: Permissions,
+        admission: below_second_p2::BelowSecondP2Budget,
+    ) -> Result<Self> {
+        validate_psw(full_psw)?;
+        let permissions = Permissions::new(permissions.reads.clone(), permissions.writes.clone())?
+            .restrict_raw(
+                permissions.raw_reads.clone(),
+                permissions.raw_writes.clone(),
+            )?;
+        if admission.retirements() != 39
+            || segment.end - segment.base != 403
+            || !matches!(segment.base, 0x54f5 | 0x6400)
+            || cpu.psw_u16() != full_psw
+            || cpu.psw_other & !0x0337 != 0
+            || cpu.halted
+            || u32::from(cpu.pc) != segment.base
+        {
+            return Err(AuditError::new(
+                "InvalidBelowSecondP2EntryState",
+                Some(i64::from(cpu.pc)),
+                "closed403-byte source and sealed39-step Below admission only",
+            ));
+        }
+        let mut bus = Bus::new(Vec::new(), 0xa5);
+        bus.audit = Some(AuditBus::new(segment, permissions, cpu.pc, 39));
+        Ok(Self { cpu, bus })
+    }
     #[cfg(feature = "p28-word0196-p2-handoff")]
     fn new_p2_handoff_admitted(
         segment: ProgramSegment,

@@ -50,7 +50,7 @@ pub struct ControlSnapshot {
     pub provenance: String,
 }
 impl ControlSnapshot {
-    fn validate(&self) -> Result<()> {
+    pub(super) fn validate(&self) -> Result<()> {
         if !matches!(self.tcon0, 0x83 | 0x87 | 0x8b | 0x8f)
             || self.trnsit_implemented_flags > 15
             || self.provenance != "TechnicalArchitecturalControlSnapshot_NoNativeWriterGeneration"
@@ -65,8 +65,8 @@ impl ControlSnapshot {
     }
 }
 pub struct ClosedPostP2ControlProgram {
-    segment: ProgramSegment,
-    p2: ClosedP2HandoffProgram,
+    pub(super) segment: ProgramSegment,
+    pub(super) p2: ClosedP2HandoffProgram,
 }
 impl ClosedPostP2ControlProgram {
     pub fn admit_host_verified_segment(
@@ -128,7 +128,7 @@ impl ClosedPostP2ControlProgram {
             "ExplicitInventedPublicPostP2ControlFixture"
         }
     }
-    fn pc(&self, native: u16) -> u16 {
+    pub(super) fn pc(&self, native: u16) -> u16 {
         self.p2.pc(native)
     }
     fn terminal(&self, path: PostP2ControlPath) -> u16 {
@@ -138,7 +138,7 @@ impl ClosedPostP2ControlProgram {
             0x559d
         })
     }
-    fn parts(&self, path: PostP2ControlPath) -> (Vec<OriginalNode>, Vec<u16>, Vec<u16>) {
+    pub(super) fn parts(&self, path: PostP2ControlPath) -> (Vec<OriginalNode>, Vec<u16>, Vec<u16>) {
         let (mut nodes, inventory, mut pcs) = self.p2.parts(path.prefix());
         let lb = if self.p2.native { 0x8e } else { 0x92 };
         for (pc, index, len, name, fields, after, reads, writes) in [
@@ -296,12 +296,12 @@ pub struct PostP2ControlReport {
     pub control_step_snapshots: Vec<ControlStepSnapshot>,
 }
 pub struct PostP2ControlSession {
-    inner: P2HandoffSession,
-    initial: ControlSnapshot,
-    last_control: [u8; 2],
-    control_steps: Vec<ControlStepSnapshot>,
-    native_control: Vec<(u64, [u32; 5])>,
-    classification: String,
+    pub(super) inner: P2HandoffSession,
+    pub(super) initial: ControlSnapshot,
+    pub(super) last_control: [u8; 2],
+    pub(super) control_steps: Vec<ControlStepSnapshot>,
+    pub(super) native_control: Vec<(u64, [u32; 5])>,
+    pub(super) classification: String,
 }
 impl PostP2ControlSession {
     pub fn new(
@@ -449,13 +449,14 @@ impl PostP2ControlSession {
                 let native_write_ordinal = event
                     .write_ordinal
                     .map(|n| {
-                        n.checked_sub(48).ok_or_else(|| {
-                            AuditError::new(
-                                "PostP2NativeWriteOrdinalUnderflow",
-                                None,
-                                "technical seeds are not native writes",
-                            )
-                        })
+                        n.checked_sub(self.inner.native_seed_writes())
+                            .ok_or_else(|| {
+                                AuditError::new(
+                                    "PostP2NativeWriteOrdinalUnderflow",
+                                    None,
+                                    "technical seeds are not native writes",
+                                )
+                            })
                     })
                     .transpose()?;
                 journal.push(P2PeripheralEvent {
@@ -482,9 +483,18 @@ impl PostP2ControlSession {
                 "no service duplication or omission",
             ));
         }
+        let below = self.inner.is_below_second_p2();
         if p2.completed
-            && (journal.len() != if p2.path == P2HandoffPath::A { 3 } else { 2 }
-                || journal.iter().filter(|e| e.operation == "Write").count() != 1)
+            && (journal.len()
+                != if below {
+                    6
+                } else if p2.path == P2HandoffPath::A {
+                    3
+                } else {
+                    2
+                }
+                || journal.iter().filter(|e| e.operation == "Write").count()
+                    != if below { 2 } else { 1 })
         {
             return Err(AuditError::new(
                 "PostP2JournalCardinalityRejected",
@@ -498,7 +508,7 @@ impl PostP2ControlSession {
             .filter(|s| {
                 p2.p2_generation
                     .as_ref()
-                    .is_some_and(|g| s.index > g.retired_instruction)
+                    .is_some_and(|g| s.index > g.retired_instruction && (!below || s.index <= 21))
             })
             .count() as u64;
         let generation = journal.iter().find(|e| e.operation == "Write").map(|e| {

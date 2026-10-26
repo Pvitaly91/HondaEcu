@@ -1,0 +1,577 @@
+{
+  "baseCommit": "4d99ebcf02016df3dfa0a6d035bb01def4b170cd",
+  "below": {
+    "finalRbAddress": 298,
+    "finalRbPc": 22149,
+    "finalRbZf": "NotOldBit7",
+    "jneOwner": "NativeL0110AfterNativeStoreOne",
+    "jnePc": 22113,
+    "jneTaken": true,
+    "nonzeroAhSeparateInventedInstructionControlOnly": true,
+    "reachableAh": 0,
+    "reachableRolInput": "t=NOT8(ROTL8(initialDATA018E)); incomingCF=t.bit7",
+    "rolNonCarryPsw": "Preserved",
+    "rolOutgoingCf": "t.bit7",
+    "rolOutput": "ROTL8(t)",
+    "secondP2Al": 15,
+    "secondP2Pc": 22146,
+    "secondP2SameValue": true,
+    "wordStores": [
+      {
+        "address": 272,
+        "pc": 22060,
+        "value": 1,
+        "width": 16
+      },
+      {
+        "address": 274,
+        "pc": 22065,
+        "value": 1,
+        "width": 16
+      },
+      {
+        "address": 276,
+        "pc": 22109,
+        "value": 1,
+        "width": 16
+      }
+    ]
+  },
+  "classification": "ClosedBelowSecondP2Requirements_NotExecutionEvidence",
+  "control": {
+    "alias006": "CpuAL_LogicalRead_NoRawRamAccess",
+    "electricalEffectClaimed": false,
+    "functionalP2IoSfAccesses": 0,
+    "generationValues": [
+      "initial OR 04",
+      "initial AND FB"
+    ],
+    "irqDeliveryInjected": false,
+    "journalOperations": [
+      "Read",
+      "Read",
+      "Write",
+      "Read",
+      "Read",
+      "Write"
+    ],
+    "nativeReadsPerCase": 4,
+    "nativeWritesPerCase": 2,
+    "sameValueWritesCreateGeneration": true,
+    "tcon0Address": 64,
+    "tcon0AllowedInitial": [
+      131,
+      135,
+      139,
+      143
+    ],
+    "timerEvolutionModeled": false,
+    "trnsitAccessedOnBelow": false
+  },
+  "corpus": {
+    "belowRetirementsPerMode": 288,
+    "controlRetirementsPerMode": 64,
+    "functionalControlReadsPerMode": 64,
+    "functionalControlWritesPerMode": 32,
+    "functionalP2ReadsPerMode": 32,
+    "functionalP2WritesPerMode": 32,
+    "priorRuntimeResultsCountedAsNew": false,
+    "privateCases": 16,
+    "publicCases": 16,
+    "retirementsPerMode": 624,
+    "sameValueControlWritesPerMode": 8,
+    "sameValueP2WritesPerMode": 20,
+    "totalLocalPositiveRetirements": 1248
+  },
+  "cycleAccounting": {
+    "basis": "RetainedHistoricalFallbackTwoPerInstructionByte_ThreeByteForm",
+    "belowInstructions": [
+      {
+        "manufacturerInt": 2,
+        "nativePC": 21970,
+        "softwareDiagnosticCounterDelta": 2
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 21971,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 9,
+        "nativePC": 21973,
+        "softwareDiagnosticCounterDelta": 9
+      },
+      {
+        "manufacturerInt": 6,
+        "nativePC": 21976,
+        "softwareDiagnosticCounterDelta": 6
+      },
+      {
+        "manufacturerInt": 8,
+        "nativePC": 21979,
+        "softwareDiagnosticCounterDelta": 8
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 22060,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 6,
+        "nativePC": 22062,
+        "softwareDiagnosticCounterDelta": 6
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 22065,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 7,
+        "nativePC": 22067,
+        "softwareDiagnosticCounterDelta": 7
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 22109,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 22111,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 8,
+        "nativePC": 22113,
+        "softwareDiagnosticCounterDelta": 8
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 22129,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 8,
+        "nativePC": 22131,
+        "softwareDiagnosticCounterDelta": 8
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 22142,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 22144,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 7,
+        "nativePC": 22146,
+        "softwareDiagnosticCounterDelta": 6
+      },
+      {
+        "manufacturerInt": 9,
+        "nativePC": 22149,
+        "softwareDiagnosticCounterDelta": 9
+      }
+    ],
+    "belowManufacturerIntTotal": 102,
+    "belowSoftwareDiagnosticTotal": 101,
+    "classification": "UserApprovedDiagnosticAccounting_NotManufacturerTimingEquivalence",
+    "controlInstructions": [
+      {
+        "manufacturerInt": 8,
+        "nativePC": 21913,
+        "softwareDiagnosticCounterDelta": 8
+      },
+      {
+        "manufacturerInt": 9,
+        "nativePC": 21960,
+        "softwareDiagnosticCounterDelta": 9
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 21963,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 4,
+        "nativePC": 21965,
+        "softwareDiagnosticCounterDelta": 4
+      },
+      {
+        "manufacturerInt": 7,
+        "nativePC": 21967,
+        "softwareDiagnosticCounterDelta": 7
+      }
+    ],
+    "overallClassification": "DiagnosticCycleTimingEquivalenceNotEstablished",
+    "physicalTimeClaimed": false,
+    "primaryManualIntCycles": 7,
+    "secondP2ManufacturerInt": 7,
+    "secondP2SoftwareDiagnosticDelta": 6,
+    "semanticOrCanonicalFieldsOmitted": [],
+    "softwareDiagnosticCounterDelta": 6,
+    "timingEquivalenceEstablished": false
+  },
+  "delivery": {
+    "bothEnvironmentAndExplicitTargetDirRequired": true,
+    "cargoTarget": ".tmp/m2bx-owned/cargo-target",
+    "defaultOffFeature": "p28-word0196-below-second-p2-continuity",
+    "fullPublicCanonicalBytesComparedAcrossThreePlatforms": true,
+    "historicalProtectedRunnerPaths": 38,
+    "inheritedAuthorizedPreservationExceptions": 1,
+    "newUnauthorizedProtectedDifferencesRequired": 0,
+    "privateRomInCi": false,
+    "requiredBaseFeature": "p28-word0196-post-p2-control",
+    "requiredCiJobs": 13,
+    "strictHistoricalPreservationPass": false
+  },
+  "entry": {
+    "controlSnapshotProvenance": "TechnicalArchitecturalControlSnapshot_NoNativeWriterGeneration",
+    "dataInventory": [
+      264,
+      265,
+      266,
+      267,
+      268,
+      269,
+      270,
+      271,
+      272,
+      273,
+      274,
+      275,
+      276,
+      277,
+      278,
+      279,
+      292,
+      296,
+      298,
+      398,
+      399,
+      406,
+      407
+    ],
+    "historicalGenerationIdsTransferred": false,
+    "logicalSetupWrites": 55,
+    "newCanaries": [
+      272,
+      273,
+      274,
+      275,
+      276,
+      277,
+      278
+    ],
+    "newCanaryValue": 165,
+    "noHostPcJump": true,
+    "noMidExecutionReseed": true,
+    "noSnapshotImport": true,
+    "oneCpuBusPerCase": true,
+    "oneTechnicalPeripheralInitializationBeforeFirstInstruction": true,
+    "rawSetupWrites": 87,
+    "unownedRamAuthority": "ExplicitTechnicalBusCanary_NotNativeOwner"
+  },
+  "firmwareReady": false,
+  "manufacturer": {
+    "instructionManualSha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+    "peripheralPackageSha256": "f061cb5bcbd1804699fb60b543c425646fbb15b939c9bc51b24edbb4da4c6ddf",
+    "selectedTailExtentBytes": 41,
+    "selectedTailExtents": 18,
+    "semanticsAuthority": "PrimaryManualAndReviewedSource_NotProductionOutput",
+    "tailForms": 14
+  },
+  "milestone": "M2bx",
+  "p2": {
+    "address": 36,
+    "generations": 2,
+    "journalOperations": [
+      "Read",
+      "Write",
+      "Read",
+      "Write"
+    ],
+    "logicalWriteOrdinals": [
+      60,
+      67
+    ],
+    "nativeReadsPerCase": 2,
+    "nativeWriteOrdinals": [
+      5,
+      12
+    ],
+    "nativeWritesPerCase": 2,
+    "rawWriteOrdinals": [
+      93,
+      103
+    ],
+    "secondGenerationFreshEvenSameValue": true
+  },
+  "path": {
+    "aggregateP2OverlapsBelow": 2,
+    "algorithm": 10,
+    "below": 18,
+    "budget": 39,
+    "firstP2": 1,
+    "identity": "A",
+    "predecessor": 6,
+    "prefixControl": 4,
+    "selectedInstructionsAtStop": 0,
+    "stopBeforePc": 22152
+  },
+  "program": {
+    "entryPc": 21749,
+    "instructionNodes": 49,
+    "noArbitraryStepping": true,
+    "privateEndExclusive": 22152,
+    "privateSource": "VerifiedUnmodifiedOriginalImage_NoRelocationOrPadding",
+    "publicBase": 25600,
+    "publicEndExclusive": 26003,
+    "publicSource": "IndependentInventedCodeCells_NotOemByteCopy",
+    "returnFrame": "NotEstablished",
+    "rtExecuted": false,
+    "segmentBytes": 403,
+    "stopBeforeRt5688": true,
+    "tailPcSequence": [
+      21970,
+      21971,
+      21973,
+      21976,
+      21979,
+      22060,
+      22062,
+      22065,
+      22067,
+      22109,
+      22111,
+      22113,
+      22129,
+      22131,
+      22142,
+      22144,
+      22146,
+      22149
+    ]
+  },
+  "schemaVersion": 1,
+  "sourceBindings": [
+    {
+      "bytes": 70,
+      "path": "research/p28-word0196/native_post_p2_control/__init__.py",
+      "sha256": "1108e1298db7c62361b62dcefb751e9886c85833933d5713a724df7d5ddbcf71"
+    },
+    {
+      "bytes": 2537,
+      "path": "research/p28-word0196/native_post_p2_control/admission.py",
+      "sha256": "9ad7987efc3bc1ed9cac761313adf24b923f8acb75b340b6391f0894900aed25"
+    },
+    {
+      "bytes": 4396,
+      "path": "research/p28-word0196/native_post_p2_control/admission_tests.py",
+      "sha256": "0eb144e55f72101c324c8eeab41dd86c5bfb0695840082cc9f560250b3fd90b3"
+    },
+    {
+      "bytes": 12530,
+      "path": "research/p28-word0196/native_post_p2_control/build_guard.py",
+      "sha256": "3516d7cbb00792b5d1d2c8fd54e9cf197e6a5f2d52eb1a88bfedd68a2ccf6709"
+    },
+    {
+      "bytes": 8627,
+      "path": "research/p28-word0196/native_post_p2_control/build_guard_tests.py",
+      "sha256": "cf1fd63bf5e94f8535815b97b199d272aff400382d236cc4ce56b288b056e18d"
+    },
+    {
+      "bytes": 2433,
+      "path": "research/p28-word0196/native_post_p2_control/checkpoint.py",
+      "sha256": "6d8304fe6f13cc9547bf211b386e7210fdd108298902382b3110d33188dacf01"
+    },
+    {
+      "bytes": 3226,
+      "path": "research/p28-word0196/native_post_p2_control/checkpoint_tests.py",
+      "sha256": "e79487f05999216c34595e9e74b26f2956e0706bac9b69d52f79e78d3ad5c0b1"
+    },
+    {
+      "bytes": 6551,
+      "path": "research/p28-word0196/native_post_p2_control/ci_contract.py",
+      "sha256": "316fc2991882cc11c1b8ceb2b7431f4f4319d558bd48c9a933afecc9e29ab341"
+    },
+    {
+      "bytes": 2048,
+      "path": "research/p28-word0196/native_post_p2_control/ci_contract_tests.py",
+      "sha256": "3c1e37bdc573063ac7db37613e67d22301c8a88bab5f8240bc0f2df78debceec"
+    },
+    {
+      "bytes": 8038,
+      "path": "research/p28-word0196/native_post_p2_control/contract.json",
+      "sha256": "5d71edd042075dd0e88df3dcbf40b691cbda887af1b58ce57458a93b3bc20d9b"
+    },
+    {
+      "bytes": 7949,
+      "path": "research/p28-word0196/native_post_p2_control/contract_validation.py",
+      "sha256": "f674c82df24101bdef277d50ee33de15a37071f811bfaf7142a643a7ec355c90"
+    },
+    {
+      "bytes": 2315,
+      "path": "research/p28-word0196/native_post_p2_control/contract_validation_tests.py",
+      "sha256": "e5a0416e6aad4072e525b8eb0276fa6a9ccb5289ea60cd14bcf42828ec896889"
+    },
+    {
+      "bytes": 4247,
+      "path": "research/p28-word0196/native_post_p2_control/corpus.py",
+      "sha256": "ffcbdbb8020e6cca770335aceceee04b155f9550f3dfdd5dc96a2d5b79ffb4cd"
+    },
+    {
+      "bytes": 3123,
+      "path": "research/p28-word0196/native_post_p2_control/corpus_tests.py",
+      "sha256": "7f76ad0f7aa87d8438c98e6f51bf9e5ace6e2ff32891e347f5d53f928b322880"
+    },
+    {
+      "bytes": 20596,
+      "path": "research/p28-word0196/native_post_p2_control/oracle.py",
+      "sha256": "33adc4957d93e588b7b2cf152e11bb498730494cd51f5d8a57f69b704a182fdb"
+    },
+    {
+      "bytes": 14122,
+      "path": "research/p28-word0196/native_post_p2_control/oracle_tests.py",
+      "sha256": "4c8c29442e744407e694dc83d10a5b400aff72821dd1c8a233ca9635fc22b594"
+    },
+    {
+      "bytes": 38376,
+      "path": "research/p28-word0196/native_post_p2_control/resume.py",
+      "sha256": "3e55e7b8e19bac4836b46939a19929a9063f8fc6417fc13c158268ffb902e546"
+    },
+    {
+      "bytes": 22234,
+      "path": "research/p28-word0196/native_post_p2_control/resume_tests.py",
+      "sha256": "4039c62a40d92e6c01ef16e28d93127d7ef6d7888c21e31db0ec651b03280cc4"
+    },
+    {
+      "bytes": 9156,
+      "path": "research/p28-word0196/native_post_p2_control/source_guard.py",
+      "sha256": "e0fd416f07f96863939fff6c5eccdfccec954c7a28be80b7c776cd42ee598a7a"
+    },
+    {
+      "bytes": 2911,
+      "path": "research/p28-word0196/native_post_p2_control/source_guard_tests.py",
+      "sha256": "4d117f8dd02d32edf123172e7592d07c9c48f214c5e3c839eead3b41435ac5d4"
+    },
+    {
+      "bytes": 4895,
+      "path": "research/p28-word0196/native_post_p2_control/verify.py",
+      "sha256": "da360bea89533188eee5d71849f05c21176c3c6d2a0fbe6ef8a6c900c42849f4"
+    },
+    {
+      "bytes": 2003,
+      "path": "research/p28-word0196/native_post_p2_control/verify_tests.py",
+      "sha256": "d99eb9e73d4fc6b1c0461ea6b928c6bc6a86cccfc7bb3820d3fb603f1c83f22b"
+    },
+    {
+      "bytes": 12594,
+      "path": "docs/M2BW_NATIVE_POST_P2_CONTROL_CONTINUITY.md",
+      "sha256": "429bc4e1a619cbdd165bbe30478892933d83d129012bb5850cfc1737e46f1fe1"
+    },
+    {
+      "bytes": 15114,
+      "path": "docs/M2BX_NATIVE_BELOW_SECOND_P2_CONTINUITY.md",
+      "sha256": "1c2d6c2248464210da76a1fa68ea126256512490379741f0d5b96058a36e0416"
+    },
+    {
+      "bytes": 8471,
+      "path": "docs/M2AB_POST_P2_CONTROL_HANDOFF.md",
+      "sha256": "53d0ab78eebb0650ff29feef648d7970ba6f6b4c640494c5641dc71bc4093e7f"
+    },
+    {
+      "bytes": 17557,
+      "path": "research/p28-word0196/original_rom_boundary/contract.json",
+      "sha256": "b8a1a482dfa8f48f310db89d291014d1f4ebf83f51022cf7f70fb1dea0c1da30"
+    },
+    {
+      "bytes": 32188,
+      "path": "research/p28-word0196/word0196_ir.json",
+      "sha256": "4fdbd6b7dbdd8f48d5a43e123ca93a33a003c22556a0c40b5296d5f409e085c4"
+    },
+    {
+      "bytes": 8507,
+      "path": "research/p28-word0196/word0196_equivalent.c",
+      "sha256": "4b189d4ed3e97e0d197f6c558755cf056a89c1dc7122653c5c557e7ab62d76d3"
+    },
+    {
+      "bytes": 6066,
+      "path": "rust/p28-slice-runner/src/post_p2_control.rs",
+      "sha256": "35ac4f0e7f14884eda04a127dd5afac4fdcf9834471249ad018cd347a1191deb"
+    },
+    {
+      "bytes": 8181,
+      "path": "docs/M2AC_BELOW_SECOND_P2_HANDOFF.md",
+      "sha256": "40ca68cf13a4ecbfe030a7960e9db8b89ad49b1fa9e80fdd99209e326d029006"
+    },
+    {
+      "bytes": 6099,
+      "path": "rust/p28-slice-runner/src/below_second_p2.rs",
+      "sha256": "3942cc0954aed9d29647f12641ff7f66f519d69d943c83c633b2237a4e2166c7"
+    },
+    {
+      "bytes": 4324,
+      "path": "rust/p28-slice-runner/src/below_second_p2_tests.rs",
+      "sha256": "f3a97d55fd1adaedd22c51eb62b260b60bd4e3cd53f912720a4bd773b3cc0dbd"
+    },
+    {
+      "bytes": 10808,
+      "path": "docs/M2BU_NATIVE_ENTRY_CONTINUITY.md",
+      "sha256": "9f41342e73aaf7170ca7d252e43b682aa12f65ae33340b5ae87829c53fceb04a"
+    },
+    {
+      "bytes": 11340,
+      "path": "docs/M2BV_NATIVE_P2_OWNERSHIP_HANDOFF.md",
+      "sha256": "060dff8fa228750149d29e62b43dcbdda20afb4d0a4ecb24a8889a3103c5d3ca"
+    },
+    {
+      "bytes": 18935,
+      "path": "docs/M2AW_NX8_200_TARGET_ABI_CONTRACT.md",
+      "sha256": "122bbb14adcd5718dc3fbb3fefb19dee74a9228099278802254ef6c7d59f8174"
+    },
+    {
+      "bytes": 14412,
+      "path": "docs/M2BS_ORIGINAL_ROM_BOUNDARY_NATIVE_CONTEXT.md",
+      "sha256": "fc507f02e225a8fa23f14f97b68672277aa60bbf2ad3a60c766434ef12a10a96"
+    },
+    {
+      "bytes": 8442,
+      "path": "docs/M2AA_P2_OUTPUT_LATCH_HANDOFF.md",
+      "sha256": "14459918ab1b863e00dcc36ff32fd6b2cf53d3cb74ae60248364700a5c85c096"
+    }
+  ],
+  "trace": {
+    "allProgramDataControlFieldsCompared": true,
+    "canonicalFieldExclusions": [],
+    "firstSingularGenerationsRetained": true,
+    "fullLogicalAndRawJournalsCompared": true,
+    "perInstructionFullCpuPswCompared": true,
+    "sameValueWritesRetained": true,
+    "twoGenerationArraysCompared": true
+  },
+  "unresolved": [
+    "ActualHardwareEcuExecutionNotObserved",
+    "RecoveredFullEcuSchedulerNotEstablished",
+    "PhysicalSFNotEstablished",
+    "NativeStackSafetyNotEstablished",
+    "NativeP2InitialOwnershipNotEstablished",
+    "NativeTCON0InitialOwnershipNotEstablished",
+    "NativeTRNSITInitialOwnershipNotEstablished",
+    "TimerEvolutionNotModeled",
+    "IRQDeliveryNotInjected",
+    "PhysicalTimingEquivalenceNotEstablished",
+    "ElectricalOutputNotObserved",
+    "ActualNativeDownstreamRejoinNotEstablished",
+    "SafeROMPlacementNotEstablished",
+    "TargetProgramEquivalenceNotEstablished",
+    "FirmwareIntegrationNotEstablished",
+    "DiagnosticCycleTimingEquivalenceNotEstablished",
+    "RT5688NotExecuted",
+    "ReturnFrameNotEstablished"
+  ]
+}

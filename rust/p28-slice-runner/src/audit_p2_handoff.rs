@@ -214,8 +214,8 @@ impl ClosedP2HandoffProgram {
 }
 
 pub struct P2HandoffSeeds {
-    data: BTreeMap<u16, u8>,
-    pointing: [[u16; 4]; 8],
+    pub(super) data: BTreeMap<u16, u8>,
+    pub(super) pointing: [[u16; 4]; 8],
 }
 impl P2HandoffSeeds {
     pub fn new(
@@ -305,6 +305,28 @@ pub struct P2HandoffSession {
     p2_steps: Vec<P2StepSnapshot>,
 }
 impl P2HandoffSession {
+    pub(super) fn is_below_second_p2(&self) -> bool {
+        #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+        {
+            self.inner
+                .bus
+                .audit
+                .as_ref()
+                .expect("installed")
+                .below_second_p2_active()
+        }
+        #[cfg(not(feature = "p28-word0196-below-second-p2-continuity"))]
+        {
+            false
+        }
+    }
+    pub(super) fn native_seed_writes(&self) -> u64 {
+        if self.is_below_second_p2() {
+            55
+        } else {
+            48
+        }
+    }
     pub fn new(
         program: &ClosedP2HandoffProgram,
         cpu: Cpu,
@@ -513,14 +535,18 @@ impl P2HandoffSession {
             .expect("installed")
             .p2_handoff_state()
             .expect("closed capability");
-        let service = self.inner.bus.p2_accesses();
-        if service.len() > 2 {
+        let all_service = self.inner.bus.p2_accesses();
+        let below = self.is_below_second_p2();
+        if all_service.len() > if below { 4 } else { 2 } {
             return Err(AuditError::new(
                 "P2JournalCardinalityRejected",
                 None,
                 "one actual RMW service pair",
             ));
         }
+        // The singular M2bv/M2bw projection remains G1. The separate M2bx
+        // report verifies and exposes all four actual services and G2.
+        let service = &all_service[..all_service.len().min(2)];
         let mut journal = Vec::new();
         for (index, row) in service.iter().enumerate() {
             let ordinal = if index == 0 {
@@ -574,7 +600,7 @@ impl P2HandoffSession {
             let native_write = logical
                 .write_ordinal
                 .map(|n| {
-                    n.checked_sub(48).ok_or_else(|| {
+                    n.checked_sub(self.native_seed_writes()).ok_or_else(|| {
                         AuditError::new(
                             "P2NativeWriteOrdinalUnderflow",
                             None,

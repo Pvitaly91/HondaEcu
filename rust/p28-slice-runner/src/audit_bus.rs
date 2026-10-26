@@ -56,6 +56,12 @@ struct ControlAuditState {
     write: Option<u64>,
     retired: bool,
 }
+#[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+#[derive(Clone)]
+struct BelowSecondAuditState {
+    p2: P2AuditState,
+    control: ControlAuditState,
+}
 struct State {
     entry_pc: u16,
     current_pc: u16,
@@ -75,6 +81,8 @@ struct State {
     p2_handoff: Option<P2AuditState>,
     #[cfg(feature = "p28-word0196-post-p2-control")]
     post_control: Option<ControlAuditState>,
+    #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+    below_second: Option<BelowSecondAuditState>,
     program: Vec<ProgramEvent>,
     data: Vec<DataEvent>,
     raw: Vec<RawDataEvent>,
@@ -161,6 +169,10 @@ impl AuditBus {
         let mut state = self.state.borrow_mut();
         let result = (|| {
             Self::readiness(&state)?;
+            #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+            if state.budget == 39 {
+                return Self::install_below_second_caps(&mut state, p2_pc, p2_index);
+            }
             let original = state.original.as_ref().ok_or_else(|| {
                 AuditError::new("PostP2OriginalRequired", None, "closed original source")
             })?;
@@ -213,6 +225,87 @@ impl AuditBus {
         })();
         result.map_err(|e| Self::latch(&mut state, e))
     }
+    #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+    fn install_below_second_caps(state: &mut State, p2_pc: u16, p2_index: usize) -> Result<()> {
+        let original = state.original.as_ref().ok_or_else(|| {
+            AuditError::new(
+                "BelowSecondOriginalRequired",
+                None,
+                "closed original source",
+            )
+        })?;
+        let base = state.entry_pc;
+        let pc = |native: u16| base + (native - 0x54f5);
+        if state.phase != "Setup"
+            || state.p2_handoff.is_some()
+            || state.post_control.is_some()
+            || state.below_second.is_some()
+            || state.budget != 39
+            || !matches!(base, 0x54f5 | 0x6400)
+            || p2_pc != pc(0x55c5)
+            || p2_index != 1647
+            || original.nodes.len() != 49
+            || original.inventory.len() != 23
+            || original.pcs.len() != 39
+            || original.pcs.get(16) != Some(&p2_pc)
+            || original.pcs.get(17) != Some(&pc(0x55c8))
+            || original.pcs.get(20) != Some(&pc(0x55cf))
+            || original.pcs.get(23) != Some(&pc(0x55d5))
+            || original.pcs.get(37) != Some(&pc(0x5682))
+            || original.pcs.get(38) != Some(&pc(0x5685))
+            || original.terminal != pc(0x5688)
+            || state.step_calls != 0
+            || state.execution_calls != 0
+            || state.retirements != 0
+        {
+            return Err(AuditError::new(
+                "BelowSecondCapabilityInstallationRejected",
+                Some(i64::from(p2_pc)),
+                "closed49-node39-step Below source before first instruction only",
+            ));
+        }
+        state.p2_handoff = Some(P2AuditState {
+            pc: p2_pc,
+            index: p2_index,
+            read_ordinal: None,
+            write_ordinal: None,
+            retired: false,
+            retirement: 17,
+        });
+        state.post_control = Some(ControlAuditState {
+            pc: pc(0x55c8),
+            index: 1994,
+            address: 0x40,
+            alias_pc: Some(pc(0x55cf)),
+            reads: vec![],
+            write: None,
+            retired: false,
+        });
+        state.below_second = Some(BelowSecondAuditState {
+            p2: P2AuditState {
+                pc: pc(0x5682),
+                index: 1647,
+                read_ordinal: None,
+                write_ordinal: None,
+                retired: false,
+                retirement: 38,
+            },
+            control: ControlAuditState {
+                pc: pc(0x55d5),
+                index: 1779,
+                address: 0x40,
+                alias_pc: None,
+                reads: vec![],
+                write: None,
+                retired: false,
+            },
+        });
+        Ok(())
+    }
+    #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+    pub(crate) fn below_second_p2_active(&self) -> bool {
+        self.state.borrow().below_second.is_some()
+    }
     #[cfg(feature = "p28-word0196-post-p2-control")]
     pub(crate) fn post_p2_control_active(&self) -> bool {
         self.state.borrow().post_control.is_some()
@@ -221,12 +314,31 @@ impl AuditBus {
     pub(crate) fn post_p2_control_selected(&self, pc: u16, index: usize) -> Option<(u16, u16)> {
         let s = self.state.borrow();
         let c = s.post_control.as_ref()?;
-        (s.phase == "Executing"
+        let first = (s.phase == "Executing"
             && c.pc == pc
             && c.index == index
             && !c.retired
             && c.write.is_none())
-        .then_some((c.address, pc))
+        .then_some((c.address, pc));
+        if first.is_some() {
+            return first;
+        }
+        #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+        if let Some(second) = s.below_second.as_ref() {
+            let c2 = &second.control;
+            if s.phase == "Executing"
+                && c2.pc == pc
+                && c2.index == index
+                && !c2.retired
+                && c2.write.is_none()
+                && s.retirements + 1 == 24
+                && c.retired
+                && s.p2_handoff.as_ref().is_some_and(|p| p.retired)
+            {
+                return Some((c2.address, pc));
+            }
+        }
+        None
     }
     #[cfg(feature = "p28-word0196-post-p2-control")]
     fn control_logical_right(s: &State, address: u16, width: u8, write: bool) -> Result<bool> {
@@ -235,6 +347,31 @@ impl AuditBus {
         };
         if address >= 0x80 || address == 0x24 {
             return Ok(false);
+        }
+        #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+        if let Some(second) = s.below_second.as_ref() {
+            let c2 = &second.control;
+            if s.pc == Some(c2.pc) {
+                if address != 0x40
+                    || width != 8
+                    || s.phase != "Executing"
+                    || s.instruction != Some(c2.index)
+                    || s.retirements + 1 != 24
+                    || !c.retired
+                    || !s.p2_handoff.as_ref().is_some_and(|p| p.retired)
+                    || c2.retired
+                    || c2.write.is_some()
+                    || (write && c2.reads.len() != 2)
+                    || (!write && c2.reads.len() >= 2)
+                {
+                    return Err(AuditError::new(
+                        "BelowSecondControlPermissionDenied",
+                        Some(i64::from(address)),
+                        "second exact byte RB after first native P2/control generations only",
+                    ));
+                }
+                return Ok(true);
+            }
         }
         if address == 6
             && width == 8
@@ -273,10 +410,25 @@ impl AuditBus {
     #[cfg(feature = "p28-word0196-p2-handoff")]
     pub(crate) fn p2_handoff_selected(&self, pc: u16, index: usize) -> bool {
         let state = self.state.borrow();
-        state.phase == "Executing"
+        let first = state.phase == "Executing"
             && state.p2_handoff.as_ref().is_some_and(|p| {
                 p.pc == pc && p.index == index && p.write_ordinal.is_none() && !p.retired
-            })
+            });
+        if first {
+            return true;
+        }
+        #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+        if let Some(second) = state.below_second.as_ref() {
+            return state.phase == "Executing"
+                && second.p2.pc == pc
+                && second.p2.index == index
+                && state.retirements + 1 == 38
+                && second.control.retired
+                && !second.p2.retired
+                && second.p2.write_ordinal.is_none()
+                && state.p2_handoff.as_ref().is_some_and(|p| p.retired);
+        }
+        false
     }
     #[cfg(feature = "p28-word0196-p2-handoff")]
     pub(crate) fn p2_handoff_state(&self) -> Option<P2AuditState> {
@@ -293,6 +445,31 @@ impl AuditBus {
         #[cfg(feature = "p28-word0196-post-p2-control")]
         if state.post_control.is_some() && address != 0x24 {
             return Ok(false);
+        }
+        #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+        if let Some(second) = state.below_second.as_ref() {
+            let p = &second.p2;
+            if state.pc == Some(p.pc) {
+                if address != 0x24
+                    || width != 8
+                    || state.phase != "Executing"
+                    || state.instruction != Some(p.index)
+                    || state.retirements + 1 != 38
+                    || !p2.retired
+                    || !second.control.retired
+                    || p.retired
+                    || p.write_ordinal.is_some()
+                    || (write && p.read_ordinal.is_none())
+                    || (!write && p.read_ordinal.is_some())
+                {
+                    return Err(AuditError::new(
+                        "BelowSecondP2PermissionDenied",
+                        Some(i64::from(address)),
+                        "second exact byte ORB after retained G1 and second control only",
+                    ));
+                }
+                return Ok(true);
+            }
         }
         if address != 0x24
             || width != 8
@@ -323,6 +500,16 @@ impl AuditBus {
             expected.sort_unstable();
             let mut actual = state.seeded.clone();
             actual.sort_unstable();
+            #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+            let extended_seeds = state.budget == 39
+                && original.nodes.len() == 49
+                && original.inventory.len() == 23
+                && original.pcs.len() == 39
+                && self.segment.end - self.segment.base == 403
+                && matches!(self.segment.base, 0x54f5 | 0x6400);
+            #[cfg(not(feature = "p28-word0196-below-second-p2-continuity"))]
+            let extended_seeds = false;
+            let (logical_seeds, raw_seeds) = if extended_seeds { (55, 87) } else { (48, 80) };
             if state.phase != "Setup"
                 || state.composite.is_some()
                 || state.transfer.is_some()
@@ -334,8 +521,8 @@ impl AuditBus {
                 || state.step_calls != 0
                 || state.execution_calls != 0
                 || state.retirements != 0
-                || state.data.len() != 48
-                || state.raw.len() != 80
+                || state.data.len() != logical_seeds
+                || state.raw.len() != raw_seeds
                 || state.data.iter().any(|e| e.phase != "Seed" || !e.serviced)
                 || state.raw.iter().any(|e| !e.serviced)
                 || original.pcs.first().copied() != Some(state.entry_pc)
@@ -480,6 +667,8 @@ impl AuditBus {
                 original: None,
                 #[cfg(feature = "p28-word0196-p2-handoff")]
                 p2_handoff: None,
+                #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+                below_second: None,
                 #[cfg(feature = "p28-word0196-post-p2-control")]
                 post_control: None,
                 program: vec![],
@@ -1473,6 +1662,52 @@ impl AuditBus {
                         "terminal fallthrough is not synthetic direct-J authority",
                     ));
                 }
+                #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+                if state.below_second.is_some() {
+                    let origin = state.pc.expect("actual origin");
+                    let first_p2 = state.p2_handoff.as_ref().is_some_and(|p| p.retired);
+                    let first_control = state.post_control.as_ref().is_some_and(|c| c.retired);
+                    let retirement = state.retirements + 1;
+                    let second = state.below_second.as_mut().expect("closed below admission");
+                    if origin == second.control.pc {
+                        if retirement != 24
+                            || !first_p2
+                            || !first_control
+                            || second.control.retired
+                            || second.control.reads.len() != 2
+                            || second.control.write.is_none()
+                        {
+                            return Err(AuditError::new("BelowSecondControlRetirementIncomplete", Some(i64::from(origin)),
+                            "second actual ordered control RMW after retained first generations"));
+                        }
+                        second.control.retired = true;
+                    }
+                    if origin == second.p2.pc {
+                        if retirement != 38
+                            || !first_p2
+                            || !second.control.retired
+                            || second.p2.retired
+                            || second.p2.read_ordinal.is_none()
+                            || second.p2.write_ordinal.is_none()
+                        {
+                            return Err(AuditError::new(
+                                "BelowSecondP2RetirementIncomplete",
+                                Some(i64::from(origin)),
+                                "actual second P2 read/write creates a fresh generation",
+                            ));
+                        }
+                        second.p2.retired = true;
+                    }
+                    if terminal
+                        && (retirement != 39 || !second.control.retired || !second.p2.retired)
+                    {
+                        return Err(AuditError::new(
+                            "BelowSecondTerminalIncomplete",
+                            Some(i64::from(origin)),
+                            "both second native operations must complete before RT boundary",
+                        ));
+                    }
+                }
                 #[cfg(feature = "p28-word0196-p2-handoff")]
                 {
                     #[cfg(feature = "p28-word0196-post-p2-control")]
@@ -1882,9 +2117,22 @@ impl AuditBus {
         {
             let event = &state.data[token.index];
             let observed = (event.address == 0x24 && event.serviced)
-                .then(|| (event.operation == "Write", event.ordinal));
-            if let (Some(p2), Some((write, ordinal))) = (state.p2_handoff.as_mut(), observed) {
-                if write {
+                .then(|| (event.operation == "Write", event.ordinal, event.pc));
+            #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+            if let (Some(second), Some((write, ordinal, pc))) =
+                (state.below_second.as_mut(), observed)
+            {
+                if pc == Some(second.p2.pc) {
+                    if write {
+                        second.p2.write_ordinal = Some(ordinal);
+                    } else {
+                        second.p2.read_ordinal = Some(ordinal);
+                    }
+                }
+            }
+            if let (Some(p2), Some((write, ordinal, pc))) = (state.p2_handoff.as_mut(), observed) {
+                if pc != Some(p2.pc) { /* second capability never overwrites G1 metadata */
+                } else if write {
                     p2.write_ordinal = Some(ordinal);
                 } else {
                     p2.read_ordinal = Some(ordinal);
@@ -1895,9 +2143,23 @@ impl AuditBus {
         {
             let event = &state.data[token.index];
             let value = (event.serviced && matches!(event.address, 0x40 | 0x46))
-                .then(|| (event.operation == "Write", event.ordinal));
-            if let (Some(control), Some((write, ordinal))) = (state.post_control.as_mut(), value) {
-                if write {
+                .then(|| (event.operation == "Write", event.ordinal, event.pc));
+            #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
+            if let (Some(second), Some((write, ordinal, pc))) = (state.below_second.as_mut(), value)
+            {
+                if pc == Some(second.control.pc) {
+                    if write {
+                        second.control.write = Some(ordinal);
+                    } else {
+                        second.control.reads.push(ordinal);
+                    }
+                }
+            }
+            if let (Some(control), Some((write, ordinal, pc))) =
+                (state.post_control.as_mut(), value)
+            {
+                if pc != Some(control.pc) { /* preserve the first control generation */
+                } else if write {
                     control.write = Some(ordinal);
                 } else {
                     control.reads.push(ordinal);
