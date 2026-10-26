@@ -63,6 +63,8 @@ struct BelowSecondAuditState {
     control: ControlAuditState,
 }
 struct State {
+    #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+    cal_rt: Option<crate::audit::cal_rt_continuity::CalRtBudget>,
     entry_pc: u16,
     current_pc: u16,
     phase: &'static str,
@@ -116,10 +118,51 @@ impl State {
 }
 pub(crate) struct AuditBus {
     segment: ProgramSegment,
+    #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+    caller_segment: Option<ProgramSegment>,
     permissions: Permissions,
     state: RefCell<State>,
 }
 impl AuditBus {
+    pub(crate) fn cal_rt_body_offset(&self) -> u64 {
+        #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+        if self.state.borrow().cal_rt.is_some() {
+            return 1;
+        }
+        0
+    }
+    fn body_offset(state: &State) -> u64 {
+        #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+        if state.cal_rt.is_some() {
+            return 1;
+        }
+        let _ = state;
+        0
+    }
+    #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+    pub(crate) fn new_cal_rt(
+        caller: ProgramSegment,
+        body: ProgramSegment,
+        permissions: Permissions,
+        admission: crate::audit::cal_rt_continuity::CalRtBudget,
+    ) -> Self {
+        let mut result = Self::new(body, permissions, admission.caller_pc(), 41);
+        result.caller_segment = Some(caller);
+        result.state.get_mut().cal_rt = Some(admission);
+        result
+    }
+    fn segment_for(&self, address: u32) -> Option<&ProgramSegment> {
+        if (self.segment.base..self.segment.end).contains(&address) {
+            return Some(&self.segment);
+        }
+        #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+        if let Some(caller) = &self.caller_segment {
+            if (caller.base..caller.end).contains(&address) {
+                return Some(caller);
+            }
+        }
+        None
+    }
     #[cfg(feature = "p28-word0196-p2-handoff")]
     pub(crate) fn install_p2_handoff(&self, pc: u16, index: usize) -> Result<()> {
         let mut state = self.state.borrow_mut();
@@ -170,7 +213,7 @@ impl AuditBus {
         let result = (|| {
             Self::readiness(&state)?;
             #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
-            if state.budget == 39 {
+            if state.budget == 39 || Self::body_offset(&state) == 1 {
                 return Self::install_below_second_caps(&mut state, p2_pc, p2_index);
             }
             let original = state.original.as_ref().ok_or_else(|| {
@@ -234,26 +277,30 @@ impl AuditBus {
                 "closed original source",
             )
         })?;
+        let offset = Self::body_offset(state) as usize;
+        #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+        let base = state.cal_rt.map_or(state.entry_pc, |c| c.body_pc());
+        #[cfg(not(feature = "p28-word0196-cal-rt-continuity"))]
         let base = state.entry_pc;
         let pc = |native: u16| base + (native - 0x54f5);
         if state.phase != "Setup"
             || state.p2_handoff.is_some()
             || state.post_control.is_some()
             || state.below_second.is_some()
-            || state.budget != 39
+            || state.budget != (if offset == 0 { 39 } else { 41 })
             || !matches!(base, 0x54f5 | 0x6400)
             || p2_pc != pc(0x55c5)
             || p2_index != 1647
-            || original.nodes.len() != 49
-            || original.inventory.len() != 23
-            || original.pcs.len() != 39
-            || original.pcs.get(16) != Some(&p2_pc)
-            || original.pcs.get(17) != Some(&pc(0x55c8))
-            || original.pcs.get(20) != Some(&pc(0x55cf))
-            || original.pcs.get(23) != Some(&pc(0x55d5))
-            || original.pcs.get(37) != Some(&pc(0x5682))
-            || original.pcs.get(38) != Some(&pc(0x5685))
-            || original.terminal != pc(0x5688)
+            || original.nodes.len() != 49 + offset * 2
+            || original.inventory.len() != 23 + offset * 2
+            || original.pcs.len() != 39 + offset * 2
+            || original.pcs.get(16 + offset) != Some(&p2_pc)
+            || original.pcs.get(17 + offset) != Some(&pc(0x55c8))
+            || original.pcs.get(20 + offset) != Some(&pc(0x55cf))
+            || original.pcs.get(23 + offset) != Some(&pc(0x55d5))
+            || original.pcs.get(37 + offset) != Some(&pc(0x5682))
+            || original.pcs.get(38 + offset) != Some(&pc(0x5685))
+            || (offset == 0 && original.terminal != pc(0x5688))
             || state.step_calls != 0
             || state.execution_calls != 0
             || state.retirements != 0
@@ -270,7 +317,7 @@ impl AuditBus {
             read_ordinal: None,
             write_ordinal: None,
             retired: false,
-            retirement: 17,
+            retirement: 17 + offset as u8,
         });
         state.post_control = Some(ControlAuditState {
             pc: pc(0x55c8),
@@ -288,7 +335,7 @@ impl AuditBus {
                 read_ordinal: None,
                 write_ordinal: None,
                 retired: false,
-                retirement: 38,
+                retirement: 38 + offset as u8,
             },
             control: ControlAuditState {
                 pc: pc(0x55d5),
@@ -331,7 +378,7 @@ impl AuditBus {
                 && c2.index == index
                 && !c2.retired
                 && c2.write.is_none()
-                && s.retirements + 1 == 24
+                && s.retirements + 1 == 24 + Self::body_offset(&s)
                 && c.retired
                 && s.p2_handoff.as_ref().is_some_and(|p| p.retired)
             {
@@ -356,7 +403,7 @@ impl AuditBus {
                     || width != 8
                     || s.phase != "Executing"
                     || s.instruction != Some(c2.index)
-                    || s.retirements + 1 != 24
+                    || s.retirements + 1 != 24 + Self::body_offset(s)
                     || !c.retired
                     || !s.p2_handoff.as_ref().is_some_and(|p| p.retired)
                     || c2.retired
@@ -422,7 +469,7 @@ impl AuditBus {
             return state.phase == "Executing"
                 && second.p2.pc == pc
                 && second.p2.index == index
-                && state.retirements + 1 == 38
+                && state.retirements + 1 == u64::from(second.p2.retirement)
                 && second.control.retired
                 && !second.p2.retired
                 && second.p2.write_ordinal.is_none()
@@ -454,7 +501,7 @@ impl AuditBus {
                     || width != 8
                     || state.phase != "Executing"
                     || state.instruction != Some(p.index)
-                    || state.retirements + 1 != 38
+                    || state.retirements + 1 != u64::from(p.retirement)
                     || !p2.retired
                     || !second.control.retired
                     || p.retired
@@ -509,7 +556,31 @@ impl AuditBus {
                 && matches!(self.segment.base, 0x54f5 | 0x6400);
             #[cfg(not(feature = "p28-word0196-below-second-p2-continuity"))]
             let extended_seeds = false;
-            let (logical_seeds, raw_seeds) = if extended_seeds { (55, 87) } else { (48, 80) };
+            #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+            let cal_rt_seeds = state.cal_rt.is_some_and(|c| {
+                state.budget == 41
+                    && original.nodes.len() == 51
+                    && original.inventory.len() == 25
+                    && original.pcs.len() == 41
+                    && original.pcs.first() == Some(&c.caller_pc())
+                    && original.pcs.last() == Some(&c.rt_pc())
+                    && original.terminal == c.return_pc()
+                    && self.segment.base == u32::from(c.body_pc())
+                    && self.segment.end - self.segment.base == 404
+                    && self
+                        .caller_segment
+                        .as_ref()
+                        .is_some_and(|s| s.base == u32::from(c.caller_pc()) && s.end - s.base == 3)
+            });
+            #[cfg(not(feature = "p28-word0196-cal-rt-continuity"))]
+            let cal_rt_seeds = false;
+            let (logical_seeds, raw_seeds) = if cal_rt_seeds {
+                (57, 89)
+            } else if extended_seeds {
+                (55, 87)
+            } else {
+                (48, 80)
+            };
             if state.phase != "Setup"
                 || state.composite.is_some()
                 || state.transfer.is_some()
@@ -649,8 +720,12 @@ impl AuditBus {
     ) -> Self {
         Self {
             segment,
+            #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+            caller_segment: None,
             permissions,
             state: RefCell::new(State {
+                #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+                cal_rt: None,
                 entry_pc: entry,
                 current_pc: entry,
                 phase: "Setup",
@@ -1476,11 +1551,11 @@ impl AuditBus {
                     "bounded before decoder invocation",
                 ));
             }
-            let segment = state
-                .transfer
-                .as_ref()
-                .map_or(&self.segment, |t| t.segment());
-            if u32::from(pc) < segment.base || u32::from(pc) >= segment.end {
+            let contained = state.transfer.as_ref().map_or_else(
+                || self.segment_for(u32::from(pc)).is_some(),
+                |t| t.segment().contains_address(pc),
+            );
+            if !contained {
                 return Err(AuditError::new(
                     "EntryOutsideSegment",
                     Some(i64::from(pc)),
@@ -1502,12 +1577,22 @@ impl AuditBus {
     }
     pub(crate) fn program_read(&self, address: i64, purpose: &str) -> Result<u8> {
         let mut state = self.state.borrow_mut();
-        let (base, end) = state
-            .transfer
-            .as_ref()
-            .map_or((self.segment.base, self.segment.end), |t| {
-                (t.segment().base, t.segment().end)
-            });
+        // Preserve historical denied-probe diagnostics against the active
+        // segment. The second closed window only selects another real source;
+        // an absent window never supplies padding or a zero-valued byte.
+        let (base, end) = {
+            let segment = state
+                .transfer
+                .as_ref()
+                .map(|t| t.segment())
+                .unwrap_or_else(|| {
+                    u32::try_from(address)
+                        .ok()
+                        .and_then(|a| self.segment_for(a))
+                        .unwrap_or(&self.segment)
+                });
+            (segment.base, segment.end)
+        };
         let offset = u32::try_from(address)
             .ok()
             .filter(|a| *a >= base && *a < end)
@@ -1568,11 +1653,17 @@ impl AuditBus {
                     "strict immutable segment has no zero fallback or prefix",
                 )
             })?;
-            Ok(state
+            let segment = state
                 .transfer
                 .as_ref()
-                .map_or(&self.segment, |t| t.segment())
-                .bytes[offset as usize])
+                .map(|t| t.segment())
+                .unwrap_or_else(|| {
+                    u32::try_from(address)
+                        .ok()
+                        .and_then(|a| self.segment_for(a))
+                        .unwrap_or(&self.segment)
+                });
+            Ok(segment.bytes[offset as usize])
         })();
         let refusal = result
             .as_ref()
@@ -1664,13 +1755,14 @@ impl AuditBus {
                 }
                 #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
                 if state.below_second.is_some() {
+                    let offset = Self::body_offset(&state);
                     let origin = state.pc.expect("actual origin");
                     let first_p2 = state.p2_handoff.as_ref().is_some_and(|p| p.retired);
                     let first_control = state.post_control.as_ref().is_some_and(|c| c.retired);
                     let retirement = state.retirements + 1;
                     let second = state.below_second.as_mut().expect("closed below admission");
                     if origin == second.control.pc {
-                        if retirement != 24
+                        if retirement != 24 + offset
                             || !first_p2
                             || !first_control
                             || second.control.retired
@@ -1683,7 +1775,7 @@ impl AuditBus {
                         second.control.retired = true;
                     }
                     if origin == second.p2.pc {
-                        if retirement != 38
+                        if retirement != 38 + offset
                             || !first_p2
                             || !second.control.retired
                             || second.p2.retired
@@ -1699,7 +1791,9 @@ impl AuditBus {
                         second.p2.retired = true;
                     }
                     if terminal
-                        && (retirement != 39 || !second.control.retired || !second.p2.retired)
+                        && (retirement != (if offset == 0 { 39 } else { 41 })
+                            || !second.control.retired
+                            || !second.p2.retired)
                     {
                         return Err(AuditError::new(
                             "BelowSecondTerminalIncomplete",
@@ -1915,6 +2009,59 @@ impl AuditBus {
                     Some(i64::from(address)),
                     "functional DATA lifecycle",
                 ));
+            }
+            #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+            if let Some(c) = state.cal_rt {
+                let overlaps = u32::from(address) < u32::from(c.frame_address()) + 2
+                    && u32::from(address) + u32::from(width / 8) > u32::from(c.frame_address());
+                if overlaps {
+                    let call = write
+                        && state.pc == Some(c.caller_pc())
+                        && state.instruction == Some(388)
+                        && state.retirements == 0
+                        && value == Some(c.return_pc());
+                    let ret = !write
+                        && state.pc == Some(c.rt_pc())
+                        && state.instruction == Some(1902)
+                        && state.retirements == 40;
+                    if state.phase != "Executing"
+                        || address != c.frame_address()
+                        || width != 16
+                        || !(call || ret)
+                        || state.data[state.data_start..]
+                            .iter()
+                            .any(|e| e.address == address)
+                    {
+                        return Err(AuditError::new(
+                            "CalRtStackCapabilityDenied",
+                            Some(i64::from(address)),
+                            "one actual CAL word write and one actual final RT word read only",
+                        ));
+                    }
+                    if ret {
+                        let overlapping: Vec<_> = state
+                            .data
+                            .iter()
+                            .filter(|e| {
+                                e.phase == "Functional"
+                                    && e.operation == "Write"
+                                    && e.serviced
+                                    && u32::from(e.address) < u32::from(address) + 2
+                                    && u32::from(e.address) + u32::from(e.width / 8)
+                                        > u32::from(address)
+                            })
+                            .collect();
+                        if overlapping.len() != 1
+                            || overlapping[0].pc != Some(c.caller_pc())
+                            || overlapping[0].instruction_index != Some(388)
+                            || overlapping[0].width != 16
+                            || overlapping[0].value != Some(c.return_pc())
+                        {
+                            return Err(AuditError::new("CalRtFreshFrameRequired", Some(i64::from(address)),
+                                "preexisting equal bytes do not establish the current CAL writer generation"));
+                        }
+                    }
+                }
             }
             let closed_rmw = if let Some(t) = &state.transfer {
                 if state.phase != "Executing" || t.stage != TransferStage::Composite {

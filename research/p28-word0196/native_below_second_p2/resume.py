@@ -97,6 +97,21 @@ def verify_ack(ack, program_identity, public):
 
 class VerificationRun:
     """One source-frozen closed corpus; sibling modes retain separate progress."""
+
+    # Source-selected, closed policy defaults. Existing M2bx callers preserve
+    # their exact identities, budgets, canonical records and acceptance checks.
+    MILESTONE = "M2bx"
+    BASE, BRANCH, BUDGETS = BASE, BRANCH, BUDGETS
+    PUBLIC_MODE, PRIVATE_MODE = PUBLIC_MODE, PRIVATE_MODE
+    LOCK_NAME = ".m2bx-runtime.lock.json"
+    check_source_join = staticmethod(check_source_join)
+    read_checkpoint = staticmethod(read_checkpoint)
+    verify_ack = staticmethod(verify_ack)
+
+    def validate_program_domain(self, program_identity, public):
+        require(type(public) is bool and program_identity["program_base"] == (0x6400 if public else 0x54F5),
+                "ExplicitM2bxProgramDomainRequired")
+
     def __init__(self, *, output, runner, source_join, source_supplier, cases, wire_cases,
                  expected, program, program_identity, compare, public, source_fence=lambda: True,
                  private_identity=None, historical=None, executor=execute_case, checkpoint_path=None,
@@ -107,7 +122,7 @@ class VerificationRun:
         self.runner = Path(runner).resolve(strict=True)
         self.runner_binding = file_binding(self.runner)
         self.join, self.source_supplier = source_join, source_supplier
-        self.fingerprint = check_source_join(source_join)
+        self.fingerprint = self.check_source_join(source_join)
         require(type(cases) is list and type(wire_cases) is list and type(expected) is list
                 and len(cases) == len(wire_cases) == len(expected), "CompleteFrozenM2bxCasesRequired")
         paths = Counter(case["path"] for case in cases)
@@ -116,7 +131,7 @@ class VerificationRun:
         require(len(ids) == len(set(ids)) and all(type(name) is str
                 and re.fullmatch(r"[A-Za-z0-9_-]{1,160}", name) is not None for name in ids), "UniqueSafeM2bxCaseIdsRequired")
         for case, wire, frozen_expected in zip(cases, wire_cases, expected):
-            require(type(case["budget"]) is int and case["budget"] == BUDGETS[case["path"]]
+            require(type(case["budget"]) is int and case["budget"] == self.BUDGETS[case["path"]]
                     and wire["case_id"] == case["case_id"] and wire["path"] == case["path"]
                     and type(wire["budget"]) is int and wire["budget"] == case["budget"], "ExactFrozenM2bxPathBudgetRequired")
             snapshot = case.get("p2_snapshot")
@@ -139,15 +154,14 @@ class VerificationRun:
             require(frozen_expected.get("control_initial") == [control["tcon0"], control["trnsit_implemented_flags"]]
                     and frozen_expected.get("control_instruction_retirements") == (4 if case["path"] == "A" else 1),
                     "FrozenIndependentControlStateRequired")
-        require(type(public) is bool and program_identity["program_base"] == (0x6400 if public else 0x54F5),
-                "ExplicitM2bxProgramDomainRequired")
+        self.validate_program_domain(program_identity, public)
         require(transport_api.CASE_TIMEOUT_SECONDS == 60, "UnchangedBoundedOneCaseTransportRequired")
         self.cases, self.wires, self.expected = cases, wire_cases, expected
         self.program, self.program_identity, self.compare = program, program_identity, compare
         self.public, self.fence, self.executor = public, source_fence, executor
         self.private_identity, self.historical = private_identity, historical
         self.corpus_kind = corpus_kind
-        self.mode = PUBLIC_MODE if public else PRIVATE_MODE
+        self.mode = self.PUBLIC_MODE if public else self.PRIVATE_MODE
         self.mode_key = ("public" if public else "private") + ":" + corpus_kind
         require(global_checkpoint is None or checkpoint_path is None or Path(global_checkpoint) == Path(checkpoint_path),
                 "ConflictingGlobalCheckpointPaths")
@@ -155,10 +169,10 @@ class VerificationRun:
         self.global_checkpoint = local_path(selected) if selected is not None else None
         self.local_checkpoint = self.state / "RESUME_STATE.json"
         self.preservation_binding = preservation_binding
-        self.ack_validator = ack_validator or verify_ack
+        self.ack_validator = ack_validator or self.verify_ack
         self.corpus_digest = digest(cases)
-        self.freeze = {"schemaVersion": 1, "milestone": "M2bx", "classification": self.mode,
-            "baseSha": BASE, "corpusKind": corpus_kind, "sourceFingerprintSha256": self.fingerprint,
+        self.freeze = {"schemaVersion": 1, "milestone": self.MILESTONE, "classification": self.mode,
+            "baseSha": self.BASE, "corpusKind": corpus_kind, "sourceFingerprintSha256": self.fingerprint,
             "sourceBindings": source_join["sourceBindings"], "runnerBinding": self.runner_binding,
             "corpusSha256": self.corpus_digest, "cases": cases, "wireCases": wire_cases,
             "independentExpected": expected, "expectedSha256": digest(expected), "programIdentity": program_identity,
@@ -177,7 +191,7 @@ class VerificationRun:
         return no_reparse(self.state / "attempts" / f"{index:04d}-{self.cases[index]['case_id']}")
 
     def intent(self, index):
-        return {"schemaVersion": 1, "milestone": "M2bx", "sourceFingerprint": self.fingerprint,
+        return {"schemaVersion": 1, "milestone": self.MILESTONE, "sourceFingerprint": self.fingerprint,
             "corpusSha256": self.corpus_digest, "corpusKind": self.corpus_kind, "caseIndex": index,
             "caseId": self.cases[index]["case_id"], "wireCaseSha256": digest(self.wires[index]),
             "expectedSha256": digest(self.expected[index]), "runnerBinding": self.runner_binding,
@@ -193,11 +207,11 @@ class VerificationRun:
         # authority; a resumed user does not need to edit four local mirrors.
         path = self.global_checkpoint if self.global_checkpoint is not None else self.local_checkpoint
         path = local_path(path)
-        if path.exists() and self.is_paused(read_checkpoint(path, fingerprint=self.fingerprint)):
+        if path.exists() and self.is_paused(self.read_checkpoint(path, fingerprint=self.fingerprint)):
             raise PauseRequested()
 
     def checkpoint(self, phase, *, active=None, blocker=None, summary=None):
-        value = {"schemaVersion": 1, "milestone": "M2bx", "branch": BRANCH, "baseSha": BASE,
+        value = {"schemaVersion": 1, "milestone": self.MILESTONE, "branch": self.BRANCH, "baseSha": self.BASE,
             "sourceFingerprint": self.fingerprint, "corpusSha256": self.corpus_digest,
             "executionMode": self.mode, "corpusKind": self.corpus_kind, "currentPhase": phase, "phase": phase,
             "completedSteps": ["SOURCE_VERIFIED", "PRE_RUNTIME_FREEZE"] + (["ROM_EXECUTION", "ORACLE_COMPARISON"] if summary else []),
@@ -216,14 +230,14 @@ class VerificationRun:
             file_binding(self.cache_path(len(self.records) - 1)) if self.records else
             file_binding(self.output / "pre-runtime-freeze.json"))
         if self.global_checkpoint is None and self.local_checkpoint.exists():
-            previous = read_checkpoint(self.local_checkpoint, fingerprint=self.fingerprint)
+            previous = self.read_checkpoint(self.local_checkpoint, fingerprint=self.fingerprint)
             if self.is_paused(previous):
                 value.update(phase="PAUSED", currentPhase="PAUSED", status="PAUSED")
                 if "pauseRequested" in previous:
                     value["pauseRequested"] = previous["pauseRequested"]
         atomic_json(self.local_checkpoint, value, replace=True)
         if self.global_checkpoint is not None and self.global_checkpoint != self.local_checkpoint:
-            global_state = read_checkpoint(self.global_checkpoint, fingerprint=self.fingerprint)
+            global_state = self.read_checkpoint(self.global_checkpoint, fingerprint=self.fingerprint)
             paused = self.is_paused(global_state)
             require(self.preservation_binding is None or global_state.get("preservationException") == self.preservation_binding,
                     "InheritedPreservationExceptionChanged")
@@ -283,6 +297,13 @@ class VerificationRun:
                 and record["case"] == self.cases[index] and record["wireCase"] == self.wires[index]
                 and record["expected"] == self.expected[index], "CompleteFrozenM2bxRecordRequired")
         self.ack_validator(record["programAdmission"], self.program_identity, self.public)
+        self.validate_actual_record(index, record)
+        actual = record["actual"]
+        compared = self.compare(self.cases[index], actual, program_identity=self.program_identity)
+        require(compared["passed"] is True and compared["expected"] == self.expected[index]
+                and compared["comparison"] == record["comparison"], "IndependentFrozenM2bxComparisonMismatch")
+
+    def validate_actual_record(self, index, record):
         actual, report = record["actual"], record["actual"]["report"]
         terminal = 0x5688 + (0x6400 - 0x54F5 if self.public else 0)
         require(actual.get("kind") == "below_second_p2_observation" and actual.get("accepted") is True,
@@ -305,9 +326,6 @@ class VerificationRun:
         require(p2[2]["value"] == p2[1]["value"] == p2[3]["value"] and p2[3]["same_value"] is True
                 and report["second_p2_generation"] != report["p2_generation"]
                 and report["second_control_generation"] != report["control_generation"], "ActualRetainedG1AndFreshSameValueG2Required")
-        compared = self.compare(self.cases[index], actual, program_identity=self.program_identity)
-        require(compared["passed"] is True and compared["expected"] == self.expected[index]
-                and compared["comparison"] == record["comparison"], "IndependentFrozenM2bxComparisonMismatch")
 
     def make_record(self, index, ack, actual):
         compared = self.compare(self.cases[index], actual, program_identity=self.program_identity)
@@ -320,7 +338,7 @@ class VerificationRun:
     def publish_case(self, index, record, transport):
         self.check_record(index, record)
         self.check_transport(transport, record)
-        atomic_json(self.cache_path(index), {"schemaVersion": 1, "milestone": "M2bx", "sourceFingerprint": self.fingerprint,
+        atomic_json(self.cache_path(index), {"schemaVersion": 1, "milestone": self.MILESTONE, "sourceFingerprint": self.fingerprint,
             "corpusSha256": self.corpus_digest, "corpusKind": self.corpus_kind,
             "record": record, "recordSha256": digest(record), "transport": transport})
         self.records.append(record)
@@ -368,20 +386,20 @@ class VerificationRun:
         require(not (self.state / "first-mismatch.json").exists(), "PreservedFirstMismatchBlocksAcceptance")
         saved_mode = None
         if self.global_checkpoint is not None and self.global_checkpoint.exists():
-            global_state = read_checkpoint(self.global_checkpoint, fingerprint=self.fingerprint)
-            require(global_state.get("branch") == BRANCH and global_state.get("baseSha") == BASE,
+            global_state = self.read_checkpoint(self.global_checkpoint, fingerprint=self.fingerprint)
+            require(global_state.get("branch") == self.BRANCH and global_state.get("baseSha") == self.BASE,
                     "ExactM2bxGlobalCheckpointBranchAndBaseRequired")
             transport_api.refuse_active(global_state.get("activeProcess") or global_state.get("activeProcessIdentity"))
             saved_mode = global_state.get("runtimeModes", {}).get(self.mode_key)
             require(saved_mode is None or saved_mode["outputDirectory"] == str(self.output), "ExistingModeOutputCannotBeReplaced")
         previous = None
         if self.local_checkpoint.exists():
-            previous = read_checkpoint(self.local_checkpoint, fingerprint=self.fingerprint, corpus_sha256=self.corpus_digest)
+            previous = self.read_checkpoint(self.local_checkpoint, fingerprint=self.fingerprint, corpus_sha256=self.corpus_digest)
             transport_api.refuse_active(previous.get("activeProcess"))
         self.fence()
         current_source = self.source_supplier()
         require(current_source["sourceBindings"] == self.join["sourceBindings"]
-                and check_source_join(current_source) == self.fingerprint, "SourceChangedBeforeM2bxRuntime")
+                and self.check_source_join(current_source) == self.fingerprint, "SourceChangedBeforeM2bxRuntime")
         for name, expected in (("sourcejoin.json", self.join), ("pre-runtime-freeze.json", self.freeze)):
             path = self.output / name
             if path.exists():
@@ -400,7 +418,7 @@ class VerificationRun:
             require(not gap, "NonprefixCompletedM2bxCases")
             cached = read_json(path)
             require(set(cached) == {"schemaVersion", "milestone", "sourceFingerprint", "corpusSha256", "corpusKind", "record", "recordSha256", "transport"}
-                    and cached["milestone"] == "M2bx" and type(cached["schemaVersion"]) is int and cached["schemaVersion"] == 1
+                    and cached["milestone"] == self.MILESTONE and type(cached["schemaVersion"]) is int and cached["schemaVersion"] == 1
                     and cached["sourceFingerprint"] == self.fingerprint and cached["corpusSha256"] == self.corpus_digest
                     and cached["corpusKind"] == self.corpus_kind and cached["recordSha256"] == digest(cached["record"]),
                     "CachedM2bxIdentityOrChecksumMismatch")
@@ -408,7 +426,7 @@ class VerificationRun:
             self.check_transport(cached["transport"], cached["record"])
             self.records.append(cached["record"])
         if previous is not None:
-            require(previous.get("branch") == BRANCH and previous.get("baseSha") == BASE
+            require(previous.get("branch") == self.BRANCH and previous.get("baseSha") == self.BASE
                     and previous.get("executionMode") == self.mode, "ExactM2bxLocalCheckpointDomainRequired")
             self.validate_saved_progress(previous)
         if saved_mode is not None:
@@ -442,7 +460,7 @@ class VerificationRun:
                 self.checkpoint("ROM_EXECUTION")
             except (ValueError, OSError, subprocess.SubprocessError) as error:
                 code = getattr(error, "code", type(error).__name__)
-                atomic_json(self.state / "first-mismatch.json", {"schemaVersion": 1, "milestone": "M2bx",
+                atomic_json(self.state / "first-mismatch.json", {"schemaVersion": 1, "milestone": self.MILESTONE,
                     "sourceFingerprint": self.fingerprint, "corpusSha256": self.corpus_digest, "caseIndex": index,
                     "caseId": self.cases[index]["case_id"], "diagnosticClass": code,
                     "expected": self.expected[index], "actual": actual, "programAdmission": ack,
@@ -454,7 +472,7 @@ class VerificationRun:
         self.fence()
         current_source = self.source_supplier()
         require(current_source["sourceBindings"] == self.join["sourceBindings"]
-                and check_source_join(current_source) == self.fingerprint
+                and self.check_source_join(current_source) == self.fingerprint
                 and file_binding(self.runner) == self.runner_binding, "SourceOrRunnerChangedAcrossM2bxRuntime")
         raw = b"".join(canonical(record) for record in self.records)
         require(len(raw) <= MAX_JSON, "BoundedM2bxCanonicalStreamRequired")
@@ -466,12 +484,22 @@ class VerificationRun:
             publish_bytes(path, gzip.compress(raw, mtime=0))
         with gzip.open(path, "rb") as stream:
             require(stream.read(MAX_JSON + 1) == raw, "CanonicalFullEofCrcRoundtripFailed")
+        summary = self.build_summary(raw)
+        path = self.output / "summary.json"
+        if path.exists():
+            require(read_json(path) == summary, "RetainedSummaryChanged")
+        else:
+            atomic_json(path, summary)
+        self.checkpoint("ORACLE_COMPARISON", summary=summary)
+        return summary
+
+    def build_summary(self, raw):
         require(len(self.records) == 16
                 and sum(record["actual"]["actual_successful_step_returns"] for record in self.records) == 624,
                 "ExactlySixteenActualBelowCasesAnd624RetirementsRequired")
         peripheral = [row for record in self.records for row in record["actual"]["report"]["peripheral_p2_journal"]]
         control = [row for record in self.records for row in record["actual"]["report"]["peripheral_control_journal"]]
-        summary = {"schemaVersion": 1, "milestone": "M2bx", "passed": True, "classification": self.mode,
+        summary = {"schemaVersion": 1, "milestone": self.MILESTONE, "passed": True, "classification": self.mode,
             "corpusKind": self.corpus_kind, "sourceFingerprintSha256": self.fingerprint, "corpusSha256": self.corpus_digest,
             "cases": len(self.records), "positiveCases": len(self.records),
             "paths": dict(Counter(case["path"] for case in self.cases)),
@@ -503,27 +531,21 @@ class VerificationRun:
             "PhysicalP2Owner": "NotEstablished", "PhysicalOutputEffect": "NotObserved",
             "cycleAccounting": dict(CYCLE_ACCOUNTING),
             "unresolvedStatuses": list(UNRESOLVED)}
-        path = self.output / "summary.json"
-        if path.exists():
-            require(read_json(path) == summary, "RetainedSummaryChanged")
-        else:
-            atomic_json(path, summary)
-        self.checkpoint("ORACLE_COMPARISON", summary=summary)
         return summary
 
     def run(self):
         self.pause_gate()
         self.state.mkdir(parents=True, exist_ok=True)
         if self.global_checkpoint is not None:
-            global_state = read_checkpoint(self.global_checkpoint, fingerprint=self.fingerprint)
-            require(global_state.get("branch") == BRANCH and global_state.get("baseSha") == BASE,
+            global_state = self.read_checkpoint(self.global_checkpoint, fingerprint=self.fingerprint)
+            require(global_state.get("branch") == self.BRANCH and global_state.get("baseSha") == self.BASE,
                     "ExactM2bxGlobalCheckpointBranchAndBaseRequired")
-            lock = local_path(self.global_checkpoint.parent / ".m2bx-runtime.lock.json")
+            lock = local_path(self.global_checkpoint.parent / self.LOCK_NAME)
         else:
             lock = no_reparse(self.state / "runtime.lock.json")
         if lock.exists():
             saved = read_json(lock)
-            require(saved["milestone"] == "M2bx" and saved["sourceFingerprint"] == self.fingerprint
+            require(saved["milestone"] == self.MILESTONE and saved["sourceFingerprint"] == self.fingerprint
                     and (self.global_checkpoint is not None or saved["corpusSha256"] == self.corpus_digest),
                     "StaleRuntimeLockSourceOrCorpus")
             transport_api.refuse_active({"controller": saved["controller"]})
@@ -531,7 +553,7 @@ class VerificationRun:
             retired.parent.mkdir(parents=True, exist_ok=True)
             require(not retired.exists(), "RetiredLockCollision")
             lock.rename(retired)  # Preserve stale ownership evidence; do not delete it.
-        owner = {"schemaVersion": 1, "milestone": "M2bx", "sourceFingerprint": self.fingerprint,
+        owner = {"schemaVersion": 1, "milestone": self.MILESTONE, "sourceFingerprint": self.fingerprint,
                  "corpusSha256": self.corpus_digest, "modeKey": self.mode_key,
                  "outputDirectory": str(self.output), "controller": process_identity(os.getpid())}
         with lock.open("xb") as stream:
@@ -546,9 +568,9 @@ class VerificationRun:
                 # prefix merely because validation stopped at a corrupt row.
                 for path in dict.fromkeys((self.local_checkpoint, self.global_checkpoint)):
                     if path is not None and path.exists():
-                        saved = read_checkpoint(path)
+                        saved = self.read_checkpoint(path)
                         if (saved.get("sourceFingerprint") == self.fingerprint
-                                and saved.get("branch") == BRANCH and saved.get("baseSha") == BASE):
+                                and saved.get("branch") == self.BRANCH and saved.get("baseSha") == self.BASE):
                             saved.update(status="BLOCKED", blockers=[code],
                                 nextAction="InspectPreservedM2bxEvidence_NoAutomaticRuntimeRepeat",
                                 updatedUtc=datetime.now(timezone.utc).isoformat())

@@ -506,9 +506,10 @@ impl PostP2ControlSession {
             .steps
             .iter()
             .filter(|s| {
-                p2.p2_generation
-                    .as_ref()
-                    .is_some_and(|g| s.index > g.retired_instruction && (!below || s.index <= 21))
+                p2.p2_generation.as_ref().is_some_and(|g| {
+                    s.index > g.retired_instruction
+                        && (!below || s.index <= 21 + self.inner.body_offset())
+                })
             })
             .count() as u64;
         let generation = journal.iter().find(|e| e.operation == "Write").map(|e| {

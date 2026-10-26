@@ -1021,19 +1021,20 @@ jobs:
       CARGO_TARGET_DIR: ${{ github.workspace }}/.tmp/m2bx-owned/cargo-target
 
     steps:
-      - name: Checkout exact active M2bx source
+      - name: Checkout pinned accepted M2bx source
         uses: actions/checkout@v4
         with:
+          ref: 832b7c382076a8a441e48d2d19917aa43118eb37
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up pinned M2bx Rust toolchain
         run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
 
-      - name: Verify active M2bx closed source and thirteen-job CI projection
+      - name: Verify pinned M2bx source and its unchanged thirteen-job CI projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/native_below_second_p2/source_guard.py --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/native_below_second_p2/source_guard.py --expected-head "832b7c382076a8a441e48d2d19917aa43118eb37"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: M2bx independent P2 oracle ownership admission and resume regressions
@@ -1097,6 +1098,102 @@ jobs:
             .tmp/m2bx-public-evidence/summary.json
             .tmp/m2bx-public-evidence/pre-runtime-freeze.json
             .tmp/m2bx-public-evidence/sourcejoin.json
+          if-no-files-found: error
+          retention-days: 14
+
+
+  native-cal-rt-continuity:
+    needs: native-below-second-p2
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_BUILD_JOBS: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: core.autocrlf
+      GIT_CONFIG_VALUE_0: "false"
+      CARGO_TARGET_DIR: ${{ github.workspace }}/.tmp/m2by-owned/cargo-target
+
+    steps:
+      - name: Checkout exact active M2by source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up pinned M2by Rust toolchain
+        run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
+
+      - name: Verify active M2by closed source and fifteen-job CI projection
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/native_cal_rt_continuity/source_guard.py --expected-head "${{ github.sha }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2by independent P2 oracle ownership admission and resume regressions
+        shell: pwsh
+        run: |
+          python -B -m unittest discover -s research/p28-word0196/native_cal_rt_continuity -t research/p28-word0196 -p '*_tests.py'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Fetch exact locked M2by dependencies
+        shell: pwsh
+        run: |
+          cargo +1.85.1 fetch --locked --manifest-path rust/p28-slice-runner/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2by current-source default-off and complete old-plus-P2 Rust regressions
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/native_cal_rt_continuity/build_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2by-owned/cargo-target --no-default-features
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          python -B research/p28-word0196/native_cal_rt_continuity/build_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 test --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2by-owned/cargo-target --no-default-features --features p28-word0196-cal-rt-continuity
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 fmt --check --manifest-path rust/p28-slice-runner/Cargo.toml
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Build required-feature M2by P2 runner in owned target
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/native_cal_rt_continuity/build_guard.py --ci-cargo-preflight
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cargo +1.85.1 build --release --locked --offline --jobs 1 --manifest-path rust/p28-slice-runner/Cargo.toml --target-dir .tmp/m2by-owned/cargo-target --no-default-features --features p28-word0196-cal-rt-continuity --bin m2by-cal-rt-continuity
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2by actual public continuous predecessor algorithm and CAL-body-RT frame continuity execution
+        shell: pwsh
+        run: |
+          $taskRunner = '.tmp/m2by-owned/cargo-target/release/m2by-cal-rt-continuity'
+          if ($IsWindows) { $taskRunner += '.exe' }
+          python -B research/p28-word0196/validate_native_cal_rt_continuity.py --public --output .tmp/m2by-public-evidence --runner $taskRunner
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify closed M2by public artifact membership
+        shell: pwsh
+        run: |
+          $taskRequired = @('canonical.jsonl.gz', 'summary.json', 'pre-runtime-freeze.json', 'sourcejoin.json')
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2by-public-evidence' -Force)
+          if ($taskActual.Count -ne 4) { throw 'Unexpected M2by artifact membership.' }
+          foreach ($taskName in $taskRequired) {
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2by-public-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2by artifact member.' }
+          }
+
+      - name: Preserve only public invented M2by canonical evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: M2by-public-canonical-${{ matrix.os }}
+          path: |
+            .tmp/m2by-public-evidence/canonical.jsonl.gz
+            .tmp/m2by-public-evidence/summary.json
+            .tmp/m2by-public-evidence/pre-runtime-freeze.json
+            .tmp/m2by-public-evidence/sourcejoin.json
           if-no-files-found: error
           retention-days: 14
 

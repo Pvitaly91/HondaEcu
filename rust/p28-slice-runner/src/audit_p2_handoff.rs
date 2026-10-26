@@ -305,6 +305,14 @@ pub struct P2HandoffSession {
     p2_steps: Vec<P2StepSnapshot>,
 }
 impl P2HandoffSession {
+    pub(super) fn body_offset(&self) -> u64 {
+        self.inner
+            .bus
+            .audit
+            .as_ref()
+            .expect("installed")
+            .cal_rt_body_offset()
+    }
     pub(super) fn is_below_second_p2(&self) -> bool {
         #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
         {
@@ -321,7 +329,9 @@ impl P2HandoffSession {
         }
     }
     pub(super) fn native_seed_writes(&self) -> u64 {
-        if self.is_below_second_p2() {
+        if self.body_offset() != 0 {
+            57
+        } else if self.is_below_second_p2() {
             55
         } else {
             48
@@ -654,7 +664,9 @@ impl P2HandoffSession {
                 && step.outcome.pc_after == self.entry_pc + (0x556f - 0x54f5)
         });
         let completed = report.completed && state.retired && journal.len() == 2;
-        let count = report.steps.len() as u64;
+        let count = (report.steps.len() as u64)
+            .saturating_sub(self.body_offset())
+            .min(if below { 39 } else { u64::MAX });
         let ownership = serde_json::json!({"P2InitialSource":"TechnicalArchitecturalSnapshot",
             "P2InitialNativeOwner":"NotEstablished","P2RmwWriter":if state.retired {"ActualProductionInstruction"}else{"NotObserved"},
             "P2RmwWriterPC":state.retired.then_some(self.p2_pc),"P2FinalGeneration":if completed {"VerifiedWithinTechnicalSession"}else{"NotEstablished"},

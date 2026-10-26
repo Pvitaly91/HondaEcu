@@ -17,8 +17,8 @@ impl BelowSecondP2Budget {
 }
 
 pub struct ClosedBelowSecondP2Program {
-    segment: ProgramSegment,
-    prefix: ClosedPostP2ControlProgram,
+    pub(super) segment: ProgramSegment,
+    pub(super) prefix: ClosedPostP2ControlProgram,
 }
 impl ClosedBelowSecondP2Program {
     pub fn admit_host_verified_segment(
@@ -90,10 +90,10 @@ impl ClosedBelowSecondP2Program {
             "ExplicitInventedPublicBelowSecondP2Fixture"
         }
     }
-    fn pc(&self, native: u16) -> u16 {
+    pub(super) fn pc(&self, native: u16) -> u16 {
         self.entry_pc() + (native - 0x54f5)
     }
-    fn parts(&self) -> (Vec<OriginalNode>, Vec<u16>, Vec<u16>) {
+    pub(super) fn parts(&self) -> (Vec<OriginalNode>, Vec<u16>, Vec<u16>) {
         let (mut nodes, mut inventory, mut pcs) = self.prefix.parts(PostP2ControlPath::A);
         let tail = tail_nodes(self.prefix.p2.native);
         pcs.extend(tail.iter().map(|node| node.pc));
@@ -376,7 +376,7 @@ fn tail_nodes(native: bool) -> Vec<OriginalNode> {
     result
 }
 
-pub struct BelowSecondP2Seeds(P2HandoffSeeds);
+pub struct BelowSecondP2Seeds(pub(super) P2HandoffSeeds);
 impl BelowSecondP2Seeds {
     pub fn new(
         program: &ClosedBelowSecondP2Program,
@@ -560,13 +560,14 @@ impl BelowSecondP2Session {
                     native_write_ordinal: event
                         .write_ordinal
                         .map(|w| {
-                            w.checked_sub(55).ok_or_else(|| {
-                                AuditError::new(
-                                    "BelowSecondNativeWriteOrdinalUnderflow",
-                                    None,
-                                    "seed writes are not native",
-                                )
-                            })
+                            w.checked_sub(self.inner.inner.native_seed_writes())
+                                .ok_or_else(|| {
+                                    AuditError::new(
+                                        "BelowSecondNativeWriteOrdinalUnderflow",
+                                        None,
+                                        "seed writes are not native",
+                                    )
+                                })
                         })
                         .transpose()?,
                     same_value: event.same_value,
@@ -585,9 +586,16 @@ impl BelowSecondP2Session {
         let control_generations = generations(&prefix, &prefix.peripheral_control_journal)?;
         prefix.p2.peripheral_p2_journal = journal;
         prefix.p2.p2_instruction_retirements = p2_generations.len() as u64;
-        let below_instruction_retirements = prefix.p2.steps.len().saturating_sub(21) as u64;
+        let offset = self.inner.inner.body_offset();
+        let count = prefix
+            .p2
+            .steps
+            .len()
+            .saturating_sub(offset as usize)
+            .min(39);
+        let below_instruction_retirements = count.saturating_sub(21) as u64;
         if prefix.p2.completed
-            && (prefix.p2.steps.len() != 39
+            && (prefix.p2.steps.len() != (if offset == 0 { 39 } else { 41 })
                 || p2_generations.len() != 2
                 || control_generations.len() != 2
                 || prefix.p2.peripheral_p2_journal.len() != 4

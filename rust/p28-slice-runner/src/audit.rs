@@ -59,6 +59,14 @@ pub(crate) mod below_second_p2;
 #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
 pub use below_second_p2::{BelowSecondP2Seeds, BelowSecondP2Session, ClosedBelowSecondP2Program};
 
+#[cfg(feature = "p28-word0196-cal-rt-continuity")]
+#[path = "audit_cal_rt_continuity.rs"]
+pub(crate) mod cal_rt_continuity;
+#[cfg(feature = "p28-word0196-cal-rt-continuity")]
+pub use cal_rt_continuity::{
+    CalRtContinuitySeeds, CalRtContinuitySession, ClosedCalRtContinuityProgram,
+};
+
 pub type Result<T> = std::result::Result<T, AuditError>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -421,6 +429,47 @@ pub struct Session {
     bus: Bus,
 }
 impl Session {
+    // Only the closed M2by wrapper can construct this context. The legacy
+    // public constructor and all historical retirement budgets stay unchanged.
+    #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+    fn new_cal_rt_admitted(
+        caller: ProgramSegment,
+        body: ProgramSegment,
+        cpu: Cpu,
+        full_psw: u16,
+        permissions: Permissions,
+        admission: cal_rt_continuity::CalRtBudget,
+    ) -> Result<Self> {
+        validate_psw(full_psw)?;
+        let permissions = Permissions::new(permissions.reads.clone(), permissions.writes.clone())?
+            .restrict_raw(
+                permissions.raw_reads.clone(),
+                permissions.raw_writes.clone(),
+            )?;
+        if cpu.psw_u16() != full_psw
+            || cpu.psw_other & !0x0337 != 0
+            || cpu.halted
+            || cpu.pc != admission.caller_pc()
+            || cpu.ssp != admission.frame_address()
+            || caller.base != u32::from(cpu.pc)
+            || caller.end - caller.base != 3
+            || body.base != u32::from(admission.body_pc())
+            || body.end - body.base != 404
+            || !matches!(
+                (caller.base, body.base),
+                (0x063b, 0x54f5) | (0x2000, 0x6400)
+            )
+        {
+            return Err(AuditError::new(
+                "InvalidCalRtEntryState",
+                Some(i64::from(cpu.pc)),
+                "sealed two-window41-step CAL/body/RT context only",
+            ));
+        }
+        let mut bus = Bus::new(Vec::new(), 0xa5);
+        bus.audit = Some(AuditBus::new_cal_rt(caller, body, permissions, admission));
+        Ok(Self { cpu, bus })
+    }
     #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
     fn new_below_second_p2_admitted(
         segment: ProgramSegment,

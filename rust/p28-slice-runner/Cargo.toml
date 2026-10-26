@@ -13,6 +13,7 @@ p28-word0196-entry-continuity = ["p28-word0196-original-rom"]
 p28-word0196-p2-handoff = ["p28-word0196-entry-continuity"]
 p28-word0196-post-p2-control = ["p28-word0196-p2-handoff"]
 p28-word0196-below-second-p2-continuity = ["p28-word0196-post-p2-control"]
+p28-word0196-cal-rt-continuity = ["p28-word0196-below-second-p2-continuity"]
 
 [[bin]]
 name = "m2bt-original-rom"
@@ -38,6 +39,11 @@ required-features = ["p28-word0196-post-p2-control"]
 name = "m2bx-below-second-p2"
 path = "src/bin/m2bx_below_second_p2.rs"
 required-features = ["p28-word0196-below-second-p2-continuity"]
+
+[[bin]]
+name = "m2by-cal-rt-continuity"
+path = "src/bin/m2by_cal_rt_continuity.rs"
+required-features = ["p28-word0196-cal-rt-continuity"]
 
 [dependencies]
 serde = { version = "=1.0.219", features = ["derive"] }
