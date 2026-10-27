@@ -595,7 +595,7 @@ impl BelowSecondP2Session {
             .min(39);
         let below_instruction_retirements = count.saturating_sub(21) as u64;
         if prefix.p2.completed
-            && (prefix.p2.steps.len() != (if offset == 0 { 39 } else { 41 })
+            && (prefix.p2.steps.len() != usize::from(prefix.p2.audit.budget)
                 || p2_generations.len() != 2
                 || control_generations.len() != 2
                 || prefix.p2.peripheral_p2_journal.len() != 4

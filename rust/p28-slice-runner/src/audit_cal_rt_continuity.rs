@@ -14,6 +14,7 @@ pub(crate) struct CalRtBudget {
     caller: u16,
     body: u16,
     frame: u16,
+    selector: Option<u16>,
 }
 impl CalRtBudget {
     pub(crate) fn caller_pc(self) -> u16 {
@@ -31,12 +32,80 @@ impl CalRtBudget {
     pub(crate) fn rt_pc(self) -> u16 {
         self.body + (0x5688 - 0x54f5)
     }
+    pub(crate) fn retirements(self) -> u8 {
+        if self.selector.is_some() {
+            49
+        } else {
+            41
+        }
+    }
+    pub(crate) fn caller_length(self) -> u32 {
+        if self.selector.is_some() {
+            17
+        } else {
+            3
+        }
+    }
+    pub(crate) fn node_count(self) -> usize {
+        if self.selector.is_some() {
+            59
+        } else {
+            51
+        }
+    }
+    pub(crate) fn inventory_count(self) -> usize {
+        if self.selector.is_some() {
+            26
+        } else {
+            25
+        }
+    }
+    pub(crate) fn logical_seeds(self) -> u64 {
+        if self.selector.is_some() {
+            58
+        } else {
+            57
+        }
+    }
+    pub(crate) fn raw_seeds(self) -> usize {
+        if self.selector.is_some() {
+            90
+        } else {
+            89
+        }
+    }
+    pub(crate) fn terminal_pc(self) -> u16 {
+        self.caller + self.caller_length() as u16
+    }
+    pub(crate) fn selector_address(self) -> Option<u16> {
+        self.selector
+    }
+    #[cfg(feature = "p28-word0196-post-return-selector-continuity")]
+    pub(super) fn post_return(caller: u16, body: u16, frame: u16, selector: u16) -> Result<Self> {
+        if !matches!(
+            (caller, body, selector),
+            (0x063b, 0x54f5, 0x013c) | (0x2000, 0x6400, 0x0140)
+        ) || !matches!(frame, 0x0702 | 0x0720 | 0x07fc | 0x07fe)
+        {
+            return Err(AuditError::new(
+                "PostReturnContextRejected",
+                None,
+                "closed native or invented selector context only",
+            ));
+        }
+        Ok(Self {
+            caller,
+            body,
+            frame,
+            selector: Some(selector),
+        })
+    }
 }
 
 pub struct ClosedCalRtContinuityProgram {
-    caller: ProgramSegment,
-    segment: ProgramSegment,
-    body: ClosedBelowSecondP2Program,
+    pub(super) caller: ProgramSegment,
+    pub(super) segment: ProgramSegment,
+    pub(super) body: ClosedBelowSecondP2Program,
     identity: String,
 }
 fn copy(segment: &ProgramSegment) -> ProgramSegment {
@@ -172,7 +241,7 @@ impl ClosedCalRtContinuityProgram {
         })
         .collect()
     }
-    fn parts(&self, frame: u16) -> (Vec<OriginalNode>, Vec<u16>, Vec<u16>) {
+    pub(super) fn parts(&self, frame: u16) -> (Vec<OriginalNode>, Vec<u16>, Vec<u16>) {
         let (mut nodes, mut inventory, mut pcs) = self.body.parts();
         let stack = Access {
             address: frame,
@@ -223,8 +292,8 @@ impl ClosedCalRtContinuityProgram {
 }
 
 pub struct CalRtContinuitySeeds {
-    seeds: P2HandoffSeeds,
-    frame: u16,
+    pub(super) seeds: P2HandoffSeeds,
+    pub(super) frame: u16,
 }
 impl CalRtContinuitySeeds {
     pub fn new(
@@ -322,7 +391,7 @@ pub struct CalRtContinuityReport {
     pub all_native_journal: Vec<[u32; 6]>,
 }
 pub struct CalRtContinuitySession {
-    inner: BelowSecondP2Session,
+    pub(super) inner: BelowSecondP2Session,
     context: CalRtBudget,
     windows: Vec<ProgramWindow>,
     identity: String,
@@ -361,8 +430,43 @@ impl CalRtContinuitySession {
             caller: program.entry_pc(),
             body: program.body_pc(),
             frame: seeds.frame,
+            selector: None,
         };
-        let (nodes, inventory, pcs) = program.parts(seeds.frame);
+        let parts = program.parts(seeds.frame);
+        Self::from_source(
+            program,
+            cpu,
+            full_psw,
+            seeds,
+            p2_snapshot,
+            control,
+            copy(&program.caller),
+            context,
+            parts,
+            program.program_windows(),
+            program.identity.clone(),
+            program.classification(),
+        )
+    }
+    // Both routes initialize once before the first CAL. This shares the exact
+    // M2by execution machinery; it never imports a completed 41-step state.
+    pub(super) fn from_source(
+        program: &ClosedCalRtContinuityProgram,
+        cpu: Cpu,
+        full_psw: u16,
+        seeds: CalRtContinuitySeeds,
+        p2_snapshot: P2Snapshot,
+        control: ControlSnapshot,
+        caller: ProgramSegment,
+        context: CalRtBudget,
+        parts: (Vec<OriginalNode>, Vec<u16>, Vec<u16>),
+        windows: Vec<ProgramWindow>,
+        identity: String,
+        classification: &str,
+    ) -> Result<Self> {
+        control.validate()?;
+        p2_snapshot.validate()?;
+        let (nodes, inventory, pcs) = parts;
         let mut reads: Vec<_> = nodes
             .iter()
             .filter(|n| pcs.contains(&n.pc))
@@ -380,7 +484,7 @@ impl CalRtContinuitySession {
         writes.sort_by_key(|w| w.access);
         writes.dedup_by_key(|w| w.access);
         let inner = Session::new_cal_rt_admitted(
-            copy(&program.caller),
+            caller,
             copy(&program.segment),
             cpu,
             full_psw,
@@ -397,7 +501,7 @@ impl CalRtContinuitySession {
             nodes,
             inventory,
             pcs,
-            program.return_pc(),
+            context.terminal_pc(),
             Some(values),
         )?;
         inner.inner.bus.begin_all_native();
@@ -409,21 +513,21 @@ impl CalRtContinuitySession {
                     last_control: values,
                     control_steps: vec![],
                     native_control: vec![],
-                    classification: program.classification().into(),
+                    classification: classification.into(),
                 },
             },
             context,
-            windows: program.program_windows(),
-            identity: program.identity.clone(),
+            windows,
+            identity,
             frame: None,
             consumed: None,
             fault: None,
         })
     }
-    fn session(&mut self) -> &mut Session {
+    pub(super) fn session(&mut self) -> &mut Session {
         &mut self.inner.inner.inner.inner
     }
-    fn reject(&mut self, code: &str, detail: &str) -> AuditError {
+    pub(super) fn reject(&mut self, code: &str, detail: &str) -> AuditError {
         let error = AuditError::new(code, None, detail);
         self.fault = Some(error.clone());
         self.session()
@@ -512,6 +616,15 @@ impl CalRtContinuitySession {
             }
             self.current_frame()?;
         }
+        if self.context.selector_address().is_some() && count >= 41 {
+            if self.session().cpu.ssp != self.context.frame {
+                return Err(self.reject(
+                    "PostReturnStackPointerContinuityRejected",
+                    "actual restored SSP is retained after RT",
+                ));
+            }
+            self.current_frame()?;
+        }
         let step = self.inner.step()?;
         let audit = self
             .session()
@@ -537,7 +650,7 @@ impl CalRtContinuitySession {
                 || e.address != self.context.frame
                 || e.width != 16
                 || e.value != Some(self.context.return_pc())
-                || e.write_ordinal != Some(57)
+                || e.write_ordinal != Some(self.context.logical_seeds())
                 || raw.len() != 2
                 || raw.iter().any(|r| !r.serviced || r.operation != "Write")
                 || raw[0].address != self.context.frame
@@ -582,7 +695,7 @@ impl CalRtContinuitySession {
                 width: 16,
                 return_pc: self.context.return_pc(),
                 logical_ordinal: e.ordinal,
-                logical_write_ordinal: 57,
+                logical_write_ordinal: e.write_ordinal.expect("actual CAL write"),
                 raw_ordinals: [raw[0].ordinal, raw[1].ordinal],
                 raw_write_ordinals: [
                     raw[0].write_ordinal.expect("actual write"),
@@ -679,10 +792,12 @@ impl CalRtContinuitySession {
         let completed = body.prefix.p2.completed
             && self.frame.is_some()
             && self.consumed.is_some()
-            && count == 41
+            && count == u64::from(self.context.retirements())
             && self.fault.is_none()
             && stack_journal.len() == 2;
-        let frame_status = if completed {
+        let frame_status = if completed
+            || (self.context.selector_address().is_some() && self.consumed.is_some())
+        {
             "CallerFrameConsumedByActualRT"
         } else if self.frame.is_some() {
             "CallerFrameEstablishedPendingReturn"
@@ -702,8 +817,12 @@ impl CalRtContinuitySession {
             completed,
             cal_instruction_retirements: count.min(1),
             body_instruction_retirements: count.saturating_sub(1).min(39),
-            rt_instruction_retirements: u64::from(count == 41),
-            post_return_instruction_retirements: 0,
+            rt_instruction_retirements: u64::from(count >= 41),
+            post_return_instruction_retirements: if self.context.selector_address().is_some() {
+                count.saturating_sub(41).min(8)
+            } else {
+                0
+            },
             cpu_bus_instances: 1,
             all_native_journal,
         })

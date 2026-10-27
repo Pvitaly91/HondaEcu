@@ -131,6 +131,14 @@ impl AuditBus {
         }
         0
     }
+    pub(crate) fn cal_rt_logical_seeds(&self) -> Option<u64> {
+        #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+        {
+            return self.state.borrow().cal_rt.map(|c| c.logical_seeds());
+        }
+        #[cfg(not(feature = "p28-word0196-cal-rt-continuity"))]
+        None
+    }
     fn body_offset(state: &State) -> u64 {
         #[cfg(feature = "p28-word0196-cal-rt-continuity")]
         if state.cal_rt.is_some() {
@@ -146,7 +154,12 @@ impl AuditBus {
         permissions: Permissions,
         admission: crate::audit::cal_rt_continuity::CalRtBudget,
     ) -> Self {
-        let mut result = Self::new(body, permissions, admission.caller_pc(), 41);
+        let mut result = Self::new(
+            body,
+            permissions,
+            admission.caller_pc(),
+            admission.retirements(),
+        );
         result.caller_segment = Some(caller);
         result.state.get_mut().cal_rt = Some(admission);
         result
@@ -279,6 +292,12 @@ impl AuditBus {
         })?;
         let offset = Self::body_offset(state) as usize;
         #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+        let (budget, node_count, inventory_count) = state.cal_rt.map_or((39, 49, 23), |c| {
+            (c.retirements(), c.node_count(), c.inventory_count())
+        });
+        #[cfg(not(feature = "p28-word0196-cal-rt-continuity"))]
+        let (budget, node_count, inventory_count) = (39, 49, 23);
+        #[cfg(feature = "p28-word0196-cal-rt-continuity")]
         let base = state.cal_rt.map_or(state.entry_pc, |c| c.body_pc());
         #[cfg(not(feature = "p28-word0196-cal-rt-continuity"))]
         let base = state.entry_pc;
@@ -287,13 +306,13 @@ impl AuditBus {
             || state.p2_handoff.is_some()
             || state.post_control.is_some()
             || state.below_second.is_some()
-            || state.budget != (if offset == 0 { 39 } else { 41 })
+            || state.budget != budget
             || !matches!(base, 0x54f5 | 0x6400)
             || p2_pc != pc(0x55c5)
             || p2_index != 1647
-            || original.nodes.len() != 49 + offset * 2
-            || original.inventory.len() != 23 + offset * 2
-            || original.pcs.len() != 39 + offset * 2
+            || original.nodes.len() != node_count
+            || original.inventory.len() != inventory_count
+            || original.pcs.len() != usize::from(budget)
             || original.pcs.get(16 + offset) != Some(&p2_pc)
             || original.pcs.get(17 + offset) != Some(&pc(0x55c8))
             || original.pcs.get(20 + offset) != Some(&pc(0x55cf))
@@ -558,24 +577,37 @@ impl AuditBus {
             let extended_seeds = false;
             #[cfg(feature = "p28-word0196-cal-rt-continuity")]
             let cal_rt_seeds = state.cal_rt.is_some_and(|c| {
-                state.budget == 41
-                    && original.nodes.len() == 51
-                    && original.inventory.len() == 25
-                    && original.pcs.len() == 41
+                state.budget == c.retirements()
+                    && original.nodes.len() == c.node_count()
+                    && original.inventory.len() == c.inventory_count()
+                    && original.pcs.len() == usize::from(c.retirements())
                     && original.pcs.first() == Some(&c.caller_pc())
-                    && original.pcs.last() == Some(&c.rt_pc())
-                    && original.terminal == c.return_pc()
+                    && original.pcs.get(40) == Some(&c.rt_pc())
+                    && original.terminal == c.terminal_pc()
+                    && (c.selector_address().is_none()
+                        || (original.pcs.get(41) == Some(&c.return_pc())
+                            && original.pcs.last() == Some(&(c.caller_pc() + 15))
+                            && original
+                                .inventory
+                                .contains(&c.selector_address().expect("closed selector"))))
                     && self.segment.base == u32::from(c.body_pc())
                     && self.segment.end - self.segment.base == 404
-                    && self
-                        .caller_segment
-                        .as_ref()
-                        .is_some_and(|s| s.base == u32::from(c.caller_pc()) && s.end - s.base == 3)
+                    && self.caller_segment.as_ref().is_some_and(|s| {
+                        s.base == u32::from(c.caller_pc()) && s.end - s.base == c.caller_length()
+                    })
             });
             #[cfg(not(feature = "p28-word0196-cal-rt-continuity"))]
             let cal_rt_seeds = false;
             let (logical_seeds, raw_seeds) = if cal_rt_seeds {
-                (57, 89)
+                #[cfg(feature = "p28-word0196-cal-rt-continuity")]
+                {
+                    let c = state.cal_rt.expect("closed source");
+                    (c.logical_seeds() as usize, c.raw_seeds())
+                }
+                #[cfg(not(feature = "p28-word0196-cal-rt-continuity"))]
+                {
+                    (57, 89)
+                }
             } else if extended_seeds {
                 (55, 87)
             } else {
@@ -1756,6 +1788,7 @@ impl AuditBus {
                 #[cfg(feature = "p28-word0196-below-second-p2-continuity")]
                 if state.below_second.is_some() {
                     let offset = Self::body_offset(&state);
+                    let source_budget = u64::from(state.budget);
                     let origin = state.pc.expect("actual origin");
                     let first_p2 = state.p2_handoff.as_ref().is_some_and(|p| p.retired);
                     let first_control = state.post_control.as_ref().is_some_and(|c| c.retired);
@@ -1791,7 +1824,7 @@ impl AuditBus {
                         second.p2.retired = true;
                     }
                     if terminal
-                        && (retirement != (if offset == 0 { 39 } else { 41 })
+                        && (retirement != source_budget
                             || !second.control.retired
                             || !second.p2.retired)
                     {
@@ -2059,6 +2092,34 @@ impl AuditBus {
                         {
                             return Err(AuditError::new("CalRtFreshFrameRequired", Some(i64::from(address)),
                                 "preexisting equal bytes do not establish the current CAL writer generation"));
+                        }
+                    }
+                }
+                if let Some(selector) = c.selector_address() {
+                    let overlaps = u32::from(address) < u32::from(selector) + 1
+                        && u32::from(address) + u32::from(width / 8) > u32::from(selector);
+                    if overlaps {
+                        let read = !write
+                            && state.pc == Some(c.return_pc())
+                            && state.instruction == Some(747)
+                            && state.retirements == 41;
+                        let write = write
+                            && state.pc == Some(c.caller_pc() + 15)
+                            && state.instruction == Some(2301)
+                            && state.retirements == 48;
+                        if state.phase != "Executing"
+                            || address != selector
+                            || width != 8
+                            || !(read || write)
+                            || state.data[state.data_start..]
+                                .iter()
+                                .any(|e| e.address == selector)
+                        {
+                            return Err(AuditError::new(
+                                "PostReturnSelectorCapabilityDenied",
+                                Some(i64::from(address)),
+                                "one actual post-RT byte read and final native selector write only",
+                            ));
                         }
                     }
                 }

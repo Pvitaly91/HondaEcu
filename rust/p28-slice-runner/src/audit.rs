@@ -67,6 +67,15 @@ pub use cal_rt_continuity::{
     CalRtContinuitySeeds, CalRtContinuitySession, ClosedCalRtContinuityProgram,
 };
 
+#[cfg(feature = "p28-word0196-post-return-selector-continuity")]
+#[path = "audit_post_return_selector.rs"]
+pub(crate) mod post_return_selector;
+#[cfg(feature = "p28-word0196-post-return-selector-continuity")]
+pub use post_return_selector::{
+    ClosedPostReturnSelectorProgram, PostReturnSelectorSeeds, PostReturnSelectorSession,
+    SelectorSnapshot,
+};
+
 pub type Result<T> = std::result::Result<T, AuditError>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -452,7 +461,7 @@ impl Session {
             || cpu.pc != admission.caller_pc()
             || cpu.ssp != admission.frame_address()
             || caller.base != u32::from(cpu.pc)
-            || caller.end - caller.base != 3
+            || caller.end - caller.base != admission.caller_length()
             || body.base != u32::from(admission.body_pc())
             || body.end - body.base != 404
             || !matches!(

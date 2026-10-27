@@ -330,7 +330,13 @@ impl P2HandoffSession {
     }
     pub(super) fn native_seed_writes(&self) -> u64 {
         if self.body_offset() != 0 {
-            57
+            self.inner
+                .bus
+                .audit
+                .as_ref()
+                .expect("installed")
+                .cal_rt_logical_seeds()
+                .expect("closed CAL context")
         } else if self.is_below_second_p2() {
             55
         } else {
