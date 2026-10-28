@@ -1,0 +1,42 @@
+{
+  "AuthorizedExternalToolingExceptions": 1,
+  "AuthorizedPreservationExceptions": 2,
+  "InheritedHistoricalGeneratedRunnerExceptions": 1,
+  "StrictHistoricalPreservationPass": false,
+  "actualCpuExecutions": 0,
+  "actualOriginalRomExecutions": 0,
+  "actualRetiredInstructions": 0,
+  "baseSha": "2e327d2ade8d419180f1088cb277a306accbab4f",
+  "baseSourceCount": 1133,
+  "baseSourceFingerprintSha256": "2ce07be5dcc42c6403f099ce0f82ccae061eac6b9947f132029dfa74e2f295ad",
+  "classification": "StaticProvenanceCanonical_NotOriginalRomCpuExecution",
+  "defaultCanaryMaySelectVerifiedRoute": false,
+  "firmwareReady": false,
+  "historicalGenerationsMayBeImported": false,
+  "milestone": "M2cb",
+  "newSourceApproval": "SeparateExplicitWorkflowPin_AfterIndependentReview",
+  "newUnauthorizedProtectedDifferencesRequired": 0,
+  "proofLevels": [
+    "StaticWriter",
+    "ConditionalReachableWriter",
+    "SourceValueUnderPreconditions",
+    "ActualSameMachineWriter",
+    "GenerationPreservedToReader"
+  ],
+  "proofLevelsInterchangeable": false,
+  "runtimeFeatureAdded": false,
+  "schemaVersion": 1,
+  "targets": [
+    {
+      "address": 287,
+      "bit": 3,
+      "readerPC": 1612
+    },
+    {
+      "address": 283,
+      "bit": 7,
+      "readerPC": 1615
+    }
+  ],
+  "unknownValuesMayAcquireOwners": false
+}

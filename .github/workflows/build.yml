@@ -29,10 +29,10 @@ jobs:
         id: classify
         shell: bash
         run: |
-          python -B research/p28-word0196/native_branch064c/ci_routing.py --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "f6d6ca2c1d91a840c68d9cda001ebb7944bf14bcc4ebb68824e6bc7a3adf2ab0" --github-output "$GITHUB_OUTPUT"
+          python -B research/p28-word0196/native_data011f_011b_ownership/ci_routing.py --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "6f73d6674d895c1158a7d6573293ccd1850f05a52f986d4ee79da7f7fd8e3cdb" --github-output "$GITHUB_OUTPUT"
 
 
-  branch064c-static:
+  ownership-static:
     needs: ci-routing
     if: ${{ always() && needs.ci-routing.result == 'success' && needs.ci-routing.outputs.research_only == 'true' && needs.ci-routing.outputs.full_qa == 'false' }}
     strategy:
@@ -46,7 +46,7 @@ jobs:
       GIT_CONFIG_KEY_0: core.autocrlf
       GIT_CONFIG_VALUE_0: "false"
     steps:
-      - name: Checkout exact active M2ca static research source
+      - name: Checkout exact active M2cb static research source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -57,42 +57,42 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: M2ca exact source equality and closed workflow projection
+      - name: M2cb exact source equality and closed workflow projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/native_branch064c/source_guard.py --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/native_data011f_011b_ownership/source_guard.py --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2ca source provenance and invented static gate regressions without CPU execution
+      - name: M2cb source provenance and invented symbolic ownership regressions without CPU execution
         shell: pwsh
         run: |
-          python -B -m unittest discover -s research/p28-word0196/native_branch064c -t research/p28-word0196 -p '*_tests.py'
+          python -B -m unittest discover -s research/p28-word0196/native_data011f_011b_ownership -t research/p28-word0196 -p '*_tests.py'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2ca invented static canonical calculations not CPU observations
+      - name: M2cb invented static canonical calculations not CPU observations
         shell: pwsh
         run: |
-          python -B research/p28-word0196/validate_native_branch064c.py --output .tmp/m2ca-static-evidence --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/validate_native_data011f_011b_ownership.py --output .tmp/m2cb-static-evidence --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify closed invented static artifact membership
         shell: pwsh
         run: |
           $taskRequired = @('static-canonical.jsonl.gz', 'static-summary.json', 'sourcejoin.json')
-          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2ca-static-evidence' -Force)
-          if ($taskActual.Count -ne 3) { throw 'Unexpected M2ca static artifact membership.' }
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2cb-static-evidence' -Force)
+          if ($taskActual.Count -ne 3) { throw 'Unexpected M2cb static artifact membership.' }
           foreach ($taskName in $taskRequired) {
-            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2ca-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2ca static artifact member.' }
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2cb-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2cb static artifact member.' }
           }
 
       - name: Preserve invented static calculations only not CPU or private ROM evidence
         uses: actions/upload-artifact@v4
         with:
-          name: M2ca-invented-static-${{ matrix.os }}
+          name: M2cb-invented-static-${{ matrix.os }}
           path: |
-            .tmp/m2ca-static-evidence/static-canonical.jsonl.gz
-            .tmp/m2ca-static-evidence/static-summary.json
-            .tmp/m2ca-static-evidence/sourcejoin.json
+            .tmp/m2cb-static-evidence/static-canonical.jsonl.gz
+            .tmp/m2cb-static-evidence/static-summary.json
+            .tmp/m2cb-static-evidence/sourcejoin.json
           if-no-files-found: error
           retention-days: 14
 
