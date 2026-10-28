@@ -10,7 +10,95 @@ permissions:
   contents: read
 
 jobs:
+
+  ci-routing:
+    runs-on: ubuntu-latest
+    outputs:
+      full_qa: ${{ steps.classify.outputs.full_qa }}
+      research_only: ${{ steps.classify.outputs.research_only }}
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Checkout exact active source for bounded routing
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Classify exact source changes with full-QA fallback
+        id: classify
+        shell: bash
+        run: |
+          python -B research/p28-word0196/native_branch064c/ci_routing.py --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "f6d6ca2c1d91a840c68d9cda001ebb7944bf14bcc4ebb68824e6bc7a3adf2ab0" --github-output "$GITHUB_OUTPUT"
+
+
+  branch064c-static:
+    needs: ci-routing
+    if: ${{ always() && needs.ci-routing.result == 'success' && needs.ci-routing.outputs.research_only == 'true' && needs.ci-routing.outputs.full_qa == 'false' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: core.autocrlf
+      GIT_CONFIG_VALUE_0: "false"
+    steps:
+      - name: Checkout exact active M2ca static research source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python for static invented calculations only
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: M2ca exact source equality and closed workflow projection
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/native_branch064c/source_guard.py --expected-head "${{ github.sha }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2ca source provenance and invented static gate regressions without CPU execution
+        shell: pwsh
+        run: |
+          python -B -m unittest discover -s research/p28-word0196/native_branch064c -t research/p28-word0196 -p '*_tests.py'
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: M2ca invented static canonical calculations not CPU observations
+        shell: pwsh
+        run: |
+          python -B research/p28-word0196/validate_native_branch064c.py --output .tmp/m2ca-static-evidence --expected-head "${{ github.sha }}"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Verify closed invented static artifact membership
+        shell: pwsh
+        run: |
+          $taskRequired = @('static-canonical.jsonl.gz', 'static-summary.json', 'sourcejoin.json')
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2ca-static-evidence' -Force)
+          if ($taskActual.Count -ne 3) { throw 'Unexpected M2ca static artifact membership.' }
+          foreach ($taskName in $taskRequired) {
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2ca-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2ca static artifact member.' }
+          }
+
+      - name: Preserve invented static calculations only not CPU or private ROM evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: M2ca-invented-static-${{ matrix.os }}
+          path: |
+            .tmp/m2ca-static-evidence/static-canonical.jsonl.gz
+            .tmp/m2ca-static-evidence/static-summary.json
+            .tmp/m2ca-static-evidence/sourcejoin.json
+          if-no-files-found: error
+          retention-days: 14
+
   historical-pinned-qa:
+    needs: ci-routing
+    if: ${{ always() && (needs.ci-routing.result != 'success' || needs.ci-routing.outputs.full_qa != 'false') }}
     strategy:
       fail-fast: false
       matrix:
@@ -551,7 +639,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
   build-and-test:
-    needs: historical-pinned-qa
+    needs: [ci-routing, historical-pinned-qa]
+    if: ${{ always() && (needs.ci-routing.result != 'success' || needs.ci-routing.outputs.full_qa != 'false') && needs.historical-pinned-qa.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -699,7 +788,8 @@ jobs:
           retention-days: 3
 
   native-entry-continuity:
-    needs: build-and-test
+    needs: [ci-routing, build-and-test]
+    if: ${{ always() && (needs.ci-routing.result != 'success' || needs.ci-routing.outputs.full_qa != 'false') && needs.build-and-test.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -812,7 +902,8 @@ jobs:
           retention-days: 14
 
   native-p2-handoff:
-    needs: native-entry-continuity
+    needs: [ci-routing, native-entry-continuity]
+    if: ${{ always() && (needs.ci-routing.result != 'success' || needs.ci-routing.outputs.full_qa != 'false') && needs.native-entry-continuity.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -909,7 +1000,8 @@ jobs:
 
 
   native-post-p2-control:
-    needs: native-p2-handoff
+    needs: [ci-routing, native-p2-handoff]
+    if: ${{ always() && (needs.ci-routing.result != 'success' || needs.ci-routing.outputs.full_qa != 'false') && needs.native-p2-handoff.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -1006,7 +1098,8 @@ jobs:
 
 
   native-below-second-p2:
-    needs: native-post-p2-control
+    needs: [ci-routing, native-post-p2-control]
+    if: ${{ always() && (needs.ci-routing.result != 'success' || needs.ci-routing.outputs.full_qa != 'false') && needs.native-post-p2-control.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -1103,7 +1196,8 @@ jobs:
 
 
   native-cal-rt-continuity:
-    needs: native-below-second-p2
+    needs: [ci-routing, native-below-second-p2]
+    if: ${{ always() && (needs.ci-routing.result != 'success' || needs.ci-routing.outputs.full_qa != 'false') && needs.native-below-second-p2.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -1200,7 +1294,8 @@ jobs:
 
 
   native-post-return-selector:
-    needs: native-cal-rt-continuity
+    needs: [ci-routing, native-cal-rt-continuity]
+    if: ${{ always() && (needs.ci-routing.result != 'success' || needs.ci-routing.outputs.full_qa != 'false') && needs.native-cal-rt-continuity.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -1215,19 +1310,20 @@ jobs:
       CARGO_TARGET_DIR: ${{ github.workspace }}/.tmp/m2bz-owned/cargo-target
 
     steps:
-      - name: Checkout exact active M2bz source
+      - name: Checkout pinned accepted M2bz source
         uses: actions/checkout@v4
         with:
+          ref: f77d2cc1468fe128ba4ad393c3e0a1a5dab423fc
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up pinned M2bz Rust toolchain
         run: rustup toolchain install 1.85.1 --profile minimal --component rustfmt
 
-      - name: Verify active M2bz closed source and seventeen-job CI projection
+      - name: Verify pinned M2bz source and its unchanged seventeen-job CI projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/native_post_return_selector/source_guard.py --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/native_post_return_selector/source_guard.py --expected-head "f77d2cc1468fe128ba4ad393c3e0a1a5dab423fc"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: M2bz independent P2 oracle ownership admission and resume regressions
@@ -1295,6 +1391,8 @@ jobs:
           retention-days: 14
 
   desktop-windows:
+    needs: ci-routing
+    if: ${{ always() && (needs.ci-routing.result != 'success' || needs.ci-routing.outputs.full_qa != 'false') }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
