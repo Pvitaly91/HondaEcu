@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2ce",
+  "classification": "StaticRootedFirstRamtestProvenance_NotCpuExecution",
+  "baseSha": "9e136ccc53712e5b51d623af174abdd5c84763cc",
+  "researchClassification": "CONDITIONAL_ROOT_TO_FIRST_CAL_OBLIGATIONS_REFINED / EXECUTION_BLOCKED",
+  "runtimeAdmission": "Blocked",
+  "firmwareReady": false
+}
