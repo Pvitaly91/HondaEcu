@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2cg",
+  "classification": "StaticData011B7ZeroSourceProvenance_NotCpuExecution",
+  "baseSha": "bb781647d553ee321ae9ac75732e06736fb01fbb",
+  "researchClassification": "CONDITIONAL_DATA011B7_ZERO_PRODUCER_ESTABLISHED / EXECUTION_BLOCKED",
+  "analysisRecords": 4,
+  "inventedConstraintCases": 37,
+  "negativeRequirementCategories": 31,
+  "runtimeAdmission": "Blocked",
+  "firmwareReady": false
+}
