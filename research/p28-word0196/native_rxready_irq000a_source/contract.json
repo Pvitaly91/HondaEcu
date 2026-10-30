@@ -1,0 +1,82 @@
+{
+  "milestone": "M2cj",
+  "baseSha": "08df0e3c9e8e90a7b97fc99280b4cb5a5559ca43",
+  "classification": "StaticRxReadySingleInvocationSourceObligations_NotExecution",
+  "manufacturer": {
+    "document": "MSM66201/207 User Manual retained body",
+    "archiveSha256": "f061cb5bcbd1804699fb60b543c425646fbb15b939c9bc51b24edbb4da4c6ddf",
+    "edition": null,
+    "actualEcuApplicability": null,
+    "wholeArchiveIntegrity": "KnownSevenCrcFailures_NotRepaired",
+    "reviewedCleanPrintedSpreads": [[126,127],[128,129],[130,131],[164,165],[166,167],[168,169]],
+    "receiveRule": "12.1(5)(6)_Printed128",
+    "permitRule": "12.1(4)_Printed126_127",
+    "overrunRule": "SRSTAT_Bit1_Printed130",
+    "iePolarity": "EvidenceFavorsSet1_165_168_169_With167ConflictRetained",
+    "missingPrintedPagesAfterSerial131BeforeRetained148": [132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147],
+    "exactMissingSectionAllocation": null
+  },
+  "singleInvocation": {
+    "classification": "ConditionalSoftwareEffect_InheritedFlagPathWithNewReceivePredecessors",
+    "sourceScope": "CorrectedM2ciRxAuthority_M2cgM2chReviewedInstructionEffects",
+    "path": [531,533,535,540,543,546,549,597,598,600,601,603,605,607,608,610,612,615,617,618,621,623,624,626,661,663,666,668],
+    "pathIsObservedTrace": false,
+    "entry": {"vector":10,"pc":531,"irqBit":1,"request":"RQSRRDY","enable":"IESRRDY"},
+    "requiredRetainedContext": {"modeAddress":854,"modeBit":1,"modeValue":1,"oldErrorBit":6,"oldErrorValue":0,"r7":2,"r5":2,"r2":4,"r6":"InheritedConditionalHeaderPlusLength_NotHostSeed"},
+    "handler": {"pswWriterPC":535,"literal":258,"fullReadbackEqualsLiteral":false,"SCB":2,"lrbWriterPC":540,"LRB":126,"localBank":[1008,1015],"pageBase":768},
+    "sourceRead": {"pc":610,"address":85,"widthBits":8,"form":"LB A, N8","AL":"F_SymbolicDistinctRead","AH":"RetainedOrdinaryLbSemantics_PhysicalSfUnknown","DD":0,"actualValue":null,"actualReadIdentity":null,"actualSourceGeneration":null},
+    "comparison": {"pc":612,"form":"CMPB r5, #2","comparesReceivedByte":false,"CF":0,"ZF":1,"ALPreserved":true,"AHPreserved":true,"DD":0},
+    "branch": {"pc":615,"form":"JNE","taken":false,"nextPC":617},
+    "writer": {"pc":617,"address":1011,"widthBits":8,"source":"ALFrom0262","writesAdjacentByte":false,"sameValueCreatesFreshStorageGeneration":true,"actualWriterObserved":false,"actualStorageGeneration":null},
+    "orderedPersistentEffects": [
+      {"pc":546,"address":854,"widthBits":8,"effect":"RmwClearBit6_RetainOtherBits","sameValueWriteRequired":true},
+      {"pc":617,"address":1011,"widthBits":8,"effect":"StoreDistinctReadF","sameValueWriteRequired":true},
+      {"pc":621,"address":1014,"widthBits":8,"effect":"R6EqualsPriorR6PlusFModulo256","ALPreserved":true},
+      {"pc":623,"address":1013,"widthBits":8,"effect":"IncrementR5From2To3"},
+      {"pc":624,"address":1015,"widthBits":8,"effect":"WriteR7Equals2","sameValueWriteRequired":true}
+    ],
+    "oddFlagRequiredToReach0269": false,
+    "oddFlagMeaning": "OnlyLater2918_2919ConsumerPredicate_NotExecutedHere",
+    "readyBit7SetByThisFlagInvocation": false,
+    "tail": {"f8ReadPC":661,"mieClearPC":663,"ieWriterPC":666,"rtiPC":668,"returnPCSource":"MatchingSavedForegroundPC_Not029C_Not28AE","IEAutomaticallyRestoredByRTI":false,"pointingRamAutomaticallyRestored":false},
+    "preservation": {"selectedTailHasNoFurther03F3Write":true,"actualFrameSafe":null,"actualRtiObserved":false,"actualForegroundPC":null,"actualRamRetention":null,"current03F3SemanticOwner":null,"noNextHeaderOrOtherAliasMayBeAssumed":true},
+    "runtimeAdmission": "Blocked"
+  },
+  "dag": [
+    {"from":"ApplicableSilicon","to":"QualifiedReceiveCompletion","evidence":"User126_128_ActualPartUnknown","requires":"ActualSRCON7Permit_ModeClockAndFrameOwner","classification":"ManufacturerSourceQualified","actualEstablished":false,"aliasRisk":"WrongSfrVariant","firstMissing":"SpecificEcuSiliconApplicability"},
+    {"from":"QualifiedReceiveCompletion","to":"SRBUFContentAndRXRequest","evidence":"User128_12_1_5_6","requires":"NotIgnoredMultiprocessorMpc0","classification":"ManufacturerSourceQualified","actualEstablished":false,"aliasRisk":"NextAcceptedCompletionCanReplaceContent","firstMissing":"ActualReceiveEventAndByte"},
+    {"from":"Conditional54EAClear","to":"CurrentRQSRRDYPending","evidence":"WordClear54EA_BeforeIE54F0","requires":"PostClearOrConcurrentReassertion_NoAssumedSetClearPriority","classification":"ConditionalSoftwareEffect","actualEstablished":false,"aliasRisk":"LaterClearEntryOrUnknownWriter","firstMissing":"SourceOwnedPostClearPendingGeneration"},
+    {"from":"MaskWriterAndModeHistory","to":"CurrentIESRRDY","evidence":"3F14_3F28_54F0_3E81ModeCheck","requires":"OwnedF8_FA_IEAnd0217_2_NoOverwrite_PolarityQualified","classification":"ConditionalSoftwareEffect","actualEstablished":false,"aliasRisk":"WordPointerFrameAndOtherIEWriter","firstMissing":"CurrentIEShadowAndModeOwners"},
+    {"from":"PendingAndIE","to":"EligibleIRQ000AEntry","evidence":"User164_169_167ConflictRetained","requires":"MIE_Priority_Boundary_ApplicableMode","classification":"ManufacturerSourceQualified","actualEstablished":false,"aliasRisk":"OtherIRQOrNMI","firstMissing":"ActualPendingEnablePriorityAndBoundary"},
+    {"from":"EligibleIRQ000AEntry","to":"OneMatchingFrameAndPC0213","evidence":"UserFig17_1_ExactVector000A","requires":"OwnedSSP_WritableRetainedWords_NoInvalidOverlap","classification":"ConditionalSoftwareEffect","actualEstablished":false,"aliasRisk":"03F0_03F7_FrameCanDestroyParserBank","firstMissing":"ActualFrameCreatorAndSavedForegroundContext"},
+    {"from":"PC0213","to":"FlagDispatchContext","evidence":"0213_0215_0217_021C_0222","requires":"FAOwner_LiteralVsReadback_SCB2_LRB007E_Mode1_OldError0","classification":"ConditionalSoftwareEffect","actualEstablished":false,"aliasRisk":"NestedIRQAfterMIEEnable","firstMissing":"CurrentContextAndInheritedHeaderLengthOwners"},
+    {"from":"FlagDispatchContext","to":"DistinctRead0262","evidence":"0255_0262_InheritedFlagPath","requires":"RetainedR7_2_R5_2_R2_4_ApplicableSRBUFRead","classification":"ConditionalSoftwareEffect","actualEstablished":false,"aliasRisk":"NewReceiveBeforeReadOrWrongBank","firstMissing":"ActualSRBUFReadAndCurrentContentGeneration"},
+    {"from":"DistinctRead0262","to":"Writer0269_DATA03F3","evidence":"CMPBr5_0264_JNE0267_STB0269","requires":"NoALMutation_CorrectByteBankAndCompletion","classification":"ConditionalSoftwareEffect","actualEstablished":false,"aliasRisk":"NestedFrameOrAccumulatorMutation","firstMissing":"Actual0269WriterGeneration"},
+    {"from":"Writer0269_DATA03F3","to":"TailAndMatchingRTI029C","evidence":"026D_026F_0270_0295_0297_029A_029C","requires":"SeparateR3R6R5R7Writes_F8Owner_IntactEntryFrame","classification":"ConditionalSoftwareEffect","actualEstablished":false,"aliasRisk":"IRQ_NMI_StackAndPointingRegisterAliases","firstMissing":"ActualMatchingRTIAndFrameRetention"},
+    {"from":"TailAndMatchingRTI029C","to":"RetainedForegroundSource","evidence":"SavedPC_A_LRB_PSW_SSP_NotHost28AE","requires":"NoLaterOverwrite_PhysicalRamMap_OwnedReturnContext","classification":"ActualNativeGenerationNotEstablished","actualEstablished":false,"aliasRisk":"ForegroundOrNextPacketWriter","firstMissing":"SameMachineContinuityAndCurrent03F3Owner"}
+  ],
+  "receiveControls": [
+    {"caseId":"rx-uart","args":["uart_normal",false,true,false,null,false]},
+    {"caseId":"rx-overrun","args":["uart_normal",false,true,false,null,true]},
+    {"caseId":"rx-ignored-mpc0","args":["uart_multiprocessor",false,true,true,0,true]},
+    {"caseId":"rx-address-mpc1","args":["uart_multiprocessor",false,true,true,1,false]},
+    {"caseId":"rx-filter-off","args":["uart_multiprocessor",false,true,false,0,false]},
+    {"caseId":"rx-sync-master","args":["synchronous_normal",true,true,false,null,false]},
+    {"caseId":"rx-sync-slave","args":["synchronous_normal",false,true,false,null,false]},
+    {"caseId":"rx-permit-missing","args":["uart_normal",false,false,false,null,false]}
+  ],
+  "maskControls": [{"caseId":"mask-a-set1","args":[0,1]},{"caseId":"mask-b-set1","args":[1,1]},{"caseId":"mask-a-set0","args":[0,0]},{"caseId":"mask-b-set0","args":[1,0]}],
+  "pendingControls": [{"caseId":"pending-before","args":["before54EA",false]},{"caseId":"pending-after","args":["after54EA",false]},{"caseId":"pending-unknown","args":["unknown",false]},{"caseId":"pending-collision","args":["unknown",true]}],
+  "frameControls": [{"caseId":"frame-unknown","ssp":null},{"caseId":"frame-bank-overlap","ssp":1014},{"caseId":"frame-mathematical-disjoint","ssp":1280}],
+  "acceptedClaim": {
+    "source":"SerialReceivingReady","vector":10,"irqBit":1,"irqSymbol":"RQSRRDY","ieSymbol":"IESRRDY","bitAuthority":"UserTable17_1_NotBorrowedIntoInstructionTable",
+    "iePolarity":"EvidenceFavorsSet1_167ConflictRetained","actualPolarityPromoted":false,"pendingIsDelivered":false,"hostIEInjected":false,"hostMIEInjected":false,"actualReceiveCompletion":null,"historicalByteReusedAsCurrent":false,
+    "srbufAddress":85,"handlerSCB":2,"handlerLRB":126,"frameBytes":8,"actualFrameFootprint":null,"unknownSSPDeclaredSafe":false,"unaccountedNmiExcluded":false,
+    "returnForm":"RTI","actualRestoredPC":null,"hostForegroundPC":null,"crossMachineTransfer":false,"technicalSSPImported":false,"actual03F3Generation":null,"actualCpuExecutions":0,"oldSourcesRewritten":false,"newPreservationExceptions":0
+  },
+  "authority": {
+    "statusClasses":["ManufacturerSourceQualified","ConditionalSoftwareEffect","ActualHardwareEventNotObserved","ActualNativeGenerationNotEstablished","SameMachineContinuityNotEstablished","RuntimeAdmissionBlocked"],
+    "actualEcuChipIdentified":false,"actualReceiveEvent":null,"currentIEOwner":null,"currentPendingOwner":null,"currentMIEOwner":null,"actualPriorityEligibility":null,"actualFrameCreator":null,"actualSRBUFRead":null,"actual0269Writer":null,"actualRTIReturn":null,"actualForegroundRetention":null,
+    "actualMachineId":null,"actualEventOrdinal":null,"actualWriteOrdinal":null,"cpuExecutions":0,"romExecutions":0,"irqDeliveries":0,"rtiExecutions":0,"retiredInstructions":0,"runtimeAdmission":"Blocked","firmwareReady":false
+  }
+}
