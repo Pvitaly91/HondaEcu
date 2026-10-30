@@ -29,10 +29,10 @@ jobs:
         id: classify
         shell: bash
         run: |
-          python -B research/p28-word0196/ecu_silicon_applicability/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "4e93245debd52334c7319b8ee9bf9a48a4f23d4587ed63cbfe66d13ceea662ad" --github-output "$GITHUB_OUTPUT"
+          python -B research/p28-word0196/ecu_rom_provenance/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "dc2a09ae5c77da3c7f631459fbcd0b6356ade6d283f7da0798bc3403170a0ede" --github-output "$GITHUB_OUTPUT"
 
 
-  ecu-silicon-static:
+  ecu-rom-provenance-static:
     needs: ci-routing
     if: ${{ always() && needs.ci-routing.result == 'success' && needs.ci-routing.outputs.research_only == 'true' && needs.ci-routing.outputs.full_qa == 'false' }}
     strategy:
@@ -46,7 +46,7 @@ jobs:
       GIT_CONFIG_KEY_0: core.autocrlf
       GIT_CONFIG_VALUE_0: "false"
     steps:
-      - name: Checkout exact active M2cl static research source
+      - name: Checkout exact active M2cm static research source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -57,42 +57,42 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: M2cl exact source equality and closed workflow projection
+      - name: M2cm exact source equality and closed workflow projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/ecu_silicon_applicability/ci.py --guard --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/ecu_rom_provenance/ci.py --guard --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2cl source provenance and ECU silicon documentary applicability and source regressions without CPU execution
+      - name: M2cm source provenance and ECU ROM provenance and hardware bridge static regressions without CPU execution
         shell: pwsh
         run: |
-          python -B -m unittest discover -s research/p28-word0196/ecu_silicon_applicability -t research/p28-word0196 -p '*_tests.py'
+          python -B -m unittest discover -s research/p28-word0196/ecu_rom_provenance -t research/p28-word0196 -p '*_tests.py'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2cl documentary static canonical calculations not CPU observations
+      - name: M2cm documentary static canonical calculations not CPU observations
         shell: pwsh
         run: |
-          python -B research/p28-word0196/validate_ecu_silicon_applicability.py --output .tmp/m2cl-static-evidence --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/validate_ecu_rom_provenance.py --output .tmp/m2cm-static-evidence --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify closed documentary static artifact membership
         shell: pwsh
         run: |
           $taskRequired = @('static-canonical.jsonl.gz', 'static-summary.json', 'sourcejoin.json')
-          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2cl-static-evidence' -Force)
-          if ($taskActual.Count -ne 3) { throw 'Unexpected M2cl static artifact membership.' }
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2cm-static-evidence' -Force)
+          if ($taskActual.Count -ne 3) { throw 'Unexpected M2cm static artifact membership.' }
           foreach ($taskName in $taskRequired) {
-            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2cl-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2cl static artifact member.' }
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2cm-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2cm static artifact member.' }
           }
 
       - name: Preserve documentary static calculations only not CPU or private ROM evidence
         uses: actions/upload-artifact@v4
         with:
-          name: M2cl-documentary-static-${{ matrix.os }}
+          name: M2cm-documentary-static-${{ matrix.os }}
           path: |
-            .tmp/m2cl-static-evidence/static-canonical.jsonl.gz
-            .tmp/m2cl-static-evidence/static-summary.json
-            .tmp/m2cl-static-evidence/sourcejoin.json
+            .tmp/m2cm-static-evidence/static-canonical.jsonl.gz
+            .tmp/m2cm-static-evidence/static-summary.json
+            .tmp/m2cm-static-evidence/sourcejoin.json
           if-no-files-found: error
           retention-days: 14
 
