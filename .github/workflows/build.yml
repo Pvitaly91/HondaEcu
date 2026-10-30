@@ -29,10 +29,10 @@ jobs:
         id: classify
         shell: bash
         run: |
-          python -B research/p28-word0196/native_rxready_irq000a_source/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "6e42862482e76ef639cadd2b687318ffe1528706b0218386652527f266414274" --github-output "$GITHUB_OUTPUT"
+          python -B research/p28-word0196/rxready_acknowledgement/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "ade894431a906d23bc146b90018519d1da818054bc72cf8c740cce804b3ae686" --github-output "$GITHUB_OUTPUT"
 
 
-  rxready-single-static:
+  rxready-ack-static:
     needs: ci-routing
     if: ${{ always() && needs.ci-routing.result == 'success' && needs.ci-routing.outputs.research_only == 'true' && needs.ci-routing.outputs.full_qa == 'false' }}
     strategy:
@@ -46,7 +46,7 @@ jobs:
       GIT_CONFIG_KEY_0: core.autocrlf
       GIT_CONFIG_VALUE_0: "false"
     steps:
-      - name: Checkout exact active M2cj static research source
+      - name: Checkout exact active M2ck static research source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -57,42 +57,42 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: M2cj exact source equality and closed workflow projection
+      - name: M2ck exact source equality and closed workflow projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/native_rxready_irq000a_source/ci.py --guard --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/rxready_acknowledgement/ci.py --guard --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2cj source provenance and RX-ready pending and single-invocation source regressions without CPU execution
+      - name: M2ck source provenance and RX-ready source authentication and acknowledgement regressions without CPU execution
         shell: pwsh
         run: |
-          python -B -m unittest discover -s research/p28-word0196/native_rxready_irq000a_source -t research/p28-word0196 -p '*_tests.py'
+          python -B -m unittest discover -s research/p28-word0196/rxready_acknowledgement -t research/p28-word0196 -p '*_tests.py'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2cj documentary static canonical calculations not CPU observations
+      - name: M2ck documentary static canonical calculations not CPU observations
         shell: pwsh
         run: |
-          python -B research/p28-word0196/validate_native_rxready_irq000a.py --output .tmp/m2cj-static-evidence --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/validate_rxready_acknowledgement.py --output .tmp/m2ck-static-evidence --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify closed documentary static artifact membership
         shell: pwsh
         run: |
           $taskRequired = @('static-canonical.jsonl.gz', 'static-summary.json', 'sourcejoin.json')
-          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2cj-static-evidence' -Force)
-          if ($taskActual.Count -ne 3) { throw 'Unexpected M2cj static artifact membership.' }
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2ck-static-evidence' -Force)
+          if ($taskActual.Count -ne 3) { throw 'Unexpected M2ck static artifact membership.' }
           foreach ($taskName in $taskRequired) {
-            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2cj-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2cj static artifact member.' }
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2ck-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2ck static artifact member.' }
           }
 
       - name: Preserve documentary static calculations only not CPU or private ROM evidence
         uses: actions/upload-artifact@v4
         with:
-          name: M2cj-documentary-static-${{ matrix.os }}
+          name: M2ck-documentary-static-${{ matrix.os }}
           path: |
-            .tmp/m2cj-static-evidence/static-canonical.jsonl.gz
-            .tmp/m2cj-static-evidence/static-summary.json
-            .tmp/m2cj-static-evidence/sourcejoin.json
+            .tmp/m2ck-static-evidence/static-canonical.jsonl.gz
+            .tmp/m2ck-static-evidence/static-summary.json
+            .tmp/m2ck-static-evidence/sourcejoin.json
           if-no-files-found: error
           retention-days: 14
 

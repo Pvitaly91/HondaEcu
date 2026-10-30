@@ -1,0 +1,428 @@
+{
+  "milestone": "M2ck",
+  "baseSha": "b2f5331a077a25a2bf29331f38a6b6041792cd55",
+  "classification": "RXREADY_SOURCE_CONFLICT_UNRESOLVED",
+  "executionStatus": "EXECUTION_BLOCKED",
+  "documentaryScope": "StaticSourceAndClaimVerification_NotReceiverOrCpuSimulation",
+  "editionAuthenticatedMeaning": "PrintedDocumentIdDateEditionVisuallyIdentified_NotOfficialCryptographicAuthenticity",
+  "documents": [
+    {
+      "sourceId": "UserIncomplete",
+      "title": "MSM66201/66207 User Manual, incomplete retained scan archive",
+      "manufacturer": "OKI Semiconductor",
+      "documentId": null,
+      "date": null,
+      "sha256": "f061cb5bcbd1804699fb60b543c425646fbb15b939c9bc51b24edbb4da4c6ddf",
+      "bytes": 16203609,
+      "url": "https://mycomputerninja.com/~jon/www.pgmfi.org/twiki/pub/Library/66kAssemblerDocs/66207usersmanual_incomplete.zip",
+      "models": [
+        "MSM66201",
+        "MSM66P201",
+        "MSM66207",
+        "MSM66P207"
+      ],
+      "kind": "IncompleteUserScan",
+      "editionAuthenticated": false,
+      "integrity": "SevenCrcFailures_Unrepaired",
+      "applicability": "FamilyBodyAttribution_EditionAndEcuSiliconUnknown",
+      "claims": [
+        "QualifiedReceiveRules",
+        "GenericIrqEntry",
+        "IeConflict"
+      ]
+    },
+    {
+      "sourceId": "ISA1991",
+      "title": "MSM66201 Instruction Manual",
+      "manufacturer": "OKI Semiconductor",
+      "documentId": null,
+      "date": "September 1991",
+      "sha256": "f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271",
+      "bytes": 4563117,
+      "url": "https://mycomputerninja.com/~jon/www.pgmfi.org/twiki/pub/Library/66kAssemblerDocs/Oki_66201_Instruction_Manual.pdf",
+      "models": [
+        "MSM66201"
+      ],
+      "kind": "InstructionManual",
+      "editionAuthenticated": true,
+      "integrity": "RetainedHistoricalPdfIdentity",
+      "applicability": "MSM66201InstructionScope_ActualEcuSiliconUnknown",
+      "claims": [
+        "InstructionSemanticsOnly"
+      ]
+    },
+    {
+      "sourceId": "JapaneseY3",
+      "title": "MSM66201/66P201/66207/66P207 10-bit A/D converter integrated 16-bit microcontroller",
+      "manufacturer": "OKI Semiconductor",
+      "documentId": "J2E1027-27-Y3",
+      "date": "January 1998",
+      "sha256": "9da5f4c364fb8aed21c783bc5ad7b1e114c4b8773c7a00b9a7373c261112bf7a",
+      "bytes": 602102,
+      "url": "https://datasheet.datasheetarchive.com/originals/library/Datasheets-DAV1/DSADA0015905.pdf",
+      "models": [
+        "MSM66201",
+        "MSM66P201",
+        "MSM66207",
+        "MSM66P207"
+      ],
+      "kind": "SpecificationSheet",
+      "editionAuthenticated": true,
+      "integrity": "ThirtyRenderedPages_EncryptedNoPassword_ParserWarnings_NotRepaired",
+      "applicability": "NamedFamily_ActualEcuSiliconUnknown",
+      "claims": [
+        "SfrInventoryOnly"
+      ]
+    },
+    {
+      "sourceId": "EnglishY4",
+      "title": "MSM66201/66P201/66207/66P207 OLMS-66K Series 16-Bit Microcontroller",
+      "manufacturer": "OKI Semiconductor",
+      "documentId": "E2E1027-27-Y4",
+      "date": "January 1998",
+      "sha256": "247913724eb291e20c869d42ba40363268fba415ab787b7c843e2a094533f0fe",
+      "bytes": 589158,
+      "url": "https://files.boostednw.com/HONDA/66207.pdf",
+      "models": [
+        "MSM66201",
+        "MSM66P201",
+        "MSM66207",
+        "MSM66P207"
+      ],
+      "kind": "SpecificationSheet",
+      "editionAuthenticated": true,
+      "integrity": "RetainedHistoricalPdfIdentity",
+      "applicability": "NamedFamily_ActualEcuSiliconUnknown",
+      "claims": [
+        "SfrInventoryOnly"
+      ]
+    },
+    {
+      "sourceId": "DataBook1990",
+      "title": "Microcontroller Data Book 1990/1991",
+      "manufacturer": "OKI Semiconductor",
+      "documentId": null,
+      "date": "June 1990",
+      "sha256": "88aae3b11782ae1b8bfea0f112b81c342232a98ed75e39b6aac6ea3ad5f54e82",
+      "bytes": 25444912,
+      "url": "https://bitsavers.trailing-edge.com/components/oki/_dataBooks/1990_OKI_Microcontroller_Data_Book.pdf",
+      "models": [
+        "MSM66201",
+        "MSM66P201",
+        "MSM66207",
+        "MSM66P207"
+      ],
+      "kind": "DataBookPreliminaryDeviceSections",
+      "editionAuthenticated": true,
+      "integrity": "ParsedScanWithXrefWarning",
+      "applicability": "NamedFamilyPreliminary_ActualEcuSiliconUnknown",
+      "claims": [
+        "PreliminarySfrInventoryOnly"
+      ]
+    },
+    {
+      "sourceId": "OldSpec66201",
+      "title": "MSM66201/66P201 High Performance CMOS Single Chip 8/16 Bit Microcontroller",
+      "manufacturer": "OKI Semiconductor",
+      "documentId": null,
+      "date": null,
+      "sha256": "2d538a3d80c45df662bb7cd6ed8282b252173d42022d7ca54bc34639f8b519eb",
+      "bytes": 644783,
+      "url": "https://www.datasheetarchive.com/pdf/download/distributors/Datasheets-23/DSA-448125.pdf",
+      "models": [
+        "MSM66201",
+        "MSM66P201"
+      ],
+      "kind": "PreliminarySpecificationSheet",
+      "editionAuthenticated": false,
+      "integrity": "RetainedScan_DocumentWideEditionUnknown",
+      "applicability": "MSM66201_66P201Only_NoSilent66207PeripheralTransfer",
+      "claims": [
+        "HistoricalDeviceDescriptionOnly"
+      ]
+    }
+  ],
+  "boundSources": [
+    {
+      "path": "docs/M2CJ_RXREADY_IRQ000A_SINGLE_INVOCATION.md",
+      "bytes": 13323,
+      "sha256": "4db3384f9be12ede559720262a19376f48dcf3a877bb4841f47ec8bbadd2bf60"
+    },
+    {
+      "path": "research/p28-word0196/native_rxready_irq000a_source/contract.json",
+      "bytes": 10164,
+      "sha256": "176f04e72b97e93f78b2b9012a56dc2907de50d5a200a30523bc26eb65f9d862"
+    },
+    {
+      "path": "research/p28-word0196/native_rxready_irq000a_source/rx_pending.py",
+      "bytes": 5373,
+      "sha256": "0f695562515d60fcc1c315605d84dc0b70b7f649f74765a06451735e90cc324b"
+    },
+    {
+      "path": "research/p28-word0196/native_rxready_irq000a_source/mask_lineage.py",
+      "bytes": 7069,
+      "sha256": "2ccc215da9951d79b4309f6952d5b618fcd914dbf260f29130d9f363bb32feda"
+    }
+  ],
+  "firmwareReady": false,
+  "actualObservation": null,
+  "targetCpuExecutions": 0,
+  "actualIrqDeliveries": 0,
+  "actualRtiExecutions": 0,
+  "newSources": {
+    "newJapaneseSpecificationAcquired": true,
+    "newEnglishMirrorContainerOfKnownY4Edition": true,
+    "newApplicableAcknowledgementManualOrErratumAcquired": false,
+    "englishMirror": {
+      "bytes": 583437,
+      "sha256": "fe18068dc496a03f5b6bdefe5818741e572cb7626acfb3d1df427547f8b3264b",
+      "url": "https://downloads.laboratoryb.org/insight/documents/OKI/MSM66201.pdf",
+      "edition": "E2E1027-27-Y4",
+      "separateIndependentPeripheralRule": false
+    }
+  },
+  "missingSource": {
+    "exactSubsectionAndPage": null,
+    "localPrintedGap": [
+      132,
+      147
+    ],
+    "required": "CompleteApplicableReceiveOperationAndInterruptErratumEditionBridge",
+    "absenceGloballyEstablished": false
+  },
+  "claims": [
+    {
+      "topic": "source-user",
+      "recordClass": "SourceFinding",
+      "conclusion": "IncompleteBody_EditionUnknown_SevenCrcFailures",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "source-isa",
+      "recordClass": "SourceFinding",
+      "conclusion": "FirstEdition_September1991_InstructionManual_NotPeripheralAckAuthority",
+      "sourceIds": [
+        "ISA1991"
+      ]
+    },
+    {
+      "topic": "source-japanese",
+      "recordClass": "SourceFinding",
+      "conclusion": "J2E1027-27-Y3_January1998_Specification_NotUserManual",
+      "sourceIds": [
+        "JapaneseY3"
+      ]
+    },
+    {
+      "topic": "source-english",
+      "recordClass": "SourceFinding",
+      "conclusion": "E2E1027-27-Y4_January1998_KnownEditionMirror_NotUserManual",
+      "sourceIds": [
+        "EnglishY4"
+      ]
+    },
+    {
+      "topic": "source-databook",
+      "recordClass": "SourceFinding",
+      "conclusion": "FifthEdition_June1990_PreliminaryDeviceSpecifications_NotUserManual",
+      "sourceIds": [
+        "DataBook1990"
+      ]
+    },
+    {
+      "topic": "source-oldspec",
+      "recordClass": "SourceFinding",
+      "conclusion": "Preliminary66201Specification_DocumentWideEditionUnknown_NotErratum",
+      "sourceIds": [
+        "OldSpec66201"
+      ]
+    },
+    {
+      "topic": "limit-index",
+      "recordClass": "AuthorityLimit",
+      "conclusion": "IndexAndFilenameAreLocators_NotPrimarySemanticEvidence",
+      "sourceIds": [
+        "SearchIndexes"
+      ]
+    },
+    {
+      "topic": "limit-crossfamily",
+      "recordClass": "AuthorityLimit",
+      "conclusion": "CoreAssemblyCompatibilityDoesNotEstablishPeripheralEquivalence",
+      "sourceIds": [
+        "ISA1991",
+        "CrossFamilyLocators"
+      ]
+    },
+    {
+      "topic": "rx-generation",
+      "recordClass": "ManufacturerSourceQualified",
+      "conclusion": "EligibleCompletionTransfersSRBUFAndGeneratesRXRequest_SourceQualified",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "mpc-filter",
+      "recordClass": "ManufacturerSourceQualified",
+      "conclusion": "FilterEnabledMpc0_NoNewSRBUF_NoNewRXRequest_SourceQualified",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "overrun-replacement",
+      "recordClass": "ManufacturerSourceQualified",
+      "conclusion": "UnreadMayBeReplaced_NewOverrunNotFinalStickyStatus_SourceQualified",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "receiver-permit",
+      "recordClass": "ManufacturerSourceQualified",
+      "conclusion": "SRREN1Permits_ModeChangeRequires0_SyncMasterAutoClearAfterFrame_SourceQualified",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "error-request-suppression",
+      "recordClass": "UnknownRelation",
+      "conclusion": "MERR_PERR_FERR_RequestSuppressionUnknown",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "srbuf-read-ack",
+      "recordClass": "UnknownRelation",
+      "conclusion": "ReadAcknowledgementUnknown_BothReadClearAndNoSideEffectUnsupported",
+      "sourceIds": [
+        "UserIncomplete",
+        "EnglishY4",
+        "JapaneseY3"
+      ]
+    },
+    {
+      "topic": "entry-generic-ack",
+      "recordClass": "ManufacturerSourceQualified",
+      "conclusion": "ServicedIRQCleared_MIECleared_IERetained_SourceQualified",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "entry-rx-ack",
+      "recordClass": "ConditionalSourceJoin",
+      "conclusion": "RXBit1GenericEntryAckJoinConditional_NotActualIRQ",
+      "sourceIds": [
+        "UserIncomplete",
+        "ISA1991"
+      ]
+    },
+    {
+      "topic": "reassert-without-completion",
+      "recordClass": "UnknownRelation",
+      "conclusion": "AutomaticReassertionWithoutNewCompletionUnknown",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "pending-enable",
+      "recordClass": "ManufacturerSourceQualified",
+      "conclusion": "RequestGenerationDistinctFromDelivery_NotUnlimitedLifetimeProof",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "collision-priority",
+      "recordClass": "UnknownRelation",
+      "conclusion": "HardwareSet_SoftwareClear_EntryAck_Read_NewCompletionPriorityUnknown",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "ie-polarity",
+      "recordClass": "SourceConflict",
+      "conclusion": "EvidenceFavorsSet1_165_168_169_With167ConflictRetained",
+      "sourceIds": [
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "software-clear54ea",
+      "recordClass": "StaticConditional",
+      "conclusion": "Completed54EAClearCutsPreclearGeneration_PostclearOrConcurrentOwnerNeeded",
+      "sourceIds": [
+        "M2cjStatic",
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "mask-writers",
+      "recordClass": "StaticConditional",
+      "conclusion": "54F0_3F14_3F28_WritersStatic_CurrentIE_MIE_OwnersUnknown",
+      "sourceIds": [
+        "M2cjStatic"
+      ]
+    },
+    {
+      "topic": "read0262",
+      "recordClass": "StaticConditional",
+      "conclusion": "0262ByteReadSRBUF0055_NotObserved",
+      "sourceIds": [
+        "M2cjStatic",
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "compare0264",
+      "recordClass": "StaticConditional",
+      "conclusion": "0264ComparesR5With2_NotReceivedF",
+      "sourceIds": [
+        "M2cjStatic"
+      ]
+    },
+    {
+      "topic": "store0269",
+      "recordClass": "StaticConditional",
+      "conclusion": "0269StoresALTo03F3_NoOddFRequirement_NotObserved",
+      "sourceIds": [
+        "M2cjStatic"
+      ]
+    },
+    {
+      "topic": "return029c",
+      "recordClass": "StaticConditional",
+      "conclusion": "029CReturnsMatchingSavedForegroundPC_NotHost28AE_NotObserved",
+      "sourceIds": [
+        "M2cjStatic",
+        "ISA1991",
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "frame-safety",
+      "recordClass": "UnknownNativeContext",
+      "conclusion": "EightByteFrameRequiresOwnedSSPAndPhysicalSafety_Unknown",
+      "sourceIds": [
+        "M2cjStatic",
+        "UserIncomplete"
+      ]
+    },
+    {
+      "topic": "authority-execution",
+      "recordClass": "RuntimeAuthorityExcluded",
+      "conclusion": "ExecutionBlocked_NoCPU_ROM_IRQ_RTI_FirmwareReadyFalse",
+      "sourceIds": [
+        "M2ckScope"
+      ]
+    }
+  ]
+}
