@@ -172,6 +172,7 @@ def validate_output(value):
     regular(p)
     need(p.resolve() == p, 'CanonicalOwnedOutputPathRequired')
     allowed = (ROOT / '.tmp/m2ci-static-evidence', ROOT / 'private/reports/m2ci')
+    need(p != allowed[1], 'ReportControlRootReservedEvenWhenAbsent')
     need(any(p == a or a in p.parents for a in allowed), 'OwnedM2ciOutputOnly')
     need(not p.exists(), 'FreshOutputRequired')
     return p

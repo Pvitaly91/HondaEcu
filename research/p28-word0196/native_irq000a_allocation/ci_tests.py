@@ -1,5 +1,6 @@
 """Routing regressions use raw source maps; no historical tests or CPU run."""
 import unittest
+from unittest.mock import patch
 
 from original_rom_boundary.source_guard import Blob, contents, tree
 from native_irq000a_allocation import ci
@@ -69,6 +70,11 @@ class SourceRoutingTests(unittest.TestCase):
     def test_output_parent_traversal_cannot_leave_owned_directory(self):
         with self.assertRaises(ValueError):
             ci.validate_output(ci.ROOT / 'private/reports/m2ci/../../escape')
+
+    def test_report_control_root_is_reserved_in_clean_ci_without_private_data(self):
+        with patch.object(ci.Path, 'exists', return_value=False), self.assertRaisesRegex(
+                ValueError, 'ReportControlRootReservedEvenWhenAbsent'):
+            ci.validate_output(ci.ROOT / 'private/reports/m2ci')
 
 
 if __name__ == '__main__':

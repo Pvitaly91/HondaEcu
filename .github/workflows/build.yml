@@ -29,7 +29,7 @@ jobs:
         id: classify
         shell: bash
         run: |
-          python -B research/p28-word0196/native_irq000a_allocation/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "4bf84f5e9a39b6a61f24eac379c0bd03b148935cd2ae21bb5e612501eb089256" --github-output "$GITHUB_OUTPUT"
+          python -B research/p28-word0196/native_irq000a_allocation/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "6d5735818c4ca2a97b052a6c568420cf655b6cb73dc70a6ebfa3e93acd85ba4e" --github-output "$GITHUB_OUTPUT"
 
 
   irq-allocation-static:
