@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2ci",
+  "baseSha": "f7c773394c66cbd604f60c8d7af117572fe79686",
+  "classification": "DocumentaryStaticAllocationReview_NotExecution",
+  "documents": [
+    {"id":"A","title":"MSM66201 Instruction Manual","publisher":"OKI Semiconductor","documentNumber":null,"edition":"First Edition","date":"September 1991","revision":null,"deviceScope":"Standard MSM66201; customer-specific ASIC allocation may differ","sha256":"f6e423ac0bd15378754e30c35ed426415ec219e360c68e817ab451df72142271","bytes":4563117,"pages":266,"reviewedTable":"Table1-1 / printed1-5 / PDF9","pageImageSha256":"6e37518ff405f4cb8edee7b8392d9744c6a2e7385348d7f434c0e41a87736517","visualMethod":"IndependentFullPageImageReview_NoOCR","allocationEvidence":true,"newManufacturerDocument":false,"footnote":"Customer-specific ASIC internal I/O can change vector allocation"},
+    {"id":"B","title":"MSM66201/207 User Manual body","publisher":"OKI manufacturer body attribution","documentNumber":null,"edition":null,"date":null,"revision":null,"deviceScope":"MSM66201/207 body; exact edition and ECU applicability unknown","sha256":"f061cb5bcbd1804699fb60b543c425646fbb15b939c9bc51b24edbb4da4c6ddf","bytes":16203609,"pages":null,"reviewedTable":"Table17-1 / printed166","pageImageSha256":"a61d26b3dc4d97f36a9c88ae4931d5c0718c9b4b61a1ae134558d295b936dd8f","visualMethod":"IndependentFullPageImageReview_NoOCR","allocationEvidence":true,"newManufacturerDocument":false,"integrity":{"wholeArchive":"ArchiveIntegrityMismatch","crcVerifiedMembers":59,"crcFailedMembers":7,"selectedTablePageReadable":true,"completeManual":false,"titleEditionLeafRetained":false,"repaired":false}},
+    {"id":"C","title":"MSM66201/66P201/66207/66P207 specification","publisher":"OKI Semiconductor","documentNumber":"E2E1027-27-Y4","edition":null,"date":"January 1998","previousDate":"November 1996","revision":"Y4","deviceScope":"Standard MSM66201/66P201/66207/66P207","sha256":"247913724eb291e20c869d42ba40363268fba415ab787b7c843e2a094533f0fe","bytes":589158,"pages":30,"allocationEvidence":false,"newManufacturerDocument":false,"finding":"General IRQ/IE SFR list and vector memory area; no three-factor allocation table or revision bridge"},
+    {"id":"D","title":"Microcontroller Data Book 1990/1991","publisher":"OKI Semiconductor","documentNumber":null,"edition":"Fifth Edition","date":"June 1990","revision":"Target sections Preliminary","deviceScope":"MSM66201/66P201 and MSM66207/66P207 sections","sha256":"88aae3b11782ae1b8bfea0f112b81c342232a98ed75e39b6aac6ea3ad5f54e82","bytes":25444912,"pages":534,"allocationEvidence":false,"newManufacturerDocument":false,"finding":"Target PDF368-409 general IRQ/IE lists and vector memory regions; no three-factor source table or revision bridge","integrity":"Non-zero-indexed xref warning retained; original not repaired"},
+    {"id":"E","title":"OLMS-66K Series Instruction List","publisher":"OKI Semiconductor","documentNumber":"E2E1025-27-Y2","edition":null,"date":"January 1998","previousDate":"November 1996","revision":"Y2","deviceScope":"Includes MSM66201/66P201 and MSM66207/66P207; other families not peripheral equivalence","sha256":"5f8f3d12328c8811a9245974f7b6efd0d26687a50c22a2001c21ed88b3068a0f","bytes":28708,"pages":5,"allocationEvidence":false,"newManufacturerDocument":false,"finding":"Mnemonic/function list only; no IRQ vector allocation"}
+  ],
+  "vectors": [
+    {"vectorAddress":10,"addressSpace":"PROGRAM","widthBits":16,"programVectorTarget":531,"targetEvidence":"ReadOnlyVerifiedOriginalRom_NotObservedDelivery","A":{"interruptSource":"SerialReceivingReady","irqBit":null,"ieBit":null,"irqSymbol":null,"ieSymbol":null},"B":{"interruptSource":"SerialReceivingReady","irqBit":1,"ieBit":1,"irqSymbol":"RQSRRDY","ieSymbol":"IESRRDY"}},
+    {"vectorAddress":12,"addressSpace":"PROGRAM","widthBits":16,"programVectorTarget":9430,"targetEvidence":"ReadOnlyVerifiedOriginalRom_NotObservedDelivery","A":{"interruptSource":"SerialTransmittingReady","irqBit":null,"ieBit":null,"irqSymbol":null,"ieSymbol":null},"B":{"interruptSource":"SerialTransmittingReady","irqBit":2,"ieBit":2,"irqSymbol":"RQSTRDY","ieSymbol":"IESTRDY"}},
+    {"vectorAddress":14,"addressSpace":"PROGRAM","widthBits":16,"programVectorTarget":1005,"targetEvidence":"ReadOnlyVerifiedOriginalRom_NotObservedDelivery","A":{"interruptSource":"BRGForSerialReceive","irqBit":null,"ieBit":null,"irqSymbol":null,"ieSymbol":null},"B":{"interruptSource":"SerialReceiveBrgOverflow","irqBit":3,"ieBit":3,"irqSymbol":"RQSRGEN","ieSymbol":"IESRGEN"}}
+  ],
+  "profiles": [
+    {"profile":"InstructionTable1_1","source":"A","vector000A":"SerialReceivingReady","registerBitMapping":"NotEstablishedByThisTable","ecuApplicability":"Unknown","selectedForActualEcu":false},
+    {"profile":"UserTable17_1","source":"B","vector000A":"SerialReceivingReady","registerBitMapping":"Table17_1WordBits1_2_3_SourceQualified","ecuApplicability":"Unknown","selectedForActualEcu":false}
+  ],
+  "maskPairs": [[672,11179],[160,43427]],
+  "correction": {
+    "result":"PriorTranscriptionErrorCorrected",
+    "newPrimaryConflict":false,
+    "threeVectorRoleAgreement":true,
+    "priorUser000ATransmitClaim":"RejectedAsPrintedTableTranscription",
+    "priorUser000CErrorClaim":"RejectedAsPrintedTableTranscription",
+    "priorUserBit1RQSTRDYClaim":"Rejected_RQSTRDYisBit2",
+    "oldM2chReportsManifestsAndCodeRewritten":false,
+    "newManufacturerErratum":false,
+    "revisionSuccessionEstablished":false,
+    "newManufacturerDocuments":0,
+    "knownMirrorCountsAsIndependentDocument":false,
+    "sourceLabelsChosenFromFirmwareBehavior":false
+  },
+  "authority": {
+    "actualEcuChipIdentified":false,"actualMaskRevision":null,
+    "actualIrqSourceObserved":false,"actualIrqDeliveries":0,
+    "cpuExecutions":0,"romExecutions":0,"rtiExecutions":0,"retiredInstructions":0,
+    "actualMachineId":null,"actualEventOrdinal":null,"actualWriteOrdinal":null,
+    "actualIe":null,"actualPending":null,"actualMie":null,
+    "srbufReadsSelectActualChip":false,"fourNativeInvocationsObserved":false,
+    "actualSrbufPacketObserved":false,"nX8_500SMappingImported":false,
+    "manufacturerInquiry":"DraftReady_NotSent","manufacturerResponseReceived":false,
+    "supportTicketCreated":false,"runtimeAdmission":"Blocked","firmwareReady":false
+  }
+}
