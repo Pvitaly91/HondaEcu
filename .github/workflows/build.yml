@@ -29,7 +29,7 @@ jobs:
         id: classify
         shell: bash
         run: |
-          python -B research/p28-word0196/length_checksum_dataflow/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "e7bda143e543a019252b8bec7628adb95e2ba2dcf4c5531d56dc105d6e01aab4" --github-output "$GITHUB_OUTPUT"
+          python -B research/p28-word0196/length_checksum_dataflow/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "13d248037c698a5f5c3447b5eca141dc97a3f8b6a68ede36ecea99afbe23a2af" --github-output "$GITHUB_OUTPUT"
 
 
   length-checksum-dataflow-static:

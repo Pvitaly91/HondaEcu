@@ -1,7 +1,9 @@
 """Source routing and publication controls; no CPU or historical suite runs."""
 from copy import deepcopy
+from pathlib import Path
 import re
 import stat
+from tempfile import TemporaryDirectory, gettempdir
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -130,10 +132,19 @@ class SourceRoutingTests(unittest.TestCase):
 
     def test_output_cannot_overwrite_source_or_existing_evidence(self):
         for value in (ci.ROOT, ci.ROOT / 'private/reports/m2co',
-                      ci.ROOT / 'research/p28-word0196/length_checksum_dataflow',
-                      ci.ROOT / 'private/reports/m2co/ci-planning'):
+                      ci.ROOT / 'research/p28-word0196/length_checksum_dataflow'):
             with self.subTest(path=value), self.assertRaises(ValueError):
                 ci.validate_output(value)
+        with TemporaryDirectory(prefix='m2co-output-guard-') as temporary:
+            isolated = Path(temporary).resolve()
+            self.assertEqual(isolated.parent, Path(gettempdir()).resolve())
+            with patch.object(ci, 'ROOT', isolated):
+                target = isolated / 'private/reports/m2co/ci-planning'
+                self.assertFalse(target.exists())
+                self.assertEqual(ci.validate_output(target), target)
+                target.mkdir(parents=True)
+                with self.assertRaisesRegex(ValueError, '^FreshOutputRequired$'):
+                    ci.validate_output(target)
 
     def test_wrong_head_rejected_without_runtime(self):
         with self.assertRaises(ValueError):
