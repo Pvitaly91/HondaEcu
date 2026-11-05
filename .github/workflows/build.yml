@@ -29,10 +29,10 @@ jobs:
         id: classify
         shell: bash
         run: |
-          python -B research/p28-word0196/length_checksum_dataflow/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "13d248037c698a5f5c3447b5eca141dc97a3f8b6a68ede36ecea99afbe23a2af" --github-output "$GITHUB_OUTPUT"
+          python -B research/p28-word0196/generic_payload_multibyte/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "71fa859de40c93b4d299a5246e9851d4654512c305c803e8d8fd202bbec7da6d" --github-output "$GITHUB_OUTPUT"
 
 
-  length-checksum-dataflow-static:
+  generic-payload-multibyte-static:
     needs: ci-routing
     if: ${{ always() && needs.ci-routing.result == 'success' && needs.ci-routing.outputs.research_only == 'true' && needs.ci-routing.outputs.full_qa == 'false' }}
     strategy:
@@ -46,7 +46,7 @@ jobs:
       GIT_CONFIG_KEY_0: core.autocrlf
       GIT_CONFIG_VALUE_0: "false"
     steps:
-      - name: Checkout exact active M2co static research source
+      - name: Checkout exact active M2cp static research source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -57,42 +57,42 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: M2co exact source equality and closed workflow projection
+      - name: M2cp exact source equality and closed workflow projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/length_checksum_dataflow/ci.py --guard --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/generic_payload_multibyte/ci.py --guard --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2co source provenance and Length Checksum dispatch dataflow reconstruction and oracle regressions without CPU execution
+      - name: M2cp source provenance and Generic payload counter and multibyte reconstruction and oracle regressions without CPU execution
         shell: pwsh
         run: |
-          python -B -m unittest discover -s research/p28-word0196/length_checksum_dataflow -t research/p28-word0196 -p '*_tests.py'
+          python -B -m unittest discover -s research/p28-word0196/generic_payload_multibyte -t research/p28-word0196 -p '*_tests.py'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2co conditional software canonical calculations not CPU observations
+      - name: M2cp conditional software canonical calculations not CPU observations
         shell: pwsh
         run: |
-          python -B research/p28-word0196/validate_length_checksum_dataflow.py --output .tmp/m2co-static-evidence --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/validate_generic_payload_multibyte.py --output .tmp/m2cp-static-evidence --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify closed documentary static artifact membership
         shell: pwsh
         run: |
           $taskRequired = @('static-canonical.jsonl.gz', 'static-summary.json', 'sourcejoin.json')
-          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2co-static-evidence' -Force)
-          if ($taskActual.Count -ne 3) { throw 'Unexpected M2co static artifact membership.' }
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2cp-static-evidence' -Force)
+          if ($taskActual.Count -ne 3) { throw 'Unexpected M2cp static artifact membership.' }
           foreach ($taskName in $taskRequired) {
-            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2co-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2co static artifact member.' }
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2cp-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2cp static artifact member.' }
           }
 
       - name: Preserve documentary static calculations only not CPU or private ROM evidence
         uses: actions/upload-artifact@v4
         with:
-          name: M2co-conditional-software-${{ matrix.os }}
+          name: M2cp-conditional-software-${{ matrix.os }}
           path: |
-            .tmp/m2co-static-evidence/static-canonical.jsonl.gz
-            .tmp/m2co-static-evidence/static-summary.json
-            .tmp/m2co-static-evidence/sourcejoin.json
+            .tmp/m2cp-static-evidence/static-canonical.jsonl.gz
+            .tmp/m2cp-static-evidence/static-summary.json
+            .tmp/m2cp-static-evidence/sourcejoin.json
           if-no-files-found: error
           retention-days: 14
 
