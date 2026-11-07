@@ -29,10 +29,10 @@ jobs:
         id: classify
         shell: bash
         run: |
-          python -B research/p28-word0196/mode_caller_continuity/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "7d4303234a48cf599e82889ee46181d80de797ec3064dbf62dd1d47a9a648789" --github-output "$GITHUB_OUTPUT"
+          python -B research/p28-word0196/enclosing_caller_return/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "7e46b59c2fa365915c50ce153f21364bd39e2e7165db6171ca9b593f2ddacb8c" --github-output "$GITHUB_OUTPUT"
 
 
-  mode-caller-continuity-static:
+  enclosing-caller-return-static:
     needs: ci-routing
     if: ${{ always() && needs.ci-routing.result == 'success' && needs.ci-routing.outputs.research_only == 'true' && needs.ci-routing.outputs.full_qa == 'false' }}
     strategy:
@@ -46,7 +46,7 @@ jobs:
       GIT_CONFIG_KEY_0: core.autocrlf
       GIT_CONFIG_VALUE_0: "false"
     steps:
-      - name: Checkout exact active M2cu static research source
+      - name: Checkout exact active M2cv static research source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -57,42 +57,42 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: M2cu exact source equality and closed workflow projection
+      - name: M2cv exact source equality and closed workflow projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/mode_caller_continuity/ci.py --guard --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/enclosing_caller_return/ci.py --guard --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2cu source provenance and Mode producer caller continuity source and oracle regressions without CPU execution
+      - name: M2cv source provenance and Enclosing caller and formal return source and oracle regressions without CPU execution
         shell: pwsh
         run: |
-          python -B -m unittest discover -s research/p28-word0196/mode_caller_continuity -t research/p28-word0196 -p '*_tests.py'
+          python -B -m unittest discover -s research/p28-word0196/enclosing_caller_return -t research/p28-word0196 -p '*_tests.py'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2cu conditional software canonical calculations not CPU observations
+      - name: M2cv conditional software canonical calculations not CPU observations
         shell: pwsh
         run: |
-          python -B research/p28-word0196/validate_mode_caller_continuity.py --output .tmp/m2cu-static-evidence --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/validate_enclosing_caller_return.py --output .tmp/m2cv-static-evidence --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify closed documentary static artifact membership
         shell: pwsh
         run: |
           $taskRequired = @('static-canonical.jsonl.gz', 'static-summary.json', 'sourcejoin.json')
-          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2cu-static-evidence' -Force)
-          if ($taskActual.Count -ne 3) { throw 'Unexpected M2cu static artifact membership.' }
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2cv-static-evidence' -Force)
+          if ($taskActual.Count -ne 3) { throw 'Unexpected M2cv static artifact membership.' }
           foreach ($taskName in $taskRequired) {
-            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2cu-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2cu static artifact member.' }
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2cv-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2cv static artifact member.' }
           }
 
       - name: Preserve documentary static calculations only not CPU or private ROM evidence
         uses: actions/upload-artifact@v4
         with:
-          name: M2cu-conditional-software-${{ matrix.os }}
+          name: M2cv-conditional-software-${{ matrix.os }}
           path: |
-            .tmp/m2cu-static-evidence/static-canonical.jsonl.gz
-            .tmp/m2cu-static-evidence/static-summary.json
-            .tmp/m2cu-static-evidence/sourcejoin.json
+            .tmp/m2cv-static-evidence/static-canonical.jsonl.gz
+            .tmp/m2cv-static-evidence/static-summary.json
+            .tmp/m2cv-static-evidence/sourcejoin.json
           if-no-files-found: error
           retention-days: 14
 
