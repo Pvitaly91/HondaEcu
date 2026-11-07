@@ -29,10 +29,10 @@ jobs:
         id: classify
         shell: bash
         run: |
-          python -B research/p28-word0196/shadow_cold_reacquisition/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "3d5c428b9d0d5c88ec739e5c1b745554a5d2d5c6e968475789bbe47b1c9e5270" --github-output "$GITHUB_OUTPUT"
+          python -B research/p28-word0196/cold_return_c8_writer_proof/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "3ec2a2a30d24836786b06a0f5f3181e798b4b424ae71ac79c920e78a8343ac8a" --github-output "$GITHUB_OUTPUT"
 
 
-  shadow-cold-reacquisition-static:
+  cold-return-c8-static:
     needs: ci-routing
     if: ${{ always() && needs.ci-routing.result == 'success' && needs.ci-routing.outputs.research_only == 'true' && needs.ci-routing.outputs.full_qa == 'false' }}
     strategy:
@@ -46,7 +46,7 @@ jobs:
       GIT_CONFIG_KEY_0: core.autocrlf
       GIT_CONFIG_VALUE_0: "false"
     steps:
-      - name: Checkout exact active M2cy static research source
+      - name: Checkout exact active M2cz static research source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -57,42 +57,42 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: M2cy exact source equality and closed workflow projection
+      - name: M2cz exact source equality and closed workflow projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/shadow_cold_reacquisition/ci.py --guard --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/cold_return_c8_writer_proof/ci.py --guard --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2cy source provenance and Shadow provenance and cold reacquisition source and oracle regressions without CPU execution
+      - name: M2cz source provenance and Cold return and C8 writer proof source and oracle regressions without CPU execution
         shell: pwsh
         run: |
-          python -B -m unittest discover -s research/p28-word0196/shadow_cold_reacquisition -t research/p28-word0196 -p '*_tests.py'
+          python -B -m unittest discover -s research/p28-word0196/cold_return_c8_writer_proof -t research/p28-word0196 -p '*_tests.py'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2cy conditional software canonical calculations not CPU observations
+      - name: M2cz conditional software canonical calculations not CPU observations
         shell: pwsh
         run: |
-          python -B research/p28-word0196/validate_shadow_cold_reacquisition.py --output .tmp/m2cy-static-evidence --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/validate_cold_return_c8_writer_proof.py --output .tmp/m2cz-static-evidence --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify closed documentary static artifact membership
         shell: pwsh
         run: |
           $taskRequired = @('static-canonical.jsonl.gz', 'static-summary.json', 'sourcejoin.json')
-          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2cy-static-evidence' -Force)
-          if ($taskActual.Count -ne 3) { throw 'Unexpected M2cy static artifact membership.' }
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2cz-static-evidence' -Force)
+          if ($taskActual.Count -ne 3) { throw 'Unexpected M2cz static artifact membership.' }
           foreach ($taskName in $taskRequired) {
-            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2cy-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2cy static artifact member.' }
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2cz-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2cz static artifact member.' }
           }
 
       - name: Preserve documentary static calculations only not CPU or private ROM evidence
         uses: actions/upload-artifact@v4
         with:
-          name: M2cy-conditional-software-${{ matrix.os }}
+          name: M2cz-conditional-software-${{ matrix.os }}
           path: |
-            .tmp/m2cy-static-evidence/static-canonical.jsonl.gz
-            .tmp/m2cy-static-evidence/static-summary.json
-            .tmp/m2cy-static-evidence/sourcejoin.json
+            .tmp/m2cz-static-evidence/static-canonical.jsonl.gz
+            .tmp/m2cz-static-evidence/static-summary.json
+            .tmp/m2cz-static-evidence/sourcejoin.json
           if-no-files-found: error
           retention-days: 14
 
