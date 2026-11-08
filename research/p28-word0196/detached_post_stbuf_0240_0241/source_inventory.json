@@ -1,0 +1,274 @@
+{
+  "acceptedBase": "a9eeb45292a120711bb1adf918385675c2456409",
+  "context": {
+    "activeSites": [
+      "0240",
+      "0241"
+    ],
+    "actualTargetOperations": 0,
+    "boundaries": [
+      "STOP_BEFORE_STBUF_023E",
+      "STOP_BEFORE_EPILOGUE_0244",
+      "STOP_BEFORE_STBUF_2995"
+    ],
+    "currentPageBase": "0300",
+    "detachedEntry": "0240",
+    "functionalProgramOperands": 0,
+    "hardBarriers": [
+      "023E",
+      "0244"
+    ],
+    "localBankBase": "03F0",
+    "nominalInternalRam": {
+      "MSM66201": "0080-027F",
+      "MSM66207": "0080-047F"
+    },
+    "physicalTargetMapEstablished": false,
+    "pointingRegistersNeeded": false,
+    "qualifyOrdinaryData": [
+      "03F5",
+      "0356"
+    ],
+    "requiredListingLrb": "007E",
+    "scbNeeded": false,
+    "stackNeeded": false
+  },
+  "edges": [
+    {
+      "branchFlags": [],
+      "evidenceClass": "ConfirmedStaticCFG",
+      "from": "023E",
+      "predicate": "SequentialIfCompleted",
+      "requiredState": [
+        "DD0ForByteStore"
+      ],
+      "to": "0240",
+      "unresolvedConditions": [
+        "PeripheralBoundaryBlocked",
+        "UnprovedNativeHandoff"
+      ]
+    },
+    {
+      "branchFlags": [],
+      "evidenceClass": "ConfirmedStaticCFG",
+      "from": "0240",
+      "predicate": "SequentialIfQualified",
+      "requiredState": [
+        "DetachedSymbolicEntry",
+        "LRB007E",
+        "QualifiedData03F5Generation"
+      ],
+      "to": "0241",
+      "unresolvedConditions": []
+    },
+    {
+      "branchFlags": [],
+      "evidenceClass": "ConfirmedStaticCFG",
+      "from": "0241",
+      "predicate": "SequentialIfQualified",
+      "requiredState": [
+        "QualifiedData0356Generation"
+      ],
+      "to": "0244",
+      "unresolvedConditions": []
+    }
+  ],
+  "frameConditions": {
+    "a": "AL and AH retained individually",
+    "er2": "high byte changes through r5/DATA03F5; low byte retained",
+    "psw": "INCB updates ZF and HC; SB supersedes ZF using old bit6",
+    "retained": [
+      "CF",
+      "DD",
+      "OtherPSW",
+      "SCB",
+      "LRB",
+      "DP",
+      "X1",
+      "X2",
+      "USP",
+      "SSP"
+    ],
+    "unreviewedSideEffects": "Physical target and peripheral state unestablished"
+  },
+  "milestone": "M2dg",
+  "otherIngress": {
+    "branchFlags": [
+      "CF=0 at 022E",
+      "ZF=0 at 024F"
+    ],
+    "from": "024F",
+    "mergedWithDetached": false,
+    "predicate": "r5 != 2 and unsigned r5 > r2",
+    "source": "AcceptedM2dfDirectGreaterPath",
+    "to": "0244"
+  },
+  "schemaVersion": 1,
+  "sites": [
+    {
+      "addressingMode": "DATA0051",
+      "branchTarget": null,
+      "dataAccess": {
+        "read": [],
+        "write": [
+          {
+            "address": "0051",
+            "classification": "ProspectiveWriteOnlySTBUF",
+            "space": "DATA",
+            "value": "AL",
+            "width": 8
+          }
+        ]
+      },
+      "ddMode": "RequiresDD0",
+      "encodedOperandClass": "DirectZeroPageByte",
+      "endExclusive": "0240",
+      "flags": {
+        "cf": "retained",
+        "dd": "retained",
+        "hc": "retained",
+        "otherPsw": "retained",
+        "zf": "retained"
+      },
+      "form": "STB A, N8",
+      "instructionManualPage": "3-155",
+      "length": 2,
+      "operandWidth": 8,
+      "pc": "023E",
+      "programOperandAccesses": [],
+      "role": "PriorPeripheralHardBarrier",
+      "stopBoundary": "STOP_BEFORE_STBUF_023E",
+      "successors": [
+        "0240"
+      ]
+    },
+    {
+      "addressingMode": "LRB local register",
+      "branchTarget": null,
+      "dataAccess": {
+        "read": [
+          {
+            "address": "03F5",
+            "addressEquation": "((LRB & 1FFF) << 3) + 5",
+            "alias": "r5/er2.high",
+            "requirement": "QualifiedOrdinaryData",
+            "space": "DATA",
+            "width": 8
+          }
+        ],
+        "write": [
+          {
+            "address": "03F5",
+            "addressEquation": "((LRB & 1FFF) << 3) + 5",
+            "alias": "r5/er2.high",
+            "class": "ByteRmw",
+            "requirement": "QualifiedOrdinaryData",
+            "sameValueWriteRetained": true,
+            "space": "DATA",
+            "value": "(old_r5 + 1) mod 256",
+            "width": 8
+          }
+        ]
+      },
+      "ddMode": "Independent",
+      "encodedOperandClass": "CompactLocalRegisterByte",
+      "endExclusive": "0241",
+      "flags": {
+        "cf": "retained",
+        "dd": "retained",
+        "hc": "(old_r5 & 0F) == 0F",
+        "otherPsw": "retained",
+        "zf": "new_r5 == 0"
+      },
+      "form": "INCB r5",
+      "instructionManualPage": "3-61",
+      "length": 1,
+      "operandWidth": 8,
+      "pc": "0240",
+      "programOperandAccesses": [],
+      "role": "DetachedEffect",
+      "stopBoundary": null,
+      "successors": [
+        "0241"
+      ]
+    },
+    {
+      "addressingMode": "LRB current page offset 56",
+      "branchTarget": null,
+      "dataAccess": {
+        "read": [
+          {
+            "address": "0356",
+            "addressEquation": "((LRB & 1FE0) << 3) | 56",
+            "bit": 6,
+            "requirement": "QualifiedOrdinaryData",
+            "space": "DATA",
+            "width": 8
+          }
+        ],
+        "write": [
+          {
+            "address": "0356",
+            "addressEquation": "((LRB & 1FE0) << 3) | 56",
+            "bit": 6,
+            "class": "ByteRmw",
+            "requirement": "QualifiedOrdinaryData",
+            "sameValueWriteRetained": true,
+            "space": "DATA",
+            "value": "old_status | 40",
+            "width": 8
+          }
+        ]
+      },
+      "ddMode": "Independent",
+      "encodedOperandClass": "CurrentPageDirectBit",
+      "endExclusive": "0244",
+      "flags": {
+        "cf": "retained",
+        "dd": "retained",
+        "hc": "retained",
+        "otherPsw": "retained",
+        "zf": "not old_status.bit6"
+      },
+      "form": "SB off N8.6",
+      "instructionManualPage": "3-127",
+      "length": 3,
+      "operandWidth": 8,
+      "pc": "0241",
+      "programOperandAccesses": [],
+      "role": "DetachedEffect",
+      "stopBoundary": null,
+      "successors": [
+        "0244"
+      ]
+    },
+    {
+      "addressingMode": "DATA00F8",
+      "branchTarget": null,
+      "dataAccess": {
+        "read": [],
+        "write": []
+      },
+      "ddMode": "SetsDD1IfExecuted",
+      "encodedOperandClass": "DirectZeroPageWord",
+      "endExclusive": "0246",
+      "flags": {},
+      "form": "L A, N8",
+      "instructionManualPage": "3-69",
+      "length": 2,
+      "operandWidth": 16,
+      "pc": "0244",
+      "programOperandAccesses": [],
+      "role": "EpilogueHardBarrier",
+      "stopBoundary": "STOP_BEFORE_EPILOGUE_0244",
+      "successors": []
+    }
+  ],
+  "sourceEvidence": {
+    "admittedRom": "M2deExactHistoricalAttachmentToBlobBinding",
+    "deviceMap": "OKI E2E1027-27-Y4 pp. 10, 11, 13, 17",
+    "primaryIsa": "OKI MSM66201 Instruction Manual, September 1991",
+    "rawEncodingPublic": false,
+    "retainedListing": "M2daAcceptedListingAndDecodedExtents"
+  }
+}
