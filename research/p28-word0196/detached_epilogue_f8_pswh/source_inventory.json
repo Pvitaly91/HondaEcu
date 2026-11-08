@@ -1,0 +1,247 @@
+{
+  "acceptedBase": "b20f1341219888afd72b950e4a592e18b0e3f02a",
+  "boundaries": [
+    "STOP_BEFORE_STBUF_023E",
+    "STOP_BEFORE_EPILOGUE_0244",
+    "STOP_BEFORE_IE_WRITE_0249",
+    "STOP_BEFORE_UNQUALIFIED_0244_OR_0246",
+    "STOP_BEFORE_STBUF_2995"
+  ],
+  "edges": [
+    {
+      "class": "DirectM2dfIngress",
+      "from": "024F",
+      "predicate": "r5 != 2 and unsigned r5 > r2; verified taken edge",
+      "to": "0244"
+    },
+    {
+      "class": "DetachedM2dgIngress",
+      "from": "0241",
+      "predicate": "Completed symbolic 0240 and 0241 with qualified DATA generations",
+      "to": "0244"
+    },
+    {
+      "class": "ConfirmedStaticCFG",
+      "from": "0244",
+      "predicate": "Qualified shadow word read",
+      "to": "0246"
+    },
+    {
+      "class": "ConfirmedStaticCFG",
+      "from": "0246",
+      "predicate": "Qualified PSWH architectural alias",
+      "to": "0249"
+    },
+    {
+      "class": "UnexecutedEncodedSequentialCandidate",
+      "from": "0249",
+      "predicate": "Outside admitted scope",
+      "to": "024B"
+    }
+  ],
+  "frameConditions": {
+    "actualIePolarityEstablished": false,
+    "actualInterruptControllerStateEstablished": false,
+    "flagCfHcAfterLoad": "Retained; final PSWH stage has a separate qualification",
+    "nativeArrivalEstablished": false,
+    "ordinaryDataWrites": 0,
+    "preserved": [
+      "LRB",
+      "SCB",
+      "X1",
+      "X2",
+      "DP",
+      "USP",
+      "SSP"
+    ]
+  },
+  "historicalAnalog": {
+    "currentShadowGenerationShared": false,
+    "differentSourceHistory": true,
+    "ieEffectInCurrentScope": false,
+    "pcs": [
+      "0295",
+      "0297",
+      "029A",
+      "029C"
+    ],
+    "sameFormsAndOperands": true
+  },
+  "milestone": "M2dh",
+  "pswhFlagInterpretations": {
+    "familyManualUndefined": [
+      "CF",
+      "HC",
+      "ZF"
+    ],
+    "genericIsaExplicitlyUpdates": [
+      "ZF"
+    ],
+    "modeledFinalUnknown": [
+      "CF",
+      "HC",
+      "ZF"
+    ],
+    "physicalApplicabilityEstablished": false
+  },
+  "schemaVersion": 1,
+  "shadow": {
+    "acceptedWriterCandidates": [
+      "2569",
+      "3F16",
+      "3F2A",
+      "54E5"
+    ],
+    "actualPhysicalMappingEstablished": false,
+    "addresses": [
+      "00F8",
+      "00F9"
+    ],
+    "classification": "SoftwareShadowCurrentGenerationConditional",
+    "nativeReachingWriterEstablished": false,
+    "nominalOrdinaryDataBothMaps": [
+      "00F8",
+      "00F9"
+    ],
+    "nominalSfrOrPointingBank": false,
+    "otherAliasClasses": [
+      "IndirectAndLocalRegisterStorage",
+      "PageZeroCurrentPageStore",
+      "OverlappingStackOrFrameWrite",
+      "RepeatedSameValueStore"
+    ],
+    "readGenerationOrder": [
+      "00F8",
+      "00F9"
+    ],
+    "requiresLrbScbUspOrSspToRead": false,
+    "space": "DATA"
+  },
+  "sites": [
+    {
+      "addressingMode": "DirectZeroPageWord",
+      "dataReads": [
+        {
+          "address": "00F8",
+          "byteAddresses": [
+            "00F8",
+            "00F9"
+          ],
+          "byteOrder": "LittleEndian",
+          "space": "DATA",
+          "widthBits": 16
+        }
+      ],
+      "dataWrites": [],
+      "ddMode": "SetsDD1",
+      "destination": "AL/AH",
+      "endExclusive": "0246",
+      "flags": {
+        "cf": "Retained",
+        "dd": 1,
+        "hc": "Retained",
+        "zf": "ZeroOfLoadedWordWithPartialKnowledge"
+      },
+      "form": "L A, N8",
+      "isa": "3-69, 1-20",
+      "length": 2,
+      "operandWidth": 16,
+      "pc": "0244",
+      "programOperandAccesses": [],
+      "role": "QualifiedWordLoad",
+      "source": "DATA00F8/00F9",
+      "successors": [
+        "0246"
+      ]
+    },
+    {
+      "addressingMode": "ArchitecturalPswhDestinationImmediateByte",
+      "dataReads": [],
+      "dataWrites": [],
+      "ddMode": "IndependentRetainsDD",
+      "destination": "PSWH alias DATA0005",
+      "endExclusive": "0249",
+      "flags": {
+        "cf": "UnknownUnderFamilySelfDestinationWarning",
+        "dd": "Retained",
+        "hc": "UnknownUnderFamilySelfDestinationWarning",
+        "mie": 0,
+        "zf": "UnknownUnderSelfDestinationFlagWriteOrder"
+      },
+      "form": "ANDB PSWH, #N8",
+      "isa": "3-27; family user manual pp. 31-32",
+      "length": 3,
+      "operandWidth": 8,
+      "pc": "0246",
+      "programOperandAccesses": [],
+      "registerEffects": [
+        {
+          "alias": "DATA0005",
+          "candidate": "BeforePSWH & FE",
+          "readWidthBits": 8,
+          "register": "PSWH",
+          "sameValueWriteRetained": true,
+          "space": "REGISTER",
+          "writeWidthBits": 8
+        }
+      ],
+      "role": "QualifiedPswhMask",
+      "source": "PSWH & 0xFE",
+      "successors": [
+        "0249"
+      ]
+    },
+    {
+      "addressingMode": "DirectZeroPageWord",
+      "dataReads": [],
+      "dataWrites": [],
+      "ddMode": "RequiresDD1",
+      "destination": "DATA001A/001B (standard IE SFR)",
+      "endExclusive": "024B",
+      "flags": {
+        "documentedCandidateFrame": "Retained"
+      },
+      "form": "ST A, N8",
+      "isa": "3-154",
+      "length": 2,
+      "operandWidth": 16,
+      "pc": "0249",
+      "programOperandAccesses": [],
+      "role": "IeWriteHardBarrier",
+      "source": "A (AL/AH)",
+      "stopBoundary": "STOP_BEFORE_IE_WRITE_0249",
+      "successorQualification": "UnexecutedEncodedSequentialCandidate",
+      "successors": [
+        "024B"
+      ]
+    },
+    {
+      "addressingMode": "ImplicitSystemStackIfExecuted",
+      "dataReads": [],
+      "dataWrites": [],
+      "ddMode": "Independent",
+      "destination": "PSW/LRB/A/PC if executed",
+      "endExclusive": "024C",
+      "flags": {
+        "documentedCandidateFrame": "RestoresPSWFromStackIfExecuted"
+      },
+      "form": "RTI",
+      "isa": "3-126, 1-17",
+      "length": 1,
+      "operandWidth": null,
+      "pc": "024B",
+      "programOperandAccesses": [],
+      "role": "ExcludedRtiCandidate",
+      "source": "System-stack frame if independently qualified",
+      "successors": []
+    }
+  ],
+  "sourceEvidence": {
+    "admittedRom": "M2deExactHistoricalAttachmentToBlobBinding",
+    "deviceMap": "OKI E2E1027-27-Y4 pp. 10, 13, 17",
+    "familyPswLayoutAndCaution": "MSM66201/207 user manual pp. 30-33, retained incomplete edition",
+    "primaryIsa": "OKI MSM66201 Instruction Manual, September 1991",
+    "rawEncodingPublic": false,
+    "retainedListing": "M2daAcceptedListingAndDecodedExtents"
+  }
+}
