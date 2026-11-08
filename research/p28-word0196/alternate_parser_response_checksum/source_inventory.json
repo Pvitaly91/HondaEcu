@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M2df",
+  "sourceClass": "StaticSourceAndPrimaryIsa",
+  "encodingDisclosure": "SemanticFormsAndEquationsOnly",
+  "proofs": {
+    "ExactExtents": "Admitted ROM, frozen listing and decoded extents agree for each inventoried site",
+    "ParserPrefix": "Accepted M2co status read, separate 0222 write, and old bit6 predicate",
+    "ArchitectureAliases": "M2aw accepted register map and OKI MSM66201 Instruction Manual chapter 1",
+    "StandardSfr": "OKI E2E1027-27-Y4 standard-device SFR map only",
+    "InstructionForms": "OKI MSM66201 Instruction Manual September 1991, printed pages below"
+  },
+  "scope": {
+    "mainFirstPc": "0227",
+    "mainByteEndExclusive": "023E",
+    "mainInstructionSites": 15,
+    "auxiliaryInstructionSites": 6,
+    "auxiliaryEntryPcs": ["024C", "024F"],
+    "stopPcs": ["023E", "0244"],
+    "inheritedPrefixPcs": ["021F", "0222", "0225"],
+    "lrb": "007E",
+    "page": "0300",
+    "localByteBase": "03F0",
+    "pointingAlias": "DP DATA word at 0084 plus 8 times selected SCB",
+    "ordinaryDataApplicability": "ConditionalNamedStandardDeviceOnly",
+    "physicalApplicability": "Unknown"
+  },
+  "sites": [
+    {"pc": "0227", "length": 1, "form": "CLR A", "isa": "3-31", "successors": ["0228"], "effects": "A16 := 0; ZF := 1; DD := 1"},
+    {"pc": "0228", "length": 1, "form": "LB A,r5", "isa": "3-70", "successors": ["0229"], "effects": "AL := DATA03F5; ZF := AL == 0; DD := 0; AH retained"},
+    {"pc": "0229", "length": 2, "form": "CMPB A,#imm8", "isa": "3-39", "successors": ["022B"], "effects": "CF := AL < 2 unsigned; ZF := AL == 2; A, HC and DD retained"},
+    {"pc": "022B", "length": 2, "form": "JEQ rel8", "isa": "3-66/67", "successors": ["024C", "022D"], "effects": "Taken iff ZF from 0229 is 1; flags retained"},
+    {"pc": "022D", "length": 1, "form": "CMPB A,r2", "isa": "3-39", "successors": ["022E"], "effects": "CF := AL < DATA03F2 unsigned; ZF := AL == DATA03F2; A, HC and DD retained"},
+    {"pc": "022E", "length": 2, "form": "JGE rel8", "isa": "3-66/67", "successors": ["024F", "0230"], "effects": "Taken iff CF from 022D is 0; ZF from the same comparison retained"},
+    {"pc": "0230", "length": 1, "form": "ADDB A,r3", "isa": "3-16", "successors": ["0231"], "effects": "AL := (AL + DATA03F3) mod 256; byte carry, zero and low-nibble carry; AH and DD retained"},
+    {"pc": "0231", "length": 2, "form": "L A,direct8", "isa": "3-69", "successors": ["0233"], "effects": "Read DATA0006/0007 as owned A16 alias, not an independent cell; ZF := A16 == 0; DD := 1; CF/HC retained"},
+    {"pc": "0233", "length": 1, "form": "SLL A", "isa": "3-142", "successors": ["0234"], "effects": "With DD1, CF := old A15; A16 := (A16 << 1) mod 65536; ZF/HC/DD retained"},
+    {"pc": "0234", "length": 3, "form": "ADD A,#imm16", "isa": "3-13", "successors": ["0237"], "effects": "A16 := (A16 + PROGRAM index origin 6E12) mod 65536; CF, ZF and bit3 carry updated; DD retained"},
+    {"pc": "0237", "length": 1, "form": "MOV DP,A", "isa": "3-82", "successors": ["0238"], "effects": "Selected DP word := A16; flags retained; distinct pointer-alias write"},
+    {"pc": "0238", "length": 2, "form": "LC A,[DP]", "isa": "3-72", "successors": ["023A"], "effects": "A16 := little-endian PROGRAM word at DP; ZF := A16 == 0; CF/HC/DD retained; no DATA indirection"},
+    {"pc": "023A", "length": 1, "form": "MOV DP,A", "isa": "3-82", "successors": ["023B"], "effects": "Selected DP word := PROGRAM-derived A16; flags retained; distinct pointer-alias write"},
+    {"pc": "023B", "length": 1, "form": "LB A,[DP]", "isa": "3-70", "successors": ["023C"], "effects": "After DATA read qualification, AL := DATA byte at exact DP without aligning; ZF := AL == 0; DD := 0; AH/CF/HC retained"},
+    {"pc": "023C", "length": 2, "form": "ADDB r6,A", "isa": "3-17", "successors": ["023E"], "effects": "Separate DATA03F6 byte RMW, r6 := (old r6 + AL) mod 256; update CF/ZF/HC; AL/AH/DD retained; keep same-value writes"},
+    {"pc": "024C", "length": 1, "form": "LB A,r2", "isa": "3-70", "successors": ["024D"], "effects": "AL := DATA03F2; ZF := AL == 0; DD := 0; AH/CF/HC retained"},
+    {"pc": "024D", "length": 2, "form": "SJ rel8", "isa": "3-140/141", "successors": ["023C"], "effects": "Unconditional source edge; flags retained; no fallthrough to 024F"},
+    {"pc": "024F", "length": 2, "form": "JNE rel8", "isa": "3-66/67", "successors": ["0244", "0251"], "effects": "Taken iff ZF from 022D is 0 under the confirmed 022E edge; flags retained"},
+    {"pc": "0251", "length": 1, "form": "CLRB A", "isa": "3-33", "successors": ["0252"], "effects": "AL := 0; ZF := 1; DD := 0; AH/CF/HC retained"},
+    {"pc": "0252", "length": 1, "form": "SUBB A,r6", "isa": "3-160", "successors": ["0253"], "effects": "AL := (0 - DATA03F6) mod 256; CF := r6 != 0; ZF := r6 == 0; HC := low nibble of r6 != 0; AH/DD and r6 retained"},
+    {"pc": "0253", "length": 2, "form": "SJ rel8", "isa": "3-140/141", "successors": ["023E"], "effects": "Unconditional source edge; bypasses 023C accumulation and 0255 dispatch"},
+    {"pc": "023E", "length": 2, "form": "STB A,direct8", "isa": "3-155", "successors": [], "effects": "STOP_BEFORE_STBUF_023E; prospective standard-device DATA0051 byte store from AL; no write admitted"},
+    {"pc": "0244", "length": 2, "form": "L A,direct8", "isa": "3-69", "successors": [], "effects": "STOP_BEFORE_EPILOGUE_0244; prospective DATA00F8 word read; no epilogue read, write, or RTI admitted"}
+  ],
+  "programDataSeparation": {
+    "index": "(r5 + r3) mod 256 on the confirmed unsigned lower route",
+    "programAddress": "6E12 + 2 * index, even in 6E12 through 7010",
+    "programRead": "Exactly one little-endian PROGRAM word at the qualified address, two bytes",
+    "dataAddress": "The PROGRAM word loaded into selected DP; DATA byte address stays exact even when odd",
+    "nativePointerOwnership": "Unestablished",
+    "physicalSfrRead": "Blocked"
+  },
+  "boundaryRelations": {
+    "normalDispatcher": "0225 to 0255 is the separate frozen dispatch route",
+    "postStbuf": "023E would precede 0240 and 0241 before 0244; the active scope stops before 023E",
+    "epilogue": "0244, 0246, 0249, 024B includes an IE-related store and RTI; no fallthrough to 024C is admitted",
+    "auxiliary": "024C is the encoded 022B target and 024F is the encoded 022E target; neither is a host-selected continuation",
+    "historicalGlobalStop": "STOP_BEFORE_STBUF_2995"
+  },
+  "executionStatus": "EXECUTION_BLOCKED",
+  "firmwareReady": false
+}
