@@ -29,10 +29,10 @@ jobs:
         id: classify
         shell: bash
         run: |
-          python -B research/p28-word0196/target_mcu_c8_applicability/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "8215767ad83980c543139df4a05644c531d5c16f58d0647d0e19121d2e7b6392" --github-output "$GITHUB_OUTPUT"
+          python -B research/p28-word0196/prearchive_extraction_custody/ci.py --route --expected-head "${{ github.sha }}" --approved-new-source-fingerprint "23b5ee4409fea23d9c4158bf2d122aa78e603296a0f7c0bea7fa8a746edea3d5" --github-output "$GITHUB_OUTPUT"
 
 
-  target-mcu-c8-static:
+  prearchive-custody-static:
     needs: ci-routing
     if: ${{ always() && needs.ci-routing.result == 'success' && needs.ci-routing.outputs.research_only == 'true' && needs.ci-routing.outputs.full_qa == 'false' }}
     strategy:
@@ -46,7 +46,7 @@ jobs:
       GIT_CONFIG_KEY_0: core.autocrlf
       GIT_CONFIG_VALUE_0: "false"
     steps:
-      - name: Checkout exact active M2dc static research source
+      - name: Checkout exact active M2dd static research source
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -57,42 +57,42 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: M2dc exact source equality and closed workflow projection
+      - name: M2dd exact source equality and closed workflow projection
         shell: pwsh
         run: |
-          python -B research/p28-word0196/target_mcu_c8_applicability/ci.py --guard --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/prearchive_extraction_custody/ci.py --guard --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2dc source provenance and Target MCU and exact C8 applicability source and oracle regressions without CPU execution
+      - name: M2dd source provenance and Prearchive extraction custody source and oracle regressions without CPU execution
         shell: pwsh
         run: |
-          python -B -m unittest discover -s research/p28-word0196/target_mcu_c8_applicability -t research/p28-word0196 -p '*_tests.py'
+          python -B -m unittest discover -s research/p28-word0196/prearchive_extraction_custody -t research/p28-word0196 -p '*_tests.py'
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: M2dc conditional software canonical calculations not CPU observations
+      - name: M2dd conditional software canonical calculations not CPU observations
         shell: pwsh
         run: |
-          python -B research/p28-word0196/validate_target_mcu_c8_applicability.py --output .tmp/m2dc-static-evidence --expected-head "${{ github.sha }}"
+          python -B research/p28-word0196/validate_prearchive_extraction_custody.py --output .tmp/m2dd-static-evidence --expected-head "${{ github.sha }}"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify closed documentary static artifact membership
         shell: pwsh
         run: |
           $taskRequired = @('static-canonical.jsonl.gz', 'static-summary.json', 'sourcejoin.json')
-          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2dc-static-evidence' -Force)
-          if ($taskActual.Count -ne 3) { throw 'Unexpected M2dc static artifact membership.' }
+          $taskActual = @(Get-ChildItem -LiteralPath '.tmp/m2dd-static-evidence' -Force)
+          if ($taskActual.Count -ne 3) { throw 'Unexpected M2dd static artifact membership.' }
           foreach ($taskName in $taskRequired) {
-            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2dc-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2dc static artifact member.' }
+            if (-not (Test-Path -LiteralPath (Join-Path '.tmp/m2dd-static-evidence' $taskName) -PathType Leaf)) { throw 'Missing M2dd static artifact member.' }
           }
 
       - name: Preserve documentary static calculations only not CPU or private ROM evidence
         uses: actions/upload-artifact@v4
         with:
-          name: M2dc-conditional-software-${{ matrix.os }}
+          name: M2dd-conditional-software-${{ matrix.os }}
           path: |
-            .tmp/m2dc-static-evidence/static-canonical.jsonl.gz
-            .tmp/m2dc-static-evidence/static-summary.json
-            .tmp/m2dc-static-evidence/sourcejoin.json
+            .tmp/m2dd-static-evidence/static-canonical.jsonl.gz
+            .tmp/m2dd-static-evidence/static-summary.json
+            .tmp/m2dd-static-evidence/sourcejoin.json
           if-no-files-found: error
           retention-days: 14
 
