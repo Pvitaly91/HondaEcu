@@ -1,0 +1,506 @@
+{
+  "acceptedBase": "f11547578e604b8d3df6b10e0835b284e6d09406",
+  "boundaries": [
+    "STOP_BEFORE_UNQUALIFIED_SRSTAT_RMW_029E",
+    "STOP_BEFORE_UNQUALIFIED_SRSTAT_RMW_02A5",
+    "STOP_BEFORE_UNQUALIFIED_SRBUF_READ_02AE",
+    "STOP_BEFORE_STBUF_2995"
+  ],
+  "context": {
+    "accumulatorAlias": {
+      "AH": "DATA0007",
+      "AL": "DATA0006"
+    },
+    "corridorZeroPageIndependentOfLrbAndScb": true,
+    "entry021F": "CurrentPage ((LRB & 1FE0) << 3) + 56",
+    "physicalMemoryMappingEstablished": false,
+    "pointerOrStackRequirementsInAdmittedEffects": false,
+    "qualifiedStatusAddress": "DATA0356",
+    "reviewedLrb": "007E",
+    "standardExternalData0356": [
+      "MSM66201"
+    ],
+    "standardInternalRam0356": [
+      "MSM66207"
+    ]
+  },
+  "edges": [
+    {
+      "edgeType": "Taken",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 3,
+      "predicate": "DATA0356.bit1 == 0",
+      "requiredFlags": [],
+      "requiredRegisters": [
+        "LRB"
+      ],
+      "sourcePc": "021F",
+      "targetPc": "029D",
+      "unresolvedConditions": [
+        "CurrentDataGenerationAndMappingMustBeQualified"
+      ]
+    },
+    {
+      "edgeType": "Fallthrough",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 3,
+      "predicate": "DATA0356.bit1 == 1",
+      "requiredFlags": [],
+      "requiredRegisters": [
+        "LRB"
+      ],
+      "sourcePc": "021F",
+      "targetPc": "0222",
+      "unresolvedConditions": [
+        "UseFrozenM2coOrdinaryPath"
+      ]
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 1,
+      "predicate": "CLRB architectural register effect",
+      "requiredFlags": [],
+      "requiredRegisters": [],
+      "sourcePc": "029D",
+      "targetPc": "029E",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "BlockedPeripheralSuccessor",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 3,
+      "predicate": "Encoded successor of blocked SRSTAT.3 RMW",
+      "requiredFlags": [],
+      "requiredRegisters": [],
+      "sourcePc": "029E",
+      "targetPc": "02A1",
+      "unresolvedConditions": [
+        "CurrentSRSTATGenerationUnknown",
+        "NoHardwareRmwAdmitted"
+      ]
+    },
+    {
+      "edgeType": "Taken",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Detached ZF == 1",
+      "requiredFlags": [
+        "ZF"
+      ],
+      "requiredRegisters": [],
+      "sourcePc": "02A1",
+      "targetPc": "02A5",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Fallthrough",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Detached ZF == 0",
+      "requiredFlags": [
+        "ZF"
+      ],
+      "requiredRegisters": [],
+      "sourcePc": "02A1",
+      "targetPc": "02A3",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Byte add under DD0",
+      "requiredFlags": [
+        "DD"
+      ],
+      "requiredRegisters": [
+        "AL"
+      ],
+      "sourcePc": "02A3",
+      "targetPc": "02A5",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "BlockedPeripheralSuccessor",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 3,
+      "predicate": "Encoded successor of blocked SRSTAT.2 RMW",
+      "requiredFlags": [],
+      "requiredRegisters": [],
+      "sourcePc": "02A5",
+      "targetPc": "02A8",
+      "unresolvedConditions": [
+        "CurrentSRSTATGenerationUnknown",
+        "NoHardwareRmwAdmitted"
+      ]
+    },
+    {
+      "edgeType": "Taken",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Detached ZF == 1",
+      "requiredFlags": [
+        "ZF"
+      ],
+      "requiredRegisters": [],
+      "sourcePc": "02A8",
+      "targetPc": "02AC",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Fallthrough",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Detached ZF == 0",
+      "requiredFlags": [
+        "ZF"
+      ],
+      "requiredRegisters": [],
+      "sourcePc": "02A8",
+      "targetPc": "02AA",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Byte add under DD0",
+      "requiredFlags": [
+        "DD"
+      ],
+      "requiredRegisters": [
+        "AL"
+      ],
+      "sourcePc": "02AA",
+      "targetPc": "02AC",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "AH byte alias assignment under DD0",
+      "requiredFlags": [
+        "DD"
+      ],
+      "requiredRegisters": [
+        "AL"
+      ],
+      "sourcePc": "02AC",
+      "targetPc": "02AE",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "BlockedPeripheralSuccessor",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Encoded successor of blocked SRBUF read",
+      "requiredFlags": [],
+      "requiredRegisters": [],
+      "sourcePc": "02AE",
+      "targetPc": "02B0",
+      "unresolvedConditions": [
+        "ActualSRBUFOwnerUnknown",
+        "ReadAcknowledgementUnknown",
+        "NoHardwareReadAdmitted"
+      ]
+    }
+  ],
+  "firstBarrier": "029E",
+  "firstNewPredicate": "02A1",
+  "laterIndependentEntries": [
+    "02A1",
+    "02A8"
+  ],
+  "milestone": "M2di",
+  "ordinaryParserNotReplayedOnTakenEdge": [
+    "0222",
+    "0225",
+    "0255"
+  ],
+  "peripheralObligations": [
+    "SRSTATReadModifyWriteUnqualified",
+    "CurrentSRBUFGenerationUnknown",
+    "RxReadyAndAckReassertionUnknown",
+    "HardwareSetSoftwareClearOrderingUnknown",
+    "IeMiePendingAndFrameUnknown",
+    "NoPhysicalSiliconApplicabilityEstablished"
+  ],
+  "schemaVersion": 1,
+  "sites": [
+    {
+      "dataRead": true,
+      "dataWrite": false,
+      "ddMode": "Independent",
+      "displacement": 123,
+      "endExclusive": "0222",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "JBR off N8.1, rel8",
+      "isa": "3-64",
+      "length": 3,
+      "operandAddress": "0356 under LRB007E",
+      "operandClass": "CurrentPageByteBit1",
+      "pc": "021F",
+      "predicate": "QualifiedCurrentPageByte.bit1 == 0",
+      "programOperandAccesses": [],
+      "role": "FrozenPrefixGate",
+      "successors": [
+        "029D",
+        "0222"
+      ],
+      "widthBits": 8
+    },
+    {
+      "dataRead": false,
+      "dataWrite": false,
+      "ddMode": "SetsDD0",
+      "endExclusive": "029E",
+      "flags": {
+        "cf": "Retained",
+        "dd": 0,
+        "hc": "Retained",
+        "zf": 1
+      },
+      "form": "CLRB A",
+      "isa": "3-33",
+      "length": 1,
+      "operandAddress": "AL alias DATA0006",
+      "operandClass": "AccumulatorLow",
+      "pc": "029D",
+      "programOperandAccesses": [],
+      "registerEffect": "AL := 0; AH retained",
+      "role": "QualifiedRegisterEffect",
+      "successors": [
+        "029E"
+      ],
+      "widthBits": 8
+    },
+    {
+      "dataRead": false,
+      "dataWrite": false,
+      "ddMode": "Independent",
+      "documentaryBitMeaning": "MERR",
+      "endExclusive": "02A1",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "1 iff pre-reset bit is zero"
+      },
+      "form": "RB N8.3",
+      "isa": "3-114",
+      "length": 3,
+      "operandAddress": "DATA0056",
+      "operandClass": "ZeroPageByteBit",
+      "pc": "029E",
+      "programOperandAccesses": [],
+      "prospectiveAccess": "ReadModifyWriteOfOneStatusBit",
+      "role": "SrstatRmwHardBarrier",
+      "standardSfr": "SRSTAT",
+      "stopBoundary": "STOP_BEFORE_UNQUALIFIED_SRSTAT_RMW_029E",
+      "successors": [
+        "02A1"
+      ],
+      "widthBits": 8
+    },
+    {
+      "dataRead": false,
+      "dataWrite": false,
+      "ddMode": "Independent",
+      "displacement": 2,
+      "endExclusive": "02A3",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "JEQ rel8",
+      "isa": "3-66/3-67",
+      "length": 2,
+      "operandClass": "SignedRelative",
+      "pc": "02A1",
+      "predicate": "Qualified symbolic ZF == 1; documentary predecessor 029E uses old SRSTAT.bit3",
+      "programOperandAccesses": [],
+      "role": "DetachedSymbolicFlagGate",
+      "successors": [
+        "02A5",
+        "02A3"
+      ],
+      "widthBits": null
+    },
+    {
+      "dataRead": false,
+      "dataWrite": false,
+      "ddMode": "RequiresDD0",
+      "endExclusive": "02A5",
+      "flags": {
+        "cf": "ByteCarryOut",
+        "dd": "Retained",
+        "hc": "Bit3CarryOut",
+        "zf": "ZeroOfNewAL"
+      },
+      "form": "ADDB A, #N8",
+      "immediate": 1,
+      "isa": "3-16; family pp. 32-33",
+      "length": 2,
+      "operandClass": "AccumulatorLowImmediate",
+      "pc": "02A3",
+      "programOperandAccesses": [],
+      "registerEffect": "AL := (AL + immediate) mod 256; AH retained",
+      "role": "QualifiedRegisterEffect",
+      "successors": [
+        "02A5"
+      ],
+      "widthBits": 8
+    },
+    {
+      "dataRead": false,
+      "dataWrite": false,
+      "ddMode": "Independent",
+      "documentaryBitMeaning": "PERR",
+      "endExclusive": "02A8",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "1 iff pre-reset bit is zero"
+      },
+      "form": "RB N8.2",
+      "isa": "3-114",
+      "length": 3,
+      "operandAddress": "DATA0056",
+      "operandClass": "ZeroPageByteBit",
+      "pc": "02A5",
+      "programOperandAccesses": [],
+      "prospectiveAccess": "ReadModifyWriteOfOneStatusBit",
+      "role": "SrstatRmwHardBarrier",
+      "standardSfr": "SRSTAT",
+      "stopBoundary": "STOP_BEFORE_UNQUALIFIED_SRSTAT_RMW_02A5",
+      "successors": [
+        "02A8"
+      ],
+      "widthBits": 8
+    },
+    {
+      "dataRead": false,
+      "dataWrite": false,
+      "ddMode": "Independent",
+      "displacement": 2,
+      "endExclusive": "02AA",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "JEQ rel8",
+      "isa": "3-66/3-67",
+      "length": 2,
+      "operandClass": "SignedRelative",
+      "pc": "02A8",
+      "predicate": "Qualified symbolic ZF == 1; documentary predecessor 02A5 uses old SRSTAT.bit2",
+      "programOperandAccesses": [],
+      "role": "DetachedSymbolicFlagGate",
+      "successors": [
+        "02AC",
+        "02AA"
+      ],
+      "widthBits": null
+    },
+    {
+      "dataRead": false,
+      "dataWrite": false,
+      "ddMode": "RequiresDD0",
+      "endExclusive": "02AC",
+      "flags": {
+        "cf": "ByteCarryOut",
+        "dd": "Retained",
+        "hc": "Bit3CarryOut",
+        "zf": "ZeroOfNewAL"
+      },
+      "form": "ADDB A, #N8",
+      "immediate": 2,
+      "isa": "3-16; family pp. 32-33",
+      "length": 2,
+      "operandClass": "AccumulatorLowImmediate",
+      "pc": "02AA",
+      "programOperandAccesses": [],
+      "registerEffect": "AL := (AL + immediate) mod 256; AH retained",
+      "role": "QualifiedRegisterEffect",
+      "successors": [
+        "02AC"
+      ],
+      "widthBits": 8
+    },
+    {
+      "architecturalWrite": true,
+      "dataRead": false,
+      "dataWrite": false,
+      "ddMode": "RequiresDD0",
+      "endExclusive": "02AE",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "STB A, N8",
+      "isa": "3-155; family p. 31; device p. 10",
+      "length": 2,
+      "operandAddress": "DATA0007 architectural alias AH",
+      "operandClass": "ZeroPageByte",
+      "pc": "02AC",
+      "programOperandAccesses": [],
+      "registerEffect": "AH := AL; retain AL and flags; no destination read",
+      "retainsSameValueGeneration": true,
+      "role": "QualifiedArchitecturalAliasStore",
+      "successors": [
+        "02AE"
+      ],
+      "widthBits": 8
+    },
+    {
+      "dataRead": false,
+      "dataWrite": false,
+      "ddMode": "WouldSetDD0",
+      "endExclusive": "02B0",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Would be 0",
+        "hc": "Retained",
+        "zf": "Would reflect zero of received byte"
+      },
+      "form": "LB A, N8",
+      "isa": "3-70; family p. 128; device p. 11",
+      "length": 2,
+      "operandAddress": "DATA0055",
+      "operandClass": "ZeroPageByte",
+      "pc": "02AE",
+      "programOperandAccesses": [],
+      "prospectiveAccess": "OneByteReadOnly",
+      "prospectiveDestination": "AL",
+      "role": "SrbufReadHardBarrier",
+      "standardSfr": "SRBUF",
+      "stopBoundary": "STOP_BEFORE_UNQUALIFIED_SRBUF_READ_02AE",
+      "successors": [
+        "02B0"
+      ],
+      "widthBits": 8
+    }
+  ],
+  "sourceEvidence": {
+    "admittedRom": "M2deExactHistoricalAttachmentToBlobBinding",
+    "deviceMap": "OKI E2E1027-27-Y4 pp. 10, 11, 13, 17",
+    "familyUserManual": "MSM66201/207 pp. 30-33 and 128-130, retained incomplete edition",
+    "primaryIsa": "OKI MSM66201 Instruction Manual, September 1991",
+    "rawEncodingPublic": false,
+    "retainedListing": "M2daAcceptedListingAndDecodedExtents"
+  }
+}
