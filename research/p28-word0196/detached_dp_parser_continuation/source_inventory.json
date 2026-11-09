@@ -1,0 +1,552 @@
+{
+  "acceptedBase": "eecf88fc8b1aa4a6221204c72a9c25082ad004c9",
+  "activeSites": [
+    "02B0",
+    "02B1",
+    "02B2",
+    "02B4",
+    "02B5",
+    "02B7",
+    "02C2",
+    "02C5"
+  ],
+  "barrierSites": [
+    "02AE",
+    "02B8",
+    "02C6"
+  ],
+  "boundaries": [
+    "STOP_BEFORE_UNQUALIFIED_SRBUF_READ_02AE",
+    "STOP_BEFORE_UNQUALIFIED_INDIRECT_DATA_READ_02B7",
+    "STOP_BEFORE_UNQUALIFIED_INDIRECT_DATA_READ_02C5",
+    "STOP_BEFORE_UNREVIEWED_02B8",
+    "STOP_BEFORE_UNREVIEWED_02C6",
+    "STOP_BEFORE_STBUF_2995"
+  ],
+  "context": {
+    "detachedEntry": "02B0",
+    "localAlias": "For LRB007E, DATA03F4/03F5 are r4/r5; reaching writer not proved",
+    "lowSfrOrReserved": "0000-007F",
+    "nativeIngressEstablished": false,
+    "nominal035C": {
+      "MSM66201": "External",
+      "MSM66207": "Internal"
+    },
+    "physicalMemoryMappingEstablished": false,
+    "pointingBankBase": "0080 + 8 * SCB",
+    "programOperandAccesses": [],
+    "scbSource": "PSWL low 3 bits; unknown is not bank 0",
+    "selectedDpBacking": [
+      "0084 + 8 * SCB",
+      "0085 + 8 * SCB"
+    ],
+    "standardRam201": "0080-027F",
+    "standardRam207": "0080-047F"
+  },
+  "edges": [
+    {
+      "edgeType": "BlockedPeripheralSuccessor",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Encoded successor of blocked SRBUF read",
+      "requiredFlags": [],
+      "requiredRegisters": [],
+      "sourcePc": "02AE",
+      "targetPc": "02B0",
+      "unresolvedConditions": [
+        "ActualSRBUFOwnerUnknown",
+        "ReadAcknowledgementUnknown",
+        "NoNativeHandoff"
+      ]
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 1,
+      "predicate": "Qualified SCB-selected DP write",
+      "requiredFlags": [],
+      "requiredRegisters": [
+        "AL",
+        "AH",
+        "SCB"
+      ],
+      "sourcePc": "02B0",
+      "targetPc": "02B1",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 1,
+      "predicate": "Reload exact written DP generation without dereferencing its value",
+      "requiredFlags": [],
+      "requiredRegisters": [
+        "DP",
+        "SCB"
+      ],
+      "sourcePc": "02B1",
+      "targetPc": "02B2",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Taken",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "ZF from 02B1 equals 1",
+      "requiredFlags": [
+        "ZF"
+      ],
+      "requiredRegisters": [],
+      "sourcePc": "02B2",
+      "targetPc": "02C2",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Fallthrough",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "ZF from 02B1 equals 0",
+      "requiredFlags": [
+        "ZF"
+      ],
+      "requiredRegisters": [],
+      "sourcePc": "02B2",
+      "targetPc": "02B4",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 1,
+      "predicate": "Shift accumulator word and derive CF",
+      "requiredFlags": [
+        "DD"
+      ],
+      "requiredRegisters": [
+        "A"
+      ],
+      "sourcePc": "02B4",
+      "targetPc": "02B5",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Taken",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "CF from 02B4 equals 1; preserve first DP writer",
+      "requiredFlags": [
+        "CF"
+      ],
+      "requiredRegisters": [],
+      "sourcePc": "02B5",
+      "targetPc": "02C5",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Fallthrough",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "CF from 02B4 equals 0; preserve first DP writer",
+      "requiredFlags": [
+        "CF"
+      ],
+      "requiredRegisters": [],
+      "sourcePc": "02B5",
+      "targetPc": "02B7",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 1,
+      "predicate": "Qualified ordinary DATA word and both source generations",
+      "requiredFlags": [],
+      "requiredRegisters": [
+        "DP",
+        "SCB"
+      ],
+      "sourcePc": "02B7",
+      "targetPc": "02B8",
+      "unresolvedConditions": [
+        "StopBeforeUnqualifiedIndirectRead",
+        "StopBeforeLater02B8Effect"
+      ]
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 3,
+      "predicate": "Qualified second DP writer of immediate word 035C",
+      "requiredFlags": [],
+      "requiredRegisters": [
+        "SCB"
+      ],
+      "sourcePc": "02C2",
+      "targetPc": "02C5",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "Sequential",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 1,
+      "predicate": "Qualified ordinary DATA byte and current source generation",
+      "requiredFlags": [],
+      "requiredRegisters": [
+        "DP",
+        "SCB"
+      ],
+      "sourcePc": "02C5",
+      "targetPc": "02C6",
+      "unresolvedConditions": [
+        "StopBeforeUnqualifiedIndirectRead",
+        "StopBeforeLater02C6Effect"
+      ]
+    },
+    {
+      "edgeType": "UnmodeledSuccessor",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Encoded successor beyond selected word read scope",
+      "requiredFlags": [],
+      "requiredRegisters": [],
+      "sourcePc": "02B8",
+      "targetPc": "02BA",
+      "unresolvedConditions": []
+    },
+    {
+      "edgeType": "UnmodeledSuccessor",
+      "evidenceClass": "ConfirmedStaticCFG",
+      "instructionLength": 2,
+      "predicate": "Encoded short jump beyond selected byte read scope",
+      "requiredFlags": [],
+      "requiredRegisters": [],
+      "sourcePc": "02C6",
+      "targetPc": "02BE",
+      "unresolvedConditions": []
+    }
+  ],
+  "milestone": "M2dj",
+  "routeClasses": [
+    {
+      "condition": "A16 is zero",
+      "indirectAddress": "035C",
+      "pointerWriter": "02C2",
+      "route": [
+        "02B0",
+        "02B1",
+        "02B2",
+        "02C2",
+        "02C5"
+      ],
+      "widthBits": 8
+    },
+    {
+      "condition": "A16 is nonzero and odd",
+      "indirectAddress": "original A16",
+      "pointerWriter": "02B0",
+      "route": [
+        "02B0",
+        "02B1",
+        "02B2",
+        "02B4",
+        "02B5",
+        "02C5"
+      ],
+      "widthBits": 8
+    },
+    {
+      "condition": "A16 is nonzero and even",
+      "indirectAddress": "original A16 & FFFE",
+      "pointerWriter": "02B0",
+      "route": [
+        "02B0",
+        "02B1",
+        "02B2",
+        "02B4",
+        "02B5",
+        "02B7"
+      ],
+      "widthBits": 16
+    }
+  ],
+  "schemaVersion": 1,
+  "sites": [
+    {
+      "ddMode": "WouldSetDD0",
+      "endExclusive": "02B0",
+      "flags": {
+        "cf": "Retained",
+        "dd": "WouldBe0",
+        "hc": "Retained",
+        "zf": "WouldReflectByteZero"
+      },
+      "form": "LB A, N8",
+      "isa": "3-70",
+      "length": 2,
+      "modeledEffect": false,
+      "operandAddress": "DATA0055",
+      "operandClass": "ZeroPageByte",
+      "pc": "02AE",
+      "programOperandAccesses": [],
+      "role": "InheritedSrbufReadBarrier",
+      "standardSfr": "SRBUF",
+      "stopBoundary": "STOP_BEFORE_UNQUALIFIED_SRBUF_READ_02AE",
+      "successors": [
+        "02B0"
+      ],
+      "widthBits": 8
+    },
+    {
+      "addressSpace": "ArchitecturalRegisterBackingDATA",
+      "addressing": "0x0084 + 8 * SCB",
+      "ddMode": "Independent",
+      "endExclusive": "02B1",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "MOV DP, A",
+      "isa": "3-82/3-85",
+      "journal": "One ordered word write with low/high generations, no functional destination read",
+      "length": 1,
+      "operandClass": "AccumulatorWordToDirectPointingRegister",
+      "pc": "02B0",
+      "programOperandAccesses": [],
+      "registerEffect": "Selected DP := A16; retain accumulator",
+      "role": "QualifiedDpBackingWordStore",
+      "successors": [
+        "02B1"
+      ],
+      "widthBits": 16
+    },
+    {
+      "addressSpace": "ArchitecturalRegisterBackingDATA",
+      "addressing": "0x0084 + 8 * SCB",
+      "ddMode": "SetsDD1",
+      "dereferencesDpValue": false,
+      "endExclusive": "02B2",
+      "flags": {
+        "cf": "Retained",
+        "dd": 1,
+        "hc": "Retained",
+        "zf": "ZeroOfLoadedWord"
+      },
+      "form": "L A, DP",
+      "isa": "3-69",
+      "length": 1,
+      "operandClass": "DirectPointingRegister",
+      "pc": "02B1",
+      "programOperandAccesses": [],
+      "registerEffect": "A16 := Selected DP",
+      "role": "QualifiedDirectDpOperandLoad",
+      "successors": [
+        "02B2"
+      ],
+      "widthBits": 16
+    },
+    {
+      "ddMode": "Independent",
+      "displacement": 14,
+      "endExclusive": "02B4",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "JEQ rel8",
+      "isa": "3-66/3-67",
+      "length": 2,
+      "operandClass": "SignedRelative",
+      "pc": "02B2",
+      "predicate": "ZF from 02B1 equals 1",
+      "programOperandAccesses": [],
+      "role": "FirstConditionalPredicate",
+      "successors": [
+        "02C2",
+        "02B4"
+      ],
+      "widthBits": null
+    },
+    {
+      "ddMode": "RequiresDD1",
+      "endExclusive": "02B5",
+      "flags": {
+        "cf": "OldWordBit0",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "SRL A",
+      "isa": "3-150",
+      "length": 1,
+      "operandClass": "AccumulatorWord",
+      "pc": "02B4",
+      "programOperandAccesses": [],
+      "registerEffect": "A16 := floor(old A16 / 2)",
+      "role": "QualifiedWordShift",
+      "successors": [
+        "02B5"
+      ],
+      "widthBits": 16
+    },
+    {
+      "ddMode": "Independent",
+      "displacement": 14,
+      "endExclusive": "02B7",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "JLT rel8",
+      "isa": "3-66/3-67",
+      "length": 2,
+      "operandClass": "SignedRelative",
+      "pc": "02B5",
+      "predicate": "CF from 02B4 equals 1",
+      "programOperandAccesses": [],
+      "role": "SecondConditionalPredicate",
+      "successors": [
+        "02C5",
+        "02B7"
+      ],
+      "widthBits": null
+    },
+    {
+      "addressSpace": "DATA",
+      "addressing": "effective = DP & FFFE, little-endian word; both bytes qualify",
+      "ddMode": "SetsDD1",
+      "endExclusive": "02B8",
+      "flags": {
+        "cf": "Retained",
+        "dd": 1,
+        "hc": "Retained",
+        "zf": "ZeroOfLoadedWord"
+      },
+      "form": "L A, [DP]",
+      "isa": "3-69; 1-17 through 1-20",
+      "length": 1,
+      "operandClass": "DpIndirectDataWord",
+      "pc": "02B7",
+      "programOperandAccesses": [],
+      "registerEffect": "A16 := qualified DATA word",
+      "role": "ConditionalIndirectWordFrontier",
+      "stopBoundary": "STOP_BEFORE_UNQUALIFIED_INDIRECT_DATA_READ_02B7",
+      "successors": [
+        "02B8"
+      ],
+      "widthBits": 16
+    },
+    {
+      "ddMode": "WouldSetDD0",
+      "endExclusive": "02BA",
+      "flags": {
+        "cf": "Retained",
+        "dd": "WouldBe0",
+        "hc": "Retained",
+        "zf": "WouldReflectByteZero"
+      },
+      "form": "LB A, N8",
+      "isa": "3-70; device p. 10",
+      "length": 2,
+      "modeledEffect": false,
+      "operandAddress": "DATA0006 architectural alias AL",
+      "operandClass": "ZeroPageByte",
+      "pc": "02B8",
+      "programOperandAccesses": [],
+      "role": "LaterWordReadPathBoundary",
+      "stopBoundary": "STOP_BEFORE_UNREVIEWED_02B8",
+      "successors": [
+        "02BA"
+      ],
+      "widthBits": 8
+    },
+    {
+      "addressSpace": "ArchitecturalRegisterBackingDATA",
+      "addressing": "0x0084 + 8 * SCB",
+      "ddMode": "Independent",
+      "endExclusive": "02C5",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "MOV DP, #N16",
+      "immediateWord": "035C",
+      "isa": "3-82/3-86",
+      "journal": "Distinct ordered word write with low/high generations, no functional destination read",
+      "length": 3,
+      "operandClass": "ImmediateWordToDirectPointingRegister",
+      "pc": "02C2",
+      "programOperandAccesses": [],
+      "registerEffect": "Selected DP := 0x035C; retain accumulator",
+      "role": "QualifiedDpImmediateBackingWordStore",
+      "successors": [
+        "02C5"
+      ],
+      "widthBits": 16
+    },
+    {
+      "addressSpace": "DATA",
+      "addressing": "effective = DP, no alignment",
+      "ddMode": "SetsDD0",
+      "endExclusive": "02C6",
+      "flags": {
+        "cf": "Retained",
+        "dd": 0,
+        "hc": "Retained",
+        "zf": "ZeroOfLoadedByte"
+      },
+      "form": "LB A, [DP]",
+      "isa": "3-70; 1-17 through 1-20",
+      "length": 1,
+      "operandClass": "DpIndirectDataByte",
+      "pc": "02C5",
+      "programOperandAccesses": [],
+      "registerEffect": "AL := qualified DATA byte; AH retained",
+      "role": "ConditionalIndirectByteFrontier",
+      "stopBoundary": "STOP_BEFORE_UNQUALIFIED_INDIRECT_DATA_READ_02C5",
+      "successors": [
+        "02C6"
+      ],
+      "widthBits": 8
+    },
+    {
+      "ddMode": "Independent",
+      "displacement": -10,
+      "endExclusive": "02C8",
+      "flags": {
+        "cf": "Retained",
+        "dd": "Retained",
+        "hc": "Retained",
+        "zf": "Retained"
+      },
+      "form": "SJ rel8",
+      "isa": "3-140",
+      "length": 2,
+      "modeledEffect": false,
+      "operandClass": "SignedRelative",
+      "pc": "02C6",
+      "programOperandAccesses": [],
+      "role": "LaterByteReadPathBoundary",
+      "stopBoundary": "STOP_BEFORE_UNREVIEWED_02C6",
+      "successors": [
+        "02BE"
+      ],
+      "widthBits": null
+    }
+  ],
+  "sourceEvidence": {
+    "admittedRom": "M2deExactHistoricalAttachmentToBlobBinding",
+    "deviceMap": "OKI E2E1027-27-Y4 pp. 9-13, 17",
+    "pointingAlias": "M2aw accepted nX-8/200 register and memory contract",
+    "primaryIsa": "OKI MSM66201 Instruction Manual, September 1991",
+    "rawEncodingPublic": false,
+    "retainedListing": "M2daAcceptedListingAndDecodedExtents"
+  }
+}
